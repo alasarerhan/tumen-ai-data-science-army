@@ -1,8 +1,9 @@
-import React from "react";
+import React, { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeSanitize from "rehype-sanitize";
-import { FileCode2, Table2, BarChart3, FileText } from "lucide-react";
+import { FileCode2, Table2, BarChart3, FileText, Copy, Check } from "lucide-react";
+import { toast } from "sonner";
 import type { ArtifactDto, ChartArtifact } from "../../api/chat";
 import { SankeyChart } from "../charts/sankey-chart";
 import { NetworkChart } from "../charts/network-chart";
@@ -46,6 +47,19 @@ function renderChartArtifact(artifact: ChartArtifact) {
 }
 
 export function ArtifactCard({ artifact }: ArtifactCardProps) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = (text: string) => {
+    if (!navigator.clipboard) {
+      toast.error("Clipboard API not available");
+      return;
+    }
+    void navigator.clipboard.writeText(text);
+    setCopied(true);
+    toast.success("Copied to clipboard");
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   if (artifact.type === "table") {
     return (
       <div className="rounded-md border border-slate-200 bg-white p-3">
@@ -94,8 +108,18 @@ export function ArtifactCard({ artifact }: ArtifactCardProps) {
   if (artifact.type === "code") {
     return (
       <div className="overflow-hidden rounded-md border border-slate-200">
-        <div className="flex items-center gap-2 border-b border-slate-700 bg-slate-900 px-3 py-2 text-xs text-slate-300">
-          <FileCode2 size={14} /> {artifact.language}
+        <div className="flex items-center justify-between border-b border-slate-700 bg-slate-900 px-3 py-2 text-xs text-slate-300">
+          <div className="flex items-center gap-2">
+            <FileCode2 size={14} /> {artifact.language}
+          </div>
+          <button
+            type="button"
+            onClick={() => handleCopy(artifact.code)}
+            className="rounded p-1 hover:bg-slate-800 transition-colors"
+            aria-label="Copy code"
+          >
+            {copied ? <Check size={14} className="text-green-500" /> : <Copy size={14} />}
+          </button>
         </div>
         <pre className="max-h-80 overflow-auto bg-slate-950 p-3 text-xs text-slate-100">
           <code>{artifact.code}</code>

@@ -25,6 +25,7 @@ import {
 import { cn } from "../../lib/utils";
 import { Avatar } from "../ui/avatar";
 import { useAuth } from "../../context/AuthContext";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 
 interface NavItem {
   label: string;
@@ -84,66 +85,97 @@ export function AppShell({ children }: AppShellProps) {
 
       <nav className="flex-1 space-y-1 overflow-y-auto p-2" aria-label="Main navigation">
         {navItems.map((item) => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            onClick={() => setMobileOpen(false)}
-            className={({ isActive }) =>
-              cn(
-                "flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors",
-                isActive ? "bg-indigo-50 text-indigo-700" : "text-slate-600 hover:bg-slate-100",
-                collapsed && "justify-center px-1",
-              )
-            }
-            title={collapsed ? item.label : undefined}
-          >
-            {item.icon}
-            {!collapsed ? <span className="truncate">{item.label}</span> : null}
-          </NavLink>
+          <Tooltip key={item.to} delayDuration={300}>
+            <TooltipTrigger asChild>
+              <NavLink
+                to={item.to}
+                onClick={() => setMobileOpen(false)}
+                className={({ isActive }) =>
+                  cn(
+                    "flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                    isActive ? "bg-indigo-50 text-indigo-700" : "text-slate-600 hover:bg-slate-100",
+                    collapsed && "justify-center px-1",
+                  )
+                }
+              >
+                {item.icon}
+                <span className={cn("truncate", collapsed && "sr-only")}>{item.label}</span>
+              </NavLink>
+            </TooltipTrigger>
+            {collapsed && (
+              <TooltipContent side="right" sideOffset={10}>
+                {item.label}
+              </TooltipContent>
+            )}
+          </Tooltip>
         ))}
       </nav>
 
       <div className="space-y-1 border-t border-slate-200 p-2">
         {adminNavItems.map((item) => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            className={({ isActive }) =>
-              cn(
-                "flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors",
-                isActive ? "bg-indigo-50 text-indigo-700" : "text-slate-600 hover:bg-slate-100",
-                collapsed && "justify-center px-1",
-              )
-            }
-            title={collapsed ? item.label : undefined}
-          >
-            {item.icon}
-            {!collapsed ? <span className="truncate">{item.label}</span> : null}
-          </NavLink>
+          <Tooltip key={item.to} delayDuration={300}>
+            <TooltipTrigger asChild>
+              <NavLink
+                to={item.to}
+                className={({ isActive }) =>
+                  cn(
+                    "flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                    isActive ? "bg-indigo-50 text-indigo-700" : "text-slate-600 hover:bg-slate-100",
+                    collapsed && "justify-center px-1",
+                  )
+                }
+              >
+                {item.icon}
+                <span className={cn("truncate", collapsed && "sr-only")}>{item.label}</span>
+              </NavLink>
+            </TooltipTrigger>
+            {collapsed && (
+              <TooltipContent side="right" sideOffset={10}>
+                {item.label}
+              </TooltipContent>
+            )}
+          </Tooltip>
         ))}
-        <NavLink
-          to="/settings"
-          className={({ isActive }) =>
-            cn(
-              "flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors",
-              isActive ? "bg-indigo-50 text-indigo-700" : "text-slate-600 hover:bg-slate-100",
-              collapsed && "justify-center px-1",
-            )
-          }
-          title={collapsed ? "Settings" : undefined}
-        >
-          <Settings size={18} />
-          {!collapsed ? <span>Settings</span> : null}
-        </NavLink>
-        <button
-          type="button"
-          onClick={() => setCollapsed((value) => !value)}
-          className="hidden w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-slate-500 hover:bg-slate-100 lg:flex"
-          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-        >
-          {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
-          {!collapsed ? <span>Collapse</span> : null}
-        </button>
+        <Tooltip delayDuration={300}>
+          <TooltipTrigger asChild>
+            <NavLink
+              to="/settings"
+              className={({ isActive }) =>
+                cn(
+                  "flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                  isActive ? "bg-indigo-50 text-indigo-700" : "text-slate-600 hover:bg-slate-100",
+                  collapsed && "justify-center px-1",
+                )
+              }
+            >
+              <Settings size={18} />
+              <span className={cn(collapsed && "sr-only")}>Settings</span>
+            </NavLink>
+          </TooltipTrigger>
+          {collapsed && (
+            <TooltipContent side="right" sideOffset={10}>
+              Settings
+            </TooltipContent>
+          )}
+        </Tooltip>
+        <Tooltip delayDuration={300}>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              onClick={() => setCollapsed((value) => !value)}
+              className="hidden w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-slate-500 hover:bg-slate-100 lg:flex"
+              aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            >
+              {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+              {!collapsed ? <span>Collapse</span> : null}
+            </button>
+          </TooltipTrigger>
+          {collapsed && (
+            <TooltipContent side="right" sideOffset={10}>
+              Expand
+            </TooltipContent>
+          )}
+        </Tooltip>
       </div>
     </div>
   );

@@ -25,6 +25,39 @@ import {
 import { cn } from "../../lib/utils";
 import { Avatar } from "../ui/avatar";
 import { useAuth } from "../../context/AuthContext";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
+
+interface NavLinkWithTooltipProps {
+  to: string;
+  label: string;
+  icon: React.ReactNode;
+  collapsed: boolean;
+  onClick?: () => void;
+}
+
+function NavLinkWithTooltip({ to, label, icon, collapsed, onClick }: NavLinkWithTooltipProps) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <NavLink
+          to={to}
+          onClick={onClick}
+          className={({ isActive }) =>
+            cn(
+              "flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+              isActive ? "bg-indigo-50 text-indigo-700" : "text-slate-600 hover:bg-slate-100",
+              collapsed && "justify-center px-1",
+            )
+          }
+        >
+          {icon}
+          {!collapsed ? <span className="truncate">{label}</span> : <span className="sr-only">{label}</span>}
+        </NavLink>
+      </TooltipTrigger>
+      {collapsed && <TooltipContent side="right">{label}</TooltipContent>}
+    </Tooltip>
+  );
+}
 
 interface NavItem {
   label: string;
@@ -84,57 +117,15 @@ export function AppShell({ children }: AppShellProps) {
 
       <nav className="flex-1 space-y-1 overflow-y-auto p-2" aria-label="Main navigation">
         {navItems.map((item) => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            onClick={() => setMobileOpen(false)}
-            className={({ isActive }) =>
-              cn(
-                "flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors",
-                isActive ? "bg-indigo-50 text-indigo-700" : "text-slate-600 hover:bg-slate-100",
-                collapsed && "justify-center px-1",
-              )
-            }
-            title={collapsed ? item.label : undefined}
-          >
-            {item.icon}
-            {!collapsed ? <span className="truncate">{item.label}</span> : null}
-          </NavLink>
+          <NavLinkWithTooltip key={item.to} {...item} collapsed={collapsed} onClick={() => setMobileOpen(false)} />
         ))}
       </nav>
 
       <div className="space-y-1 border-t border-slate-200 p-2">
         {adminNavItems.map((item) => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            className={({ isActive }) =>
-              cn(
-                "flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors",
-                isActive ? "bg-indigo-50 text-indigo-700" : "text-slate-600 hover:bg-slate-100",
-                collapsed && "justify-center px-1",
-              )
-            }
-            title={collapsed ? item.label : undefined}
-          >
-            {item.icon}
-            {!collapsed ? <span className="truncate">{item.label}</span> : null}
-          </NavLink>
+          <NavLinkWithTooltip key={item.to} {...item} collapsed={collapsed} />
         ))}
-        <NavLink
-          to="/settings"
-          className={({ isActive }) =>
-            cn(
-              "flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors",
-              isActive ? "bg-indigo-50 text-indigo-700" : "text-slate-600 hover:bg-slate-100",
-              collapsed && "justify-center px-1",
-            )
-          }
-          title={collapsed ? "Settings" : undefined}
-        >
-          <Settings size={18} />
-          {!collapsed ? <span>Settings</span> : null}
-        </NavLink>
+        <NavLinkWithTooltip to="/settings" label="Settings" icon={<Settings size={18} />} collapsed={collapsed} />
         <button
           type="button"
           onClick={() => setCollapsed((value) => !value)}
@@ -195,15 +186,30 @@ export function AppShell({ children }: AppShellProps) {
             <button type="button" className="hidden items-center gap-2 rounded-md border border-slate-200 px-3 py-1 text-sm text-slate-400 sm:flex" aria-label="Search">
               <Search size={14} /> Search
             </button>
-            <button type="button" className="rounded p-2 text-slate-500 hover:bg-slate-100" aria-label="Notifications">
-              <Bell size={16} />
-            </button>
-            <button type="button" onClick={() => navigate("/settings")} className="rounded-full">
-              <Avatar user={shellUser} size={32} />
-            </button>
-            <button type="button" onClick={handleLogout} className="rounded p-2 text-slate-500 hover:bg-slate-100" aria-label="Sign out">
-              <LogOut size={16} />
-            </button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button type="button" className="rounded p-2 text-slate-500 hover:bg-slate-100" aria-label="Notifications">
+                  <Bell size={16} />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">Notifications</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button type="button" onClick={() => navigate("/settings")} className="rounded-full" aria-label="Account Settings">
+                  <Avatar user={shellUser} size={32} />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">Account Settings</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button type="button" onClick={handleLogout} className="rounded p-2 text-slate-500 hover:bg-slate-100" aria-label="Sign out">
+                  <LogOut size={16} />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">Sign out</TooltipContent>
+            </Tooltip>
           </div>
         </header>
 

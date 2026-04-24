@@ -25,6 +25,7 @@ import {
 import { cn } from "../../lib/utils";
 import { Avatar } from "../ui/avatar";
 import { useAuth } from "../../context/AuthContext";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 
 interface NavItem {
   label: string;
@@ -50,6 +51,46 @@ const adminNavItems: NavItem[] = [
 
 interface AppShellProps {
   children: React.ReactNode;
+}
+
+function NavLinkWithTooltip({
+  to,
+  icon,
+  label,
+  collapsed,
+  onClick,
+}: {
+  to: string;
+  icon: React.ReactNode;
+  label: string;
+  collapsed: boolean;
+  onClick?: () => void;
+}) {
+  const content = (
+    <NavLink
+      to={to}
+      onClick={onClick}
+      className={({ isActive }) =>
+        cn(
+          "flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+          isActive ? "bg-indigo-50 text-indigo-700" : "text-slate-600 hover:bg-slate-100",
+          collapsed && "justify-center px-1",
+        )
+      }
+    >
+      {icon}
+      {!collapsed ? <span className="truncate">{label}</span> : <span className="sr-only">{label}</span>}
+    </NavLink>
+  );
+
+  if (!collapsed) return content;
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>{content}</TooltipTrigger>
+      <TooltipContent side="right">{label}</TooltipContent>
+    </Tooltip>
+  );
 }
 
 export function AppShell({ children }: AppShellProps) {
@@ -84,57 +125,33 @@ export function AppShell({ children }: AppShellProps) {
 
       <nav className="flex-1 space-y-1 overflow-y-auto p-2" aria-label="Main navigation">
         {navItems.map((item) => (
-          <NavLink
+          <NavLinkWithTooltip
             key={item.to}
             to={item.to}
+            icon={item.icon}
+            label={item.label}
+            collapsed={collapsed}
             onClick={() => setMobileOpen(false)}
-            className={({ isActive }) =>
-              cn(
-                "flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors",
-                isActive ? "bg-indigo-50 text-indigo-700" : "text-slate-600 hover:bg-slate-100",
-                collapsed && "justify-center px-1",
-              )
-            }
-            title={collapsed ? item.label : undefined}
-          >
-            {item.icon}
-            {!collapsed ? <span className="truncate">{item.label}</span> : null}
-          </NavLink>
+          />
         ))}
       </nav>
 
       <div className="space-y-1 border-t border-slate-200 p-2">
         {adminNavItems.map((item) => (
-          <NavLink
+          <NavLinkWithTooltip
             key={item.to}
             to={item.to}
-            className={({ isActive }) =>
-              cn(
-                "flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors",
-                isActive ? "bg-indigo-50 text-indigo-700" : "text-slate-600 hover:bg-slate-100",
-                collapsed && "justify-center px-1",
-              )
-            }
-            title={collapsed ? item.label : undefined}
-          >
-            {item.icon}
-            {!collapsed ? <span className="truncate">{item.label}</span> : null}
-          </NavLink>
+            icon={item.icon}
+            label={item.label}
+            collapsed={collapsed}
+          />
         ))}
-        <NavLink
+        <NavLinkWithTooltip
           to="/settings"
-          className={({ isActive }) =>
-            cn(
-              "flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors",
-              isActive ? "bg-indigo-50 text-indigo-700" : "text-slate-600 hover:bg-slate-100",
-              collapsed && "justify-center px-1",
-            )
-          }
-          title={collapsed ? "Settings" : undefined}
-        >
-          <Settings size={18} />
-          {!collapsed ? <span>Settings</span> : null}
-        </NavLink>
+          icon={<Settings size={18} />}
+          label="Settings"
+          collapsed={collapsed}
+        />
         <button
           type="button"
           onClick={() => setCollapsed((value) => !value)}

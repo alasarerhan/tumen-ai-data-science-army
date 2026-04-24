@@ -5,6 +5,7 @@ import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import { useAuth } from "../context/AuthContext";
 import { cn } from "../lib/utils";
+import { toast } from "sonner";
 import {
   User,
   Building,
@@ -30,12 +31,13 @@ const SETTINGS_NAV = [
   { id: "danger", label: "Danger Zone", icon: <AlertTriangle size={16} /> },
 ];
 
-function Toggle({ checked, onChange }: { checked: boolean; onChange: () => void }) {
+function Toggle({ checked, onChange, "aria-label": ariaLabel }: { checked: boolean; onChange: () => void; "aria-label"?: string }) {
   return (
     <button
       onClick={onChange}
       role="switch"
       aria-checked={checked}
+      aria-label={ariaLabel}
       className={cn(
         "w-10 h-5 rounded-full transition-colors flex-shrink-0 relative",
         checked ? "bg-indigo-600" : "bg-slate-200 dark:bg-slate-700"
@@ -76,6 +78,8 @@ export default function Settings() {
   const [fullName, setFullName] = useState(user?.email?.split("@")[0] ?? "");
   const [jobTitle, setJobTitle] = useState("Senior Data Scientist");
   const [unsaved, setUnsaved] = useState(false);
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [isInviting, setIsInviting] = useState(false);
 
   // Notifications state
   const [notifToggles, setNotifToggles] = useState({
@@ -117,6 +121,7 @@ export default function Settings() {
             <button
               key={item.id}
               onClick={() => setActiveSection(item.id)}
+              aria-current={activeSection === item.id ? "page" : undefined}
               className={cn(
                 "w-full flex items-center gap-2.5 px-3 py-2 rounded-[6px] text-sm transition-colors text-left",
                 activeSection === item.id
@@ -167,7 +172,21 @@ export default function Settings() {
                       />
                     </div>
                   ))}
-                  <Button variant="primary" size="md" onClick={() => setUnsaved(false)}>Save Changes</Button>
+                  <Button
+                    variant="primary"
+                    size="md"
+                    loading={isSavingProfile}
+                    onClick={() => {
+                      setIsSavingProfile(true);
+                      setTimeout(() => {
+                        setUnsaved(false);
+                        setIsSavingProfile(false);
+                        toast.success("Profile updated successfully");
+                      }, 800);
+                    }}
+                  >
+                    Save Changes
+                  </Button>
                 </div>
               </div>
             )}
@@ -252,7 +271,20 @@ export default function Settings() {
                       <option>Editor</option>
                       <option>Admin</option>
                     </select>
-                    <Button variant="primary" size="md">Send Invite</Button>
+                    <Button
+                      variant="primary"
+                      size="md"
+                      loading={isInviting}
+                      onClick={() => {
+                        setIsInviting(true);
+                        setTimeout(() => {
+                          setIsInviting(false);
+                          toast.success("Invitation sent");
+                        }, 800);
+                      }}
+                    >
+                      Send Invite
+                    </Button>
                   </div>
                 </div>
               </div>
@@ -295,7 +327,14 @@ export default function Settings() {
                     </div>
                     <div className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded px-3 py-2">
                       <code className="flex-1 text-xs font-mono text-slate-700 dark:text-slate-300 break-all">{generatedKey}</code>
-                      <button onClick={() => navigator.clipboard.writeText(generatedKey)} className="text-slate-400 hover:text-slate-600" aria-label="Copy key">
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(generatedKey);
+                          toast.success("API key copied to clipboard");
+                        }}
+                        className="text-slate-400 hover:text-slate-600"
+                        aria-label="Copy key"
+                      >
                         <Copy size={14} />
                       </button>
                     </div>
@@ -318,7 +357,13 @@ export default function Settings() {
                           <td className="px-4 py-3 text-slate-500 text-xs">{key.created}</td>
                           <td className="px-4 py-3 text-slate-500 text-xs">{key.lastUsed}</td>
                           <td className="px-4 py-3">
-                            <Button variant="destructive" size="xs">Revoke</Button>
+                            <Button
+                              variant="destructive"
+                              size="xs"
+                              onClick={() => toast.success("API key revoked")}
+                            >
+                              Revoke
+                            </Button>
                           </td>
                         </tr>
                       ))}
@@ -345,6 +390,7 @@ export default function Settings() {
                       <Toggle
                         checked={notifToggles[item.key]}
                         onChange={() => handleNotifToggle(item.key)}
+                        aria-label={`Toggle ${item.label}`}
                       />
                     </div>
                   ))}

@@ -1,6 +1,6 @@
-# AI Data Science Team Platform
+# TÜMEN AI Data Science Platform
 
-AI Data Science Team is an AI-powered analytics platform that helps business users analyze data without writing code.
+TÜMEN AI Data Science Team is an AI-powered analytics platform that helps business users analyze data without writing code.
 
 Users can upload CSV/Excel files, ask questions in natural language (English or Turkish), and get streamed insights, charts, and strategic recommendations. The platform also supports repeatable, scheduled workflows.
 

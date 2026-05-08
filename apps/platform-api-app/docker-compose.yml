@@ -1,0 +1,33 @@
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_DB: platform
+    ports:
+      - "5433:5432"
+    volumes:
+      - platform_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d platform"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  api:
+    build: .
+    environment:
+      DEPLOYMENT_PROFILE: local
+      DATABASE_URL: postgresql+psycopg://postgres:postgres@postgres:5432/platform
+      AUTH_MODE: dev
+      ALLOW_LOCAL_RUN_FALLBACK: "true"
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ["sh", "-c", "alembic upgrade head && uvicorn platform_api.asgi:app --host 0.0.0.0 --port 8000"]
+
+volumes:
+  platform_postgres_data:

@@ -1,0 +1,38 @@
+[project]
+name = "platform-api"
+version = "0.1.0"
+description = "Platform API service"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+    "python-multipart>=0.0.20",
+    "pydantic-settings>=2.6",
+    "sqlalchemy>=2.0",
+    "psycopg[binary]>=3.2",
+    "alembic>=1.13",
+    "python-jose[cryptography]>=3.3",
+    "httpx>=0.27",
+    "prefect>=3.0",
+    "email-validator>=2.2",
+    "prometheus-client>=0.21",
+    "openai>=1.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v"
+asyncio_mode = "auto"
+
+[tool.ruff]
+line-length = 100
+
+[tool.mutmut]
+paths_to_mutate = [
+    "platform_api/services/outbox.py",
+    "platform_api/core/circuit_breaker.py",
+    "platform_api/core/rate_limit.py",
+]
+tests_dir = ["tests/"]
+runner = "pytest -x -q"
+use_coverage = true

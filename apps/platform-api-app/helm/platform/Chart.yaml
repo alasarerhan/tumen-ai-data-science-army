@@ -1,0 +1,15 @@
+apiVersion: v2
+name: platform
+description: Platform API — FastAPI backend for the AI Data Science Team platform.
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+keywords:
+  - platform-api
+  - fastapi
+  - ai-datascience
+maintainers:
+  - name: AI Data Science Team
+home: https://github.com/ai-datascience-team/platform-api
+sources:
+  - https://github.com/ai-datascience-team/platform-api

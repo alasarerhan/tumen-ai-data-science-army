@@ -1,0 +1,4 @@
+# Development / testing dependencies
+pytest>=8.0
+pytest-asyncio>=0.24
+httpx>=0.27  # for async test client (already in main requirements, pinned here for clarity)

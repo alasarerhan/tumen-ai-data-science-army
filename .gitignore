@@ -48,6 +48,10 @@ coverage.xml
 *.py,cover
 .hypothesis/
 .pytest_cache/
+.pytest-work/
+.pytest-tmp/
+.tmp-tests/
+cover/
 
 # Translations
 *.mo
@@ -55,9 +59,14 @@ coverage.xml
 
 # Django stuff:
 *.log
+*.err
+*.out
 local_settings.py
 db.sqlite3
 db.sqlite3-journal
+*.db
+*.db-*
+*.db-journal
 
 # Flask stuff:
 instance/
@@ -135,12 +144,32 @@ Thumbs.db
 
 # Claude
 .claude/
+.codex/
+.agents/
 
 # Data files
 data/
 *.csv
 *.xlsx
 *.xls
+
+# Runtime artifacts
+logs/
+pipeline_store/
+pipeline_reports/
+h2o_models/
+mlruns/
+reports/
+mlflow.db
+mlflow.db-*
+mlflow_artifacts/
+.chat_uploads/
+.chat_test_uploads/
+.ruff_cache/
+_avast_/
+apps/platform-api-app/_write_strategy.py
+apps/platform-api-app/bandit/
+apps/platform-api-app/pip_audit/
 
 # Node.js
 node_modules/
@@ -152,11 +181,22 @@ frontend/dist/
 m9_figma_context.txt
 m9_figma_metadata.txt
 
+# Local planning artifacts
+PLAN.md
+ELPLAN.md
+planning_docs/
+implementation.md
+specification.md
+tasks.md
+
 
 *.claude/
 *.codex/
 *.github/
 *.pytest_cache/
+
+# Local nested upstream checkout kept only as a source backup after flattening.
+ai-data-science-team/
 
 # Frontend generated coverage
 frontend/coverage/

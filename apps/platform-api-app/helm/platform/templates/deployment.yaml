@@ -1,0 +1,132 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "platform.fullname" . }}
+  labels:
+    {{- include "platform.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "platform.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        # Force pod roll on ConfigMap changes
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "platform.labels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "platform.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: {{ include "platform.image" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8000
+              protocol: TCP
+          env:
+            # ----------------------------------------------------------------
+            # Non-sensitive config from ConfigMap
+            # ----------------------------------------------------------------
+            - name: API_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "platform.fullname" . }}
+                  key: API_HOST
+            - name: API_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "platform.fullname" . }}
+                  key: API_PORT
+            - name: DEPLOYMENT_PROFILE
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "platform.fullname" . }}
+                  key: DEPLOYMENT_PROFILE
+            - name: AUTH_MODE
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "platform.fullname" . }}
+                  key: AUTH_MODE
+            - name: OIDC_ISSUER
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "platform.fullname" . }}
+                  key: OIDC_ISSUER
+            - name: OIDC_AUDIENCE
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "platform.fullname" . }}
+                  key: OIDC_AUDIENCE
+            - name: OIDC_JWKS_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "platform.fullname" . }}
+                  key: OIDC_JWKS_URL
+            - name: TENANT_WRITE_QUOTA_PER_MINUTE
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "platform.fullname" . }}
+                  key: TENANT_WRITE_QUOTA_PER_MINUTE
+            # ----------------------------------------------------------------
+            # Database URL — constructed from parts; password from Secret
+            # ----------------------------------------------------------------
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ if .Values.db.existingSecret }}{{ .Values.db.existingSecret }}{{ else }}{{ include "platform.fullname" . }}-db{{ end }}
+                  key: {{ .Values.db.existingSecretKey }}
+            - name: DATABASE_URL
+              value: {{ printf "postgresql+psycopg://%s:$(POSTGRES_PASSWORD)@%s:%s/%s" .Values.db.user .Values.db.host .Values.db.port .Values.db.name | quote }}
+            # ----------------------------------------------------------------
+            # Extra environment variables
+            # ----------------------------------------------------------------
+            {{- with .Values.extraEnv }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- with .Values.extraEnvFrom }}
+          envFrom:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          livenessProbe:
+            {{- toYaml .Values.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.readinessProbe | nindent 12 }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

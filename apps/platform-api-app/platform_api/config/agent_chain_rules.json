@@ -1,0 +1,337 @@
+{
+  "version": "1.0.0",
+  "agents": [
+    {
+      "key": "DataLoaderToolsAgent",
+      "label": "Data Loader",
+      "kind": "data",
+      "color": "#10b981",
+      "aliases": ["Data Loader", "Data Loader Agent", "DataLoaderAgent", "load", "loader"],
+      "safe_next": ["DataWranglingAgent", "DataCleaningAgent", "EDAToolsAgent", "DataVisualizationAgent", "FeatureEngineeringAgent", "DataQualityAgent", "AnomalyDetectionAgent"],
+      "conditional_next": ["H2OMLAgent", "TimeSeriesEDAAgent", "ForecastingModelAgent", "AutoForecastAgent"]
+    },
+    {
+      "key": "SQLDatabaseAgent",
+      "label": "SQL Database",
+      "kind": "data",
+      "color": "#14b8a6",
+      "aliases": ["SQL Database", "SQL Database Agent", "sql", "SQLAgent", "query database"],
+      "safe_next": ["DataWranglingAgent", "DataCleaningAgent", "EDAToolsAgent", "DataVisualizationAgent", "FeatureEngineeringAgent", "DataQualityAgent", "AnomalyDetectionAgent"],
+      "conditional_next": ["H2OMLAgent", "TimeSeriesEDAAgent", "ForecastingModelAgent", "AutoForecastAgent"]
+    },
+    {
+      "key": "DataMergeAgent",
+      "label": "Data Merge",
+      "kind": "data",
+      "color": "#22c55e",
+      "aliases": ["Data Merge", "Data Merge Agent", "Data_Merge_Agent", "merge"],
+      "safe_next": ["DataWranglingAgent", "DataCleaningAgent", "EDAToolsAgent", "DataVisualizationAgent", "FeatureEngineeringAgent", "DataQualityAgent", "AnomalyDetectionAgent"],
+      "conditional_next": ["H2OMLAgent", "TimeSeriesEDAAgent", "ForecastingModelAgent", "AutoForecastAgent"]
+    },
+    {
+      "key": "DataWranglingAgent",
+      "label": "Data Wrangling",
+      "kind": "data",
+      "color": "#22c55e",
+      "aliases": ["Data Wrangling", "Data Wrangling Agent", "wrangle", "wrangling", "Pandas Wrangling"],
+      "safe_next": ["DataCleaningAgent", "EDAToolsAgent", "DataVisualizationAgent", "FeatureEngineeringAgent", "DataQualityAgent", "AnomalyDetectionAgent"],
+      "conditional_next": ["H2OMLAgent", "TimeSeriesEDAAgent", "ForecastingModelAgent", "AutoForecastAgent"]
+    },
+    {
+      "key": "DataCleaningAgent",
+      "label": "Data Cleaning",
+      "kind": "data",
+      "color": "#10b981",
+      "aliases": ["Data Cleaning", "Data Cleaner", "Data Cleaning Agent", "Data Cleaner Agent", "clean", "data_clean"],
+      "safe_next": ["EDAToolsAgent", "DataVisualizationAgent", "FeatureEngineeringAgent", "DataQualityAgent", "AnomalyDetectionAgent"],
+      "conditional_next": ["H2OMLAgent", "TimeSeriesEDAAgent", "ForecastingModelAgent", "AutoForecastAgent"]
+    },
+    {
+      "key": "EDAToolsAgent",
+      "label": "EDA",
+      "kind": "analysis",
+      "color": "#0ea5e9",
+      "aliases": ["EDA", "EDA Agent", "EDA Tools", "EDA Tools Agent", "eda", "exploratory data analysis"],
+      "safe_next": ["ResultsSynthesizerAgent", "NarrativeAgent", "RecommendationAgent", "ContextualKnowledgeAgent"],
+      "conditional_next": ["DataCleaningAgent", "FeatureEngineeringAgent", "H2OMLAgent", "DataQualityAgent", "AnomalyDetectionAgent", "ApprovalGateAgent"]
+    },
+    {
+      "key": "DataVisualizationAgent",
+      "label": "Visualization",
+      "kind": "analysis",
+      "color": "#06b6d4",
+      "aliases": ["Visualization", "Data Visualization", "Data Visualization Agent", "viz", "plot"],
+      "safe_next": ["ResultsSynthesizerAgent", "NarrativeAgent", "RecommendationAgent"],
+      "conditional_next": ["ApprovalGateAgent", "MLflowToolsAgent"]
+    },
+    {
+      "key": "FeatureEngineeringAgent",
+      "label": "Feature Engineering",
+      "kind": "ml",
+      "color": "#6366f1",
+      "aliases": ["Feature Engineering", "Feature Engineering Agent", "feature", "feature_engineering"],
+      "safe_next": ["H2OMLAgent", "EDAToolsAgent", "DataVisualizationAgent", "DataQualityAgent", "AnomalyDetectionAgent"],
+      "conditional_next": ["ModelEvaluationAgent", "TimeSeriesEDAAgent"]
+    },
+    {
+      "key": "H2OMLAgent",
+      "label": "H2O ML",
+      "kind": "ml",
+      "color": "#6366f1",
+      "aliases": ["H2O ML", "H2O ML Agent", "Model Training", "model", "train", "AutoML", "H2O"],
+      "safe_next": ["ModelEvaluationAgent", "MLflowToolsAgent"],
+      "conditional_next": ["ModelServingAgent", "ModelMonitoringAgent", "ModelExplainabilityAgent", "EDAToolsAgent", "DataVisualizationAgent", "ResultsSynthesizerAgent"]
+    },
+    {
+      "key": "ModelEvaluationAgent",
+      "label": "Model Evaluation",
+      "kind": "ml",
+      "color": "#4f46e5",
+      "aliases": ["Model Evaluation", "Model Evaluation Agent", "evaluate", "evaluation"],
+      "safe_next": ["ResultsSynthesizerAgent", "NarrativeAgent", "RecommendationAgent", "MLflowToolsAgent", "ApprovalGateAgent"],
+      "conditional_next": []
+    },
+    {
+      "key": "MLflowToolsAgent",
+      "label": "MLflow",
+      "kind": "ops",
+      "color": "#8b5cf6",
+      "aliases": ["MLflow", "MLflow Agent", "MLflow Tools", "MLflow Tools Agent", "mlflow", "mlflow_tools", "mlflow_log"],
+      "safe_next": ["ResultsSynthesizerAgent", "NarrativeAgent", "RecommendationAgent", "ApprovalGateAgent"],
+      "conditional_next": ["OrchestratorAgent"]
+    },
+    {
+      "key": "DataQualityAgent",
+      "label": "Data Quality",
+      "kind": "analysis",
+      "color": "#f59e0b",
+      "aliases": ["Data Quality", "Data Quality Agent", "quality", "profile quality"],
+      "safe_next": ["ResultsSynthesizerAgent", "NarrativeAgent", "RecommendationAgent"],
+      "conditional_next": ["DataCleaningAgent", "FeatureEngineeringAgent", "H2OMLAgent", "ApprovalGateAgent"]
+    },
+    {
+      "key": "AnomalyDetectionAgent",
+      "label": "Anomaly Detection",
+      "kind": "analysis",
+      "color": "#f97316",
+      "aliases": ["Anomaly Detection", "Anomaly Detection Agent", "anomaly", "detect anomalies"],
+      "safe_next": ["ResultsSynthesizerAgent", "NarrativeAgent", "RecommendationAgent"],
+      "conditional_next": ["DataCleaningAgent", "DataVisualizationAgent", "ApprovalGateAgent"]
+    },
+    {
+      "key": "APIConnectorAgent",
+      "label": "API Connector",
+      "kind": "data",
+      "color": "#14b8a6",
+      "aliases": ["API Connector", "API Connector Agent", "api", "http"],
+      "safe_next": [],
+      "conditional_next": ["DataWranglingAgent", "DataCleaningAgent", "EDAToolsAgent", "DataVisualizationAgent", "FeatureEngineeringAgent", "H2OMLAgent", "DataQualityAgent", "AnomalyDetectionAgent"]
+    },
+    {
+      "key": "DocumentParserAgent",
+      "label": "Document Parser",
+      "kind": "data",
+      "color": "#84cc16",
+      "aliases": ["Document Parser", "Document Parser Agent", "document", "parser"],
+      "safe_next": [],
+      "conditional_next": ["DataWranglingAgent", "DataCleaningAgent", "EDAToolsAgent", "DataVisualizationAgent", "FeatureEngineeringAgent", "H2OMLAgent", "DataQualityAgent", "AnomalyDetectionAgent"]
+    },
+    {
+      "key": "ModelServingAgent",
+      "label": "Model Serving",
+      "kind": "ops",
+      "color": "#7c3aed",
+      "aliases": ["Model Serving", "Model Serving Agent", "serve", "inference", "predict service"],
+      "safe_next": [],
+      "conditional_next": ["ModelMonitoringAgent", "EDAToolsAgent", "DataVisualizationAgent", "ResultsSynthesizerAgent"]
+    },
+    {
+      "key": "ModelMonitoringAgent",
+      "label": "Model Monitoring",
+      "kind": "ops",
+      "color": "#7c3aed",
+      "aliases": ["Model Monitoring", "Model Monitoring Agent", "monitoring", "drift"],
+      "safe_next": ["ResultsSynthesizerAgent", "NarrativeAgent", "RecommendationAgent", "ApprovalGateAgent", "MLflowToolsAgent"],
+      "conditional_next": []
+    },
+    {
+      "key": "ModelExplainabilityAgent",
+      "label": "Model Explainability",
+      "kind": "ops",
+      "color": "#7c3aed",
+      "aliases": ["Model Explainability", "Model Explainability Agent", "explainability", "explain", "shap"],
+      "safe_next": ["ResultsSynthesizerAgent", "NarrativeAgent", "RecommendationAgent", "ApprovalGateAgent", "MLflowToolsAgent"],
+      "conditional_next": []
+    },
+    {
+      "key": "TimeSeriesEDAAgent",
+      "label": "Time Series EDA",
+      "kind": "timeseries",
+      "color": "#0f766e",
+      "aliases": ["Time Series EDA", "TimeSeriesEDAAgent", "ts_eda", "time series analysis"],
+      "safe_next": ["ResultsSynthesizerAgent", "NarrativeAgent", "RecommendationAgent"],
+      "conditional_next": ["ForecastingModelAgent", "ForecastEvaluationAgent"]
+    },
+    {
+      "key": "ForecastingModelAgent",
+      "label": "Forecasting Model",
+      "kind": "timeseries",
+      "color": "#0f766e",
+      "aliases": ["Forecasting Model", "ForecastingModelAgent", "forecast", "forecast model"],
+      "safe_next": ["ForecastEvaluationAgent", "NarrativeAgent", "RecommendationAgent", "MLflowToolsAgent"],
+      "conditional_next": []
+    },
+    {
+      "key": "ForecastEvaluationAgent",
+      "label": "Forecast Evaluation",
+      "kind": "timeseries",
+      "color": "#115e59",
+      "aliases": ["Forecast Evaluation", "ForecastEvaluationAgent", "forecast evaluation"],
+      "safe_next": ["ResultsSynthesizerAgent", "NarrativeAgent", "RecommendationAgent", "ApprovalGateAgent", "MLflowToolsAgent"],
+      "conditional_next": []
+    },
+    {
+      "key": "AutoForecastAgent",
+      "label": "Auto Forecast",
+      "kind": "timeseries",
+      "color": "#115e59",
+      "aliases": ["Auto Forecast", "AutoForecastAgent", "auto forecast"],
+      "safe_next": ["NarrativeAgent", "RecommendationAgent"],
+      "conditional_next": ["ForecastEvaluationAgent", "MLflowToolsAgent"]
+    },
+    {
+      "key": "ClusteringAgent",
+      "label": "Clustering",
+      "kind": "ml",
+      "color": "#8b5cf6",
+      "aliases": ["Clustering", "ClusteringAgent", "cluster", "segmentation"],
+      "safe_next": ["ResultsSynthesizerAgent", "NarrativeAgent", "RecommendationAgent"],
+      "conditional_next": ["DataVisualizationAgent"]
+    },
+    {
+      "key": "ResultsSynthesizerAgent",
+      "label": "Results Synthesizer",
+      "kind": "strategic",
+      "color": "#ec4899",
+      "aliases": ["Results Synthesizer", "ResultsSynthesizerAgent", "results synthesis"],
+      "safe_next": ["NarrativeAgent", "RecommendationAgent", "ApprovalGateAgent"],
+      "conditional_next": ["OrchestratorAgent"]
+    },
+    {
+      "key": "ContextualKnowledgeAgent",
+      "label": "Contextual Knowledge",
+      "kind": "strategic",
+      "color": "#ec4899",
+      "aliases": ["Contextual Knowledge", "ContextualKnowledgeAgent", "context"],
+      "safe_next": ["ResultsSynthesizerAgent", "NarrativeAgent", "RecommendationAgent", "ApprovalGateAgent"],
+      "conditional_next": []
+    },
+    {
+      "key": "NarrativeAgent",
+      "label": "Narrative",
+      "kind": "strategic",
+      "color": "#ec4899",
+      "aliases": ["Narrative", "Narrative Agent", "Narrative Synthesizer", "NarrativeAgent", "report"],
+      "safe_next": ["ApprovalGateAgent"],
+      "conditional_next": ["MLflowToolsAgent", "OrchestratorAgent"]
+    },
+    {
+      "key": "RecommendationAgent",
+      "label": "Recommendation",
+      "kind": "strategic",
+      "color": "#ec4899",
+      "aliases": ["Recommendation", "Recommendation Agent", "RecommendationAgent", "recommend"],
+      "safe_next": ["ApprovalGateAgent"],
+      "conditional_next": ["OrchestratorAgent", "WorkflowPlannerAgent"]
+    },
+    {
+      "key": "WorkflowPlannerAgent",
+      "label": "Workflow Planner",
+      "kind": "orchestration",
+      "color": "#64748b",
+      "aliases": ["Workflow Planner", "WorkflowPlannerAgent", "planner"],
+      "safe_next": ["ApprovalGateAgent", "OrchestratorAgent"],
+      "conditional_next": []
+    },
+    {
+      "key": "ApprovalGateAgent",
+      "label": "HITL Gate",
+      "kind": "hitl",
+      "color": "#f59e0b",
+      "aliases": ["HITL Gate", "Approval Gate", "ApprovalGateAgent", "approval", "hitl"],
+      "safe_next": ["OrchestratorAgent"],
+      "conditional_next": ["WorkflowPlannerAgent"]
+    },
+    {
+      "key": "OrchestratorAgent",
+      "label": "Orchestrator",
+      "kind": "orchestration",
+      "color": "#64748b",
+      "aliases": ["Orchestrator", "OrchestratorAgent", "runtime orchestrator"],
+      "safe_next": [],
+      "conditional_next": []
+    },
+    {
+      "key": "IaCAgent",
+      "label": "IaC",
+      "kind": "ops",
+      "color": "#94a3b8",
+      "aliases": ["IaC", "IaCAgent", "infrastructure as code"],
+      "safe_next": [],
+      "conditional_next": []
+    },
+    {
+      "key": "ContainerizationAgent",
+      "label": "Containerization",
+      "kind": "ops",
+      "color": "#94a3b8",
+      "aliases": ["Containerization", "ContainerizationAgent", "dockerize"],
+      "safe_next": [],
+      "conditional_next": []
+    },
+    {
+      "key": "CICDAgent",
+      "label": "CI/CD",
+      "kind": "ops",
+      "color": "#94a3b8",
+      "aliases": ["CI/CD", "CICDAgent", "pipeline ops"],
+      "safe_next": [],
+      "conditional_next": []
+    },
+    {
+      "key": "PandasDataAnalyst",
+      "label": "Pandas Analyst",
+      "kind": "analysis",
+      "color": "#0ea5e9",
+      "aliases": ["Pandas Analyst", "PandasDataAnalyst"],
+      "safe_next": ["ResultsSynthesizerAgent", "NarrativeAgent", "RecommendationAgent"],
+      "conditional_next": ["ApprovalGateAgent"]
+    },
+    {
+      "key": "SQLDataAnalyst",
+      "label": "SQL Analyst",
+      "kind": "analysis",
+      "color": "#0ea5e9",
+      "aliases": ["SQL Analyst", "SQLDataAnalyst"],
+      "safe_next": ["ResultsSynthesizerAgent", "NarrativeAgent", "RecommendationAgent"],
+      "conditional_next": ["ApprovalGateAgent"]
+    }
+  ],
+  "requirements": {
+    "H2OMLAgent": {
+      "target_variable": true
+    },
+    "ModelEvaluationAgent": {
+      "target_variable": true
+    },
+    "ModelMonitoringAgent": {
+      "min_incoming_edges": 2
+    },
+    "ModelExplainabilityAgent": {
+      "min_incoming_edges": 2
+    },
+    "ModelServingAgent": {
+      "min_incoming_edges": 2
+    }
+  }
+}

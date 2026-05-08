@@ -1,0 +1,156 @@
+groups:
+  - name: platform-api-slo
+    rules:
+      - alert: HighErrorRate
+        expr: |
+          sum(rate(platform_api_http_requests_total{status=~"5.."}[5m])) 
+          / sum(rate(platform_api_http_requests_total[5m])) 
+          > 0.01
+        for: 2m
+        labels:
+          severity: critical
+          slo: error-rate
+        annotations:
+          summary: "Error rate exceeds 1% SLO"
+          description: "Error rate is {{ $value | humanizePercentage }} (threshold: 1%). Current 5xx rate: {{ $value }}."
+          runbook_url: "https://wiki.internal/runbooks/platform-api/high-error-rate"
+
+      - alert: HighLatencyP99
+        expr: |
+          histogram_quantile(0.99, sum(rate(platform_api_http_request_duration_seconds_bucket[5m])) by (le)) 
+          > 0.5
+        for: 5m
+        labels:
+          severity: warning
+          slo: latency
+        annotations:
+          summary: "p99 latency exceeds 500ms SLO"
+          description: "p99 latency is {{ $value | humanizeDuration }} (threshold: 500ms)."
+          runbook_url: "https://wiki.internal/runbooks/platform-api/high-latency"
+
+      - alert: HighLatencyP99Critical
+        expr: |
+          histogram_quantile(0.99, sum(rate(platform_api_http_request_duration_seconds_bucket[5m])) by (le)) 
+          > 1.0
+        for: 2m
+        labels:
+          severity: critical
+          slo: latency
+        annotations:
+          summary: "p99 latency exceeds 1s (2x SLO)"
+          description: "p99 latency is {{ $value | humanizeDuration }} (threshold: 500ms). This is 2x the SLO target."
+          runbook_url: "https://wiki.internal/runbooks/platform-api/high-latency"
+
+      - alert: ErrorBudgetBurnRate1h
+        expr: |
+          (
+            sum(rate(platform_api_http_requests_total{status=~"5.."}[1h]))
+            / sum(rate(platform_api_http_requests_total[1h]))
+          ) > (1 - 0.995) * 30 * 24 / 1
+        for: 5m
+        labels:
+          severity: warning
+          slo: error-budget
+        annotations:
+          summary: "Error budget burn rate is high (1h window)"
+          description: "Consuming error budget {{ $value | humanize }}x faster than allowed. If this continues, the monthly budget will be exhausted."
+          runbook_url: "https://wiki.internal/runbooks/platform-api/error-budget-burn"
+
+      - alert: ErrorBudgetBurnRate5m
+        expr: |
+          (
+            sum(rate(platform_api_http_requests_total{status=~"5.."}[5m]))
+            / sum(rate(platform_api_http_requests_total[5m]))
+          ) > (1 - 0.995) * 30 * 24 * 12 / 5
+        for: 2m
+        labels:
+          severity: critical
+          slo: error-budget
+        annotations:
+          summary: "Error budget burn rate is critical (5m window)"
+          description: "Consuming error budget {{ $value | humanize }}x faster than allowed. Immediate action required."
+          runbook_url: "https://wiki.internal/runbooks/platform-api/error-budget-burn"
+
+      - alert: AvailabilityBelowSLO
+        expr: |
+          (1 - sum(rate(platform_api_http_requests_total{status!~"5.."}[30d])) / sum(rate(platform_api_http_requests_total[30d]))) * 100
+          > 0.5
+        for: 10m
+        labels:
+          severity: warning
+          slo: availability
+        annotations:
+          summary: "Availability below 99.5% SLO (30d window)"
+          description: "30-day availability is {{ $value | humanize }}% (threshold: 99.5%). Error budget is being consumed."
+          runbook_url: "https://wiki.internal/runbooks/platform-api/availability"
+
+      - alert: DLQSizeHigh
+        expr: outbox_dlq_gauge > 10
+        for: 5m
+        labels:
+          severity: warning
+          component: outbox
+        annotations:
+          summary: "Dead Letter Queue size exceeds threshold"
+          description: "DLQ has {{ $value }} events. Review and replay failed events."
+          runbook_url: "https://wiki.internal/runbooks/platform-api/dlq"
+
+      - alert: DLQSizeCritical
+        expr: outbox_dlq_gauge > 50
+        for: 2m
+        labels:
+          severity: critical
+          component: outbox
+        annotations:
+          summary: "Dead Letter Queue size is critical"
+          description: "DLQ has {{ $value }} events. Immediate investigation required."
+          runbook_url: "https://wiki.internal/runbooks/platform-api/dlq"
+
+      - alert: HighInFlightRequests
+        expr: platform_api_http_requests_in_flight > 100
+        for: 2m
+        labels:
+          severity: warning
+          component: capacity
+        annotations:
+          summary: "High number of in-flight requests"
+          description: "{{ $value }} requests currently in flight. Consider scaling or investigating slow endpoints."
+          runbook_url: "https://wiki.internal/runbooks/platform-api/capacity"
+
+      - alert: MemoryGrowthRateHigh
+        expr: process_memory_growth_rate_bytes_per_minute > 10485760
+        for: 5m
+        labels:
+          severity: warning
+          component: memory
+        annotations:
+          summary: "Memory growth rate is high"
+          description: "Memory growing at {{ $value | humanize1024 }}B/min. Potential memory leak."
+          runbook_url: "https://wiki.internal/runbooks/platform-api/memory"
+
+      - alert: SlowEndpointDetected
+        expr: |
+          histogram_quantile(0.95, sum(rate(platform_api_http_request_duration_seconds_bucket[10m])) by (le, path)) 
+          > 1.0
+        for: 5m
+        labels:
+          severity: info
+          component: performance
+        annotations:
+          summary: "Slow endpoint detected: {{ $labels.path }}"
+          description: "Endpoint {{ $labels.path }} has p95 latency of {{ $value | humanizeDuration }}. Investigate for N+1 queries or missing indexes."
+          runbook_url: "https://wiki.internal/runbooks/platform-api/slow-endpoint"
+
+      - alert: RateLimitExceeded
+        expr: |
+          sum(rate(platform_api_http_requests_total{status="429"}[5m])) 
+          / sum(rate(platform_api_http_requests_total[5m])) 
+          > 0.01
+        for: 5m
+        labels:
+          severity: info
+          component: rate-limit
+        annotations:
+          summary: "Rate limiting is active"
+          description: "{{ $value | humanizePercentage }} of requests are being rate limited (429). Consider increasing limits or investigating abusive clients."
+          runbook_url: "https://wiki.internal/runbooks/platform-api/rate-limit"

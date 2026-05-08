@@ -33,4 +33,21 @@ dev = [
 ]
 
 [tool.setuptools]
-packages = ["ai_data_science_team"]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["ai_data_science_team*", "plugins*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v"
+markers = [
+    "integration: end-to-end tests that call the real LLM API (requires OPENAI_API_KEY)",
+    "e2e: full pipeline tests using real platform agents and real CSV data (requires OPENAI_API_KEY)",
+    "m21: tests scoped to Milestone 21 (ChatWorkspace)",
+    "m22: tests scoped to Milestone 22 (orchestration primitives)",
+    "m23: tests scoped to Milestone 23 agents",
+    "m24: tests scoped to Milestone 24 agents",
+    "m25: tests scoped to Milestone 25 agents",
+]

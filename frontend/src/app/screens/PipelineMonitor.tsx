@@ -2,10 +2,12 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { Activity, Send, Radio, RefreshCw, WifiOff, Wifi } from "lucide-react";
 import { AppShell } from "../components/layout/AppShell";
+import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
 import { AsyncState } from "../components/ui/async-state";
 import { useAuth } from "../context/AuthContext";
 import { getRuns, type Run } from "../api/runs";
+import { getWorkflows, type WorkflowSpec } from "../api/workflows";
 import { buildRunLogsStreamUrl } from "../api/logs";
 import {
   buildSignalStreamUrl,
@@ -15,6 +17,12 @@ import {
   type SignalStreamEvent,
 } from "../api/signals";
 import { useEventSource } from "../hooks/useEventSource";
+import { useToast } from "../hooks/useToast";
+import {
+  getWorkflowValidationLabel,
+  getWorkflowValidationVariant,
+  resolveWorkflowValidationForFlowKey,
+} from "../utils/workflowValidation";
 
 const SIGNAL_TYPES: Array<SignalDto["signal_type"]> = ["pause", "resume", "skip", "modify", "annotate", "cancel"];
 
@@ -37,8 +45,10 @@ export default function PipelineMonitor() {
   const navigate = useNavigate();
   const { runId: routeRunId } = useParams();
   const { workspaceId } = useAuth();
+  const toast = useToast();
 
   const [runs, setRuns] = useState<Run[]>([]);
+  const [workflows, setWorkflows] = useState<WorkflowSpec[]>([]);
   const [loadingRuns, setLoadingRuns] = useState(false);
   const [runsError, setRunsError] = useState<string | null>(null);
   const [selectedRunId, setSelectedRunId] = useState<string | null>(routeRunId ?? null);
@@ -50,6 +60,10 @@ export default function PipelineMonitor() {
   const [signalHistory, setSignalHistory] = useState<SignalDto[]>([]);
 
   const selectedRun = runs.find((run) => run.id === selectedRunId) ?? null;
+  const selectedRunWorkflowValidation = useMemo(
+    () => resolveWorkflowValidationForFlowKey(workflows, selectedRun?.flow_key),
+    [workflows, selectedRun?.flow_key],
+  );
 
   const logsUrl = useMemo(() => {
     if (!workspaceId || !selectedRunId) return null;
@@ -90,9 +104,17 @@ export default function PipelineMonitor() {
         setSelectedRunId((current) => current ?? res.items[0]?.id ?? null);
       })
       .catch((err: unknown) => {
-        setRunsError(err instanceof Error ? err.message : "Failed to load runs");
+        const message = err instanceof Error ? err.message : "Failed to load runs";
+        setRunsError(message);
+        toast.error("Run list failed", message);
       })
       .finally(() => setLoadingRuns(false));
+    getWorkflows({ workspace_id: workspaceId })
+      .then((res) => setWorkflows(res.items))
+      .catch((err: unknown) => {
+        console.error("Failed to load workflows:", err);
+        setWorkflows([]);
+      });
   }, [workspaceId]);
 
   useEffect(() => {
@@ -141,6 +163,10 @@ export default function PipelineMonitor() {
       setSignalHistory((prev) => [...prev, created]);
       setNote("");
       setTargetStep("");
+      toast.success("Signal sent", `Signal ${created.signal_type} was emitted successfully.`);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to emit signal";
+      toast.error("Signal failed", message);
     } finally {
       setSubmittingSignal(false);
     }
@@ -195,6 +221,12 @@ export default function PipelineMonitor() {
                 void getRuns(workspaceId)
                   .then((res) => setRuns(res.items))
                   .finally(() => setLoadingRuns(false));
+                void getWorkflows({ workspace_id: workspaceId })
+                  .then((res) => setWorkflows(res.items))
+                  .catch((err: unknown) => {
+                    console.error("Failed to refresh workflows:", err);
+                    setWorkflows([]);
+                  });
               }}
             >
               Refresh
@@ -210,7 +242,9 @@ export default function PipelineMonitor() {
             className="py-5"
           >
             <div className="space-y-1">
-              {runs.map((run) => (
+              {runs.map((run) => {
+                const workflowValidation = resolveWorkflowValidationForFlowKey(workflows, run.flow_key);
+                return (
                 <button
                   key={run.id}
                   type="button"
@@ -224,10 +258,18 @@ export default function PipelineMonitor() {
                       : "border-transparent hover:border-slate-200 hover:bg-slate-50"
                   }`}
                 >
-                  <p className="truncate text-sm font-medium text-slate-700">{run.flow_key}</p>
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="truncate text-sm font-medium text-slate-700">{run.flow_key}</p>
+                    {workflowValidation ? (
+                      <Badge variant={getWorkflowValidationVariant(workflowValidation.status)} size="sm">
+                        {getWorkflowValidationLabel(workflowValidation.status)}
+                      </Badge>
+                    ) : null}
+                  </div>
                   <p className="truncate text-xs text-slate-400">{run.id}</p>
                 </button>
-              ))}
+                );
+              })}
             </div>
           </AsyncState>
         </aside>
@@ -240,6 +282,11 @@ export default function PipelineMonitor() {
                 <p className="text-xs text-slate-400">{selectedRun?.id ?? "Select a run"}</p>
               </div>
               <div className="flex items-center gap-3">
+                {selectedRunWorkflowValidation ? (
+                  <Badge variant={getWorkflowValidationVariant(selectedRunWorkflowValidation.status)} size="sm">
+                    {getWorkflowValidationLabel(selectedRunWorkflowValidation.status)}
+                  </Badge>
+                ) : null}
                 <span className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs ${connectionStatus.color}`}>
                   {connectionStatus.icon}
                   {connectionStatus.label}

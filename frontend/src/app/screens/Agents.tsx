@@ -1,9 +1,9 @@
-import React from "react";
 import { AppShell } from "../components/layout/AppShell";
 import { Badge } from "../components/ui/badge";
-import { agents } from "../data/agents";
-import { cn } from "../lib/utils";
-import { CheckCircle2, AlertTriangle, AlertCircle, Bot } from "lucide-react";
+import { AsyncState } from "../components/ui/async-state";
+import { useAuth } from "../context/AuthContext";
+import { useAgentCatalog } from "../hooks/useDiscovery";
+import { Bot } from "lucide-react";
 
 const agentTypeColors: Record<string, string> = {
   iac: "#f97316",
@@ -16,19 +16,48 @@ const agentTypeColors: Record<string, string> = {
   control: "#64748b",
 };
 
-const healthIcon = {
-  healthy: <CheckCircle2 size={14} className="text-emerald-500" />,
-  degraded: <AlertTriangle size={14} className="text-amber-500" />,
-  offline: <AlertCircle size={14} className="text-red-500" />,
-};
-
 const healthVariant: Record<string, "success" | "warning" | "danger"> = {
   healthy: "success",
   degraded: "warning",
   offline: "danger",
 };
 
+type AgentType = keyof typeof agentTypeColors;
+
+function mapCategoryToType(category?: string): AgentType {
+  switch (category) {
+    case "eda":
+      return "eda";
+    case "machine_learning":
+      return "ml";
+    case "human_in_the_loop":
+      return "hitl";
+    case "strategy":
+      return "strategic";
+    case "orchestration":
+      return "control";
+    case "infrastructure":
+      return "iac";
+    case "ci_cd":
+      return "cicd";
+    default:
+      return "control";
+  }
+}
+
 export default function Agents() {
+  const { workspaceId } = useAuth();
+  const agentsQuery = useAgentCatalog(workspaceId);
+  const agents = (agentsQuery.data?.results ?? []).map((agent, index) => ({
+    id: `${agent.name}-${index}`,
+    name: agent.name,
+    type: mapCategoryToType(agent.category),
+    status:
+      agent.status === "degraded" || agent.status === "offline"
+        ? agent.status
+        : "healthy",
+    description: agent.description,
+  }));
   const healthy = agents.filter((a) => a.status === "healthy").length;
   const total = agents.length;
 
@@ -46,33 +75,44 @@ export default function Agents() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-          {agents.map((agent) => (
-            <div
-              key={agent.id}
-              className="bg-white dark:bg-slate-900 rounded-[8px] border border-slate-200 dark:border-slate-700 shadow-sm p-5 hover:shadow-md transition-shadow"
-              style={{ borderLeftColor: agentTypeColors[agent.type], borderLeftWidth: 3 }}
-            >
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex items-center gap-2.5">
-                  <div className="size-9 rounded-[6px] flex items-center justify-center" style={{ backgroundColor: agentTypeColors[agent.type] + "20" }}>
-                    <Bot size={18} style={{ color: agentTypeColors[agent.type] }} />
+        <AsyncState
+          isLoading={agentsQuery.isLoading}
+          error={agentsQuery.error instanceof Error ? agentsQuery.error.message : null}
+          isEmpty={!agentsQuery.isLoading && agents.length === 0}
+          emptyTitle="No agents discovered"
+          emptyDescription="Agent discovery is available, but no registered agents were returned for this workspace."
+          onRetry={() => {
+            void agentsQuery.refetch();
+          }}
+        >
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {agents.map((agent) => (
+              <div
+                key={agent.id}
+                className="rounded-[8px] border border-slate-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-md dark:border-slate-700 dark:bg-slate-900"
+                style={{ borderLeftColor: agentTypeColors[agent.type], borderLeftWidth: 3 }}
+              >
+                <div className="mb-3 flex items-start justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="flex size-9 items-center justify-center rounded-[6px]" style={{ backgroundColor: agentTypeColors[agent.type] + "20" }}>
+                      <Bot size={18} style={{ color: agentTypeColors[agent.type] }} />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">{agent.name}</p>
+                      <p className="text-[10px] font-medium uppercase tracking-wide" style={{ color: agentTypeColors[agent.type] }}>
+                        {agent.type}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">{agent.name}</p>
-                    <p className="text-[10px] font-medium uppercase tracking-wide" style={{ color: agentTypeColors[agent.type] }}>
-                      {agent.type}
-                    </p>
-                  </div>
+                  <Badge variant={healthVariant[agent.status]} size="sm" dot>
+                    {agent.status.charAt(0).toUpperCase() + agent.status.slice(1)}
+                  </Badge>
                 </div>
-                <Badge variant={healthVariant[agent.status]} size="sm" dot>
-                  {agent.status.charAt(0).toUpperCase() + agent.status.slice(1)}
-                </Badge>
+                <p className="text-xs text-slate-500 dark:text-slate-400">{agent.description}</p>
               </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400">{agent.description}</p>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        </AsyncState>
       </div>
     </AppShell>
   );

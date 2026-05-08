@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
 import { BrowserRouter } from "react-router";
 import Login from "../screens/Login";
 
@@ -123,7 +123,9 @@ describe("Login", () => {
 
     const submitButton = screen.getByRole("button", { name: /sign in|login|submit/i });
     if (submitButton) {
-      fireEvent.click(submitButton);
+      await act(async () => {
+        fireEvent.click(submitButton);
+      });
     }
   });
 
@@ -193,6 +195,8 @@ describe("Login", () => {
 
     const googleButton = screen.getByRole("button", { name: /continue with google/i });
     expect(googleButton).toBeInTheDocument();
-    fireEvent.click(googleButton);
+    await act(async () => {
+      fireEvent.click(googleButton);
+    });
   });
 });

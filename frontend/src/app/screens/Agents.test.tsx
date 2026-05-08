@@ -17,10 +17,22 @@ vi.mock("../context/AuthContext", () => ({
   }),
 }));
 
-vi.mock("../data/agents", () => ({
-  agents: [
-    { id: "agent-1", name: "Test Agent", type: "ml", status: "healthy", description: "Test description" },
-  ],
+vi.mock("../hooks/useDiscovery", () => ({
+  useAgentCatalog: () => ({
+    data: {
+      results: [
+        {
+          name: "Test Agent",
+          category: "machine_learning",
+          status: "healthy",
+          description: "Test description",
+        },
+      ],
+    },
+    isLoading: false,
+    error: null,
+    refetch: vi.fn(),
+  }),
 }));
 
 vi.mock("../lib/utils", () => ({

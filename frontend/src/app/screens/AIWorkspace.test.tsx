@@ -18,6 +18,18 @@ vi.mock("../context/AuthContext", () => ({
   }),
 }));
 
+vi.mock("../hooks/useWorkflowChainRules", () => ({
+  useWorkflowChainRules: () => ({
+    data: {
+      ruleset: {
+        version: "1.0.0",
+        agents: [],
+        requirements: {},
+      },
+    },
+  }),
+}));
+
 vi.mock("../api/chat", () => ({
   createChatSession: vi.fn().mockResolvedValue({ id: "session-1", title: "New chat" }),
   listChatSessions: vi.fn().mockResolvedValue({ items: [{ id: "session-1", title: "Test Chat" }] }),
@@ -29,11 +41,10 @@ vi.mock("../api/chat", () => ({
 
 import AIWorkspace from "../screens/AIWorkspace";
 
-const queryClient = new QueryClient({
-  defaultOptions: { queries: { retry: false } },
-});
-
 function renderWithProviders() {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
   return render(
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>

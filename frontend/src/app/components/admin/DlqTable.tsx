@@ -1,10 +1,9 @@
-import React, { useState } from "react";
-import { RefreshCw, Play, AlertCircle, CheckCircle2 } from "lucide-react";
+import { useState } from "react";
+import { RefreshCw, Play, AlertCircle } from "lucide-react";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { AsyncState } from "../ui/async-state";
 import type { DlqEvent } from "../../api/admin";
-import { cn } from "../../lib/utils";
 
 interface DlqTableProps {
   events: DlqEvent[];
@@ -12,12 +11,6 @@ interface DlqTableProps {
   error: string | null;
   onRefresh: () => void;
   onReplay: (eventId: string) => Promise<void>;
-}
-
-function formatBytes(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
 function formatTimeAgo(dateString: string): string {

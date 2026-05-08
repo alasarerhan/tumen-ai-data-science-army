@@ -22,7 +22,25 @@ vi.mock("../context/AuthContext", () => ({
 
 vi.mock("../hooks/useWorkflows", () => ({
   useWorkflows: vi.fn().mockReturnValue({
-    data: { items: [{ id: "wf-1", name: "Test Workflow", status: "published" }] },
+    data: {
+      items: [
+        {
+          id: "wf-1",
+          name: "Test Workflow",
+          status: "published",
+          spec: { description: "Test description" },
+          validation_summary: {
+            status: "safe",
+            error_count: 0,
+            warning_count: 0,
+            errors: [],
+            warnings: [],
+          },
+          version: 1,
+          updated_at: new Date().toISOString(),
+        },
+      ],
+    },
     isLoading: false,
     error: null,
     refetch: vi.fn(),

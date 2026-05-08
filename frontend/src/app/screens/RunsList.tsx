@@ -14,14 +14,20 @@ import {
   XCircle,
 } from "lucide-react";
 import { AppShell } from "../components/layout/AppShell";
-import { RunStatusBadge } from "../components/ui/badge";
+import { Badge, RunStatusBadge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
 import { AsyncTableState } from "../components/ui/async-table-state";
 import { useAuth } from "../context/AuthContext";
 import { useRuns, useTriggerRun, useRetryRun, useCancelRun } from "../hooks/useRuns";
+import { useWorkflows } from "../hooks/useWorkflows";
 import { type Run, type RunStatus } from "../api/runs";
 import { formatDuration, formatRelativeTime } from "../utils/time";
 import { cn } from "../lib/utils";
+import {
+  getWorkflowValidationLabel,
+  getWorkflowValidationVariant,
+  resolveWorkflowValidationForFlowKey,
+} from "../utils/workflowValidation";
 
 const STATUS_OPTIONS: { value: RunStatus | "all"; label: string }[] = [
   { value: "all", label: "All Statuses" },
@@ -41,11 +47,13 @@ export default function RunsList() {
   const [openMenu, setOpenMenu] = useState<string | null>(null);
 
   const { data: runsData, isLoading: loadingRuns, error: runsError, refetch: fetchRuns } = useRuns(workspaceId);
+  const { data: workflowsData } = useWorkflows(workspaceId);
   const triggerMutation = useTriggerRun();
   const retryMutation = useRetryRun(workspaceId);
   const cancelMutation = useCancelRun(workspaceId);
 
   const runs = runsData?.items ?? [];
+  const workflows = workflowsData?.items ?? [];
 
   const handleTriggerRun = async () => {
     if (!workspaceId) return;
@@ -207,7 +215,9 @@ export default function RunsList() {
                   emptyDescription="Adjust filters or trigger a new run."
                   onRetry={() => fetchRuns()}
                 >
-                  {filtered.map((run) => (
+                  {filtered.map((run) => {
+                    const workflowValidation = resolveWorkflowValidationForFlowKey(workflows, run.flow_key);
+                    return (
                     <tr
                       key={run.id}
                       className={cn(
@@ -245,7 +255,14 @@ export default function RunsList() {
                         </div>
                       </td>
                       <td className="px-3 py-3">
-                        <p className="max-w-[180px] truncate font-medium text-slate-800 dark:text-slate-200">{run.flow_key || "--"}</p>
+                        <div className="space-y-1">
+                          <p className="max-w-[180px] truncate font-medium text-slate-800 dark:text-slate-200">{run.flow_key || "--"}</p>
+                          {workflowValidation ? (
+                            <Badge variant={getWorkflowValidationVariant(workflowValidation.status)} size="sm">
+                              {getWorkflowValidationLabel(workflowValidation.status)}
+                            </Badge>
+                          ) : null}
+                        </div>
                       </td>
                       <td className="px-3 py-3">
                         <span className="text-xs text-slate-400">--</span>
@@ -292,7 +309,8 @@ export default function RunsList() {
                         </div>
                       </td>
                     </tr>
-                  ))}
+                    );
+                  })}
                 </AsyncTableState>
               </tbody>
             </table>

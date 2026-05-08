@@ -4,8 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider } from "./context/AuthContext";
 import { router } from "./routes";
 import { ErrorBoundary } from "./components/ErrorBoundary";
-import { Toaster } from "./components/ui/sonner";
-import { TooltipProvider } from "./components/ui/tooltip";
+import { ToastProvider } from "./components/ui/Toast";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -20,12 +19,11 @@ export default function App() {
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <TooltipProvider>
+        <ToastProvider>
+          <AuthProvider>
             <RouterProvider router={router} />
-            <Toaster position="top-right" richColors closeButton />
-          </TooltipProvider>
-        </AuthProvider>
+          </AuthProvider>
+        </ToastProvider>
       </QueryClientProvider>
     </ErrorBoundary>
   );

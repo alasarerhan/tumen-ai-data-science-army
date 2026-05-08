@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router";
 import { AppShell } from "../components/layout/AppShell";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
 import { useAuth } from "../context/AuthContext";
-import { getHitlItem, approveHitl, rejectHitl, type HitlApproval } from "../api/hitl";
-import { Pause, ChevronDown, ChevronRight, Copy, AlertTriangle, CheckCircle2, XCircle, Clock } from "lucide-react";
+import { getHitlItem, approveHitl, rejectHitl } from "../api/hitl";
+import { Pause, ChevronDown, ChevronRight, Copy, CheckCircle2, XCircle, Clock } from "lucide-react";
 
 const CODE_SAMPLE = `# Recommended Actions — NarrativeAgent v2.1.0
 # Run: run_9a3f2b1c · Q4 Sales Pipeline Analysis
@@ -34,7 +34,6 @@ export default function HITLApproval() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { workspaceId } = useAuth();
-  const [hitl, setHitl] = useState<HitlApproval | null>(null);
   const [showCode, setShowCode] = useState(false);
   const [modification, setModification] = useState("");
   const [confirmApprove, setConfirmApprove] = useState(false);
@@ -43,7 +42,7 @@ export default function HITLApproval() {
 
   useEffect(() => {
     if (!id || !workspaceId) return;
-    getHitlItem(id, workspaceId).then(setHitl).catch((err: unknown) => {
+    getHitlItem(id, workspaceId).catch((err: unknown) => {
       console.error("Failed to load HITL item:", err);
       return null;
     });

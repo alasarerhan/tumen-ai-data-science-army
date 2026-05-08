@@ -1,4 +1,5 @@
-import React, { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback } from "react";
+import { useNavigate } from "react-router";
 import { RefreshCw, Settings, Activity, Trash2 } from "lucide-react";
 import { AppShell } from "../components/layout/AppShell";
 import { Button } from "../components/ui/button";
@@ -12,6 +13,7 @@ import {
   getSchedulerStatus,
   getMemoryStats,
   replayDlqEvent,
+  runArtifactCleanup,
   type DlqEvent,
   type QueueStats,
   type SchedulerStatus,
@@ -19,32 +21,26 @@ import {
 } from "../api/admin";
 
 export default function AdminDashboard() {
+  const navigate = useNavigate();
   const [queueStats, setQueueStats] = useState<QueueStats | null>(null);
   const [dlqEvents, setDlqEvents] = useState<DlqEvent[]>([]);
   const [schedulerStatus, setSchedulerStatus] = useState<SchedulerStatus | null>(null);
   const [memoryStats, setMemoryStats] = useState<MemoryStats | null>(null);
 
-  const [loadingQueue, setLoadingQueue] = useState(false);
   const [loadingDlq, setLoadingDlq] = useState(false);
   const [loadingScheduler, setLoadingScheduler] = useState(false);
   const [loadingMemory, setLoadingMemory] = useState(false);
+  const [runningCleanup, setRunningCleanup] = useState(false);
 
-  const [queueError, setQueueError] = useState<string | null>(null);
   const [dlqError, setDlqError] = useState<string | null>(null);
   const [schedulerError, setSchedulerError] = useState<string | null>(null);
-  const [memoryError, setMemoryError] = useState<string | null>(null);
+  const [actionNotice, setActionNotice] = useState<string | null>(null);
 
   const fetchQueueStats = useCallback(async () => {
-    setLoadingQueue(true);
-    setQueueError(null);
     try {
       const stats = await getQueueStats();
       setQueueStats(stats);
-    } catch (err: unknown) {
-      setQueueError(err instanceof Error ? err.message : "Failed to fetch queue stats");
-    } finally {
-      setLoadingQueue(false);
-    }
+    } catch {}
   }, []);
 
   const fetchDlqEvents = useCallback(async () => {
@@ -67,6 +63,7 @@ export default function AdminDashboard() {
       const status = await getSchedulerStatus();
       setSchedulerStatus(status);
     } catch (err: unknown) {
+      setSchedulerStatus(null);
       setSchedulerError(err instanceof Error ? err.message : "Failed to fetch scheduler status");
     } finally {
       setLoadingScheduler(false);
@@ -75,12 +72,11 @@ export default function AdminDashboard() {
 
   const fetchMemoryStats = useCallback(async () => {
     setLoadingMemory(true);
-    setMemoryError(null);
     try {
       const stats = await getMemoryStats();
       setMemoryStats(stats);
-    } catch (err: unknown) {
-      setMemoryError(err instanceof Error ? err.message : "Failed to fetch memory stats");
+    } catch {
+      setMemoryStats(null);
     } finally {
       setLoadingMemory(false);
     }
@@ -88,6 +84,23 @@ export default function AdminDashboard() {
 
   const handleReplayDlqEvent = async (eventId: string) => {
     await replayDlqEvent(eventId);
+  };
+
+  const handleCleanupPreview = async () => {
+    setRunningCleanup(true);
+    setActionNotice(null);
+    try {
+      const result = await runArtifactCleanup(true);
+      setActionNotice(
+        result.artifacts_deleted > 0 || result.files_deleted > 0
+          ? `Cleanup preview: ${result.artifacts_deleted} artifact records and ${result.files_deleted} files are eligible for deletion.`
+          : "Cleanup preview: no expired artifacts are currently eligible for deletion.",
+      );
+    } catch (err: unknown) {
+      setActionNotice(err instanceof Error ? err.message : "Failed to preview artifact cleanup");
+    } finally {
+      setRunningCleanup(false);
+    }
   };
 
   const refreshAll = () => {
@@ -133,11 +146,18 @@ export default function AdminDashboard() {
               variant="ghost"
               size="sm"
               leadingIcon={<Settings size={14} />}
+              onClick={() => navigate("/settings")}
             >
               Settings
             </Button>
           </div>
         </div>
+
+        {actionNotice ? (
+          <div className="rounded-lg border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-900">
+            {actionNotice}
+          </div>
+        ) : null}
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <QueueMetricsCard
@@ -162,14 +182,19 @@ export default function AdminDashboard() {
                 size="sm"
                 fullWidth
                 leadingIcon={<Trash2 size={12} />}
+                loading={runningCleanup}
+                onClick={() => {
+                  void handleCleanupPreview();
+                }}
               >
-                Run Cleanup
+                Preview Cleanup
               </Button>
               <Button
                 variant="secondary"
                 size="sm"
                 fullWidth
                 leadingIcon={<Activity size={12} />}
+                onClick={() => navigate("/runs")}
               >
                 View Metrics
               </Button>
@@ -210,8 +235,20 @@ export default function AdminDashboard() {
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-slate-500">Scheduler</span>
-                  <span className={schedulerStatus?.is_leader ? "text-emerald-600" : "text-slate-400"}>
-                    {schedulerStatus?.is_leader ? "Active" : "Standby"}
+                  <span
+                    className={
+                      schedulerStatus?.restricted
+                        ? "text-amber-600"
+                        : schedulerStatus?.is_leader
+                        ? "text-emerald-600"
+                        : "text-slate-400"
+                    }
+                  >
+                    {schedulerStatus?.restricted
+                      ? "Restricted"
+                      : schedulerStatus?.is_leader
+                      ? "Active"
+                      : "Standby"}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
@@ -222,6 +259,16 @@ export default function AdminDashboard() {
                 </div>
               </div>
             </div>
+
+            {schedulerError ? (
+              <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-xs text-red-700">
+                {schedulerError}
+              </div>
+            ) : schedulerStatus?.restricted && schedulerStatus.message ? (
+              <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-xs text-amber-800">
+                {schedulerStatus.message}
+              </div>
+            ) : null}
 
             {memoryStats?.recommendations && memoryStats.recommendations.length > 0 && (
               <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">

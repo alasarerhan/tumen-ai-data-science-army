@@ -1,7 +1,10 @@
-import React, { useState } from "react";
-import { Check, Edit, X, Play, CalendarClock, Users } from "lucide-react";
+import React, { useMemo, useState } from "react";
+import { Check, Edit, X, CalendarClock, Users } from "lucide-react";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
+import { useAuth } from "../../context/AuthContext";
+import { useWorkflowChainRules } from "../../hooks/useWorkflowChainRules";
+import { inspectWorkflowSpec } from "../../utils/workflowChainValidator";
 
 interface WorkflowStep {
   id: string;
@@ -39,8 +42,26 @@ export function WorkflowDesignMessage({
   onModify,
   onCancel,
 }: WorkflowDesignMessageProps) {
+  const { workspaceId } = useAuth();
+  const workflowChainRulesQuery = useWorkflowChainRules(workspaceId);
   const [modifyMode, setModifyMode] = useState(false);
   const [feedback, setFeedback] = useState("");
+  const validation = useMemo(
+    () =>
+      inspectWorkflowSpec({
+        name: workflowSpec.name,
+        description: workflowSpec.description,
+        steps: workflowSpec.steps.map((step) => ({
+          id: step.id,
+          agent: step.agent,
+          instruction: step.instruction,
+          depends_on: step.depends_on ?? [],
+        })),
+      }, workflowChainRulesQuery.data?.ruleset),
+    [workflowSpec, workflowChainRulesQuery.data?.ruleset],
+  );
+  const errorMessages = validation.errors.map((issue) => issue.message);
+  const warningMessages = validation.warnings.map((issue) => issue.message);
 
   const handleModifySubmit = () => {
     onModify(feedback);
@@ -66,6 +87,28 @@ export function WorkflowDesignMessage({
 
       {workflowSpec.description && (
         <p className="mb-3 text-xs text-slate-600">{workflowSpec.description}</p>
+      )}
+
+      {errorMessages.length > 0 && (
+        <div className="mb-4 rounded border border-rose-200 bg-rose-50 p-2">
+          <p className="text-xs font-medium text-rose-800">Invalid workflow chain</p>
+          {errorMessages.map((message) => (
+            <p key={message} className="mt-1 text-xs text-rose-700">
+              {message}
+            </p>
+          ))}
+        </div>
+      )}
+
+      {warningMessages.length > 0 && (
+        <div className="mb-4 rounded border border-amber-200 bg-amber-50 p-2">
+          <p className="text-xs font-medium text-amber-800">Workflow warnings</p>
+          {warningMessages.map((message) => (
+            <p key={message} className="mt-1 text-xs text-amber-700">
+              {message}
+            </p>
+          ))}
+        </div>
       )}
 
       <div className="mb-4 space-y-2">
@@ -143,6 +186,7 @@ export function WorkflowDesignMessage({
             size="sm"
             leadingIcon={<Check size={14} />}
             onClick={onApprove}
+            disabled={errorMessages.length > 0}
           >
             Approve & Run
           </Button>

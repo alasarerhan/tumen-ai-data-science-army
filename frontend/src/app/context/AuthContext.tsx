@@ -3,25 +3,22 @@ import React, {
   useCallback,
   useContext,
   useEffect,
-  useMemo,
   useRef,
   useState,
 } from "react";
-import { getCsrfToken } from "../api/client";
+import { withCsrfHeader } from "../api/client";
 import { getMe, type MeResponse } from "../api/me";
+import { reportClientError } from "../lib/error-reporting";
+import { useToast } from "../hooks/useToast";
 
 const IDLE_TIMEOUT_MS = 30 * 60 * 1000;
 const ABSOLUTE_TIMEOUT_MS = 8 * 60 * 60 * 1000;
+const ACCESS_TOKEN_REFRESH_INTERVAL_MS = 12 * 60 * 1000;
 const ACTIVITY_EVENTS = ["mousedown", "keydown", "touchstart", "scroll"];
-
-function getCookie(name: string): string | null {
-  const match = document.cookie.match(new RegExp("(^| )" + name + "=([^;]+)"));
-  return match ? match[2] : null;
-}
-
-function deleteCookie(name: string): void {
-  document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
-}
+const SESSION_TOKEN = "cookie-session";
+const SESSION_STARTED_AT_KEY = "auth_session_started_at";
+const LOGIN_SESSION_RETRY_ATTEMPTS = 5;
+const LOGIN_SESSION_RETRY_DELAY_MS = 200;
 
 /** Shape returned by useAuth() */
 export interface AuthContextValue {
@@ -36,40 +33,59 @@ export interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
+async function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [token, setToken] = useState<string | null>(
-    () => getCookie("access_token"),
-  );
+  const toast = useToast();
+  const [token, setToken] = useState<string | null>(null);
   const [user, setUser] = useState<MeResponse | null>(null);
   const [workspaceId, _setWorkspaceId] = useState<string | null>(
     () => localStorage.getItem("workspace_id"),
   );
-  const [isLoading, setIsLoading] = useState<boolean>(Boolean(token));
-  const loginTimeRef = useRef<number | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const idleTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const absoluteTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const clearSessionTimers = useCallback(() => {
+    if (idleTimeoutRef.current) clearTimeout(idleTimeoutRef.current);
+    if (absoluteTimeoutRef.current) clearTimeout(absoluteTimeoutRef.current);
+    idleTimeoutRef.current = null;
+    absoluteTimeoutRef.current = null;
+  }, []);
+
+  const ensureSessionStartedAt = useCallback((): number => {
+    const rawValue = sessionStorage.getItem(SESSION_STARTED_AT_KEY);
+    const parsed = rawValue ? Number(rawValue) : Number.NaN;
+    if (Number.isFinite(parsed) && parsed > 0) {
+      return parsed;
+    }
+    const now = Date.now();
+    sessionStorage.setItem(SESSION_STARTED_AT_KEY, String(now));
+    return now;
+  }, []);
+
   const logout = useCallback(() => {
-    deleteCookie("access_token");
     localStorage.removeItem("workspace_id");
+    sessionStorage.removeItem(SESSION_STARTED_AT_KEY);
     setToken(null);
     setUser(null);
     _setWorkspaceId(null);
-    if (idleTimeoutRef.current) clearTimeout(idleTimeoutRef.current);
-    if (absoluteTimeoutRef.current) clearTimeout(absoluteTimeoutRef.current);
+    clearSessionTimers();
     void (async () => {
       try {
-        const csrf = await getCsrfToken();
+        const headers = await withCsrfHeader();
         await fetch("/v1/auth/logout", {
           method: "POST",
           credentials: "include",
-          headers: { "X-CSRF-Token": csrf },
+          headers,
         });
       } catch {
         // best effort logout
       }
     })();
-  }, []);
+  }, [clearSessionTimers]);
 
   const resetIdleTimeout = useCallback(() => {
     if (idleTimeoutRef.current) {
@@ -77,14 +93,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       idleTimeoutRef.current = null;
     }
     if (!token) return;
-    const currentToken = token;
     idleTimeoutRef.current = setTimeout(() => {
-      if (currentToken === token) {
-        console.log("Session expired due to inactivity");
-        logout();
-      }
+      toast.warning("Session ended", "You were signed out after 30 minutes of inactivity.");
+      logout();
     }, IDLE_TIMEOUT_MS);
-  }, [token, logout]);
+  }, [token, logout, toast]);
 
   const setAbsoluteTimeout = useCallback(() => {
     if (absoluteTimeoutRef.current) {
@@ -92,14 +105,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       absoluteTimeoutRef.current = null;
     }
     if (!token) return;
-    const currentToken = token;
+    const elapsedMs = Date.now() - ensureSessionStartedAt();
+    const remainingMs = ABSOLUTE_TIMEOUT_MS - elapsedMs;
+    if (remainingMs <= 0) {
+      toast.warning("Session ended", "The maximum session duration has been reached.");
+      logout();
+      return;
+    }
     absoluteTimeoutRef.current = setTimeout(() => {
-      if (currentToken === token) {
-        console.log("Session expired due to absolute timeout");
-        logout();
-      }
-    }, ABSOLUTE_TIMEOUT_MS);
-  }, [token, logout]);
+      toast.warning("Session ended", "The maximum session duration has been reached.");
+      logout();
+    }, remainingMs);
+  }, [ensureSessionStartedAt, token, logout, toast]);
 
   useEffect(() => {
     if (!token) return;
@@ -118,28 +135,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [token, resetIdleTimeout, setAbsoluteTimeout]);
 
   /** Fetch /v1/me and populate user state */
-  const fetchMe = useCallback(async (tok: string): Promise<boolean> => {
-    if (tok === "dev") {
-      const stubMe: MeResponse = {
-        id: "dev-user",
-        sub: "dev",
-        email: "dev@localhost",
-        tenant_memberships: [{ tenant_id: "t-dev", role: "admin" }],
-        workspace_memberships: [{ workspace_id: "ws-dev", role: "admin" }],
-        claims: {},
-      };
-      setUser(stubMe);
-      const wid = stubMe.workspace_memberships[0].workspace_id;
-      if (!localStorage.getItem("workspace_id")) {
-        localStorage.setItem("workspace_id", wid);
-        _setWorkspaceId(wid);
-      }
-      return true;
-    }
-
+  const fetchMe = useCallback(async (): Promise<boolean> => {
     try {
       const me = await getMe();
       setUser(me);
+      setToken(SESSION_TOKEN);
+      ensureSessionStartedAt();
       if (!localStorage.getItem("workspace_id") && me.workspace_memberships.length > 0) {
         const wid = me.workspace_memberships[0].workspace_id;
         localStorage.setItem("workspace_id", wid);
@@ -147,64 +148,102 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       return true;
     } catch {
-      deleteCookie("access_token");
       localStorage.removeItem("workspace_id");
+      sessionStorage.removeItem(SESSION_STARTED_AT_KEY);
       setToken(null);
       setUser(null);
       _setWorkspaceId(null);
       return false;
     }
+  }, [ensureSessionStartedAt]);
+
+  const refreshSession = useCallback(async () => {
+    const headers = await withCsrfHeader();
+    const response = await fetch("/v1/auth/refresh", {
+      method: "POST",
+      credentials: "include",
+      headers,
+    });
+    if (!response.ok) {
+      throw new Error(`Session refresh failed with status ${response.status}`);
+    }
   }, []);
 
   useEffect(() => {
-    if (token) {
-      setIsLoading(true);
-      fetchMe(token).finally(() => setIsLoading(false));
-    }
-  }, []);
+    setIsLoading(true);
+    fetchMe().finally(() => setIsLoading(false));
+  }, [fetchMe]);
 
   const login = useCallback(async (newToken: string) => {
-    if (import.meta.env.DEV && newToken === "dev") {
-      const response = await fetch("/v1/auth/login/dev", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ token: newToken }),
-      });
-      if (!response.ok) {
-        throw new Error("Authentication failed. Check your token.");
+    if (!import.meta.env.DEV) {
+      throw new Error("Interactive login must be handled by the configured SSO redirect.");
+    }
+    const response = await fetch("/v1/auth/login/dev", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ token: newToken }),
+    });
+    if (!response.ok) {
+      throw new Error("Authentication failed. Check your token.");
+    }
+    setIsLoading(true);
+    sessionStorage.setItem(SESSION_STARTED_AT_KEY, String(Date.now()));
+    let ok = false;
+    for (let attempt = 0; attempt < LOGIN_SESSION_RETRY_ATTEMPTS; attempt += 1) {
+      ok = await fetchMe();
+      if (ok) {
+        break;
       }
-      setToken(newToken);
-      setIsLoading(true);
-      loginTimeRef.current = Date.now();
-      const ok = await fetchMe(newToken);
-      setIsLoading(false);
-      if (!ok) {
-        throw new Error("Authentication failed. Check your token.");
-      }
-    } else {
-      setToken(newToken);
-      setIsLoading(true);
-      loginTimeRef.current = Date.now();
-      const ok = await fetchMe(newToken);
-      setIsLoading(false);
-      if (!ok) {
-        throw new Error("Authentication failed. Check your token.");
+      if (attempt < LOGIN_SESSION_RETRY_ATTEMPTS - 1) {
+        await sleep(LOGIN_SESSION_RETRY_DELAY_MS);
       }
     }
+    setIsLoading(false);
+    if (!ok) {
+      throw new Error("Authentication failed. Check your token.");
+    }
   }, [fetchMe]);
+
+  useEffect(() => {
+    if (!token) return undefined;
+
+    const refreshInterval = window.setInterval(() => {
+      void refreshSession().catch((error: unknown) => {
+        const message = error instanceof Error ? error.message : "Session refresh failed";
+        const shouldLogout = /status 401/.test(message);
+
+        void reportClientError(error, {
+          source: "auth",
+          route: window.location.pathname,
+          context: { phase: "silent_refresh" },
+        });
+
+        if (shouldLogout) {
+          toast.warning("Session expired", "Please sign in again to continue.");
+          logout();
+          return;
+        }
+
+        toast.warning("Session refresh delayed", "The app will retry in the background.");
+      });
+    }, ACCESS_TOKEN_REFRESH_INTERVAL_MS);
+
+    return () => {
+      window.clearInterval(refreshInterval);
+    };
+  }, [logout, refreshSession, toast, token]);
 
   const setWorkspaceId = useCallback((id: string) => {
     localStorage.setItem("workspace_id", id);
     _setWorkspaceId(id);
   }, []);
 
-  const value = useMemo<AuthContextValue>(
-    () => ({ token, user, workspaceId, isLoading, login, logout, setWorkspaceId }),
-    [token, user, workspaceId, isLoading, login, logout, setWorkspaceId],
+  return (
+    <AuthContext.Provider value={{ token, user, workspaceId, isLoading, login, logout, setWorkspaceId }}>
+      {children}
+    </AuthContext.Provider>
   );
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth(): AuthContextValue {

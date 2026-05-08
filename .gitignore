@@ -167,6 +167,7 @@ mlflow_artifacts/
 .chat_test_uploads/
 .ruff_cache/
 _avast_/
+.tmp_tools/
 apps/platform-api-app/_write_strategy.py
 apps/platform-api-app/bandit/
 apps/platform-api-app/pip_audit/

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import Editor from "@monaco-editor/react";
 import cronstrue from "cronstrue";
@@ -18,8 +18,7 @@ import ReactFlow, {
 import "reactflow/dist/style.css";
 import { Play, Save, Upload, FileCode2, CalendarClock, WandSparkles, Loader2 } from "lucide-react";
 import { Button } from "../components/ui/button";
-import { getCsrfToken } from "../api/client";
-import { Badge } from "../components/ui/badge";
+import { withCsrfHeader } from "../api/client";
 import { useAuth } from "../context/AuthContext";
 import { createWorkflow, publishWorkflow } from "../api/workflows";
 import { triggerRun } from "../api/runs";
@@ -30,10 +29,12 @@ import {
   resumeScheduledDeployment,
   type ScheduledDeployment,
 } from "../api/scheduler";
-import { ScheduleBadge, formatNextRun } from "../components/workflow/ScheduleBadge";
+import { ScheduleBadge } from "../components/workflow/ScheduleBadge";
 import { NaturalScheduleInput } from "../components/workflow/NaturalScheduleInput";
+import { useToast } from "../hooks/useToast";
 import {
   flowToSpec,
+  inspectWorkflowGraphSpec,
   isValidCronExpression,
   specToFlow,
   specToYaml,
@@ -41,14 +42,19 @@ import {
   type WorkflowSpecDocument,
   type WorkflowNodeData,
 } from "../utils/workflowDesigner";
+import { getWorkflowAgentCatalog } from "../utils/workflowChainValidator";
+import { useWorkflowChainRules } from "../hooks/useWorkflowChainRules";
 
-const PALETTE_NODES: Array<{ label: string; kind: string; color: string }> = [
-  { label: "Data Loader", kind: "eda", color: "#10b981" },
-  { label: "Data Cleaner", kind: "eda", color: "#10b981" },
-  { label: "Feature Engineering", kind: "ml", color: "#6366f1" },
-  { label: "Model Training", kind: "ml", color: "#6366f1" },
-  { label: "Narrative", kind: "strategic", color: "#ec4899" },
-  { label: "HITL Gate", kind: "hitl", color: "#f59e0b" },
+const PALETTE_NODE_KEYS = [
+  "DataLoaderToolsAgent",
+  "DataCleaningAgent",
+  "DataWranglingAgent",
+  "EDAToolsAgent",
+  "DataVisualizationAgent",
+  "FeatureEngineeringAgent",
+  "H2OMLAgent",
+  "NarrativeAgent",
+  "ApprovalGateAgent",
 ];
 
 const INITIAL_NODES: Node<WorkflowNodeData>[] = [
@@ -56,34 +62,45 @@ const INITIAL_NODES: Node<WorkflowNodeData>[] = [
     id: "n1",
     type: "workflowNode",
     position: { x: 80, y: 100 },
-    data: { label: "Data Loader", kind: "eda", status: "success" },
+    data: { label: "Data Loader", kind: "data", agent: "DataLoaderToolsAgent", status: "success" },
   },
   {
     id: "n2",
     type: "workflowNode",
     position: { x: 360, y: 100 },
-    data: { label: "Data Cleaner", kind: "eda", status: "running" },
+    data: { label: "Data Cleaning", kind: "data", agent: "DataCleaningAgent", status: "running" },
   },
   {
     id: "n3",
     type: "workflowNode",
     position: { x: 640, y: 100 },
-    data: { label: "Model Training", kind: "ml", status: "idle" },
+    data: { label: "Feature Engineering", kind: "ml", agent: "FeatureEngineeringAgent", status: "idle" },
+  },
+  {
+    id: "n4",
+    type: "workflowNode",
+    position: { x: 920, y: 100 },
+    data: { label: "H2O ML", kind: "ml", agent: "H2OMLAgent", status: "idle" },
   },
 ];
 
 const INITIAL_EDGES: Edge[] = [
   { id: "e1", source: "n1", target: "n2", animated: true },
   { id: "e2", source: "n2", target: "n3", animated: true },
+  { id: "e3", source: "n3", target: "n4", animated: true },
 ];
 const SAVE_STATE_RESET_MS = 1500;
 
 function WorkflowNodeCard({ data, selected }: NodeProps<WorkflowNodeData>) {
   const colorByKind: Record<string, string> = {
-    eda: "#10b981",
+    data: "#10b981",
+    analysis: "#0ea5e9",
     ml: "#6366f1",
     strategic: "#ec4899",
     hitl: "#f59e0b",
+    orchestration: "#64748b",
+    ops: "#7c3aed",
+    timeseries: "#0f766e",
   };
 
   return (
@@ -116,6 +133,9 @@ export default function WorkflowDesigner() {
   const navigate = useNavigate();
   const { id } = useParams();
   const { workspaceId } = useAuth();
+  const toast = useToast();
+  const workflowChainRulesQuery = useWorkflowChainRules(workspaceId);
+  const workflowChainRules = workflowChainRulesQuery.data?.ruleset;
 
   const [flowName, setFlowName] = useState("Sales Intelligence Workflow");
   const [description, setDescription] = useState("Analyze, model, and synthesize strategic recommendations.");
@@ -135,11 +155,14 @@ export default function WorkflowDesigner() {
 
   const [scheduleState, setScheduleState] = useState<"idle" | "scheduling" | "scheduled">("idle");
   const [schedule, setSchedule] = useState<ScheduledDeployment | null>(null);
-  const [scheduleLoading, setScheduleLoading] = useState(false);
 
   const nodeTypes = useMemo(() => ({ workflowNode: WorkflowNodeCard }), []);
+  const paletteNodes = useMemo(
+    () => getWorkflowAgentCatalog(workflowChainRules).filter((node) => PALETTE_NODE_KEYS.includes(node.key)),
+    [workflowChainRules],
+  );
 
-  const specState = useMemo<{ spec: WorkflowSpecDocument | null; error: string | null }>(() => {
+  const specState = useMemo<{ spec: WorkflowSpecDocument | null; error: string | null; warnings: string[] }>(() => {
     try {
       const spec = flowToSpec({
         name: flowName,
@@ -147,18 +170,25 @@ export default function WorkflowDesigner() {
         cron,
         nodes,
         edges,
-      });
-      return { spec, error: null };
+      }, workflowChainRules);
+      const inspection = inspectWorkflowGraphSpec(spec, workflowChainRules);
+      return {
+        spec,
+        error: null,
+        warnings: inspection.warnings.map((issue) => issue.message),
+      };
     } catch (err: unknown) {
       return {
         spec: null,
         error: err instanceof Error ? err.message : "Invalid workflow specification",
+        warnings: [],
       };
     }
-  }, [flowName, description, cron, nodes, edges]);
+  }, [flowName, description, cron, nodes, edges, workflowChainRules]);
 
   const currentSpec = specState.spec;
   const specError = specState.error;
+  const specWarnings = specState.warnings;
   const cronPreview = getCronPreview(cron);
   const isCronInvalid = !isValidCronExpression(cron);
 
@@ -169,14 +199,12 @@ export default function WorkflowDesigner() {
 
   useEffect(() => {
     if (!savedId || !workspaceId) return;
-    setScheduleLoading(true);
     getWorkflowSchedule(savedId, workspaceId)
       .then(setSchedule)
       .catch((err: unknown) => {
         console.error("Failed to load workflow schedule:", err);
         setSchedule(null);
-      })
-      .finally(() => setScheduleLoading(false));
+      });
   }, [savedId, workspaceId]);
 
   const onConnect = useCallback(
@@ -186,8 +214,8 @@ export default function WorkflowDesigner() {
     [setEdges],
   );
 
-  const onDragStart = (event: React.DragEvent<HTMLButtonElement>, label: string, kind: string) => {
-    event.dataTransfer.setData("application/workflow-node", JSON.stringify({ label, kind }));
+  const onDragStart = (event: React.DragEvent<HTMLButtonElement>, label: string, kind: string, agent: string) => {
+    event.dataTransfer.setData("application/workflow-node", JSON.stringify({ label, kind, agent }));
     event.dataTransfer.effectAllowed = "move";
   };
 
@@ -198,13 +226,13 @@ export default function WorkflowDesigner() {
     const raw = event.dataTransfer.getData("application/workflow-node");
     if (!raw) return;
 
-    let parsed: { label: string; kind: string } | null = null;
+    let parsed: { label: string; kind: string; agent: string } | null = null;
     try {
       parsed = JSON.parse(raw) as { label: string; kind: string };
     } catch {
       return;
     }
-    if (!parsed?.label || !parsed?.kind) return;
+    if (!parsed?.label || !parsed?.kind || !parsed?.agent) return;
 
     const position = reactFlowInstance.screenToFlowPosition({
       x: event.clientX,
@@ -218,6 +246,7 @@ export default function WorkflowDesigner() {
       data: {
         label: parsed.label,
         kind: parsed.kind,
+        agent: parsed.agent,
         status: "idle",
       },
     };
@@ -228,8 +257,8 @@ export default function WorkflowDesigner() {
 
   const handleApplyYaml = () => {
     try {
-      const parsed = yamlToSpec(yamlText);
-      const transformed = specToFlow(parsed);
+      const parsed = yamlToSpec(yamlText, workflowChainRules);
+      const transformed = specToFlow(parsed, workflowChainRules);
       setFlowName(transformed.name);
       setDescription(transformed.description);
       setCron(transformed.cron);
@@ -244,7 +273,7 @@ export default function WorkflowDesigner() {
 
   const handleFormatYaml = () => {
     try {
-      const parsed = yamlToSpec(yamlText);
+      const parsed = yamlToSpec(yamlText, workflowChainRules);
       setYamlText(specToYaml(parsed));
       setYamlError(null);
     } catch (err: unknown) {
@@ -266,10 +295,13 @@ export default function WorkflowDesigner() {
       });
       setSavedId(created.id);
       setSaveState("saved");
+      toast.success("Workflow saved", "Draft changes were stored successfully.");
       setTimeout(() => setSaveState("idle"), SAVE_STATE_RESET_MS);
       setYamlDirty(false);
     } catch (err: unknown) {
-      setYamlError(err instanceof Error ? err.message : "Failed to save workflow draft");
+      const message = err instanceof Error ? err.message : "Failed to save workflow draft";
+      setYamlError(message);
+      toast.error("Save failed", message);
       setSaveState("idle");
     }
   };
@@ -291,15 +323,21 @@ export default function WorkflowDesigner() {
         });
         workflowId = created.id;
         setSavedId(workflowId);
+        toast.success("Workflow published", "A new published version was created.");
       } catch (err: unknown) {
-        setYamlError(err instanceof Error ? err.message : "Failed to publish workflow");
+        const message = err instanceof Error ? err.message : "Failed to publish workflow";
+        setYamlError(message);
+        toast.error("Publish failed", message);
         return;
       }
     } else {
       try {
         await publishWorkflow(workflowId, workspaceId);
+        toast.success("Workflow published", "The existing draft is now live.");
       } catch (err: unknown) {
-        setYamlError(err instanceof Error ? err.message : "Failed to publish workflow");
+        const message = err instanceof Error ? err.message : "Failed to publish workflow";
+        setYamlError(message);
+        toast.error("Publish failed", message);
         return;
       }
     }
@@ -321,9 +359,12 @@ export default function WorkflowDesigner() {
           spec: currentSpec,
         },
       });
+      toast.success("Run started", `Run ${run.id} is now in progress.`);
       navigate(`/runs/${run.id}`);
     } catch (err: unknown) {
-      setYamlError(err instanceof Error ? err.message : "Failed to trigger workflow run");
+      const message = err instanceof Error ? err.message : "Failed to trigger workflow run";
+      setYamlError(message);
+      toast.error("Run failed to start", message);
       setRunState("idle");
     }
   };
@@ -352,27 +393,31 @@ export default function WorkflowDesigner() {
         last_run_status: null,
       });
       setScheduleState("scheduled");
+      toast.success("Schedule updated", "The workflow schedule was saved.");
     } catch (err: unknown) {
-      setYamlError(err instanceof Error ? err.message : "Failed to create schedule");
+      const message = err instanceof Error ? err.message : "Failed to create schedule";
+      setYamlError(message);
+      toast.error("Schedule failed", message);
       setScheduleState("idle");
     }
   };
 
   const handleToggleSchedule = async () => {
     if (!workspaceId || !schedule) return;
-    setScheduleLoading(true);
     try {
       if (schedule.enabled) {
         await pauseScheduledDeployment(schedule.deployment_id, workspaceId);
         setSchedule((prev) => prev ? { ...prev, enabled: false } : null);
+        toast.info("Schedule paused");
       } else {
         await resumeScheduledDeployment(schedule.deployment_id, workspaceId);
         setSchedule((prev) => prev ? { ...prev, enabled: true } : null);
+        toast.success("Schedule resumed");
       }
     } catch (err: unknown) {
-      setYamlError(err instanceof Error ? err.message : "Failed to toggle schedule");
-    } finally {
-      setScheduleLoading(false);
+      const message = err instanceof Error ? err.message : "Failed to toggle schedule";
+      setYamlError(message);
+      toast.error("Schedule update failed", message);
     }
   };
 
@@ -389,19 +434,24 @@ export default function WorkflowDesigner() {
   const parseNaturalSchedule = async () => {
     if (!naturalSchedule) return;
     try {
-      const csrf = await getCsrfToken();
+      const headers = await withCsrfHeader({
+        "Content-Type": "application/json",
+      });
       const response = await fetch("/v1/scheduler/parse", {
         method: "POST",
         credentials: "include",
-        headers: { "Content-Type": "application/json", "X-CSRF-Token": csrf },
+        headers,
         body: JSON.stringify({ expression: naturalSchedule }),
       });
       if (!response.ok) throw new Error("Failed to parse schedule");
       const data = await response.json();
       setCron(data.cron);
       setNaturalSchedule("");
+      toast.success("Natural language schedule parsed", data.cron);
     } catch (err: unknown) {
-      setYamlError(err instanceof Error ? err.message : "Failed to parse natural schedule");
+      const message = err instanceof Error ? err.message : "Failed to parse natural schedule";
+      setYamlError(message);
+      toast.error("Schedule parse failed", message);
     }
   };
 
@@ -469,12 +519,12 @@ export default function WorkflowDesigner() {
         <aside className="border-r border-slate-200 bg-white p-3">
           <div className="space-y-2">
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Nodes</p>
-            {PALETTE_NODES.map((node) => (
+            {paletteNodes.map((node) => (
               <button
                 key={`${node.kind}-${node.label}`}
                 type="button"
                 draggable
-                onDragStart={(event) => onDragStart(event, node.label, node.kind)}
+                onDragStart={(event) => onDragStart(event, node.label, node.kind, node.key)}
                 className="flex w-full items-center justify-between rounded-md border border-slate-200 px-2 py-2 text-left text-xs hover:bg-slate-50"
               >
                 <span>{node.label}</span>
@@ -579,6 +629,13 @@ export default function WorkflowDesigner() {
               height="100%"
             />
           </div>
+          {specWarnings.length > 0 ? (
+            <div className="border-t border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+              {specWarnings.map((warning, index) => (
+                <p key={`${warning}-${index}`}>{warning}</p>
+              ))}
+            </div>
+          ) : null}
           {specError ? <p className="border-t border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">{specError}</p> : null}
           {yamlError ? <p className="border-t border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">{yamlError}</p> : null}
         </aside>

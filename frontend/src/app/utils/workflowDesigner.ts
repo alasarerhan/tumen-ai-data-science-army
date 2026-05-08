@@ -1,10 +1,17 @@
 import type { Edge, Node } from "reactflow";
 import YAML from "yaml";
 import cronstrue from "cronstrue";
+import {
+  inspectWorkflowSpec,
+  validateWorkflowSpecWithRules,
+  type WorkflowValidationIssue,
+} from "./workflowChainValidator";
+import type { WorkflowChainRuleset } from "../api/workflowChainRules";
 
 export interface WorkflowNodeData {
   label: string;
   kind: string;
+  agent?: string;
   status?: "idle" | "running" | "success" | "error";
 }
 
@@ -21,11 +28,13 @@ export interface WorkflowSpecDocument {
       id: string;
       label: string;
       kind: string;
+      agent?: string;
       position: { x: number; y: number };
       status?: string;
     }>;
     edges: Array<{ id: string; source: string; target: string }>;
   };
+  target_variable?: string;
 }
 
 export function isValidCronExpression(expression: string): boolean {
@@ -39,7 +48,17 @@ export function isValidCronExpression(expression: string): boolean {
   }
 }
 
-export function validateWorkflowSpec(spec: WorkflowSpecDocument): WorkflowSpecDocument {
+export function inspectWorkflowGraphSpec(
+  spec: WorkflowSpecDocument,
+  ruleset?: WorkflowChainRuleset,
+): {
+  warnings: WorkflowValidationIssue[];
+  errors: WorkflowValidationIssue[];
+} {
+  return inspectWorkflowSpec(spec, ruleset);
+}
+
+export function validateWorkflowSpec(spec: WorkflowSpecDocument, ruleset?: WorkflowChainRuleset): WorkflowSpecDocument {
   if (!spec.name || !spec.name.trim()) {
     throw new Error("Workflow name is required");
   }
@@ -75,7 +94,7 @@ export function validateWorkflowSpec(spec: WorkflowSpecDocument): WorkflowSpecDo
     throw new Error("Invalid cron expression");
   }
 
-  return spec;
+  return validateWorkflowSpecWithRules(spec, ruleset);
 }
 
 export function flowToSpec(params: {
@@ -84,7 +103,7 @@ export function flowToSpec(params: {
   cron?: string;
   nodes: Node<WorkflowNodeData>[];
   edges: Edge[];
-}): WorkflowSpecDocument {
+}, ruleset?: WorkflowChainRuleset): WorkflowSpecDocument {
   const spec: WorkflowSpecDocument = {
     version: "1.0.0",
     name: params.name,
@@ -98,6 +117,7 @@ export function flowToSpec(params: {
         id: node.id,
         label: node.data.label,
         kind: node.data.kind,
+        agent: node.data.agent,
         position: node.position,
         status: node.data.status,
       })),
@@ -108,17 +128,17 @@ export function flowToSpec(params: {
       })),
     },
   };
-  return validateWorkflowSpec(spec);
+  return validateWorkflowSpec(spec, ruleset);
 }
 
-export function specToFlow(spec: WorkflowSpecDocument): {
+export function specToFlow(spec: WorkflowSpecDocument, ruleset?: WorkflowChainRuleset): {
   nodes: Node<WorkflowNodeData>[];
   edges: Edge[];
   cron: string;
   name: string;
   description: string;
 } {
-  const validated = validateWorkflowSpec(spec);
+  const validated = validateWorkflowSpec(spec, ruleset);
   return {
     name: validated.name,
     description: validated.description ?? "",
@@ -130,6 +150,7 @@ export function specToFlow(spec: WorkflowSpecDocument): {
       data: {
         label: node.label,
         kind: node.kind,
+        agent: node.agent,
         status: (node.status as WorkflowNodeData["status"]) ?? "idle",
       },
     })),
@@ -146,13 +167,13 @@ export function specToYaml(spec: WorkflowSpecDocument): string {
   return YAML.stringify(spec);
 }
 
-export function yamlToSpec(yaml: string): WorkflowSpecDocument {
+export function yamlToSpec(yaml: string, ruleset?: WorkflowChainRuleset): WorkflowSpecDocument {
   const parsed = YAML.parse(yaml) as WorkflowSpecDocument;
 
   if (!parsed?.graph?.nodes || !parsed?.graph?.edges || !parsed?.name) {
     throw new Error("Invalid workflow yaml. Expected fields: name, graph.nodes, graph.edges");
   }
 
-  return validateWorkflowSpec(parsed);
+  return validateWorkflowSpec(parsed, ruleset);
 }
 

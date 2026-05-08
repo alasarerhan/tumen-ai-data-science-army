@@ -13,6 +13,8 @@ export default function Login() {
   const [showToken, setShowToken] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const configuredDevToken = (import.meta.env.VITE_DEV_AUTH_TOKEN as string | undefined)?.trim();
+  const oidcLoginUrl = (import.meta.env.VITE_OIDC_LOGIN_URL as string | undefined)?.trim();
 
   // Already authenticated → skip login page
   if (authToken) return <Navigate to="/dashboard" replace />;
@@ -31,13 +33,17 @@ export default function Login() {
     }
   };
 
-  /** Google SSO — production uses real OIDC, dev mode uses dev token */
+  /** Google SSO uses an explicit redirect URL; local development can opt into a configured dev token. */
   const handleGoogle = () => {
     if (import.meta.env.DEV) {
-      signIn("dev");
-    } else {
-      window.location.href = "/auth/google";
+      void signIn(configuredDevToken || "dev");
+      return;
     }
+    if (oidcLoginUrl) {
+      window.location.href = oidcLoginUrl;
+      return;
+    }
+    setError("SSO is not configured for this environment. Use the developer token flow for local access.");
   };
 
   const handleDevSignIn = (e: React.FormEvent) => {

@@ -27,6 +27,42 @@ vi.mock("../hooks/useRuns", () => ({
   }),
 }));
 
+vi.mock("../hooks/useWorkflows", () => ({
+  useWorkflows: vi.fn().mockReturnValue({
+    data: {
+      items: [
+        {
+          id: "wf-1",
+          validation_summary: { status: "safe", error_count: 0, warning_count: 0, errors: [], warnings: [] },
+        },
+        {
+          id: "wf-2",
+          validation_summary: { status: "advisory", error_count: 0, warning_count: 1, errors: [], warnings: ["warn"] },
+        },
+        {
+          id: "wf-3",
+          validation_summary: { status: "invalid", error_count: 1, warning_count: 0, errors: ["err"], warnings: [] },
+        },
+      ],
+    },
+    isLoading: false,
+  }),
+}));
+
+vi.mock("../hooks/useDiscovery", () => ({
+  useAgentCatalog: vi.fn().mockReturnValue({
+    data: { results: [{ name: "EDA Agent" }, { name: "Model Trainer" }] },
+    isLoading: false,
+  }),
+}));
+
+vi.mock("../hooks/useDataSources", () => ({
+  useDataSources: vi.fn().mockReturnValue({
+    data: { items: [{ id: "ds-1" }] },
+    isLoading: false,
+  }),
+}));
+
 vi.mock("../utils/time", () => ({
   formatDuration: vi.fn(() => "1h 30m"),
   formatRelativeTime: vi.fn(() => "2 hours ago"),
@@ -90,6 +126,16 @@ describe("Dashboard", () => {
 
     await waitFor(() => {
       expect(screen.getByRole("heading", { level: 1 })).toBeInTheDocument();
+    });
+  });
+
+  it("should show workflow health summary", async () => {
+    renderWithProviders();
+
+    await waitFor(() => {
+      expect(screen.getByText("Safe: 1")).toBeInTheDocument();
+      expect(screen.getByText("Advisory: 1")).toBeInTheDocument();
+      expect(screen.getByText("Invalid: 1")).toBeInTheDocument();
     });
   });
 });

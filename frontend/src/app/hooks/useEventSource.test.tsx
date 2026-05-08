@@ -1,9 +1,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, waitFor, act } from "@testing-library/react";
 import { useEventSource } from "../hooks/useEventSource";
+import { withCsrfHeader } from "../api/client";
 
 vi.mock("../api/client", () => ({
-  getCsrfToken: vi.fn().mockResolvedValue("csrf-test-token"),
+  withCsrfHeader: vi.fn().mockResolvedValue({ "X-CSRF-Token": "csrf-test-token" }),
 }));
 
 vi.mock("../api/sse", () => ({
@@ -17,6 +18,7 @@ describe("useEventSource", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockFetch.mockReset();
+    vi.mocked(withCsrfHeader).mockResolvedValue({ "X-CSRF-Token": "csrf-test-token" });
   });
 
   afterEach(() => {

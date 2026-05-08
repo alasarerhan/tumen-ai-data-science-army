@@ -34,20 +34,33 @@ export function SchedulerStatusCard({ status, loading, className }: SchedulerSta
     <div className={cn("rounded-lg border border-slate-200 bg-white p-4", className)}>
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-sm font-semibold text-slate-700">Scheduler</h3>
-        <Badge variant={status.is_leader ? "success" : "neutral"} size="sm">
-          {status.is_leader ? "Leader" : "Follower"}
+        <Badge
+          variant={status.restricted ? "warning" : status.is_leader ? "success" : "neutral"}
+          size="sm"
+        >
+          {status.restricted ? "Restricted" : status.is_leader ? "Leader" : "Follower"}
         </Badge>
       </div>
 
       <div className="space-y-3">
+        {status.restricted ? (
+          <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
+            {status.message || "Scheduler visibility is limited to platform operators."}
+          </div>
+        ) : null}
+
         <div className="flex items-center gap-2 text-xs">
-          {status.is_leader ? (
+          {status.restricted ? (
+            <Clock size={14} className="text-amber-500" />
+          ) : status.is_leader ? (
             <Crown size={14} className="text-amber-500" />
           ) : (
             <Clock size={14} className="text-slate-400" />
           )}
           <span className="text-slate-600">
-            {status.is_leader
+            {status.restricted
+              ? "Tenant admins can view queue health, but scheduler leadership remains platform-scoped."
+              : status.is_leader
               ? `Leading: ${status.leader_id?.slice(0, 12)}...`
               : "Waiting for leadership"}
           </span>

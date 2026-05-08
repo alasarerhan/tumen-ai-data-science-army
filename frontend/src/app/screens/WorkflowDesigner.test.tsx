@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
 import { BrowserRouter } from "react-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
@@ -19,6 +19,100 @@ vi.mock("../context/AuthContext", () => ({
   useAuth: () => ({
     workspaceId: "test-workspace",
     user: { email: "test@example.com", role: "admin" },
+  }),
+}));
+
+vi.mock("../hooks/useWorkflowChainRules", () => ({
+  useWorkflowChainRules: () => ({
+    data: {
+      ruleset: {
+        version: "1.0.0",
+        agents: [
+          {
+            key: "DataLoaderToolsAgent",
+            label: "Data Loader",
+            kind: "data",
+            color: "#10b981",
+            aliases: ["Data Loader"],
+            safe_next: ["DataCleaningAgent"],
+            conditional_next: [],
+          },
+          {
+            key: "DataCleaningAgent",
+            label: "Data Cleaning",
+            kind: "data",
+            color: "#10b981",
+            aliases: ["Data Cleaning"],
+            safe_next: ["FeatureEngineeringAgent"],
+            conditional_next: [],
+          },
+          {
+            key: "DataWranglingAgent",
+            label: "Data Wrangling",
+            kind: "data",
+            color: "#22c55e",
+            aliases: ["Data Wrangling"],
+            safe_next: ["DataCleaningAgent"],
+            conditional_next: [],
+          },
+          {
+            key: "EDAToolsAgent",
+            label: "EDA",
+            kind: "analysis",
+            color: "#0ea5e9",
+            aliases: ["EDA"],
+            safe_next: [],
+            conditional_next: ["DataCleaningAgent"],
+          },
+          {
+            key: "DataVisualizationAgent",
+            label: "Visualization",
+            kind: "analysis",
+            color: "#06b6d4",
+            aliases: ["Visualization"],
+            safe_next: [],
+            conditional_next: [],
+          },
+          {
+            key: "FeatureEngineeringAgent",
+            label: "Feature Engineering",
+            kind: "ml",
+            color: "#6366f1",
+            aliases: ["Feature Engineering"],
+            safe_next: ["H2OMLAgent"],
+            conditional_next: [],
+          },
+          {
+            key: "H2OMLAgent",
+            label: "H2O ML",
+            kind: "ml",
+            color: "#6366f1",
+            aliases: ["H2O ML"],
+            safe_next: [],
+            conditional_next: [],
+          },
+          {
+            key: "NarrativeAgent",
+            label: "Narrative",
+            kind: "strategic",
+            color: "#ec4899",
+            aliases: ["Narrative"],
+            safe_next: [],
+            conditional_next: [],
+          },
+          {
+            key: "ApprovalGateAgent",
+            label: "HITL Gate",
+            kind: "hitl",
+            color: "#f59e0b",
+            aliases: ["HITL Gate"],
+            safe_next: [],
+            conditional_next: [],
+          },
+        ],
+        requirements: {},
+      },
+    },
   }),
 }));
 
@@ -56,17 +150,15 @@ vi.mock("@monaco-editor/react", () => ({
 import WorkflowDesigner from "../screens/WorkflowDesigner";
 import * as workflowsApi from "../api/workflows";
 import * as runsApi from "../api/runs";
-import * as schedulerApi from "../api/scheduler";
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: false,
-    },
-  },
-});
 
 function renderWithProviders() {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+      },
+    },
+  });
   return render(
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
@@ -133,7 +225,7 @@ describe("WorkflowDesigner", () => {
     renderWithProviders();
 
     await waitFor(() => {
-      expect(screen.getByText(/feature engineering/i)).toBeInTheDocument();
+      expect(screen.getAllByText(/feature engineering/i).length).toBeGreaterThan(0);
     });
   });
 
@@ -141,7 +233,7 @@ describe("WorkflowDesigner", () => {
     renderWithProviders();
 
     await waitFor(() => {
-      expect(screen.getByText(/narrative/i)).toBeInTheDocument();
+      expect(screen.getAllByText(/h2o ml/i).length).toBeGreaterThan(0);
     });
   });
 
@@ -194,7 +286,9 @@ describe("WorkflowDesigner", () => {
     });
 
     const saveButton = screen.getByRole("button", { name: /save/i });
-    fireEvent.click(saveButton);
+    await act(async () => {
+      fireEvent.click(saveButton);
+    });
   });
 
   it("should call triggerRun API when run clicked", async () => {
@@ -220,7 +314,9 @@ describe("WorkflowDesigner", () => {
     });
 
     const scheduleButton = screen.getByRole("button", { name: /schedule/i });
-    fireEvent.click(scheduleButton);
+    await act(async () => {
+      fireEvent.click(scheduleButton);
+    });
   });
 
   it("should update YAML editor when nodes change", async () => {

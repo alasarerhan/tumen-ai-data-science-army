@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { getCsrfToken } from "../api/client";
+import { withCsrfHeader } from "../api/client";
 import { readSseStream } from "../api/sse";
 
 export interface UseEventSourceOptions<TEvent> {
@@ -104,7 +104,7 @@ export function useEventSource<TEvent = unknown>({
     const readStream = async () => {
       try {
         if (method !== "GET") {
-          requestHeaders["X-CSRF-Token"] = await getCsrfToken();
+          Object.assign(requestHeaders, await withCsrfHeader());
         }
         const response = await fetch(url, {
           method,

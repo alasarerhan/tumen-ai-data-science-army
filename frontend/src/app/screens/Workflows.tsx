@@ -15,11 +15,24 @@ import { formatRelativeTime } from "../utils/time";
 import { cn } from "../lib/utils";
 
 type WorkflowStatus = WorkflowSpec["status"];
+type WorkflowValidationStatus = WorkflowSpec["validation_summary"]["status"];
 
 const statusVariant: Record<WorkflowStatus, "success" | "warning" | "neutral"> = {
   published: "success",
   draft: "warning",
   archived: "neutral",
+};
+
+const validationVariant: Record<WorkflowValidationStatus, "success" | "warning" | "danger"> = {
+  safe: "success",
+  advisory: "warning",
+  invalid: "danger",
+};
+
+const validationLabel: Record<WorkflowValidationStatus, string> = {
+  safe: "Chain Safe",
+  advisory: "Advisory",
+  invalid: "Invalid Chain",
 };
 
 export default function Workflows() {
@@ -113,6 +126,7 @@ export default function Workflows() {
               const spec = wf.spec as Record<string, unknown>;
               const scheduleInfo = spec?.schedule as Record<string, unknown> | undefined;
               const cron = (scheduleInfo?.cron as string) || schedule?.cron;
+              const validation = wf.validation_summary;
 
               return (
                 <div
@@ -134,6 +148,9 @@ export default function Workflows() {
                       <div className="flex items-center gap-2">
                         <Badge variant={statusVariant[wf.status]} size="sm">
                           {wf.status.charAt(0).toUpperCase() + wf.status.slice(1)}
+                        </Badge>
+                        <Badge variant={validationVariant[validation.status]} size="sm">
+                          {validationLabel[validation.status]}
                         </Badge>
                         {schedule && (
                           <ScheduleStatusBadge hasSchedule={!!schedule} enabled={schedule.enabled} />
@@ -184,6 +201,18 @@ export default function Workflows() {
                     <p className="mb-4 line-clamp-2 text-xs text-slate-500 dark:text-slate-400">
                       {((wf.spec as Record<string, unknown>)?.description as string) ?? "No description."}
                     </p>
+                    {validation.status !== "safe" ? (
+                      <p className={cn(
+                        "mb-4 rounded px-2 py-1 text-[11px]",
+                        validation.status === "invalid"
+                          ? "bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300"
+                          : "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300",
+                      )}>
+                        {validation.status === "invalid"
+                          ? `${validation.error_count} chain error`
+                          : `${validation.warning_count} advisory warning`}
+                      </p>
+                    ) : null}
 
                     <div className="flex items-center justify-between">
                       <span className="text-xs text-slate-500">{formatRelativeTime(wf.updated_at)}</span>

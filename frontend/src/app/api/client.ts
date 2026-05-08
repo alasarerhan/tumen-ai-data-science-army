@@ -6,7 +6,9 @@
  * - CSRF protection: double-submit token in X-CSRF-Token header for mutations
  */
 
-const BASE_URL = (import.meta.env.VITE_API_BASE_URL as string) || "http://localhost:8000";
+const BASE_URL = import.meta.env.DEV
+  ? ""
+  : ((import.meta.env.VITE_API_BASE_URL as string) || "");
 const DEFAULT_TIMEOUT = 30_000;
 const MAX_RETRIES = 3;
 const RETRY_DELAY_BASE = 1_000;
@@ -44,6 +46,20 @@ export async function getCsrfToken(forceRefresh = false): Promise<string> {
     return csrfTokenCache;
   }
   return fetchCsrfToken();
+}
+
+export async function withCsrfHeader(
+  headers: Record<string, string> = {},
+  forceRefresh = false,
+): Promise<Record<string, string>> {
+  const csrfToken = await getCsrfToken(forceRefresh);
+  if (!csrfToken) {
+    return { ...headers };
+  }
+  return {
+    ...headers,
+    [CSRF_HEADER]: csrfToken,
+  };
 }
 
 function buildHeaders(

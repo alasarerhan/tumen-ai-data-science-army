@@ -30,6 +30,20 @@ vi.mock("../hooks/useRuns", () => ({
   useCancelRun: vi.fn().mockReturnValue({ mutateAsync: vi.fn().mockResolvedValue({}) }),
 }));
 
+vi.mock("../hooks/useWorkflows", () => ({
+  useWorkflows: vi.fn().mockReturnValue({
+    data: {
+      items: [
+        {
+          id: "wf-1",
+          name: "test-flow",
+          validation_summary: { status: "advisory", error_count: 0, warning_count: 1, errors: [], warnings: ["warn"] },
+        },
+      ],
+    },
+  }),
+}));
+
 vi.mock("../utils/time", () => ({
   formatDuration: vi.fn(() => "1h 30m"),
   formatRelativeTime: vi.fn(() => "2 hours ago"),
@@ -89,6 +103,7 @@ describe("RunsList", () => {
 
     await waitFor(() => {
       expect(screen.getByText("test-flow")).toBeInTheDocument();
+      expect(screen.getByText("Advisory Chain")).toBeInTheDocument();
     });
   });
 

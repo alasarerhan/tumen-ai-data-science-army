@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import { BrowserRouter } from "react-router";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 vi.mock("react-router", async () => {
   const actual = await vi.importActual("react-router");
@@ -35,10 +36,15 @@ vi.mock("../lib/utils", () => ({
 import DataSources from "../screens/DataSources";
 
 function renderWithProviders() {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
   return render(
-    <BrowserRouter>
-      <DataSources />
-    </BrowserRouter>
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <DataSources />
+      </BrowserRouter>
+    </QueryClientProvider>
   );
 }
 

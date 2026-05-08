@@ -26,6 +26,8 @@ export interface QueueStats {
 export interface SchedulerStatus {
   is_leader: boolean;
   leader_id: string | null;
+  restricted?: boolean;
+  message?: string | null;
   jobs: Array<{
     job_name: string;
     job_type: string;

@@ -6,9 +6,14 @@ import { AuthProvider } from "../context/AuthContext";
 import * as runsApi from "../api/runs";
 import * as signalsApi from "../api/signals";
 import * as logsApi from "../api/logs";
+import * as workflowsApi from "../api/workflows";
 
 vi.mock("../api/runs", () => ({
   getRuns: vi.fn(),
+}));
+
+vi.mock("../api/workflows", () => ({
+  getWorkflows: vi.fn(),
 }));
 
 vi.mock("../api/signals", () => ({
@@ -66,6 +71,46 @@ describe("PipelineMonitor", () => {
   beforeEach(() => {
     localStorage.setItem("auth_token", "test-token");
     localStorage.setItem("workspace_id", "ws-123");
+    vi.mocked(workflowsApi.getWorkflows).mockResolvedValue({
+      items: [
+        {
+          id: "wf-1",
+          workspace_id: "ws-123",
+          tenant_id: "tenant-1",
+          name: "test-flow",
+          version: 1,
+          status: "published",
+          spec: {},
+          validation_summary: {
+            status: "safe",
+            error_count: 0,
+            warning_count: 0,
+            errors: [],
+            warnings: [],
+          },
+          created_at: null,
+          updated_at: null,
+        },
+        {
+          id: "wf-2",
+          workspace_id: "ws-123",
+          tenant_id: "tenant-1",
+          name: "another-flow",
+          version: 1,
+          status: "published",
+          spec: {},
+          validation_summary: {
+            status: "invalid",
+            error_count: 1,
+            warning_count: 0,
+            errors: ["bad chain"],
+            warnings: [],
+          },
+          created_at: null,
+          updated_at: null,
+        },
+      ],
+    });
   });
 
   afterEach(() => {
@@ -88,6 +133,8 @@ describe("PipelineMonitor", () => {
     await waitFor(() => {
       expect(screen.getByText("test-flow")).toBeInTheDocument();
       expect(screen.getByText("another-flow")).toBeInTheDocument();
+      expect(screen.getAllByText("Chain Safe").length).toBeGreaterThan(0);
+      expect(screen.getByText("Invalid Chain")).toBeInTheDocument();
     });
   });
 

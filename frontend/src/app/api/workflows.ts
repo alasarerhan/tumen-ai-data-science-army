@@ -1,5 +1,13 @@
 import { apiGet, apiPost, qs } from "./client";
 
+export interface WorkflowValidationSummary {
+  status: "safe" | "advisory" | "invalid";
+  error_count: number;
+  warning_count: number;
+  errors: string[];
+  warnings: string[];
+}
+
 export interface WorkflowSpec {
   id: string;
   workspace_id: string;
@@ -8,6 +16,7 @@ export interface WorkflowSpec {
   version: number;
   status: "draft" | "published" | "archived";
   spec: Record<string, unknown>;
+  validation_summary: WorkflowValidationSummary;
   created_at: string | null;
   updated_at: string | null;
 }

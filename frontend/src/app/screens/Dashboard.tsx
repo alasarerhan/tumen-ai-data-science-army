@@ -11,11 +11,14 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { AppShell } from "../components/layout/AppShell";
-import { RunStatusBadge } from "../components/ui/badge";
+import { Badge, RunStatusBadge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
 import { AsyncState } from "../components/ui/async-state";
 import { useAuth } from "../context/AuthContext";
+import { useDataSources } from "../hooks/useDataSources";
+import { useAgentCatalog } from "../hooks/useDiscovery";
 import { useRuns } from "../hooks/useRuns";
+import { useWorkflows } from "../hooks/useWorkflows";
 import { formatDuration, formatRelativeTime } from "../utils/time";
 
 function StatCard({
@@ -59,12 +62,36 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const { user, workspaceId } = useAuth();
   const { data: runsData, isLoading: loadingRuns, error: runsError, refetch: fetchRuns } = useRuns(workspaceId);
+  const workflowsQuery = useWorkflows(workspaceId);
+  const dataSourcesQuery = useDataSources(workspaceId);
+  const agentsQuery = useAgentCatalog(workspaceId);
 
   const runs = runsData?.items ?? [];
+  const workflows = workflowsQuery.data?.items ?? [];
+  const dataSources = dataSourcesQuery.data?.items ?? [];
+  const agents = agentsQuery.data?.results ?? [];
+  const workflowHealth = useMemo(() => {
+    return workflows.reduce(
+      (acc, workflow) => {
+        const status = workflow.validation_summary?.status ?? "safe";
+        if (status === "invalid") acc.invalid += 1;
+        else if (status === "advisory") acc.advisory += 1;
+        else acc.safe += 1;
+        return acc;
+      },
+      { safe: 0, advisory: 0, invalid: 0 },
+    );
+  }, [workflows]);
 
   const recentRuns = useMemo(() => runs.slice(0, 5), [runs]);
   const activityRuns = useMemo(() => runs.slice(0, 8), [runs]);
   const activeRunsCount = runs.filter((run) => ["running", "pending"].includes(run.status)).length;
+  const reportsLast30Days = runs.filter((run) => {
+    if (run.status !== "success" || !run.created_at) return false;
+    const createdAt = new Date(run.created_at).getTime();
+    const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
+    return createdAt >= thirtyDaysAgo;
+  }).length;
   const firstName = user?.email?.split("@")[0] ?? user?.sub?.split("@")[0] ?? "there";
 
   return (
@@ -93,20 +120,21 @@ export default function Dashboard() {
           />
           <StatCard
             label="Workflows"
-            value="--"
+            value={workflowsQuery.isLoading ? "..." : workflows.length}
             icon={<GitBranch size={16} className="text-violet-600" />}
             iconColor="bg-violet-50 dark:bg-violet-900/30"
           />
           <StatCard
             label="Agents"
-            value="--"
+            value={agentsQuery.isLoading ? "..." : agents.length}
             icon={<Bot size={16} className="text-emerald-600" />}
             iconColor="bg-emerald-50 dark:bg-emerald-900/30"
           />
           <StatCard
-            label="Reports (30d)"
-            value="--"
-            icon={<BarChart2 size={16} className="text-sky-600" />}
+            label="Data Sources"
+            value={dataSourcesQuery.isLoading ? "..." : dataSources.length}
+            delta={!dataSourcesQuery.isLoading && dataSources.length > 0 ? `${dataSources.length} connected` : undefined}
+            icon={<Database size={16} className="text-sky-600" />}
             iconColor="bg-sky-50 dark:bg-sky-900/30"
           />
         </div>
@@ -161,7 +189,7 @@ export default function Dashboard() {
                 { label: "New Workflow", icon: <GitBranch size={15} />, to: "/workflows" },
                 { label: "Trigger Run", icon: <Play size={15} />, to: "/runs" },
                 { label: "Browse Data Sources", icon: <Database size={15} />, to: "/data-sources" },
-                { label: "View Reports", icon: <BarChart2 size={15} />, to: "/reports" },
+                { label: `Reports (30d): ${reportsLast30Days}`, icon: <BarChart2 size={15} />, to: "/reports" },
               ].map((action) => (
                 <Button
                   key={action.label}
@@ -175,6 +203,23 @@ export default function Dashboard() {
                   {action.label}
                 </Button>
               ))}
+            </div>
+            <div className="mt-5 border-t border-slate-100 pt-4 dark:border-slate-800">
+              <div className="mb-2 flex items-center justify-between">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Workflow Health</p>
+                <button
+                  type="button"
+                  className="text-xs text-indigo-600 hover:underline dark:text-indigo-400"
+                  onClick={() => navigate("/workflows")}
+                >
+                  Review
+                </button>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Badge variant="success" size="sm">Safe: {workflowHealth.safe}</Badge>
+                <Badge variant="warning" size="sm">Advisory: {workflowHealth.advisory}</Badge>
+                <Badge variant="danger" size="sm">Invalid: {workflowHealth.invalid}</Badge>
+              </div>
             </div>
           </div>
         </div>

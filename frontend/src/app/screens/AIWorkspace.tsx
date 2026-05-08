@@ -5,18 +5,23 @@ import { Button } from "../components/ui/button";
 import { AsyncState } from "../components/ui/async-state";
 import { useAuth } from "../context/AuthContext";
 import {
-  createChatSession,
-  listChatSessions,
-  listChatMessages,
-  listChatUploads,
   streamChatMessage,
-  uploadChatFile,
   type ChatMessageDto,
-  type ChatSessionDto,
-  type ChatUploadDto,
+  type WorkflowDesignArtifact,
 } from "../api/chat";
+import { triggerScheduledWorkflow } from "../api/scheduler";
 import { ChatMessage } from "../components/chat/ChatMessage";
 import { FileDropZone } from "../components/chat/FileDropZone";
+import {
+  useChatMessages,
+  useChatSessions,
+  useChatUploads,
+  useCreateChatSession,
+  useUploadChatFiles,
+} from "../hooks/useChatWorkspace";
+import { useCreateWorkflow, usePublishWorkflow } from "../hooks/useWorkflows";
+import { useWorkflowChainRules } from "../hooks/useWorkflowChainRules";
+import { inspectWorkflowSpec } from "../utils/workflowChainValidator";
 
 function buildLocalMessage(partial: Partial<ChatMessageDto> & Pick<ChatMessageDto, "id" | "role" | "content">): ChatMessageDto {
   return {
@@ -31,70 +36,68 @@ function buildLocalMessage(partial: Partial<ChatMessageDto> & Pick<ChatMessageDt
 
 export default function AIWorkspace() {
   const { workspaceId } = useAuth();
-  const [sessions, setSessions] = useState<ChatSessionDto[]>([]);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessageDto[]>([]);
-  const [uploads, setUploads] = useState<ChatUploadDto[]>([]);
   const [prompt, setPrompt] = useState("");
-  const [loadingSessions, setLoadingSessions] = useState(false);
-  const [loadingMessages, setLoadingMessages] = useState(false);
   const [sessionError, setSessionError] = useState<string | null>(null);
+  const [workspaceNotice, setWorkspaceNotice] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
-  const [uploading, setUploading] = useState(false);
   const feedRef = useRef<HTMLDivElement | null>(null);
+
+  const sessionsQuery = useChatSessions(workspaceId);
+  const messagesQuery = useChatMessages(activeSessionId, workspaceId);
+  const uploadsQuery = useChatUploads(activeSessionId, workspaceId);
+  const createSessionMutation = useCreateChatSession(workspaceId);
+  const uploadFilesMutation = useUploadChatFiles(activeSessionId, workspaceId);
+  const createWorkflowMutation = useCreateWorkflow();
+  const publishWorkflowMutation = usePublishWorkflow();
+  const workflowChainRulesQuery = useWorkflowChainRules(workspaceId);
+
+  const sessions = sessionsQuery.data?.items ?? [];
+  const uploads = uploadsQuery.data?.items ?? [];
+  const loadingSessions = sessionsQuery.isLoading;
+  const loadingMessages = messagesQuery.isLoading;
+  const uploading = uploadFilesMutation.isPending;
 
   const activeSession = useMemo(
     () => sessions.find((session) => session.id === activeSessionId) ?? null,
     [sessions, activeSessionId],
   );
 
-  const loadSessions = async () => {
-    if (!workspaceId) return;
-    setLoadingSessions(true);
+  useEffect(() => {
+    if (sessionsQuery.error) {
+      setSessionError(
+        sessionsQuery.error instanceof Error ? sessionsQuery.error.message : "Failed to load sessions",
+      );
+      return;
+    }
     setSessionError(null);
-    try {
-      const response = await listChatSessions(workspaceId);
-      let items = response.items;
-      if (items.length === 0) {
-        const created = await createChatSession({ workspace_id: workspaceId, title: "New chat" });
-        items = [created];
+  }, [sessionsQuery.error]);
+
+  useEffect(() => {
+    if (!workspaceId || sessionsQuery.isLoading || createSessionMutation.isPending) {
+      return;
+    }
+    if (sessions.length > 0) {
+      setActiveSessionId((current) => current ?? sessions[0]?.id ?? null);
+      return;
+    }
+    void createSessionMutation.mutateAsync("New chat").then((created) => {
+      setActiveSessionId(created.id);
+    }).catch((err: unknown) => {
+      setSessionError(err instanceof Error ? err.message : "Failed to create session");
+    });
+  }, [workspaceId, sessions, sessionsQuery.isLoading, createSessionMutation]);
+
+  useEffect(() => {
+    if (!messagesQuery.data) {
+      if (!messagesQuery.isLoading) {
+        setMessages([]);
       }
-      setSessions(items);
-      setActiveSessionId((current) => current ?? items[0]?.id ?? null);
-    } catch (err: unknown) {
-      setSessionError(err instanceof Error ? err.message : "Failed to load sessions");
-    } finally {
-      setLoadingSessions(false);
+      return;
     }
-  };
-
-  const loadConversation = async (sessionId: string) => {
-    if (!workspaceId) return;
-    setLoadingMessages(true);
-    try {
-      const [messageRes, uploadRes] = await Promise.all([
-        listChatMessages(sessionId, workspaceId),
-        listChatUploads(sessionId, workspaceId),
-      ]);
-      setMessages(messageRes.items);
-      setUploads(uploadRes.items);
-    } catch (err: unknown) {
-      console.error("Failed to load conversation:", err);
-      setMessages([]);
-      setUploads([]);
-    } finally {
-      setLoadingMessages(false);
-    }
-  };
-
-  useEffect(() => {
-    void loadSessions();
-  }, [workspaceId]);
-
-  useEffect(() => {
-    if (!activeSessionId) return;
-    void loadConversation(activeSessionId);
-  }, [activeSessionId, workspaceId]);
+    setMessages(messagesQuery.data.items);
+  }, [messagesQuery.data, messagesQuery.isLoading]);
 
   useEffect(() => {
     if (!feedRef.current) return;
@@ -104,24 +107,17 @@ export default function AIWorkspace() {
   const handleCreateSession = async () => {
     if (!workspaceId) return;
     const title = `Chat ${sessions.length + 1}`;
-    const session = await createChatSession({ workspace_id: workspaceId, title });
-    setSessions((prev) => [session, ...prev]);
+    const session = await createSessionMutation.mutateAsync(title);
     setActiveSessionId(session.id);
     setMessages([]);
-    setUploads([]);
   };
 
   const handleUpload = async (files: File[]) => {
     if (!workspaceId || !activeSessionId || files.length === 0) return;
-    setUploading(true);
     try {
-      for (const file of files) {
-        await uploadChatFile(activeSessionId, workspaceId, file);
-      }
-      const uploadRes = await listChatUploads(activeSessionId, workspaceId);
-      setUploads(uploadRes.items);
-    } finally {
-      setUploading(false);
+      await uploadFilesMutation.mutateAsync(files);
+    } catch (err: unknown) {
+      setSessionError(err instanceof Error ? err.message : "Failed to upload file");
     }
   };
 
@@ -130,6 +126,7 @@ export default function AIWorkspace() {
     const content = prompt.trim();
     if (!content) return;
 
+    setWorkspaceNotice(null);
     setPrompt("");
     setSending(true);
 
@@ -153,7 +150,8 @@ export default function AIWorkspace() {
         },
         onDone: () => {
           setSending(false);
-          void loadSessions();
+          void sessionsQuery.refetch();
+          void messagesQuery.refetch();
         },
         onError: () => {
           setSending(false);
@@ -163,17 +161,104 @@ export default function AIWorkspace() {
     );
   };
 
-  const handleWorkflowApprove = async (artifactId: string) => {
-    console.log("Workflow approved:", artifactId);
+  const removeWorkflowArtifact = (artifactId: string) => {
+    const marker = "-artifact-";
+    const markerIndex = artifactId.lastIndexOf(marker);
+    if (markerIndex === -1) return;
+    const messageId = artifactId.slice(0, markerIndex);
+    const artifactIndex = Number(artifactId.slice(markerIndex + marker.length));
+    if (Number.isNaN(artifactIndex)) return;
+
+    setMessages((prev) =>
+      prev.map((message) => {
+        if (message.id !== messageId) {
+          return message;
+        }
+        return {
+          ...message,
+          artifacts: message.artifacts.filter((_, index) => index !== artifactIndex),
+        };
+      }),
+    );
+  };
+
+  const normalizeWorkflowSpec = (workflowSpec: WorkflowDesignArtifact["workflow_spec"]) => ({
+    name: workflowSpec.name,
+    description: workflowSpec.description,
+    schedule: workflowSpec.schedule,
+    hitl_config: workflowSpec.hitl_config,
+    steps: workflowSpec.steps.map((step) => ({
+      id: step.id,
+      tool: step.agent,
+      agent: step.agent,
+      instruction: step.instruction,
+      depends_on: step.depends_on ?? [],
+      fallbacks: step.fallbacks ?? [],
+    })),
+  });
+
+  const handleWorkflowApprove = async (
+    artifactId: string,
+    workflowSpec: WorkflowDesignArtifact["workflow_spec"],
+  ) => {
+    if (!workspaceId || !activeSessionId) return;
+    setSessionError(null);
+    setWorkspaceNotice(null);
+
+    try {
+      const normalizedSpec = normalizeWorkflowSpec(workflowSpec);
+      const validation = inspectWorkflowSpec(normalizedSpec, workflowChainRulesQuery.data?.ruleset);
+      if (validation.errors.length > 0) {
+        setSessionError(validation.errors.map((issue) => issue.message).join(" "));
+        return;
+      }
+
+      const created = await createWorkflowMutation.mutateAsync({
+        workspace_id: workspaceId,
+        name: workflowSpec.name,
+        spec: normalizedSpec,
+        publish: false,
+      });
+
+      let notice = `Workflow "${workflowSpec.name}" saved as draft.`;
+
+      try {
+        await publishWorkflowMutation.mutateAsync({ id: created.id, workspace_id: workspaceId });
+        notice = `Workflow "${workflowSpec.name}" published.`;
+
+        try {
+          const run = await triggerScheduledWorkflow(created.id, workspaceId);
+          notice = `Workflow "${workflowSpec.name}" published and triggered. Run: ${run.flow_run_id}.`;
+        } catch (triggerError: unknown) {
+          notice = triggerError instanceof Error
+            ? `Workflow "${workflowSpec.name}" published, but run trigger failed: ${triggerError.message}`
+            : `Workflow "${workflowSpec.name}" published, but run trigger failed.`;
+        }
+      } catch (publishError: unknown) {
+        notice = publishError instanceof Error
+          ? `Workflow saved as draft. Publish requires additional permissions or failed: ${publishError.message}`
+          : "Workflow saved as draft. Publish requires additional permissions.";
+      }
+
+      removeWorkflowArtifact(artifactId);
+      if (validation.warnings.length > 0) {
+        notice = `${notice} Warnings: ${validation.warnings.map((issue) => issue.message).join(" ")}`;
+      }
+      setWorkspaceNotice(notice);
+    } catch (err: unknown) {
+      setSessionError(err instanceof Error ? err.message : "Failed to approve workflow");
+    }
   };
 
   const handleWorkflowModify = async (artifactId: string, feedback: string) => {
     if (!workspaceId || !activeSessionId) return;
-    setPrompt(`Please modify the workflow: ${feedback}`);
+    setWorkspaceNotice("Workflow feedback copied into the prompt editor. Send it to generate a revised draft.");
+    setPrompt(`Revise the workflow proposal. Feedback: ${feedback}`);
   };
 
   const handleWorkflowCancel = async (artifactId: string) => {
-    console.log("Workflow cancelled:", artifactId);
+    removeWorkflowArtifact(artifactId);
+    setWorkspaceNotice("Workflow proposal dismissed.");
   };
 
   return (
@@ -195,7 +280,7 @@ export default function AIWorkspace() {
               emptyTitle="No sessions"
               emptyDescription="Start a chat to work with your data."
               onRetry={() => {
-                void loadSessions();
+                void sessionsQuery.refetch();
               }}
               className="py-4"
             >
@@ -238,6 +323,12 @@ export default function AIWorkspace() {
           <div className="border-b border-slate-200 px-4 py-3">
             <h1 className="text-sm font-semibold text-slate-800">{activeSession?.title ?? "Session"}</h1>
             <p className="text-xs text-slate-400">Table, chart, code, and report artifacts render inline.</p>
+            {workspaceNotice ? (
+              <p className="mt-2 text-xs text-indigo-600">{workspaceNotice}</p>
+            ) : null}
+            {sessionError ? (
+              <p className="mt-2 text-xs text-rose-600">{sessionError}</p>
+            ) : null}
           </div>
 
           <div ref={feedRef} className="flex-1 space-y-3 overflow-auto bg-slate-50 p-4">

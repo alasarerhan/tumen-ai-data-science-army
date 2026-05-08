@@ -32,7 +32,7 @@ const SANITIZE_SCHEMA = {
 
 interface ChatMessageProps {
   message: ChatMessageDto;
-  onWorkflowApprove?: (artifactId: string) => void;
+  onWorkflowApprove?: (artifactId: string, workflowSpec: Extract<ChatMessageDto["artifacts"][number], { type: "workflow_design" }>["workflow_spec"]) => void;
   onWorkflowModify?: (artifactId: string, feedback: string) => void;
   onWorkflowCancel?: (artifactId: string) => void;
 }
@@ -51,7 +51,7 @@ export function ChatMessage({
         <WorkflowDesignMessage
           key={`${message.id}-artifact-${idx}`}
           workflowSpec={artifact.workflow_spec}
-          onApprove={() => onWorkflowApprove?.(`${message.id}-artifact-${idx}`)}
+          onApprove={() => onWorkflowApprove?.(`${message.id}-artifact-${idx}`, artifact.workflow_spec)}
           onModify={(feedback) => onWorkflowModify?.(`${message.id}-artifact-${idx}`, feedback)}
           onCancel={() => onWorkflowCancel?.(`${message.id}-artifact-${idx}`)}
         />

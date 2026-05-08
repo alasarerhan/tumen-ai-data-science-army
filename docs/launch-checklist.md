@@ -1,5 +1,11 @@
 # M20 GA Release Launch Checklist
 
+> Status: Legacy template until rewritten with current owners, environment assumptions, and evidence.
+>
+> Do not treat this file as active release truth until the placeholders below are replaced or the checklist is superseded by a newer artifact under `docs/`.
+>
+> Active successor: `docs/release-readiness-checklist.md`
+
 ## Pre-Launch Timeline
 
 ### T-7 Days: Feature Freeze

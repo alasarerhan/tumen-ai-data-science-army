@@ -1,4 +1,4 @@
-import { BASE_URL, apiDelete, apiGet, apiPost, getCsrfToken, qs } from "./client";
+import { BASE_URL, apiDelete, apiGet, apiPost, qs, withCsrfHeader } from "./client";
 import { readSseStream } from "./sse";
 
 export interface ChatSessionDto {
@@ -122,13 +122,12 @@ export async function streamChatMessage(
   body: { workspace_id: string; content: string },
   handlers: StreamChatHandlers,
 ): Promise<void> {
-  const csrfToken = await getCsrfToken();
+  const headers = await withCsrfHeader({
+    "Content-Type": "application/json",
+  });
   const res = await fetch(`${BASE_URL}/v1/chat/sessions/${session_id}/messages/stream`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-CSRF-Token": csrfToken,
-    },
+    headers,
     credentials: "include",
     body: JSON.stringify(body),
   });

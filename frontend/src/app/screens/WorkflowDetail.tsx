@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router";
 import { AppShell } from "../components/layout/AppShell";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
-import { Avatar } from "../components/ui/avatar";
 import { useAuth } from "../context/AuthContext";
-import { getWorkflow, publishWorkflow, type WorkflowSpec } from "../api/workflows";
+import { getWorkflow, type WorkflowSpec } from "../api/workflows";
 import { formatRelativeTime } from "../utils/time";
 import { cn } from "../lib/utils";
 import {
@@ -16,7 +15,6 @@ import {
   Play,
   Pencil,
   Copy,
-  ChevronRight,
   Clock,
   CheckCircle2,
   RotateCcw,
@@ -244,6 +242,23 @@ export default function WorkflowDetail() {
     );
   }
 
+  const workflowSpec = workflow.spec as Record<string, unknown>;
+  const graph = workflowSpec.graph as { nodes?: unknown[]; edges?: unknown[] } | undefined;
+  const steps = Array.isArray(workflowSpec.steps) ? workflowSpec.steps : [];
+  const nodeCount = Array.isArray(graph?.nodes) ? graph.nodes.length : steps.length;
+  const edgeCount = Array.isArray(graph?.edges)
+    ? graph.edges.length
+    : steps.reduce((count, step) => count + (((step as { depends_on?: unknown[] }).depends_on?.length) ?? 0), 0);
+  const validation = workflow.validation_summary;
+  const validationVariant =
+    validation.status === "safe" ? "success" : validation.status === "invalid" ? "danger" : "warning";
+  const validationTitle =
+    validation.status === "safe"
+      ? "Chain Safe"
+      : validation.status === "invalid"
+      ? "Invalid Chain"
+      : "Advisory Chain";
+
   const handleEditorChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setEditorValue(e.target.value);
     setIsDirty(true);
@@ -289,6 +304,9 @@ export default function WorkflowDetail() {
                   <Badge variant={statusVariant[workflow.status]} size="sm">
                     {workflow.status.charAt(0).toUpperCase() + workflow.status.slice(1)}
                   </Badge>
+                  <Badge variant={validationVariant} size="sm">
+                    {validationTitle}
+                  </Badge>
                   {isDirty && (
                     <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 font-medium">
                       Unsaved
@@ -313,6 +331,7 @@ export default function WorkflowDetail() {
               variant="secondary"
               size="sm"
               leadingIcon={<Play size={13} />}
+              disabled={validation.status === "invalid"}
             >
               Run
             </Button>
@@ -424,14 +443,36 @@ export default function WorkflowDetail() {
                     </div>
                     <div className="flex justify-between text-xs">
                       <span className="text-slate-500">Nodes</span>
-                      <span className="text-slate-700 dark:text-slate-300">--</span>
+                      <span className="text-slate-700 dark:text-slate-300">{nodeCount}</span>
                     </div>
                     <div className="flex justify-between text-xs">
                       <span className="text-slate-500">Edges</span>
-                      <span className="text-slate-700 dark:text-slate-300">--</span>
+                      <span className="text-slate-700 dark:text-slate-300">{edgeCount}</span>
+                    </div>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-slate-500">Chain</span>
+                      <span className="text-slate-700 dark:text-slate-300">{validationTitle}</span>
                     </div>
                   </div>
                 </div>
+
+                {(validation.errors.length > 0 || validation.warnings.length > 0) && (
+                  <div className="p-4 border-b border-slate-100 dark:border-slate-800">
+                    <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-3">Validation</p>
+                    <div className="space-y-2">
+                      {validation.errors.map((message) => (
+                        <p key={message} className="rounded bg-red-50 px-2 py-1 text-[11px] text-red-700 dark:bg-red-950/30 dark:text-red-300">
+                          {message}
+                        </p>
+                      ))}
+                      {validation.warnings.map((message) => (
+                        <p key={message} className="rounded bg-amber-50 px-2 py-1 text-[11px] text-amber-700 dark:bg-amber-950/30 dark:text-amber-300">
+                          {message}
+                        </p>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* Schema reference */}
                 <div className="p-4 flex-1 overflow-y-auto">
@@ -485,7 +526,7 @@ export default function WorkflowDetail() {
                   <div className="absolute left-[15px] top-4 bottom-4 w-px bg-slate-200 dark:bg-slate-700" />
 
                   <div className="space-y-4">
-                    {VERSION_HISTORY.map((v, idx) => (
+                    {VERSION_HISTORY.map((v) => (
                       <div key={v.version} className="flex gap-4 items-start">
                         {/* Timeline dot */}
                         <div className={cn(
@@ -535,7 +576,7 @@ export default function WorkflowDetail() {
                           <div className="flex items-center gap-2">
                             <div className="size-[18px] rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-[9px] font-semibold text-slate-500">AI</div>
                             <span className="text-xs text-slate-500">{v.authorName}</span>
-                            <span className="text-slate-300 dark:text-slate-600">�</span>
+                            <span className="text-slate-300 dark:text-slate-600">·</span>
                             <span className="text-xs text-slate-400">{formatRelativeTime(v.timestamp)}</span>
                           </div>
                         </div>
@@ -581,5 +622,7 @@ export default function WorkflowDetail() {
     </AppShell>
   );
 }
+
+
 
 

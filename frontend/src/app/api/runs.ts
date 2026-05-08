@@ -1,5 +1,7 @@
 import { apiGet, apiPost, qs } from "./client";
 
+const PREFECT_UI_BASE_URL = ((import.meta.env.VITE_PREFECT_UI_BASE_URL as string | undefined) || "").replace(/\/+$/, "");
+
 export type RunStatus = "running" | "success" | "failed" | "pending" | "cancelled";
 
 export interface Run {
@@ -33,4 +35,11 @@ export const cancelRun = (run_id: string, workspace_id: string) =>
 
 export const retryRun = (run_id: string, workspace_id: string) =>
   apiPost<Run>(`/v1/runs/${run_id}/retry`, { workspace_id });
+
+export function buildPrefectRunUrl(prefectFlowRunId: string | null | undefined): string | null {
+  if (!prefectFlowRunId || !PREFECT_UI_BASE_URL) {
+    return null;
+  }
+  return `${PREFECT_UI_BASE_URL}/flow-runs/flow-run/${encodeURIComponent(prefectFlowRunId)}`;
+}
 

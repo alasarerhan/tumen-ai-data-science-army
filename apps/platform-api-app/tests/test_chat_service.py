@@ -432,3 +432,33 @@ def test_session_to_dict_and_upload_to_dict_serialization(seeded_db: dict[str, o
     assert session_payload["status"] == ChatSessionStatus.active.value
     assert upload_payload["filename"] == "file.csv"
     assert upload_payload["size_bytes"] == 123
+
+
+@pytest.mark.asyncio
+async def test_chatworkspace_astream_emits_progress_and_response(monkeypatch: pytest.MonkeyPatch) -> None:
+    from ai_data_science_team.multiagents.chat_router import RouterDecision
+    from ai_data_science_team.multiagents.chat_workspace import ChatWorkspace
+
+    class Router:
+        def route(self, message: str) -> RouterDecision:
+            return RouterDecision(
+                agent_name="pandas_data_analyst",
+                confidence=1.0,
+                method="test",
+                raw_scores={},
+            )
+
+    async def fake_async_runner(self, message, df, **kwargs):
+        return "async response", None, None
+
+    monkeypatch.setattr(ChatWorkspace, "_run_pandas_analyst_async", fake_async_runner)
+
+    workspace = ChatWorkspace(model=object(), intent_router=Router())
+    session_id = workspace.create_session()
+
+    events = [event async for event in workspace.astream(session_id, "analyze")]
+
+    assert [event.type for event in events] == ["progress", "progress", "response"]
+    assert events[-1].response is not None
+    assert events[-1].response.text == "async response"
+    assert workspace.get_history(session_id)[-1].content == "async response"

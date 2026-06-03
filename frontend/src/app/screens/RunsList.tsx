@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router";
 import {
   ChevronDown,
@@ -20,7 +20,7 @@ import { AsyncTableState } from "../components/ui/async-table-state";
 import { useAuth } from "../context/AuthContext";
 import { useRuns, useTriggerRun, useRetryRun, useCancelRun } from "../hooks/useRuns";
 import { useWorkflows } from "../hooks/useWorkflows";
-import { type Run, type RunStatus } from "../api/runs";
+import { type RunStatus } from "../api/runs";
 import { formatDuration, formatRelativeTime } from "../utils/time";
 import { cn } from "../lib/utils";
 import {

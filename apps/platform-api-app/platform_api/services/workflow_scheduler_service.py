@@ -32,11 +32,11 @@ Usage
 from __future__ import annotations
 
 import asyncio
+import importlib.util
 import json
 import logging
 import uuid
-from contextlib import asynccontextmanager
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from typing import Any, Dict, List, Optional
 
 from prometheus_client import Counter, Gauge
@@ -107,12 +107,10 @@ class WorkflowSchedulerService:
 
     def _check_prefect(self) -> bool:
         """Check if Prefect is available."""
-        try:
-            import prefect
-            return True
-        except ImportError:
+        if importlib.util.find_spec("prefect") is None:
             logger.warning("Prefect not available, scheduled workflows will be disabled")
             return False
+        return True
 
     async def create_scheduled_deployment(
         self,
@@ -220,7 +218,7 @@ class WorkflowSchedulerService:
                 workflow_spec.name, settings.prefect_api_timeout_seconds,
             )
             raise RuntimeError("Prefect API timeout. Please try again.")
-        except Exception as e:
+        except Exception:
             PREFECT_CIRCUIT_BREAKER.record_failure()
             logger.error(
                 "Failed to create scheduled deployment for workflow %s",
@@ -376,8 +374,6 @@ class WorkflowSchedulerService:
 
         try:
             from platform_api.services.run_orchestration_service import create_orchestration_run_id
-
-            spec_data = json.loads(workflow_spec.spec_json) if workflow_spec.spec_json else {}
 
             flow_run_id = await create_orchestration_run_id(
                 flow_key=workflow_spec.name,

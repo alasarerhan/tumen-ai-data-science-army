@@ -138,7 +138,7 @@ export async function streamChatMessage(
   }
 
   type StreamEvent = {
-    type: "delta" | "message" | "done" | "error";
+    type: "progress" | "delta" | "message" | "done" | "error";
     delta?: string;
     message?: ChatMessageDto;
     message_id?: string;

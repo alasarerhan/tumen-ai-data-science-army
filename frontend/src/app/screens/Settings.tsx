@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { AppShell } from "../components/layout/AppShell";
 import { Avatar } from "../components/ui/avatar";
 import { Button } from "../components/ui/button";
@@ -12,12 +12,7 @@ import {
   Key,
   Bell,
   AlertTriangle,
-  Eye,
-  EyeOff,
   Plus,
-  Trash2,
-  RefreshCw,
-  CheckCircle2,
   Copy,
 } from "lucide-react";
 
@@ -60,7 +55,7 @@ function SectionHeader({ title }: { title: string }) {
 }
 
 export default function Settings() {
-  const { user, workspaceId } = useAuth();
+  const { user } = useAuth();
   const shellUser = user
     ? {
         id: user.id ?? "me",

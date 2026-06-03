@@ -226,7 +226,7 @@ def _infer_function_name(code: str) -> Optional[str]:
 
     if not isinstance(code, str) or not code:
         return None
-    m = re.search(r"^\\s*def\\s+([a-zA-Z_][a-zA-Z0-9_]*)\\s*\\(", code, flags=re.MULTILINE)
+    m = re.search(r"^\s*def\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\(", code, flags=re.MULTILINE)
     return m.group(1) if m else None
 
 

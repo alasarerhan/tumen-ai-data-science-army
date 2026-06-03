@@ -50,6 +50,7 @@ class Settings(BaseSettings):
     # Chat workspace
     chat_upload_dir: str = "./.chat_uploads"
     chat_stream_chunk_ms: int = 35
+    chat_worker_max_threads: int = 4
     chat_upload_max_mb: int = 50
 
     # Signal stream
@@ -61,6 +62,8 @@ class Settings(BaseSettings):
     allow_local_run_fallback: bool = False
     orchestration_execution_mode: str = "prefect"  # prefect|staged_m22
     orchestration_state_redis_url: str = ""
+    workflow_queue_redis_url: str = ""
+    workflow_queue_required: bool = False
     prefect_hello_deployment_id: str = ""
     prefect_default_deployment_id: str = ""
     prefect_work_pool_name: str = ""
@@ -73,6 +76,10 @@ class Settings(BaseSettings):
 
     # Storage retention (FinOps)
     artifact_retention_days: int = 90
+    artifact_storage_backend: str = "local"  # local|s3|gcs
+    artifact_storage_local_dir: str = "./.artifacts"
+    artifact_storage_s3_bucket: str = ""
+    artifact_storage_gcs_bucket: str = ""
     audit_log_retention_days: int = 90
     log_retention_days: int = 30
 
@@ -93,6 +100,7 @@ class Settings(BaseSettings):
     scheduler_leader_ttl_seconds: int = 60
     scheduler_poll_interval_seconds: float = 5.0
     scheduler_job_timeout_seconds: int = 300
+    scheduler_max_concurrent_jobs: int = 2
 
     # External service timeouts
     prefect_api_timeout_seconds: int = 30
@@ -110,6 +118,9 @@ class Settings(BaseSettings):
 
     def is_local_or_staging_profile(self) -> bool:
         return self.is_local_profile() or self.is_staging_profile()
+
+    def is_production_profile(self) -> bool:
+        return self.deployment_profile.lower() in {"prod", "production"}
 
     def validate_directories(self) -> None:
         """Validate that required directories exist and are writable.
@@ -132,6 +143,12 @@ class Settings(BaseSettings):
                 f"Cannot create upload directory {upload_dir}: {e}. "
                 f"Set CHAT_UPLOAD_DIR environment variable to a writable directory."
             ) from e
+
+        backend = self.artifact_storage_backend.lower().strip()
+        if backend not in {"local", "s3", "gcs"}:
+            raise RuntimeError("ARTIFACT_STORAGE_BACKEND must be one of: local, s3, gcs")
+        if self.is_production_profile() and backend == "local":
+            raise RuntimeError("Production deployments must use object storage for artifacts")
 
 
 settings = Settings()

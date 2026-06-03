@@ -13,6 +13,7 @@ from platform_api.db.models import WorkflowSpec, Workspace, WorkspaceMembership
 from platform_api.db.tenant_query import TenantQuery
 from platform_api.core.service_errors import ConflictError, ForbiddenError, NotFoundError, ValidationError
 from platform_api.services.workflow_chain_validator import inspect_workflow_spec
+from platform_api.services.workflow_ir_service import validate_workflow_ir_v2
 from platform_api.services.quota_service import enforce_tenant_write_quota
 
 logger = logging.getLogger(__name__)
@@ -20,12 +21,52 @@ logger = logging.getLogger(__name__)
 WorkflowSpecStatus = Literal["draft", "published", "archived"]
 
 _VALID_STATUSES: set[str] = {"draft", "published", "archived"}
+_LEGACY_TOOL_AGENT_MAP: dict[str, str] = {
+    "data_load": "DataLoaderToolsAgent",
+    "data_clean": "DataCleaningAgent",
+    "feature_engineering": "FeatureEngineeringAgent",
+    "model_train": "H2OMLAgent",
+    "eda": "EDAToolsAgent",
+    "report": "NarrativeAgent",
+}
 
 
-def build_workflow_validation_summary(spec: dict) -> dict:
-    inspection = inspect_workflow_spec(spec)
+def _normalize_spec_for_validation(spec: dict, *, workflow_name: str | None = None) -> dict:
+    effective_spec = spec if spec.get("name") or not workflow_name else {**spec, "name": workflow_name}
+    steps = effective_spec.get("steps")
+    if not isinstance(steps, list):
+        return effective_spec
+    normalized_steps: list[dict] = []
+    changed = False
+    previous_id: str | None = None
+    for step in steps:
+        if not isinstance(step, dict):
+            normalized_steps.append(step)
+            continue
+        normalized = dict(step)
+        tool = str(normalized.get("tool") or "").strip()
+        if not normalized.get("agent") and tool in _LEGACY_TOOL_AGENT_MAP:
+            normalized["agent"] = _LEGACY_TOOL_AGENT_MAP[tool]
+            changed = True
+        if previous_id and not normalized.get("depends_on"):
+            normalized["depends_on"] = [previous_id]
+            changed = True
+        previous_id = str(normalized.get("id") or previous_id)
+        normalized_steps.append(normalized)
+    if not changed:
+        return effective_spec
+    return {**effective_spec, "steps": normalized_steps}
+
+
+def build_workflow_validation_summary(spec: dict, *, workflow_name: str | None = None) -> dict:
+    effective_spec = _normalize_spec_for_validation(spec, workflow_name=workflow_name)
+    inspection = inspect_workflow_spec(effective_spec)
     errors = inspection.get("errors", [])
     warnings = inspection.get("warnings", [])
+    if effective_spec.get("ir_version") == "2.0":
+        ir_inspection = validate_workflow_ir_v2(effective_spec)
+        errors = [*errors, *ir_inspection["errors"]]
+        warnings = [*warnings, *ir_inspection["warnings"]]
     if errors:
         status = "invalid"
     elif warnings:
@@ -69,8 +110,8 @@ def _authorized_workspace(db: Session, *, workspace_id: str, user_id: uuid.UUID)
     return workspace, membership
 
 
-def _validate_spec(spec: dict) -> None:
-    errors = build_workflow_validation_summary(spec)["errors"]
+def _validate_spec(spec: dict, *, workflow_name: str | None = None) -> None:
+    errors = build_workflow_validation_summary(spec, workflow_name=workflow_name)["errors"]
     if errors:
         raise ValidationError(" ".join(errors))
 
@@ -85,7 +126,7 @@ def create_workflow_spec_version(
     publish: bool,
 ) -> WorkflowSpec:
     workspace, membership = _authorized_workspace(db, workspace_id=workspace_id, user_id=user_id)
-    _validate_spec(spec)
+    _validate_spec(spec, workflow_name=name)
     if publish and not can_admin_workspace(membership.role):
         raise ForbiddenError("Workspace admin/owner role required for publish")
 

@@ -188,7 +188,7 @@ def configure_session_events(session_local: sessionmaker) -> None:
     """
 
     @event.listens_for(session_local, "after_begin")
-    def receive_after_begin(session, transaction, connection):
+    def receive_after_begin(_session, _transaction, connection):
         """Set tenant context when a transaction begins."""
         if connection.dialect.name != "postgresql":
             return
@@ -220,7 +220,7 @@ def configure_session_events(session_local: sessionmaker) -> None:
             ) from e
 
     @event.listens_for(session_local, "after_transaction_end")
-    def receive_after_transaction_end(session, transaction):
+    def receive_after_transaction_end(session, _transaction):
         """Reset tenant context after transaction ends to prevent leakage."""
         bind = session.get_bind()
         if bind is None or bind.dialect.name != "postgresql":
@@ -267,7 +267,7 @@ class TenantSession:
         )
         return self.db
 
-    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
+    def __exit__(self, _exc_type, _exc_val, _exc_tb) -> None:
         _set_postgres_rls_context(
             self.db,
             tenant_id=self._original_tenant,

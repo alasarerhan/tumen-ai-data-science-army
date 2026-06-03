@@ -1,8 +1,7 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useNavigate, Navigate } from "react-router";
-import { Zap, Bot, BarChart2, Users, Eye, EyeOff, AlertTriangle, Loader2 } from "lucide-react";
+import { Zap, Bot, BarChart2, Users, Eye, EyeOff, AlertTriangle } from "lucide-react";
 import { Button } from "../components/ui/button";
-import { cn } from "../lib/utils";
 import { useAuth } from "../context/AuthContext";
 
 export default function Login() {
@@ -193,6 +192,7 @@ export default function Login() {
                     <div className="relative">
                       <input
                         id="token"
+                        name="token"
                         type={showToken ? "text" : "password"}
                         autoComplete="current-password"
                         spellCheck={false}

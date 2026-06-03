@@ -201,3 +201,16 @@ ai-data-science-team/
 
 # Frontend generated coverage
 frontend/coverage/
+frontend/playwright-report/
+frontend/test-results/
+
+# Generated analysis/runtime artifacts
+graphify-out/
+**/graphify-out/
+outputs/
+architecture.html
+.graphify_python
+nul
+*.broken_*
+
+.dfmt/

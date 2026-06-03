@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { AppShell } from "../components/layout/AppShell";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";

@@ -36,7 +36,7 @@ class TestConcurrentWorkflowPublish:
                         workspace_id=str(workspace.id),
                         user_id=user_id,
                         name=f"concurrent-test-{uuid.uuid4().hex[:8]}",
-                        spec={"steps": [{"id": "s1", "tool": "test"}]},
+                        spec={"steps": [{"id": "s1", "tool": "data_clean"}]},
                         publish=True,
                     )
                     with lock:

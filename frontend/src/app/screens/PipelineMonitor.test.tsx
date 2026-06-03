@@ -5,7 +5,6 @@ import PipelineMonitor from "./PipelineMonitor";
 import { AuthProvider } from "../context/AuthContext";
 import * as runsApi from "../api/runs";
 import * as signalsApi from "../api/signals";
-import * as logsApi from "../api/logs";
 import * as workflowsApi from "../api/workflows";
 
 vi.mock("../api/runs", () => ({
@@ -40,17 +39,37 @@ vi.mock("../hooks/useEventSource", () => ({
 const mockRuns = [
   {
     id: "run-1",
+    workspace_id: "ws-123",
+    tenant_id: "tenant-1",
     flow_key: "test-flow",
+    workflow_spec_id: "wf-1",
+    workflow_version: 1,
+    trigger_type: "manual",
+    input_artifact_ids: [],
+    prefect_flow_run_id: "prefect-run-1",
     status: "running",
+    parameters: {},
     created_at: "2024-01-15T10:00:00Z",
+    updated_at: "2024-01-15T10:02:00Z",
     started_at: "2024-01-15T10:01:00Z",
+    finished_at: null,
   },
   {
     id: "run-2",
+    workspace_id: "ws-123",
+    tenant_id: "tenant-1",
     flow_key: "another-flow",
-    status: "completed",
+    workflow_spec_id: "wf-2",
+    workflow_version: 1,
+    trigger_type: "manual",
+    input_artifact_ids: [],
+    prefect_flow_run_id: "prefect-run-2",
+    status: "success",
+    parameters: {},
     created_at: "2024-01-15T09:00:00Z",
+    updated_at: "2024-01-15T09:05:00Z",
     started_at: "2024-01-15T09:01:00Z",
+    finished_at: "2024-01-15T09:05:00Z",
   },
 ];
 
@@ -243,9 +262,12 @@ describe("PipelineMonitor", () => {
       items: [
         {
           id: "sig-1",
+          workflow_run_id: "run-1",
           signal_type: "pause",
           target_step: "step-1",
           note: "Test note",
+          payload: {},
+          created_by_user_id: "user-1",
           created_at: "2024-01-15T10:00:00Z",
         },
       ],

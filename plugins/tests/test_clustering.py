@@ -5,12 +5,10 @@ Agent construction tests use a deterministic FakeChatModel mock.
 """
 from __future__ import annotations
 
-import math
 import random
 from typing import List
 
 import numpy as np
-import pytest
 
 
 # ---------------------------------------------------------------------------
@@ -325,7 +323,7 @@ def _fake_llm():
         def _llm_type(self) -> str:
             return "fake"
 
-        def _generate(self, messages, stop=None, run_manager=None, **kw) -> ChatResult:
+        def _generate(self, messages, stop=None, _run_manager=None, **kw) -> ChatResult:
             return ChatResult(
                 generations=[ChatGeneration(message=LCAIMessage(content="Done."))]
             )

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import asyncio
 import json
 import logging
 from pathlib import Path
@@ -43,6 +42,7 @@ from platform_api.services.chat_service import (
     message_to_dict,
     save_upload,
     session_to_dict,
+    stream_assistant_reply,
     update_message,
     upload_to_dict,
 )
@@ -216,8 +216,6 @@ async def stream_session_message(
         db, session=session, role=ChatMessageRole.user, content=body.content
     )
 
-    assistant_text, artifacts = generate_assistant_reply(db, session=session, prompt=body.content)
-
     pending_assistant = create_pending_message(
         db, session=session, role=ChatMessageRole.assistant, content="", artifacts=None
     )
@@ -225,22 +223,35 @@ async def stream_session_message(
     db.refresh(pending_assistant)
 
     async def _generator():
-        chunk_wait_seconds = max(1, settings.chat_stream_chunk_ms) / 1000.0
         accumulated_text = ""
+        final_artifacts = None
         try:
-            words = assistant_text.split(" ")
-            for word in words:
-                piece = f"{word} "
-                accumulated_text += piece
-                yield _sse_event({"type": "delta", "delta": piece, "message_id": str(pending_assistant.id)})
-                await asyncio.sleep(chunk_wait_seconds)
+            async for event in stream_assistant_reply(db, session=session, prompt=body.content):
+                if event.type == "progress":
+                    yield _sse_event({"type": "progress", "message_id": str(pending_assistant.id)})
+                    continue
+                if event.type == "final":
+                    piece = event.delta or event.text or ""
+                    accumulated_text += piece
+                    final_artifacts = event.artifacts
+                    if piece:
+                        yield _sse_event(
+                            {
+                                "type": "delta",
+                                "delta": piece,
+                                "message_id": str(pending_assistant.id),
+                            }
+                        )
+                    continue
+                if event.type == "error":
+                    raise RuntimeError(event.error or "Chat streaming failed")
 
             full_text = accumulated_text.strip()
             assistant = update_message(
                 db,
                 message=pending_assistant,
                 content=full_text,
-                artifacts=artifacts,
+                artifacts=final_artifacts,
             )
             db.commit()
             yield _sse_event({"type": "message", "message": message_to_dict(assistant)})

@@ -1,4 +1,3 @@
-import React from "react";
 import { CalendarClock, Pause, Play, Clock } from "lucide-react";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";

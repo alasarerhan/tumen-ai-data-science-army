@@ -23,6 +23,9 @@ dependencies = [
 testpaths = ["tests"]
 addopts = "-v"
 asyncio_mode = "auto"
+markers = [
+    "real_llm: tests that call a real LLM provider and require OPENAI_API_KEY",
+]
 
 [tool.ruff]
 line-length = 100

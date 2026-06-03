@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import uuid
 from datetime import UTC, datetime
 from pathlib import Path
@@ -70,6 +71,57 @@ async def test_scheduler_runs_handlers_as_explicit_system_actor(seeded_db: dict)
         await service._run_job(job)
 
     assert observed["system_actor"] is True
+
+
+@pytest.mark.asyncio
+async def test_scheduler_runs_due_jobs_with_bounded_concurrency(seeded_db: dict) -> None:
+    from platform_api.services.scheduler_service import SchedulerService
+
+    db = seeded_db["db"]
+    service = SchedulerService(db, max_concurrent_jobs=2)
+    isolated_session_factory = sessionmaker(bind=db.bind, autocommit=False, autoflush=False)
+    running = 0
+    max_seen = 0
+
+    async def handler(job_db):
+        nonlocal running, max_seen
+        running += 1
+        max_seen = max(max_seen, running)
+        await asyncio.sleep(0.02)
+        running -= 1
+
+    jobs = [
+        service.register_job(
+            job_name=f"bounded-concurrency-{idx}",
+            job_type="maintenance",
+            handler=handler,
+            interval_seconds=60,
+        )
+        for idx in range(3)
+    ]
+    db.commit()
+
+    with patch("platform_api.db.session.SessionLocal", isolated_session_factory):
+        semaphore = asyncio.Semaphore(service._max_concurrent_jobs)
+        await asyncio.gather(*(service._run_job_with_limit(semaphore, job.id) for job in jobs))
+
+    assert max_seen == 2
+
+
+@pytest.mark.asyncio
+async def test_scheduler_leadership_handles_multiple_enabled_jobs(seeded_db: dict) -> None:
+    from platform_api.services.scheduler_service import SchedulerService
+
+    db = seeded_db["db"]
+    service = SchedulerService(db)
+
+    async def handler(job_db):
+        return None
+
+    service.register_job("leader-check-a", "maintenance", handler, interval_seconds=60)
+    service.register_job("leader-check-b", "maintenance", handler, interval_seconds=60)
+
+    assert await service._try_acquire_leadership() is True
 
 
 def test_delete_tenant_cleans_external_backends(seeded_db: dict, tmp_path, monkeypatch) -> None:
@@ -221,7 +273,7 @@ async def test_workflow_scheduler_service_deletes_scoped_deployments(seeded_db: 
 
             return FakeClient()
 
-        async def __aexit__(self, exc_type, exc, tb):
+        async def __aexit__(self, _exc_type, _exc, _tb):
             return False
 
     prefect_module = ModuleType("prefect")

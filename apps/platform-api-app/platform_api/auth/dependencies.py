@@ -124,7 +124,7 @@ async def get_principal(
         raise HTTPException(status_code=500, detail="Unsupported AUTH_MODE")
 
     if not settings.oidc_jwks_url:
-        raise HTTPException(status_code=500, detail="OIDC_JWKS_URL is required for oidc mode")
+        raise HTTPException(status_code=503, detail="OIDC_JWKS_URL is required for oidc mode")
 
     verifier = _build_oidc_verifier(
         settings.oidc_issuer,

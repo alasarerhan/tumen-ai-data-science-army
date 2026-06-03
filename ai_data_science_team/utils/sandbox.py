@@ -344,17 +344,17 @@ def _build_runner_script() -> str:
                 result = _to_jsonable(result)
                 sys.stdout.write(json.dumps({"result": result, "error": None}))
             except Exception as exc:
-            try:
-                import traceback
-                import re
-                tb = traceback.format_exc()
-                tb = re.sub(r'File "[^"]*"', 'File "<redacted>"', tb)
-                tb = re.sub(r'/home/[^/]+/', '/home/<user>/', tb)
-                tb = re.sub(r'/Users/[^/]+/', '/Users/<user>/', tb)
-                tb = re.sub(r'C:\\\\Users\\\\[^\\\\]+\\\\', 'C:\\\\Users\\\\<user>\\\\', tb)
-            except Exception:
-                tb = ""
-            sys.stdout.write(json.dumps({"result": None, "error": f"Function execution failed", "error_type": type(exc).__name__}))
+                try:
+                    import traceback
+                    import re
+                    tb = traceback.format_exc()
+                    tb = re.sub(r'File "[^"]*"', 'File "<redacted>"', tb)
+                    tb = re.sub(r'/home/[^/]+/', '/home/<user>/', tb)
+                    tb = re.sub(r'/Users/[^/]+/', '/Users/<user>/', tb)
+                    tb = re.sub(r'C:\\\\Users\\\\[^\\\\]+\\\\', 'C:\\\\Users\\\\<user>\\\\', tb)
+                except Exception:
+                    tb = ""
+                sys.stdout.write(json.dumps({"result": None, "error": f"Function execution failed: {exc}", "error_type": type(exc).__name__, "traceback": tb}))
 
         if __name__ == "__main__":
             main()

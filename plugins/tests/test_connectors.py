@@ -5,13 +5,10 @@ SQLConnector tests use sqlite+pysqlite (stdlib), so no extra driver is needed.
 """
 from __future__ import annotations
 
-import csv
 import io
 import json
-import os
-import tempfile
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 import pandas as pd
 import pytest

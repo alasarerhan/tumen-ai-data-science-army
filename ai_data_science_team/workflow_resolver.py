@@ -314,7 +314,7 @@ class WorkflowResolver:
     def _generate_spec(self, user_goal: str) -> Dict[str, Any]:
         """Call the LLM to produce a WorkflowSpec from a user goal string."""
         if not self._model or not user_goal.strip():
-            return {}
+            return self._fallback_spec(user_goal)
 
         catalog_json = json.dumps(self._catalog, indent=2)[:4000]
         prompt = _SPEC_GENERATION_PROMPT.format(
@@ -326,9 +326,35 @@ class WorkflowResolver:
             result = self._model.invoke([HumanMessage(content=prompt)])
             content = getattr(result, "content", "") or ""
             spec = _safe_json_parse(content)
-            return spec or {}
+            if spec and not validate_spec(spec):
+                return spec
+            return self._fallback_spec(user_goal)
         except Exception:  # noqa: BLE001
-            return {}
+            return self._fallback_spec(user_goal)
+
+    def _fallback_spec(self, user_goal: str) -> Dict[str, Any]:
+        """Build a minimal deterministic WorkflowSpec when dynamic LLM planning fails."""
+        agent_name = "EDAToolsAgent"
+        if self._catalog:
+            names = [str(item.get("name", "")) for item in self._catalog if item.get("name")]
+            for candidate in ("EDAToolsAgent", "DataLoaderToolsAgent", "DataCleaningAgent"):
+                if candidate in names:
+                    agent_name = candidate
+                    break
+            else:
+                agent_name = names[0]
+
+        return build_spec(
+            name="dynamic_data_science_workflow",
+            description=user_goal or "Generated fallback workflow.",
+            steps=[
+                build_step(
+                    step_id="analyze",
+                    agent=agent_name,
+                    instruction=user_goal or "Analyze the supplied dataset and summarize key findings.",
+                )
+            ],
+        )
 
     # ------------------------------------------------------------------ utilities
 

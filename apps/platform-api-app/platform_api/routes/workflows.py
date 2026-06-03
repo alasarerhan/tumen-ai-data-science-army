@@ -43,7 +43,7 @@ def _serialize_workflow_record(record, *, include_etag: bool = False) -> dict:
         "version": record.version,
         "status": record.status,
         "spec": spec,
-        "validation_summary": build_workflow_validation_summary(spec),
+        "validation_summary": build_workflow_validation_summary(spec, workflow_name=record.name),
         "created_at": record.created_at.isoformat() if record.created_at else None,
         "updated_at": record.updated_at.isoformat() if record.updated_at else None,
     }
@@ -179,7 +179,7 @@ async def publish_workflow(
         "name": record.name,
         "version": record.version,
         "status": record.status,
-        "validation_summary": build_workflow_validation_summary(spec),
+        "validation_summary": build_workflow_validation_summary(spec, workflow_name=record.name),
         "_etag": etag,
     }
 
@@ -216,7 +216,7 @@ async def archive_workflow(
         "name": record.name,
         "version": record.version,
         "status": record.status,
-        "validation_summary": build_workflow_validation_summary(spec),
+        "validation_summary": build_workflow_validation_summary(spec, workflow_name=record.name),
         "_etag": etag,
     }
 
@@ -364,7 +364,7 @@ async def trigger_workflow(
         user_id=user.id,
     )
     spec = json.loads(record.spec_json)
-    validation_summary = build_workflow_validation_summary(spec)
+    validation_summary = build_workflow_validation_summary(spec, workflow_name=record.name)
     if validation_summary["status"] == "invalid":
         raise ValidationError("Workflow contains invalid agent chains and cannot be triggered.")
 

@@ -12,6 +12,7 @@ from platform_api.auth.dependencies import get_principal
 from platform_api.auth.models import Principal
 from platform_api.db.session import get_db
 from platform_api.main import create_app
+from platform_api.services.chat_service import ChatStreamEvent
 
 
 @pytest.fixture()
@@ -69,6 +70,65 @@ class TestChatSessionLifecycle:
         assert len(payload["artifacts"]) >= 1
 
     def test_stream_endpoint_emits_done(self, admin_client):
+        client, sdb = admin_client
+        ws_id = str(sdb["workspace"].id)
+        sid = client.post("/v1/chat/sessions", json={"workspace_id": ws_id, "title": "SSE"}).json()["id"]
+
+        async def fake_stream(*args, **kwargs):
+            yield ChatStreamEvent(type="progress")
+            yield ChatStreamEvent(
+                type="final",
+                delta="streamed assistant text",
+                text="streamed assistant text",
+                artifacts=[{"type": "report", "title": "Done", "content": "streamed assistant text"}],
+            )
+
+        with patch("platform_api.routes.chat.stream_assistant_reply", fake_stream):
+            with client.stream(
+                "POST",
+                f"/v1/chat/sessions/{sid}/messages/stream",
+                json={"workspace_id": ws_id, "content": "stream response please"},
+            ) as response:
+                assert response.status_code == 200
+                lines = [line for line in response.iter_lines() if line]
+
+        joined = "\n".join(lines)
+        assert '"type": "progress"' in joined
+        assert '"type": "delta"' in joined
+        assert "streamed assistant text" in joined
+        assert '"type": "message"' in joined
+        assert '"type": "done"' in joined
+
+        messages = client.get(f"/v1/chat/sessions/{sid}/messages?workspace_id={ws_id}").json()["items"]
+        assistant_messages = [
+            message for message in messages
+            if message["role"] == "assistant" and message["content"] == "streamed assistant text"
+        ]
+        assert len(assistant_messages) == 1
+
+    def test_stream_endpoint_emits_error_for_generation_failure(self, admin_client):
+        client, sdb = admin_client
+        ws_id = str(sdb["workspace"].id)
+        sid = client.post("/v1/chat/sessions", json={"workspace_id": ws_id, "title": "SSE error"}).json()["id"]
+
+        async def fake_stream(*args, **kwargs):
+            yield ChatStreamEvent(type="progress")
+            yield ChatStreamEvent(type="error", error="forced failure")
+
+        with patch("platform_api.routes.chat.stream_assistant_reply", fake_stream):
+            with client.stream(
+                "POST",
+                f"/v1/chat/sessions/{sid}/messages/stream",
+                json={"workspace_id": ws_id, "content": "stream response please"},
+            ) as response:
+                assert response.status_code == 200
+                lines = [line for line in response.iter_lines() if line]
+
+        joined = "\n".join(lines)
+        assert '"type": "error"' in joined
+        assert '"type": "done"' in joined
+
+    def test_stream_endpoint_emits_done_with_real_generator(self, admin_client):
         client, sdb = admin_client
         ws_id = str(sdb["workspace"].id)
         sid = client.post("/v1/chat/sessions", json={"workspace_id": ws_id, "title": "SSE"}).json()["id"]

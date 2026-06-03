@@ -199,7 +199,6 @@ class SignalStore:
             pending = [s for s in signals if not s.consumed]
             for s in pending:
                 s.consumed = True
-            self._signals[session_id] = [s for s in signals if not s.consumed]
         return pending
 
     def list_all(self, session_id: str) -> List[WorkflowSignal]:

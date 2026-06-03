@@ -14,6 +14,8 @@ export default tseslint.config(
     },
     languageOptions: {
       parserOptions: {
+        projectService: true,
+        tsconfigRootDir: import.meta.dirname,
         ecmaFeatures: {
           jsx: true,
         },
@@ -37,6 +39,20 @@ export default tseslint.config(
     },
   },
   {
-    ignores: ["node_modules/**", "dist/**", "build/**", "*.config.ts", "*.config.js"],
+    files: ["e2e/**/*.ts"],
+    rules: {
+      "react-hooks/rules-of-hooks": "off",
+    },
+  },
+  {
+    ignores: [
+      "node_modules/**",
+      "dist/**",
+      "build/**",
+      "test-results/**",
+      "playwright-report/**",
+      "*.config.ts",
+      "*.config.js",
+    ],
   }
 );

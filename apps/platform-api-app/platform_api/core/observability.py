@@ -295,11 +295,27 @@ def _register_service_metrics() -> None:
             SCHEDULER_JOBS_TOTAL,
             SCHEDULER_LEADER_GAUGE,
             SCHEDULER_QUEUE_DEPTH,
+            SCHEDULER_RUNNING_JOBS_GAUGE,
+            SCHEDULER_STUCK_JOBS_GAUGE,
         )
         _register_metric_collector(SCHEDULER_JOBS_TOTAL)
         _register_metric_collector(SCHEDULER_JOB_DURATION)
         _register_metric_collector(SCHEDULER_LEADER_GAUGE)
         _register_metric_collector(SCHEDULER_QUEUE_DEPTH)
+        _register_metric_collector(SCHEDULER_STUCK_JOBS_GAUGE)
+        _register_metric_collector(SCHEDULER_RUNNING_JOBS_GAUGE)
+    except ImportError:
+        pass
+
+    try:
+        from platform_api.services.chat_service import (
+            CHAT_BLOCKING_TASKS_IN_FLIGHT,
+            CHAT_STREAM_DURATION,
+            CHAT_STREAM_EVENTS_TOTAL,
+        )
+        _register_metric_collector(CHAT_STREAM_EVENTS_TOTAL)
+        _register_metric_collector(CHAT_STREAM_DURATION)
+        _register_metric_collector(CHAT_BLOCKING_TASKS_IN_FLIGHT)
     except ImportError:
         pass
 

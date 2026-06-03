@@ -130,6 +130,37 @@ vi.mock("../api/runs", () => ({
   triggerRun: vi.fn().mockResolvedValue({ id: "run-1", status: "pending" }),
 }));
 
+vi.mock("../api/workflowNodeTypes", () => ({
+  getWorkflowNodeTypes: vi.fn().mockResolvedValue({
+    items: [
+      {
+        type: "dataset.profile",
+        label: "Dataset Profile",
+        category: "Profiling",
+        description: "Profile dataset",
+        inputs: [{ name: "dataset", artifact_type: "dataset", required: true }],
+        outputs: [{ name: "profile", artifact_type: "profile_report", required: true }],
+        ui: { icon: "table", color: "#0ea5e9", config: [] },
+        timeout_seconds: 600,
+        retry_policy: { max_attempts: 2, backoff_seconds: 10 },
+        resources: { class: "cpu_medium" },
+      },
+      {
+        type: "model.train",
+        label: "Train Model",
+        category: "Modeling",
+        description: "Train model",
+        inputs: [{ name: "features", artifact_type: "feature_set", required: true }],
+        outputs: [{ name: "model", artifact_type: "model", required: true }],
+        ui: { icon: "brain", color: "#6366f1", config: [] },
+        timeout_seconds: 3600,
+        retry_policy: { max_attempts: 1, backoff_seconds: 60 },
+        resources: { class: "cpu_large" },
+      },
+    ],
+  }),
+}));
+
 vi.mock("../api/scheduler", () => ({
   createScheduledDeployment: vi.fn().mockResolvedValue({ deployment_id: "dep-1" }),
   getWorkflowSchedule: vi.fn().mockResolvedValue(null),

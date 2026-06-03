@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Plus, Send, Loader2 } from "lucide-react";
 import { AppShell } from "../components/layout/AppShell";
 import { Button } from "../components/ui/button";
@@ -250,7 +250,7 @@ export default function AIWorkspace() {
     }
   };
 
-  const handleWorkflowModify = async (artifactId: string, feedback: string) => {
+  const handleWorkflowModify = async (_artifactId: string, feedback: string) => {
     if (!workspaceId || !activeSessionId) return;
     setWorkspaceNotice("Workflow feedback copied into the prompt editor. Send it to generate a revised draft.");
     setPrompt(`Revise the workflow proposal. Feedback: ${feedback}`);

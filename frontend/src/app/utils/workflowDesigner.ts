@@ -12,13 +12,41 @@ export interface WorkflowNodeData {
   label: string;
   kind: string;
   agent?: string;
+  nodeType?: string;
+  inputs?: Array<{ name: string; artifact_type: string; required: boolean }>;
+  outputs?: Array<{ name: string; artifact_type: string; required: boolean }>;
+  timeout_seconds?: number;
+  retry_policy?: { max_attempts: number; backoff_seconds: number };
   status?: "idle" | "running" | "success" | "error";
 }
 
 export interface WorkflowSpecDocument {
   version: string;
+  ir_version?: "2.0";
   name: string;
   description?: string;
+  triggers?: Array<{ id: string; type: string; config: Record<string, unknown> }>;
+  nodes?: Array<{
+    id: string;
+    type: string;
+    label: string;
+    inputs: Array<{ name: string; artifact_type: string; required: boolean }>;
+    outputs: Array<{ name: string; artifact_type: string; required: boolean }>;
+    resources: Record<string, unknown>;
+    timeout_seconds?: number;
+    retry_policy?: { max_attempts: number; backoff_seconds: number };
+    fallback_policy?: Record<string, unknown>;
+    approval_policy?: Record<string, unknown>;
+    config?: Record<string, unknown>;
+  }>;
+  edges?: Array<{ id: string; source: string; target: string; artifact_type?: string }>;
+  inputs?: Array<{ name: string; artifact_type: string; source: string }>;
+  outputs?: Array<{ name: string; artifact_type: string; from_node_id?: string }>;
+  resources?: Record<string, unknown>;
+  timeout_seconds?: number;
+  retry_policy?: { max_attempts: number; backoff_seconds: number };
+  fallback_policy?: Record<string, unknown>;
+  approval_policy?: Record<string, unknown>;
   schedule?: {
     cron?: string;
     timezone?: string;
@@ -29,12 +57,33 @@ export interface WorkflowSpecDocument {
       label: string;
       kind: string;
       agent?: string;
+      nodeType?: string;
+      inputs?: Array<{ name: string; artifact_type: string; required: boolean }>;
+      outputs?: Array<{ name: string; artifact_type: string; required: boolean }>;
+      timeout_seconds?: number;
+      retry_policy?: { max_attempts: number; backoff_seconds: number };
       position: { x: number; y: number };
       status?: string;
     }>;
     edges: Array<{ id: string; source: string; target: string }>;
   };
   target_variable?: string;
+}
+
+const AGENT_NODE_TYPE_MAP: Record<string, string> = {
+  DataLoaderToolsAgent: "dataset.profile",
+  DataCleaningAgent: "data.clean",
+  DataWranglingAgent: "data.clean",
+  EDAToolsAgent: "dataset.profile",
+  DataVisualizationAgent: "report.generate",
+  FeatureEngineeringAgent: "feature.engineer",
+  H2OMLAgent: "model.train",
+  NarrativeAgent: "report.generate",
+  ApprovalGateAgent: "approval.wait",
+};
+
+export function resolveNodeType(data: WorkflowNodeData): string {
+  return data.nodeType ?? (data.agent ? AGENT_NODE_TYPE_MAP[data.agent] : undefined) ?? "report.generate";
 }
 
 export function isValidCronExpression(expression: string): boolean {
@@ -105,9 +154,36 @@ export function flowToSpec(params: {
   edges: Edge[];
 }, ruleset?: WorkflowChainRuleset): WorkflowSpecDocument {
   const spec: WorkflowSpecDocument = {
-    version: "1.0.0",
+    version: "2.0.0",
+    ir_version: "2.0",
     name: params.name,
     description: params.description,
+    triggers: [{ id: "trigger.manual", type: "manual.trigger", config: {} }],
+    nodes: params.nodes.map((node) => ({
+      id: node.id,
+      type: resolveNodeType(node.data),
+      label: node.data.label,
+      inputs: node.data.inputs ?? [],
+      outputs: node.data.outputs ?? [],
+      resources: {},
+      timeout_seconds: node.data.timeout_seconds,
+      retry_policy: node.data.retry_policy,
+      fallback_policy: {},
+      approval_policy: {},
+      config: { agent: node.data.agent, kind: node.data.kind },
+    })),
+    edges: params.edges.map((edge) => ({
+      id: edge.id,
+      source: edge.source,
+      target: edge.target,
+    })),
+    inputs: [{ name: "dataset", artifact_type: "dataset", source: "run.input_artifact_ids" }],
+    outputs: [{ name: "workflow_artifacts", artifact_type: "artifact_bundle" }],
+    resources: { default_resource_class: "cpu_medium" },
+    timeout_seconds: 7200,
+    retry_policy: { max_attempts: 1, backoff_seconds: 30 },
+    fallback_policy: {},
+    approval_policy: {},
     schedule: {
       cron: params.cron,
       timezone: "UTC",
@@ -118,6 +194,11 @@ export function flowToSpec(params: {
         label: node.data.label,
         kind: node.data.kind,
         agent: node.data.agent,
+        nodeType: resolveNodeType(node.data),
+        inputs: node.data.inputs,
+        outputs: node.data.outputs,
+        timeout_seconds: node.data.timeout_seconds,
+        retry_policy: node.data.retry_policy,
         position: node.position,
         status: node.data.status,
       })),
@@ -151,6 +232,11 @@ export function specToFlow(spec: WorkflowSpecDocument, ruleset?: WorkflowChainRu
         label: node.label,
         kind: node.kind,
         agent: node.agent,
+        nodeType: node.nodeType,
+        inputs: node.inputs,
+        outputs: node.outputs,
+        timeout_seconds: node.timeout_seconds,
+        retry_policy: node.retry_policy,
         status: (node.status as WorkflowNodeData["status"]) ?? "idle",
       },
     })),

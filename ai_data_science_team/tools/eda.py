@@ -130,7 +130,7 @@ def visualize_missing(
     encoded_plots = {}
 
     # Define a helper function to create a plot, save it, and encode it.
-    def create_and_encode_plot(plot_func, plot_name: str):
+    def create_and_encode_plot(plot_func):
         plt.figure(figsize=(8, 6))
         # Call the missingno plotting function.
         plot_func(df)
@@ -142,13 +142,13 @@ def visualize_missing(
         return base64.b64encode(buf.getvalue()).decode("utf-8")
 
     # Create and encode the matrix plot.
-    encoded_plots["matrix_plot"] = create_and_encode_plot(msno.matrix, "matrix")
+    encoded_plots["matrix_plot"] = create_and_encode_plot(msno.matrix)
 
     # Create and encode the bar plot.
-    encoded_plots["bar_plot"] = create_and_encode_plot(msno.bar, "bar")
+    encoded_plots["bar_plot"] = create_and_encode_plot(msno.bar)
 
     # Create and encode the heatmap plot.
-    encoded_plots["heatmap_plot"] = create_and_encode_plot(msno.heatmap, "heatmap")
+    encoded_plots["heatmap_plot"] = create_and_encode_plot(msno.heatmap)
 
     content = (
         "Missing data visualizations (matrix, bar, and heatmap) have been generated."

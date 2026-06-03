@@ -6,9 +6,6 @@ Agent construction tests use a deterministic FakeChatModel stub.
 from __future__ import annotations
 
 import json
-from typing import Any
-
-import pytest
 
 
 # ===========================================================================
@@ -27,7 +24,7 @@ def _fake_llm():
         def _llm_type(self) -> str:
             return "fake"
 
-        def _generate(self, messages, stop=None, run_manager=None, **kw) -> ChatResult:
+        def _generate(self, messages, stop=None, _run_manager=None, **kw) -> ChatResult:
             return ChatResult(
                 generations=[ChatGeneration(message=LCAIMessage(content="Done."))]
             )
@@ -472,7 +469,6 @@ def test_approval_gate_agent_instantiation_no_hitl():
 
 def test_approval_gate_agent_instantiation_with_hitl():
     from ai_data_science_team.agents.hitl_agent import ApprovalGateAgent
-    from langgraph.checkpoint.memory import MemorySaver
 
     agent = ApprovalGateAgent(model=_fake_llm(), human_in_the_loop=True)
     # Should auto-create MemorySaver

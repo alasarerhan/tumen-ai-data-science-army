@@ -1,15 +1,13 @@
-import React, { useState } from "react";
+import { Fragment, useState } from "react";
 import { AppShell } from "../components/layout/AppShell";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
 import { cn } from "../lib/utils";
 import {
-  Cloud,
   Plus,
   ChevronDown,
   ChevronRight,
   CheckCircle2,
-  Clock,
   AlertCircle,
   Code2,
   Download,
@@ -124,7 +122,7 @@ export default function CloudOps() {
             {/* Horizontal pipeline */}
             <div className="flex items-start gap-0">
               {DEPLOYMENT_STAGES.map((stage, idx) => (
-                <React.Fragment key={stage.name}>
+                <Fragment key={stage.name}>
                   <div className="flex-1 min-w-0">
                     <div className="border border-slate-200 dark:border-slate-700 rounded-[8px] p-4 hover:border-slate-300 dark:hover:border-slate-600 transition-colors">
                       <div className="flex items-center gap-2 mb-2">
@@ -167,7 +165,7 @@ export default function CloudOps() {
                       <ChevronRight size={12} className="text-slate-400 -ml-1" />
                     </div>
                   )}
-                </React.Fragment>
+                </Fragment>
               ))}
             </div>
           </div>

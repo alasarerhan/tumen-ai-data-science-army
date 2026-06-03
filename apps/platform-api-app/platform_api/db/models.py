@@ -181,12 +181,62 @@ class WorkflowRun(Base):
     )
 
     flow_key: Mapped[str] = mapped_column(String(100), nullable=False)
+    workflow_spec_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("workflow_specs.id", ondelete="SET NULL"), nullable=True
+    )
+    workflow_version: Mapped[int | None] = mapped_column(nullable=True)
+    trigger_type: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    input_artifact_ids_json: Mapped[str | None] = mapped_column(Text, nullable=True)
     prefect_flow_run_id: Mapped[str] = mapped_column(String(100), nullable=False, unique=True)
     status: Mapped[str] = mapped_column(String(50), nullable=False)
     parameters_json: Mapped[str | None] = mapped_column(Text, nullable=True)
     started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.current_timestamp(), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.current_timestamp(),
+        onupdate=func.current_timestamp(),
+        nullable=False,
+    )
+
+
+class WorkflowNodeExecution(Base):
+    __tablename__ = "workflow_node_executions"
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["workspace_id", "tenant_id"],
+            ["workspaces.id", "workspaces.tenant_id"],
+            ondelete="CASCADE",
+        ),
+        UniqueConstraint("workflow_run_id", "node_id", name="uq_workflow_node_executions_run_node"),
+        Index("ix_workflow_node_executions_run_status", "workflow_run_id", "status"),
+        Index("ix_workflow_node_executions_workspace_created", "workspace_id", "created_at"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    tenant_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False
+    )
+    workspace_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=False
+    )
+    workflow_run_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("workflow_runs.id", ondelete="CASCADE"), nullable=False
+    )
+    node_id: Mapped[str] = mapped_column(String(150), nullable=False)
+    node_type: Mapped[str] = mapped_column(String(120), nullable=False)
+    execution_index: Mapped[int] = mapped_column(default=0, nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="queued")
+    inputs_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    outputs_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    logs_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    error: Mapped[str | None] = mapped_column(Text, nullable=True)
+    retry_count: Mapped[int] = mapped_column(default=0, nullable=False)
+    produced_artifact_ids_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.current_timestamp(), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
@@ -233,6 +283,8 @@ class Artifact(Base):
     )
     kind: Mapped[str] = mapped_column(String(100), nullable=False)
     uri: Mapped[str] = mapped_column(Text, nullable=False)
+    produced_by_node_id: Mapped[str | None] = mapped_column(String(150), nullable=True)
+    parent_artifact_ids_json: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_by_user_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )

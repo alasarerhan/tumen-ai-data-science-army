@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import { Archive, Copy, GitBranch, MoreHorizontal, Pencil, Plus, Search, CalendarClock, Pause, Play } from "lucide-react";
 import { AppShell } from "../components/layout/AppShell";
@@ -123,9 +123,6 @@ export default function Workflows() {
           >
             {filtered.map((wf) => {
               const schedule = schedules.get(wf.id);
-              const spec = wf.spec as Record<string, unknown>;
-              const scheduleInfo = spec?.schedule as Record<string, unknown> | undefined;
-              const cron = (scheduleInfo?.cron as string) || schedule?.cron;
               const validation = wf.validation_summary;
 
               return (

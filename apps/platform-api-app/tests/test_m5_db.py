@@ -15,15 +15,12 @@ Coverage:
 from __future__ import annotations
 
 import json
-import uuid
 from unittest.mock import patch
 
 import pytest
 from fastapi import HTTPException
 
-from platform_api.db.models import WorkspaceRole
 from platform_api.services.workflow_service import (
-    _validate_spec,
     archive_workflow_spec,
     create_workflow_spec_version,
     get_latest_workflow_spec,
@@ -368,5 +365,5 @@ def test_archive_by_member_raises_403(seeded_db):
     ctx = seeded_db
     record = _create(ctx["db"], ctx["workspace"], ctx["user_admin"])
     with pytest.raises(HTTPException) as exc_info:
-        _archive(ctx["db"], ctx["workspace"], ctx["user_admin_replaced"] if False else ctx["user_member"], record.id)
+        _archive(ctx["db"], ctx["workspace"], ctx["user_member"], record.id)
     assert exc_info.value.status_code == 403

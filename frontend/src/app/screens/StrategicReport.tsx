@@ -1,5 +1,4 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router";
+import { useState } from "react";
 import { AppShell } from "../components/layout/AppShell";
 import { Button } from "../components/ui/button";
 import { cn } from "../lib/utils";
@@ -53,7 +52,7 @@ const RECOMMENDATIONS = [
   },
 ];
 
-function ScoreBadge({ label, value, max = 10 }: { label: string; value: number; max?: number }) {
+function ScoreBadge({ label, value }: { label: string; value: number }) {
   const color = value >= 8 ? "text-emerald-600 bg-emerald-50" : value >= 6 ? "text-indigo-600 bg-indigo-50" : "text-amber-600 bg-amber-50";
   return (
     <div className="flex flex-col items-center gap-0.5">
@@ -64,7 +63,6 @@ function ScoreBadge({ label, value, max = 10 }: { label: string; value: number; 
 }
 
 export default function StrategicReport() {
-  const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState<Section>("Context");
   const [expandedRec, setExpandedRec] = useState<number | null>(null);
   const [showABTest, setShowABTest] = useState(false);

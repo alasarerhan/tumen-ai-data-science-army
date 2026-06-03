@@ -39,12 +39,11 @@ import asyncio
 import logging
 import os
 import uuid
-from contextlib import asynccontextmanager
 from datetime import UTC, datetime, timedelta
-from typing import Any, Callable, Dict, List, Optional
+from typing import Callable, Dict, Optional
 
 from prometheus_client import Counter, Gauge, Histogram
-from sqlalchemy import select, update
+from sqlalchemy import or_, select, update
 from sqlalchemy.orm import Session
 
 from platform_api.core.config import settings
@@ -86,6 +85,12 @@ SCHEDULER_STUCK_JOBS_GAUGE = Gauge(
     registry=None,
 )
 
+SCHEDULER_RUNNING_JOBS_GAUGE = Gauge(
+    "platform_api_scheduler_running_jobs",
+    "Number of scheduled jobs currently executing on this instance",
+    registry=None,
+)
+
 
 MIN_INTERVAL_SECONDS = 1
 MIN_LEADER_TTL_SECONDS = 10
@@ -116,6 +121,7 @@ class SchedulerService:
         db: Session,
         leader_ttl_seconds: int = 60,
         poll_interval_seconds: float = 5.0,
+        max_concurrent_jobs: int | None = None,
     ) -> None:
         if leader_ttl_seconds < MIN_LEADER_TTL_SECONDS:
             raise ValueError(
@@ -131,10 +137,18 @@ class SchedulerService:
             raise ValueError(
                 f"poll_interval_seconds must be at least 1.0 second, got {poll_interval_seconds}"
             )
+        resolved_max_concurrent_jobs = (
+            settings.scheduler_max_concurrent_jobs
+            if max_concurrent_jobs is None
+            else max_concurrent_jobs
+        )
+        if resolved_max_concurrent_jobs < 1:
+            raise ValueError("max_concurrent_jobs must be at least 1")
         
         self._db = db
         self._leader_ttl = leader_ttl_seconds
         self._poll_interval = poll_interval_seconds
+        self._max_concurrent_jobs = resolved_max_concurrent_jobs
         self._leader_id = f"{os.getpid()}-{uuid.uuid4().hex[:8]}"
         self._running = False
         self._task: Optional[asyncio.Task] = None
@@ -277,7 +291,7 @@ class SchedulerService:
             .values(leader_id=self._leader_id, leader_expires_at=expiry)
             .returning(ScheduledJob.id)
         )
-        acquired = result.scalar_one_or_none() is not None
+        acquired = result.first() is not None
         self._db.commit()
 
         if acquired:
@@ -305,21 +319,34 @@ class SchedulerService:
             logger.error("Failed to release leadership: %s", e)
 
     async def _run_job(self, job: ScheduledJob) -> None:
-        """Execute a scheduled job."""
+        """Execute a scheduled job by ID using an isolated status session."""
+        self._db.commit()
+        await self._run_job_by_id(job.id)
+
+    async def _run_job_by_id(self, job_id: uuid.UUID) -> None:
+        """Execute a scheduled job with isolated DB sessions."""
         from platform_api.db.session import SessionLocal
+
+        status_db = SessionLocal()
+        job = status_db.get(ScheduledJob, job_id)
+        if job is None:
+            status_db.close()
+            logger.warning("Scheduled job disappeared before execution: %s", job_id)
+            return
 
         job_name = job.job_name
         handler = self._handlers.get(job_name)
 
         if not handler:
+            status_db.close()
             logger.warning("No handler registered for job: %s", job_name)
             return
 
         start_time = datetime.now(UTC)
         job.last_run_at = start_time
         job.last_run_status = "running"
-        self._db.add(job)
-        self._db.commit()
+        status_db.add(job)
+        status_db.commit()
 
         job_db = SessionLocal()
         try:
@@ -370,13 +397,26 @@ class SchedulerService:
             duration = (datetime.now(UTC) - start_time).total_seconds()
             SCHEDULER_JOB_DURATION.labels(job_name=job_name).observe(duration)
 
+            job = status_db.get(ScheduledJob, job_id)
+            if job is None:
+                status_db.close()
+                return
             job.next_run_at = self._calculate_next_run(
                 job.cron_expression,
                 job.interval_seconds,
                 datetime.now(UTC),
             )
-            self._db.add(job)
-            self._db.commit()
+            status_db.add(job)
+            status_db.commit()
+            status_db.close()
+
+    async def _run_job_with_limit(self, semaphore: asyncio.Semaphore, job_id: uuid.UUID) -> None:
+        async with semaphore:
+            SCHEDULER_RUNNING_JOBS_GAUGE.inc()
+            try:
+                await self._run_job_by_id(job_id)
+            finally:
+                SCHEDULER_RUNNING_JOBS_GAUGE.dec()
 
     async def _recover_stuck_jobs(self) -> int:
         """Recover jobs stuck in 'running' state.
@@ -436,23 +476,37 @@ class SchedulerService:
 
                     now = datetime.now(UTC)
 
-                    due_jobs = list(
-                        self._db.execute(
-                            select(ScheduledJob)
+                    due_job_ids = [
+                        row[0]
+                        for row in self._db.execute(
+                            select(ScheduledJob.id)
                             .where(
                                 ScheduledJob.enabled == True,
                                 ScheduledJob.next_run_at <= now,
+                                or_(
+                                    ScheduledJob.last_run_status == None,
+                                    ScheduledJob.last_run_status != "running",
+                                ),
                             )
-                        ).scalars()
-                    )
+                        ).all()
+                    ]
 
-                    SCHEDULER_QUEUE_DEPTH.set(len(due_jobs))
+                    SCHEDULER_QUEUE_DEPTH.set(len(due_job_ids))
 
-                    for job in due_jobs:
-                        try:
-                            await self._run_job(job)
-                        except Exception as e:
-                            logger.error("Job execution error: %s", e)
+                    semaphore = asyncio.Semaphore(self._max_concurrent_jobs)
+                    tasks = {
+                        asyncio.create_task(self._run_job_with_limit(semaphore, job_id))
+                        for job_id in due_job_ids
+                    }
+                    self._active_tasks.update(tasks)
+                    for task in tasks:
+                        task.add_done_callback(lambda t: self._active_tasks.discard(t))
+
+                    if tasks:
+                        results = await asyncio.gather(*tasks, return_exceptions=True)
+                        for result in results:
+                            if isinstance(result, Exception):
+                                logger.error("Job execution error: %s", result)
 
                 await asyncio.sleep(self._poll_interval)
 
@@ -590,4 +644,6 @@ __all__ = [
     "SCHEDULER_JOB_DURATION",
     "SCHEDULER_LEADER_GAUGE",
     "SCHEDULER_QUEUE_DEPTH",
+    "SCHEDULER_STUCK_JOBS_GAUGE",
+    "SCHEDULER_RUNNING_JOBS_GAUGE",
 ]

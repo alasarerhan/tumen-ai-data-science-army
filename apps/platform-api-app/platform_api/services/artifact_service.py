@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import uuid
+import json
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -45,6 +46,8 @@ def create_artifact_record(
     kind: str,
     uri: str,
     user_id: uuid.UUID,
+    produced_by_node_id: str | None = None,
+    parent_artifact_ids: list[str] | None = None,
 ) -> Artifact:
     workspace = _authorized_workspace(db, workspace_id=workspace_id, user_id=user_id)
 
@@ -61,7 +64,42 @@ def create_artifact_record(
         workflow_run_id=parsed_workflow_run_id,
         kind=kind,
         uri=uri,
+        produced_by_node_id=produced_by_node_id,
+        parent_artifact_ids_json=json.dumps(parent_artifact_ids or []),
         created_by_user_id=user_id,
+    )
+    db.add(artifact)
+    db.flush()
+    return artifact
+
+
+def create_system_artifact_record(
+    db: Session,
+    *,
+    tenant_id: uuid.UUID,
+    workspace_id: uuid.UUID,
+    workflow_run_id: uuid.UUID | None,
+    kind: str,
+    uri: str,
+    produced_by_node_id: str | None = None,
+    parent_artifact_ids: list[str] | None = None,
+    created_by_user_id: uuid.UUID | None = None,
+) -> Artifact:
+    """Create an artifact from a trusted worker/system path.
+
+    API callers must use ``create_artifact_record`` so workspace membership is
+    enforced. Worker code already executes inside a tenant/workspace-scoped run,
+    so it passes explicit scope IDs and does not need a user membership lookup.
+    """
+    artifact = Artifact(
+        tenant_id=tenant_id,
+        workspace_id=workspace_id,
+        workflow_run_id=workflow_run_id,
+        kind=kind,
+        uri=uri,
+        produced_by_node_id=produced_by_node_id,
+        parent_artifact_ids_json=json.dumps(parent_artifact_ids or []),
+        created_by_user_id=created_by_user_id,
     )
     db.add(artifact)
     db.flush()

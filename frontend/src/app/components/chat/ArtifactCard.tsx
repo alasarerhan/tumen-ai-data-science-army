@@ -1,8 +1,7 @@
-import React from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeSanitize from "rehype-sanitize";
-import { FileCode2, Table2, BarChart3, FileText } from "lucide-react";
+import { FileCode2, Table2, BarChart3, FileText, GitBranch } from "lucide-react";
 import type { ArtifactDto, ChartArtifact } from "../../api/chat";
 import { SankeyChart } from "../charts/sankey-chart";
 import { NetworkChart } from "../charts/network-chart";
@@ -100,6 +99,21 @@ export function ArtifactCard({ artifact }: ArtifactCardProps) {
         <pre className="max-h-80 overflow-auto bg-slate-950 p-3 text-xs text-slate-100">
           <code>{artifact.code}</code>
         </pre>
+      </div>
+    );
+  }
+
+  if (artifact.type === "workflow_design") {
+    return (
+      <div className="rounded-md border border-indigo-200 bg-indigo-50 p-3">
+        <div className="mb-2 flex items-center gap-2 text-xs font-semibold text-indigo-700">
+          <GitBranch size={14} /> Workflow Design
+        </div>
+        <p className="text-sm font-medium text-slate-800">{artifact.workflow_spec.name}</p>
+        {artifact.workflow_spec.description ? (
+          <p className="mt-1 text-xs text-slate-600">{artifact.workflow_spec.description}</p>
+        ) : null}
+        <p className="mt-2 text-xs text-slate-500">{artifact.workflow_spec.steps.length} planned steps</p>
       </div>
     );
   }

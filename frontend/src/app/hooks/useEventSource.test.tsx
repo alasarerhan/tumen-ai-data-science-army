@@ -80,7 +80,7 @@ describe("useEventSource", () => {
       body: mockBody,
     });
 
-    const { result } = renderHook(() =>
+    renderHook(() =>
       useEventSource({ url: "http://test.com/stream", enabled: true })
     );
 

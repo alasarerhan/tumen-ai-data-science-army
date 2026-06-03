@@ -25,32 +25,32 @@ Fill these before treating any command output below as reusable evidence.
 
 | Precondition | Value |
 |------|-------|
-| Frontend env file / profile | |
-| Backend env file / profile | |
-| Auth mode (`dev` or `OIDC`) | |
-| Database profile (`SQLite`, local Postgres, release-like Postgres) | |
-| Prefect status | |
-| Redis / context store status | |
-| Object/artifact storage status | |
-| Upload scanning dependency status | |
-| Frontend URL / port | |
-| Backend URL / port | |
-| External credentials or secrets required | |
-| Known blockers / expected skips | |
+| Frontend env file / profile | Local Vite profile via `frontend/start_frontend_local.cmd` |
+| Backend env file / profile | Local profile via `apps/platform-api-app/start_platform_api_local.cmd` |
+| Auth mode (`dev` or `OIDC`) | `dev` for local verification; release profile guard tested |
+| Database profile (`SQLite`, local Postgres, release-like Postgres) | SQLite local/temp DB for current local gates |
+| Prefect status | Not live-smoked in this pass |
+| Redis / context store status | Not live-smoked in this pass |
+| Object/artifact storage status | Local artifact storage exercised by tests |
+| Upload scanning dependency status | Not live-smoked in this pass |
+| Frontend URL / port | Local launcher uses `http://127.0.0.1:5174` |
+| Backend URL / port | Local launcher uses `http://127.0.0.1:8010` |
+| External credentials or secrets required | Real LLM test skipped on OpenAI `insufficient_quota` |
+| Known blockers / expected skips | Full Playwright suite still open; repeated local auth attempts can trip `/v1/auth/login/dev` rate limiting. 11 platform API skips; plugin tests require workspace-local basetemp on Windows |
 
 ## 3. Evidence Matrix
 
 | Gate | Command or check | Preconditions confirmed | Evidence location / output | Owner | Status |
 |------|------------------|-------------------------|----------------------------|-------|--------|
-| Frontend typecheck | `cd frontend && npm run typecheck` | [ ] | | | |
-| Frontend lint | `cd frontend && npm run lint` | [ ] | | | |
-| Frontend unit tests | `cd frontend && npm run test` | [ ] | | | |
-| Backend pytest | `cd ai-data-science-team/apps/platform-api-app && pytest` | [ ] | | | |
-| Agent-library pytest | `cd ai-data-science-team && pytest` | [ ] | | | |
-| Playwright golden path | `cd frontend && npm run test:e2e` | [ ] | | | |
+| Frontend typecheck | `cd frontend && npm run typecheck` | [x] | 2026-06-03 passed | Local | Passed |
+| Frontend lint | `cd frontend && npm run lint` | [x] | 2026-06-03 passed with 15 warnings | Local | Passed with warnings |
+| Frontend unit tests | `cd frontend && npm run test` | [x] | 2026-06-03 35 files / 226 tests passed | Local | Passed |
+| Backend pytest | `cd apps/platform-api-app && python -m pytest -q` | [x] | 2026-06-03 684 passed / 11 skipped | Local | Passed |
+| Agent-library pytest | root/plugin selected suites | [x] | 2026-06-03 root 94 passed; selected plugins 353 passed | Local | Passed |
+| Playwright golden path | `cd frontend && npm run test:e2e` | [ ] | 2026-06-03 partial: login spec 3/4 passed in full-file run; isolated `already authenticated` test passed; full suite still pending | Local | Open |
 | Backend smoke | `/healthz`, `/ready`, `/metrics`, auth path, `/v1/me` | [ ] | | | |
-| Frontend smoke | app load, login path, workflow/run path | [ ] | | | |
-| Migration check | `cd ai-data-science-team/apps/platform-api-app && alembic upgrade head` | [ ] | | | |
+| Frontend smoke | app load, login path, workflow/run path | [ ] | 2026-06-03 app load OK on 127.0.0.1:5174; dev login and `/v1/me` verified through Vite proxy; workflow/run path still pending | Local | Partial |
+| Migration check | `cd apps/platform-api-app && DATABASE_URL=sqlite:///./.tmp-migration-check.db python -m alembic upgrade head` | [x] | 2026-06-03 upgraded through `0017_workflow_ir_v2` | Local | Passed |
 
 ## 4. Release-Safety Checks
 

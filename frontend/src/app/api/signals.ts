@@ -3,7 +3,20 @@ import { BASE_URL, apiGet, apiPost, qs } from "./client";
 export interface SignalDto {
   id: string;
   workflow_run_id: string;
-  signal_type: "pause" | "resume" | "skip" | "modify" | "annotate" | "cancel";
+  signal_type:
+    | "pause"
+    | "resume"
+    | "skip"
+    | "modify"
+    | "annotate"
+    | "cancel"
+    | "node_started"
+    | "node_progress"
+    | "node_succeeded"
+    | "node_failed"
+    | "artifact_created"
+    | "approval_required"
+    | "run_completed";
   target_step: string | null;
   note: string | null;
   payload: Record<string, unknown>;

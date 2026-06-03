@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { ChevronLeft, Copy, Download, ExternalLink, FileText, RefreshCw, Terminal, XCircle } from "lucide-react";
 import { AppShell } from "../components/layout/AppShell";

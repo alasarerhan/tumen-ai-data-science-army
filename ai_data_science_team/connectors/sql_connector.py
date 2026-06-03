@@ -97,13 +97,16 @@ class SQLConnector(DataConnector):
                     self._engine = None
                     self._inspector = None
 
-            self._engine = sa.create_engine(
-                self._connection_string,
-                connect_args={"connect_timeout": 10},
-                pool_timeout=30,
-                pool_recycle=1800,
-                **self._connect_args,
-            )
+            url = sa.make_url(self._connection_string)
+            engine_kwargs: Dict[str, Any] = dict(self._connect_args)
+            if url.get_backend_name() == "sqlite":
+                engine_kwargs.setdefault("connect_args", {})
+            else:
+                engine_kwargs.setdefault("connect_args", {"connect_timeout": 10})
+                engine_kwargs.setdefault("pool_timeout", 30)
+                engine_kwargs.setdefault("pool_recycle", 1800)
+
+            self._engine = sa.create_engine(self._connection_string, **engine_kwargs)
             with self._engine.connect() as c:
                 c.execute(sa.text("SELECT 1"))
             self._inspector = sa.inspect(self._engine)

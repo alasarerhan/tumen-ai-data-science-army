@@ -333,7 +333,7 @@ class TestIdor:
             workspace_id=str(workspace.id),
             user_id=user_id,
             name="test-workflow",
-            spec={"steps": [{"id": "s1", "tool": "test"}]},
+            spec={"steps": [{"id": "s1", "tool": "data_clean"}]},
             publish=False,
         )
 

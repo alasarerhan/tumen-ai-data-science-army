@@ -44,9 +44,10 @@ Usage
 
 from __future__ import annotations
 
+import asyncio
 import time
-from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Tuple
+from dataclasses import dataclass
+from typing import Any, AsyncIterator, Dict, List, Optional, Tuple
 
 import pandas as pd
 from langchain_core.messages import AIMessage
@@ -97,6 +98,15 @@ class ChatResponse:
     session_id: str
     routing: RouterDecision
     duration_ms: float = 0.0
+
+
+@dataclass
+class ChatWorkspaceStreamEvent:
+    """Progress or final output from an async ChatWorkspace run."""
+
+    type: str
+    message: str = ""
+    response: Optional[ChatResponse] = None
 
 
 # ---------------------------------------------------------------------------
@@ -262,6 +272,70 @@ class ChatWorkspace:
 
         return response
 
+    async def astream(
+        self,
+        session_id: str,
+        message: str,
+        **agent_kwargs,
+    ) -> AsyncIterator[ChatWorkspaceStreamEvent]:
+        """Async streaming facade for ChatWorkspace.
+
+        Existing specialist agents are still black-box workers. Agents that
+        expose ``ainvoke_agent`` are awaited directly; sync-only agents are
+        moved to a worker thread so FastAPI's event loop remains responsive.
+        """
+        t0 = time.perf_counter()
+        yield ChatWorkspaceStreamEvent(type="progress", message="routing")
+        decision = self._router.route(message)
+
+        session = self._store.get(session_id)
+        if session is None:
+            raise KeyError(f"Session not found: {session_id}")
+
+        df: Optional[pd.DataFrame] = (
+            next(iter(session.datasets.values()), None)
+            if session.datasets
+            else None
+        )
+
+        merged_kwargs = {**self._agent_kwargs, **agent_kwargs}
+        yield ChatWorkspaceStreamEvent(type="progress", message=f"running:{decision.agent_name}")
+        try:
+            text, artifact_type, artifact_data = await self._dispatch_async(
+                agent_name=decision.agent_name,
+                message=message,
+                df=df,
+                **merged_kwargs,
+            )
+        except Exception as exc:
+            text = f"Agent execution error ({decision.agent_name}): {exc}"
+            artifact_type = None
+            artifact_data = None
+
+        duration_ms = (time.perf_counter() - t0) * 1_000
+        response = ChatResponse(
+            text=text,
+            artifact_type=artifact_type,
+            artifact_data=artifact_data,
+            agent_used=decision.agent_name,
+            session_id=session_id,
+            routing=decision,
+            duration_ms=duration_ms,
+        )
+
+        self._store.add_message(session_id, ChatMessage(role="user", content=message))
+        self._store.add_message(
+            session_id,
+            ChatMessage(
+                role="assistant",
+                content=text,
+                artifact=artifact_data,
+                agent_used=decision.agent_name,
+            ),
+        )
+
+        yield ChatWorkspaceStreamEvent(type="response", response=response)
+
     # ------------------------------------------------------------------
     # Agent dispatch (lazy imports — agents are heavy)
     # ------------------------------------------------------------------
@@ -287,6 +361,26 @@ class ChatWorkspace:
         handler = _handlers.get(agent_name, self._run_pandas_analyst)
         return handler(message=message, df=df, **kwargs)
 
+    async def _dispatch_async(
+        self,
+        agent_name: str,
+        message: str,
+        df: Optional[pd.DataFrame],
+        **kwargs,
+    ) -> Tuple[str, Optional[str], Optional[Dict]]:
+        _handlers = {
+            "pandas_data_analyst": self._run_pandas_analyst_async,
+            "eda_tools_agent": self._run_eda_agent_async,
+            "sql_data_analyst": self._run_pandas_analyst_async,
+            "data_cleaning_agent": self._run_data_cleaning_async,
+            "document_parser_agent": self._run_document_parser_async,
+            "api_connector_agent": self._run_api_connector_async,
+            "model_serving_agent": self._run_model_serving_async,
+            "anomaly_detection_agent": self._run_anomaly_detection_async,
+        }
+        handler = _handlers.get(agent_name, self._run_pandas_analyst_async)
+        return await handler(message=message, df=df, **kwargs)
+
     # -- Individual agent runners ------------------------------------------
 
     def _run_pandas_analyst(
@@ -307,6 +401,32 @@ class ChatWorkspace:
         )
         return _extract_response(agent)
 
+    async def _run_pandas_analyst_async(
+        self, message: str, df: Optional[pd.DataFrame], **kwargs
+    ) -> Tuple[str, Optional[str], Optional[Dict]]:
+        from ai_data_science_team.agents import DataWranglingAgent, DataVisualizationAgent
+        from ai_data_science_team.multiagents.pandas_data_analyst import PandasDataAnalyst
+
+        agent = PandasDataAnalyst(
+            model=self._model,
+            data_wrangling_agent=DataWranglingAgent(model=self._model),
+            data_visualization_agent=DataVisualizationAgent(model=self._model),
+        )
+        if hasattr(agent, "ainvoke_agent"):
+            await agent.ainvoke_agent(
+                user_instructions=message,
+                data_raw=df if df is not None else pd.DataFrame(),
+                **kwargs,
+            )
+        else:
+            await asyncio.to_thread(
+                agent.invoke_agent,
+                user_instructions=message,
+                data_raw=df if df is not None else pd.DataFrame(),
+                **kwargs,
+            )
+        return _extract_response(agent)
+
     def _run_eda_agent(
         self, message: str, df: Optional[pd.DataFrame], **kwargs
     ) -> Tuple[str, Optional[str], Optional[Dict]]:
@@ -314,6 +434,18 @@ class ChatWorkspace:
 
         agent = EDAToolsAgent(model=self._model)
         agent.invoke_agent(user_instructions=message, data_raw=df, **kwargs)
+        return _extract_response(agent)
+
+    async def _run_eda_agent_async(
+        self, message: str, df: Optional[pd.DataFrame], **kwargs
+    ) -> Tuple[str, Optional[str], Optional[Dict]]:
+        from ai_data_science_team.ds_agents.eda_tools_agent import EDAToolsAgent
+
+        agent = EDAToolsAgent(model=self._model)
+        if hasattr(agent, "ainvoke_agent"):
+            await agent.ainvoke_agent(user_instructions=message, data_raw=df, **kwargs)
+        else:
+            await asyncio.to_thread(agent.invoke_agent, user_instructions=message, data_raw=df, **kwargs)
         return _extract_response(agent)
 
     def _run_data_cleaning(
@@ -329,6 +461,27 @@ class ChatWorkspace:
         )
         return _extract_response(agent)
 
+    async def _run_data_cleaning_async(
+        self, message: str, df: Optional[pd.DataFrame], **kwargs
+    ) -> Tuple[str, Optional[str], Optional[Dict]]:
+        from ai_data_science_team.agents import DataCleaningAgent
+
+        agent = DataCleaningAgent(model=self._model)
+        if hasattr(agent, "ainvoke_agent"):
+            await agent.ainvoke_agent(
+                user_instructions=message,
+                data_raw=df if df is not None else pd.DataFrame(),
+                **kwargs,
+            )
+        else:
+            await asyncio.to_thread(
+                agent.invoke_agent,
+                user_instructions=message,
+                data_raw=df if df is not None else pd.DataFrame(),
+                **kwargs,
+            )
+        return _extract_response(agent)
+
     def _run_document_parser(
         self, message: str, df: Optional[pd.DataFrame], **kwargs
     ) -> Tuple[str, Optional[str], Optional[Dict]]:
@@ -337,6 +490,11 @@ class ChatWorkspace:
         agent = DocumentParserAgent(model=self._model)
         agent.invoke_agent(user_instructions=message, **kwargs)
         return _extract_response(agent)
+
+    async def _run_document_parser_async(
+        self, message: str, df: Optional[pd.DataFrame], **kwargs
+    ) -> Tuple[str, Optional[str], Optional[Dict]]:
+        return await asyncio.to_thread(self._run_document_parser, message, df, **kwargs)
 
     def _run_api_connector(
         self, message: str, df: Optional[pd.DataFrame], **kwargs
@@ -347,6 +505,11 @@ class ChatWorkspace:
         agent.invoke_agent(user_instructions=message, **kwargs)
         return _extract_response(agent)
 
+    async def _run_api_connector_async(
+        self, message: str, df: Optional[pd.DataFrame], **kwargs
+    ) -> Tuple[str, Optional[str], Optional[Dict]]:
+        return await asyncio.to_thread(self._run_api_connector, message, df, **kwargs)
+
     def _run_model_serving(
         self, message: str, df: Optional[pd.DataFrame], **kwargs
     ) -> Tuple[str, Optional[str], Optional[Dict]]:
@@ -355,6 +518,11 @@ class ChatWorkspace:
         agent = ModelServingAgent(model=self._model)
         agent.invoke_agent(user_instructions=message, **kwargs)
         return _extract_response(agent)
+
+    async def _run_model_serving_async(
+        self, message: str, df: Optional[pd.DataFrame], **kwargs
+    ) -> Tuple[str, Optional[str], Optional[Dict]]:
+        return await asyncio.to_thread(self._run_model_serving, message, df, **kwargs)
 
     def _run_anomaly_detection(
         self, message: str, df: Optional[pd.DataFrame], **kwargs
@@ -367,6 +535,27 @@ class ChatWorkspace:
             data_raw=df if df is not None else pd.DataFrame(),
             **kwargs,
         )
+        return _extract_response(agent)
+
+    async def _run_anomaly_detection_async(
+        self, message: str, df: Optional[pd.DataFrame], **kwargs
+    ) -> Tuple[str, Optional[str], Optional[Dict]]:
+        from ai_data_science_team.agents import AnomalyDetectionAgent
+
+        agent = AnomalyDetectionAgent(model=self._model)
+        if hasattr(agent, "ainvoke_agent"):
+            await agent.ainvoke_agent(
+                user_instructions=message,
+                data_raw=df if df is not None else pd.DataFrame(),
+                **kwargs,
+            )
+        else:
+            await asyncio.to_thread(
+                agent.invoke_agent,
+                user_instructions=message,
+                data_raw=df if df is not None else pd.DataFrame(),
+                **kwargs,
+            )
         return _extract_response(agent)
 
 

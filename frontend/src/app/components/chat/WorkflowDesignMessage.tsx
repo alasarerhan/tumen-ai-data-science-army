@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Check, Edit, X, CalendarClock, Users } from "lucide-react";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
@@ -80,7 +80,7 @@ export function WorkflowDesignMessage({
         <h3 className="text-sm font-semibold text-slate-800">
           Proposed Workflow: {workflowSpec.name}
         </h3>
-        <Badge variant="outline" className="bg-amber-50 text-amber-700">
+        <Badge variant="warning" className="border border-amber-200">
           Draft
         </Badge>
       </div>

@@ -43,6 +43,8 @@ async def create_artifact(
         kind=payload.kind,
         uri=payload.uri,
         user_id=user.id,
+        produced_by_node_id=payload.produced_by_node_id,
+        parent_artifact_ids=payload.parent_artifact_ids,
     )
     db.commit()
     return {
@@ -52,6 +54,10 @@ async def create_artifact(
         "workflow_run_id": str(artifact.workflow_run_id) if artifact.workflow_run_id else None,
         "kind": artifact.kind,
         "uri": artifact.uri,
+        "artifact_type": artifact.kind,
+        "storage_uri": artifact.uri,
+        "produced_by_node_id": artifact.produced_by_node_id,
+        "parent_artifact_ids": payload.parent_artifact_ids,
     }
 
 
@@ -74,6 +80,10 @@ async def list_artifacts(
                 "id": str(artifact.id),
                 "kind": artifact.kind,
                 "uri": artifact.uri,
+                "artifact_type": artifact.kind,
+                "storage_uri": artifact.uri,
+                "produced_by_node_id": artifact.produced_by_node_id,
+                "parent_artifact_ids": [],
                 "workflow_run_id": str(artifact.workflow_run_id) if artifact.workflow_run_id else None,
                 "created_at": artifact.created_at.isoformat() if artifact.created_at else None,
             }
@@ -183,10 +193,19 @@ async def stream_artifact(
             detail="External URIs must be accessed via their respective protocols"
         )
 
-    base_upload_dir = Path(settings.chat_upload_dir).resolve()
-    file_path = (base_upload_dir / uri).resolve()
+    artifact_storage_dir = Path(settings.artifact_storage_local_dir).resolve()
+    chat_upload_dir = Path(settings.chat_upload_dir).resolve()
+    raw_path = Path(uri)
+    if raw_path.is_absolute():
+        file_path = raw_path.resolve()
+        allowed_roots = [artifact_storage_dir, chat_upload_dir]
+    else:
+        artifact_candidate = (artifact_storage_dir / uri).resolve()
+        chat_candidate = (chat_upload_dir / uri).resolve()
+        file_path = artifact_candidate if artifact_candidate.exists() else chat_candidate
+        allowed_roots = [artifact_storage_dir, chat_upload_dir]
 
-    if not file_path.is_relative_to(base_upload_dir):
+    if not any(file_path.is_relative_to(root) for root in allowed_roots):
         raise HTTPException(
             status_code=403,
             detail="Access denied: path traversal attempt"

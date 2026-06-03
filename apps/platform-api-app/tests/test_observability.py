@@ -8,10 +8,8 @@ from __future__ import annotations
 import json
 import logging
 import time
-import uuid
 
 import pytest
-import pytest_asyncio
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from prometheus_client import (
@@ -141,7 +139,6 @@ def _build_app_with_isolated_registry() -> tuple[FastAPI, CollectorRegistry]:
 
     # Minimal middleware that uses the isolated counters
     from starlette.middleware.base import BaseHTTPMiddleware
-    from starlette.requests import Request
 
     class _TestMiddleware(BaseHTTPMiddleware):
         async def dispatch(self, request, call_next):
@@ -206,3 +203,16 @@ def test_module_registry_has_expected_metrics():
     assert "platform_api_http_requests_total" in metrics_text
     assert "platform_api_http_request_duration_seconds" in metrics_text
     assert "platform_api_http_requests_in_flight" in metrics_text
+
+
+def test_setup_observability_registers_chat_and_scheduler_metrics():
+    app = FastAPI()
+    setup_observability(app)
+
+    metrics_text = generate_latest(_REGISTRY).decode()
+
+    assert "platform_api_chat_stream_events_total" in metrics_text
+    assert "platform_api_chat_stream_duration_seconds" in metrics_text
+    assert "platform_api_chat_blocking_tasks_in_flight" in metrics_text
+    assert "platform_api_scheduler_running_jobs" in metrics_text
+    assert "platform_api_scheduler_stuck_jobs" in metrics_text

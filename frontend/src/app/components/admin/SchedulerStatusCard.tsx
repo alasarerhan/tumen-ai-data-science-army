@@ -1,4 +1,3 @@
-import React from "react";
 import { Crown, Clock, CheckCircle2, XCircle, Pause, Play } from "lucide-react";
 import { Badge } from "../ui/badge";
 import { cn } from "../../lib/utils";

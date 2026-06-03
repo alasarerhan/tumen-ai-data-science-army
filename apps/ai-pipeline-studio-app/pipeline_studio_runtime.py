@@ -298,10 +298,24 @@ def _exec_python_merge_transform(
     if not code:
         raise ValueError("Merge code is empty; nothing to run.")
 
+    inferred_function_name = _infer_first_def_name(code)
+    if inferred_function_name:
+        code_snippet = code
+        function_name = inferred_function_name
+    else:
+        wrapped_lines = ["def merge(parent_dfs):"]
+        for idx in range(len(parent_dfs)):
+            wrapped_lines.append(f"    df_{idx} = parent_dfs[{idx}]")
+        for line in code.splitlines():
+            wrapped_lines.append(f"    {line}" if line.strip() else "")
+        wrapped_lines.append("    return df")
+        code_snippet = "\n".join(wrapped_lines)
+        function_name = "merge"
+
     parents_data = [df.to_dict() for df in parent_dfs]
     result, error = run_code_sandboxed_subprocess(
-        code_snippet=code,
-        function_name="merge",
+        code_snippet=code_snippet,
+        function_name=function_name,
         data=parents_data,
         timeout=60,
         memory_limit_mb=512,

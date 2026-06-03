@@ -8,8 +8,8 @@ Tests cover:
 from __future__ import annotations
 
 import pytest
-from unittest.mock import MagicMock, patch
-from sqlalchemy.exc import OperationalError, DBAPIError
+from unittest.mock import patch
+from sqlalchemy.exc import OperationalError
 
 
 class TestDatabaseConnectionFailure:
@@ -17,7 +17,6 @@ class TestDatabaseConnectionFailure:
 
     def test_db_connection_failure_returns_503(self, seeded_db: dict) -> None:
         from platform_api.services import run_service
-        from fastapi import HTTPException
 
         db = seeded_db["db"]
 

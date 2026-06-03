@@ -25,7 +25,7 @@ from __future__ import annotations
 
 import json
 import textwrap
-from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
+from decimal import Decimal, ROUND_HALF_UP
 from typing import Any, Dict, List, Tuple
 
 from langchain.tools import tool
@@ -325,12 +325,11 @@ def estimate_monthly_cost(
             "⚠️  Estimate is based on a static lookup table; actual costs depend "
             "on usage, data transfer, and cloud provider pricing changes."
         )
-        # Return cost as string to preserve precision in JSON
         artifact = {
             "resource_type": resource_type,
             "size": size,
             "region": region,
-            "estimated_usd_monthly": cost_display,
+            "estimated_usd_monthly": float(cost),
             "estimated_usd_monthly_decimal": str(cost),
             "known": True,
         }

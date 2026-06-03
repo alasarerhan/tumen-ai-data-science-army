@@ -8,7 +8,7 @@ from datetime import UTC, datetime
 from sqlalchemy import select, text
 from sqlalchemy.orm import Session
 
-from platform_api.db.models import WorkflowRun, Workspace, WorkspaceMembership
+from platform_api.db.models import WorkflowRun, WorkflowSpec, Workspace, WorkspaceMembership
 from platform_api.db.tenant_query import TenantQuery
 from platform_api.core.service_errors import ForbiddenError, NotFoundError
 from platform_api.tenant_context import set_tenant_context
@@ -62,12 +62,20 @@ def create_workflow_run_record(
     flow_key: str,
     prefect_flow_run_id: str,
     parameters: dict,
+    workflow_spec_id: uuid.UUID | None = None,
+    workflow_version: int | None = None,
+    trigger_type: str | None = None,
+    input_artifact_ids: list[str] | None = None,
 ) -> WorkflowRun:
     run = WorkflowRun(
         tenant_id=tenant_id,
         workspace_id=workspace_id,
         requested_by_user_id=user_id,
         flow_key=flow_key,
+        workflow_spec_id=workflow_spec_id,
+        workflow_version=workflow_version,
+        trigger_type=trigger_type,
+        input_artifact_ids_json=json.dumps(input_artifact_ids or []),
         prefect_flow_run_id=prefect_flow_run_id,
         status="SCHEDULED",
         parameters_json=json.dumps(parameters),
@@ -80,6 +88,26 @@ def create_workflow_run_record(
         db.add(run)
         db.flush()
     return run
+
+
+def get_workflow_spec_for_run(
+    db: Session,
+    *,
+    workflow_spec_id: str,
+    workspace_id: uuid.UUID,
+    workflow_version: int | None = None,
+) -> WorkflowSpec:
+    parsed_spec_id = _parse_uuid(workflow_spec_id, "workflow_spec_id")
+    query = select(WorkflowSpec).where(
+        WorkflowSpec.id == parsed_spec_id,
+        WorkflowSpec.workspace_id == workspace_id,
+    )
+    if workflow_version is not None:
+        query = query.where(WorkflowSpec.version == workflow_version)
+    record = db.execute(query).scalar_one_or_none()
+    if record is None:
+        raise NotFoundError("Workflow spec not found")
+    return record
 
 
 def update_workflow_run_status(

@@ -8,10 +8,8 @@ from __future__ import annotations
 
 import math
 import random
-from typing import Any, Iterator, List, Optional
-from unittest.mock import MagicMock, patch
+from typing import List
 
-import numpy as np
 import pandas as pd
 import pytest
 
@@ -238,7 +236,7 @@ def _fake_llm():
         def _llm_type(self) -> str:
             return "fake"
 
-        def _generate(self, messages, stop=None, run_manager=None, **kw) -> ChatResult:
+        def _generate(self, messages, stop=None, _run_manager=None, **kw) -> ChatResult:
             return ChatResult(
                 generations=[
                     ChatGeneration(
@@ -293,6 +291,7 @@ def test_forecast_evaluation_agent_accepts_lists():
     from ai_data_science_team.ml_agents.time_series_agents import ForecastEvaluationAgent
 
     agent = ForecastEvaluationAgent(model=_fake_llm())
+    assert agent is not None
     actual = [1.0, 2.0, 3.0]
     predicted = [1.1, 2.1, 3.1]
     df = pd.DataFrame({"actual": actual, "predicted": predicted})

@@ -16,11 +16,12 @@ import ReactFlow, {
   type ReactFlowInstance,
 } from "reactflow";
 import "reactflow/dist/style.css";
-import { Play, Save, Upload, FileCode2, CalendarClock, WandSparkles, Loader2 } from "lucide-react";
+import { Play, Save, Upload, FileCode2, CalendarClock, WandSparkles, Loader2, Search, History, CheckCircle2 } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { withCsrfHeader } from "../api/client";
 import { useAuth } from "../context/AuthContext";
 import { createWorkflow, publishWorkflow } from "../api/workflows";
+import { getWorkflowNodeTypes, type WorkflowNodeType } from "../api/workflowNodeTypes";
 import { triggerRun } from "../api/runs";
 import {
   createScheduledDeployment,
@@ -144,6 +145,9 @@ export default function WorkflowDesigner() {
   const [nodes, setNodes, onNodesChange] = useNodesState(INITIAL_NODES);
   const [edges, setEdges, onEdgesChange] = useEdgesState(INITIAL_EDGES);
   const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const [catalogSearch, setCatalogSearch] = useState("");
+  const [nodeTypeCatalog, setNodeTypeCatalog] = useState<WorkflowNodeType[]>([]);
 
   const [yamlText, setYamlText] = useState("");
   const [yamlDirty, setYamlDirty] = useState(false);
@@ -161,6 +165,44 @@ export default function WorkflowDesigner() {
     () => getWorkflowAgentCatalog(workflowChainRules).filter((node) => PALETTE_NODE_KEYS.includes(node.key)),
     [workflowChainRules],
   );
+  const paletteItems = useMemo(() => {
+    if (nodeTypeCatalog.length > 0) {
+      return nodeTypeCatalog
+        .filter((node) => !node.type.endsWith(".trigger"))
+        .map((node) => ({
+          label: node.label,
+          kind: node.category.toLowerCase().replace(/\s+/g, "_"),
+          agent: node.type,
+          nodeType: node.type,
+          color: node.ui.color,
+          description: node.description,
+          inputs: node.inputs,
+          outputs: node.outputs,
+          timeout_seconds: node.timeout_seconds,
+          retry_policy: node.retry_policy,
+        }));
+    }
+    return paletteNodes.map((node) => ({
+      label: node.label,
+      kind: node.kind,
+      agent: node.key,
+      nodeType: undefined,
+      color: node.color,
+      description: "",
+      inputs: [],
+      outputs: [],
+      timeout_seconds: undefined,
+      retry_policy: undefined,
+    }));
+  }, [nodeTypeCatalog, paletteNodes]);
+  const visiblePaletteItems = useMemo(() => {
+    const query = catalogSearch.trim().toLowerCase();
+    if (!query) return paletteItems;
+    return paletteItems.filter((item) =>
+      `${item.label} ${item.kind} ${item.nodeType ?? ""} ${item.description}`.toLowerCase().includes(query),
+    );
+  }, [catalogSearch, paletteItems]);
+  const selectedNode = useMemo(() => nodes.find((node) => node.id === selectedNodeId) ?? null, [nodes, selectedNodeId]);
 
   const specState = useMemo<{ spec: WorkflowSpecDocument | null; error: string | null; warnings: string[] }>(() => {
     try {
@@ -207,15 +249,44 @@ export default function WorkflowDesigner() {
       });
   }, [savedId, workspaceId]);
 
+  useEffect(() => {
+    if (!workspaceId) return;
+    getWorkflowNodeTypes(workspaceId)
+      .then((result) => setNodeTypeCatalog(result.items))
+      .catch((err: unknown) => {
+        console.error("Failed to load workflow node catalog:", err);
+      });
+  }, [workspaceId]);
+
   const onConnect = useCallback(
     (connection: Connection) => {
+      if (!connection.source || !connection.target || connection.source === connection.target) {
+        toast.error("Invalid edge", "Connect two different workflow nodes.");
+        return;
+      }
+      if (edges.some((edge) => edge.source === connection.source && edge.target === connection.target)) {
+        toast.info("Connection exists", "That workflow path is already connected.");
+        return;
+      }
       setEdges((existing) => addEdge({ ...connection, id: `e-${Date.now()}` }, existing));
     },
-    [setEdges],
+    [edges, setEdges, toast],
   );
 
-  const onDragStart = (event: React.DragEvent<HTMLButtonElement>, label: string, kind: string, agent: string) => {
-    event.dataTransfer.setData("application/workflow-node", JSON.stringify({ label, kind, agent }));
+  const onDragStart = (
+    event: React.DragEvent<HTMLButtonElement>,
+    item: {
+      label: string;
+      kind: string;
+      agent: string;
+      nodeType?: string;
+      inputs?: Array<{ name: string; artifact_type: string; required: boolean }>;
+      outputs?: Array<{ name: string; artifact_type: string; required: boolean }>;
+      timeout_seconds?: number;
+      retry_policy?: { max_attempts: number; backoff_seconds: number };
+    },
+  ) => {
+    event.dataTransfer.setData("application/workflow-node", JSON.stringify(item));
     event.dataTransfer.effectAllowed = "move";
   };
 
@@ -226,9 +297,18 @@ export default function WorkflowDesigner() {
     const raw = event.dataTransfer.getData("application/workflow-node");
     if (!raw) return;
 
-    let parsed: { label: string; kind: string; agent: string } | null = null;
+    let parsed: {
+      label: string;
+      kind: string;
+      agent: string;
+      nodeType?: string;
+      inputs?: Array<{ name: string; artifact_type: string; required: boolean }>;
+      outputs?: Array<{ name: string; artifact_type: string; required: boolean }>;
+      timeout_seconds?: number;
+      retry_policy?: { max_attempts: number; backoff_seconds: number };
+    } | null = null;
     try {
-      parsed = JSON.parse(raw) as { label: string; kind: string };
+      parsed = JSON.parse(raw) as { label: string; kind: string; agent: string };
     } catch {
       return;
     }
@@ -247,6 +327,11 @@ export default function WorkflowDesigner() {
         label: parsed.label,
         kind: parsed.kind,
         agent: parsed.agent,
+        nodeType: parsed.nodeType,
+        inputs: parsed.inputs,
+        outputs: parsed.outputs,
+        timeout_seconds: parsed.timeout_seconds,
+        retry_policy: parsed.retry_policy,
         status: "idle",
       },
     };
@@ -321,8 +406,8 @@ export default function WorkflowDesigner() {
           spec: currentSpec as unknown as Record<string, unknown>,
           publish: true,
         });
-        workflowId = created.id;
-        setSavedId(workflowId);
+          workflowId = created.id;
+          setSavedId(workflowId);
         toast.success("Workflow published", "A new published version was created.");
       } catch (err: unknown) {
         const message = err instanceof Error ? err.message : "Failed to publish workflow";
@@ -355,6 +440,9 @@ export default function WorkflowDesigner() {
       const run = await triggerRun({
         workspace_id: workspaceId,
         flow_key: savedId ?? flowName,
+        workflow_spec_id: savedId ?? undefined,
+        trigger_type: "manual",
+        input_artifact_ids: [],
         parameters: {
           spec: currentSpec,
         },
@@ -487,6 +575,15 @@ export default function WorkflowDesigner() {
           <Button
             variant="secondary"
             size="sm"
+            leadingIcon={<History size={13} />}
+            disabled={!savedId}
+            onClick={() => savedId && navigate(`/workflows/${savedId}`)}
+          >
+            History
+          </Button>
+          <Button
+            variant="secondary"
+            size="sm"
             leadingIcon={
               scheduleState === "scheduling" ? (
                 <Loader2 size={13} className="animate-spin" />
@@ -510,27 +607,42 @@ export default function WorkflowDesigner() {
               void handleRun();
             }}
           >
-            Run
+            Test Run
           </Button>
         </div>
       </header>
 
       <div className="grid min-h-0 flex-1 grid-cols-[220px_1fr_420px]">
         <aside className="border-r border-slate-200 bg-white p-3">
-          <div className="space-y-2">
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Nodes</p>
-            {paletteNodes.map((node) => (
+          <div className="space-y-3">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Node Catalog</p>
+              <div className="mt-2 flex h-8 items-center gap-2 rounded border border-slate-200 px-2">
+                <Search size={13} className="text-slate-400" />
+                <input
+                  value={catalogSearch}
+                  onChange={(event) => setCatalogSearch(event.target.value)}
+                  placeholder="Search nodes"
+                  className="min-w-0 flex-1 text-xs outline-none"
+                />
+              </div>
+            </div>
+            {visiblePaletteItems.map((node) => (
               <button
-                key={`${node.kind}-${node.label}`}
+                key={`${node.kind}-${node.label}-${node.nodeType ?? node.agent}`}
                 type="button"
                 draggable
-                onDragStart={(event) => onDragStart(event, node.label, node.kind, node.key)}
-                className="flex w-full items-center justify-between rounded-md border border-slate-200 px-2 py-2 text-left text-xs hover:bg-slate-50"
+                onDragStart={(event) => onDragStart(event, node)}
+                className="w-full rounded-md border border-slate-200 px-2 py-2 text-left text-xs hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
-                <span>{node.label}</span>
-                <span className="size-2 rounded-full" style={{ backgroundColor: node.color }} />
+                <span className="flex items-center justify-between gap-2">
+                  <span className="font-medium text-slate-700">{node.label}</span>
+                  <span className="size-2 rounded-full" style={{ backgroundColor: node.color }} />
+                </span>
+                <span className="mt-1 block truncate text-[11px] text-slate-500">{node.nodeType ?? node.agent}</span>
               </button>
             ))}
+            {visiblePaletteItems.length === 0 ? <p className="text-xs text-slate-500">No matching nodes.</p> : null}
           </div>
         </aside>
 
@@ -543,6 +655,7 @@ export default function WorkflowDesigner() {
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}
             onInit={setReactFlowInstance}
+            onNodeClick={(_, node) => setSelectedNodeId(node.id)}
             fitView
           >
             <Background gap={20} size={1} />
@@ -553,6 +666,12 @@ export default function WorkflowDesigner() {
 
         <aside className="flex min-h-0 flex-col border-l border-slate-200 bg-white">
           <div className="space-y-2 border-b border-slate-200 p-3">
+            <div className="flex items-center justify-between">
+              <span className="rounded bg-slate-100 px-2 py-1 text-[11px] font-medium text-slate-600">Draft</span>
+              <span className={`flex items-center gap-1 text-[11px] ${specError || yamlError ? "text-red-600" : "text-emerald-600"}`}>
+                <CheckCircle2 size={12} /> {specError || yamlError ? "Invalid" : "Valid"}
+              </span>
+            </div>
             <label className="text-xs font-medium text-slate-600">Workflow name</label>
             <input
               value={flowName}
@@ -566,6 +685,32 @@ export default function WorkflowDesigner() {
               rows={2}
               className="w-full resize-none rounded border border-slate-300 px-2 py-1 text-sm"
             />
+          </div>
+
+          <div className="space-y-2 border-b border-slate-200 p-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Inspector</p>
+            {selectedNode ? (
+              <div className="space-y-2 text-xs">
+                <p className="font-semibold text-slate-800">{selectedNode.data.label}</p>
+                <p className="text-slate-500">{selectedNode.data.nodeType ?? selectedNode.data.agent}</p>
+                <div className="flex flex-wrap gap-1">
+                  {(selectedNode.data.inputs ?? []).map((input) => (
+                    <span key={`${input.name}-${input.artifact_type}`} className="rounded bg-sky-50 px-1.5 py-0.5 text-[11px] text-sky-700">
+                      in:{input.artifact_type}
+                    </span>
+                  ))}
+                  {(selectedNode.data.outputs ?? []).map((output) => (
+                    <span key={`${output.name}-${output.artifact_type}`} className="rounded bg-emerald-50 px-1.5 py-0.5 text-[11px] text-emerald-700">
+                      out:{output.artifact_type}
+                    </span>
+                  ))}
+                </div>
+                <p className="text-slate-500">Timeout: {selectedNode.data.timeout_seconds ?? "default"}s</p>
+                <p className="text-slate-500">Retries: {selectedNode.data.retry_policy?.max_attempts ?? "default"}</p>
+              </div>
+            ) : (
+              <p className="text-xs text-slate-500">Select a node to configure inputs, outputs, retries, and resources.</p>
+            )}
           </div>
 
           <div className="space-y-3 border-b border-slate-200 p-3">
@@ -639,6 +784,20 @@ export default function WorkflowDesigner() {
           {specError ? <p className="border-t border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">{specError}</p> : null}
           {yamlError ? <p className="border-t border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">{yamlError}</p> : null}
         </aside>
+      </div>
+      <div className="flex h-20 items-center justify-between border-t border-slate-200 bg-white px-4 text-xs text-slate-600" aria-live="polite">
+        <div>
+          <p className="font-semibold text-slate-700">Execution Drawer</p>
+          <p>{nodes.length} nodes, {edges.length} edges. Test runs stream node events into Monitor and Run Detail.</p>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="secondary" size="xs" disabled={!selectedNode}>
+            Test Node
+          </Button>
+          <Button variant="secondary" size="xs" disabled={!savedId}>
+            Retry Failed Node
+          </Button>
+        </div>
       </div>
     </div>
   );

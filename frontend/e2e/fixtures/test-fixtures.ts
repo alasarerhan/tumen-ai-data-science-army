@@ -53,12 +53,14 @@ export const mockRuns = [
 
 export async function loginAsDev(page: Page) {
   await page.goto('/');
+  await page.getByRole('button', { name: /developer token/i }).click();
   await page.fill('input[name="token"]', 'dev');
   await page.click('button[type="submit"]');
-  await page.waitForURL('**/dashboard', { timeout: 10000 });
+  await expect(page).toHaveURL(/.*dashboard/, { timeout: 10000 });
 }
 
 export async function clearAuth(page: Page) {
+  await page.goto('/');
   await page.evaluate(() => {
     localStorage.removeItem('auth_token');
     localStorage.removeItem('workspace_id');

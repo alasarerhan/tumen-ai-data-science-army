@@ -7,7 +7,8 @@ Users can upload CSV/Excel files, ask questions in natural language (English or 
 ## What This Project Includes
 
 - `frontend/`: React + Vite application (AI Workspace, Workflow Designer, Runs, Admin views)
-- `ai-data-science-team/`: Backend and agent applications (FastAPI platform API, orchestration apps, agent packages)
+- `apps/`: Backend applications, including the FastAPI platform API
+- `ai_data_science_team/`: Agent library, orchestration primitives, connectors, and data science tools
 - `docs/`: project and launch documentation
 - `tools/`: utility scripts and maintenance helpers
 
@@ -40,40 +41,31 @@ Users can upload CSV/Excel files, ask questions in natural language (English or 
 ## 1) Start Backend
 
 ```bash
-cd ai-data-science-team/apps/platform-api-app
-python -m venv .venv
-.venv\Scripts\activate
-pip install -r requirements.txt
-
-# configure environment
-copy .env.example .env
-
-# start local services and migrate
-docker compose up -d
-alembic upgrade head
-
-# run API
-uvicorn platform_api.main:app --reload --port 8000
+cd apps/platform-api-app
+start_platform_api_local.cmd
 ```
+
+The local launcher sets `DEPLOYMENT_PROFILE=local`, `AUTH_MODE=dev`,
+`DEV_AUTH_TOKEN=dev`, `DATABASE_URL=sqlite:///./platform_dev.db`, and runs
+`platform_api.asgi:app` on `http://127.0.0.1:8010`.
 
 ## 2) Start Frontend
 
 ```bash
 cd frontend
-npm install
-npm run dev
+start_frontend_local.cmd
 ```
 
-Frontend default URL: `http://localhost:5173`  
-API default URL: `http://localhost:8000`  
-API docs: `http://localhost:8000/docs`
+Frontend local URL: `http://127.0.0.1:5174`
+API local URL: `http://127.0.0.1:8010`
+API docs: `http://127.0.0.1:8010/docs`
 
 ## Useful Commands
 
 ```bash
 # backend tests
-cd ai-data-science-team/apps/platform-api-app
-pytest
+cd apps/platform-api-app
+python -m pytest -q
 
 # frontend tests
 cd frontend
@@ -111,5 +103,5 @@ Use `.env.example` files in app directories as templates.
 
 - Project deep-dive: `FORME.md`
 - Frontend details: `frontend/README.md`
-- Backend/app-specific docs: `ai-data-science-team/apps/*/README.md`
+- Backend/app-specific docs: `apps/*/README.md`
 

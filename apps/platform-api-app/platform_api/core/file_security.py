@@ -173,7 +173,6 @@ def sanitize_filename(filename: str) -> str:
     parts = name.split('.')
     safe_parts = []
     for part in parts:
-        test_ext = '.' + part.lower() if safe_parts else part.lower()
         if '.' + part.lower() in DANGEROUS_EXTENSIONS:
             continue
         if part.lower() in {ext.lstrip('.') for ext in DANGEROUS_EXTENSIONS}:
@@ -188,7 +187,7 @@ def sanitize_filename(filename: str) -> str:
     return '.'.join(safe_parts)
 
 
-def generate_secure_filename(original_filename: str, detected_ext: str) -> str:
+def generate_secure_filename(_original_filename: str, detected_ext: str) -> str:
     """Generate a secure, random filename.
     
     Uses UUID for the base name to prevent:
@@ -503,7 +502,7 @@ async def stream_upload_to_file(
         
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception:
         if temp_path.exists():
             temp_path.unlink()
         raise

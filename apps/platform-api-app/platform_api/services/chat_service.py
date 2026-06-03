@@ -1,12 +1,18 @@
 from __future__ import annotations
 
+import asyncio
+import functools
 import json
 import logging
 import uuid
+from concurrent.futures import ThreadPoolExecutor
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+from time import perf_counter
+from typing import Any, AsyncIterator
 
+from prometheus_client import Counter, Gauge, Histogram
 from sqlalchemy import and_, or_, select
 from sqlalchemy.orm import Session
 
@@ -24,6 +30,28 @@ from platform_api.services.workflow_chain_validator import inspect_workflow_spec
 
 logger = logging.getLogger(__name__)
 
+CHAT_STREAM_EVENTS_TOTAL = Counter(
+    "platform_api_chat_stream_events_total",
+    "Total number of chat stream events emitted",
+    ["type"],
+    registry=None,
+)
+CHAT_STREAM_DURATION = Histogram(
+    "platform_api_chat_stream_duration_seconds",
+    "Duration of streamed chat assistant generation",
+    registry=None,
+)
+CHAT_BLOCKING_TASKS_IN_FLIGHT = Gauge(
+    "platform_api_chat_blocking_tasks_in_flight",
+    "Blocking chat tasks currently running in the bounded worker pool",
+    registry=None,
+)
+
+_CHAT_EXECUTOR = ThreadPoolExecutor(
+    max_workers=max(1, settings.chat_worker_max_threads),
+    thread_name_prefix="platform-chat",
+)
+
 WORKFLOW_KEYWORDS = (
     "workflow",
     "pipeline",
@@ -33,6 +61,15 @@ WORKFLOW_KEYWORDS = (
     "approval",
     "automation",
 )
+
+
+@dataclass(frozen=True)
+class ChatStreamEvent:
+    type: str
+    delta: str | None = None
+    text: str | None = None
+    artifacts: list[dict] | None = None
+    error: str | None = None
 
 
 def _parse_uuid(value: str, label: str) -> uuid.UUID:
@@ -425,6 +462,24 @@ def _load_session_dataframe(db: Session, *, session: ChatSession) -> tuple[Any, 
     return None
 
 
+async def _run_chat_blocking(func, /, *args, **kwargs):
+    loop = asyncio.get_running_loop()
+    call = functools.partial(func, *args, **kwargs)
+    CHAT_BLOCKING_TASKS_IN_FLIGHT.inc()
+    try:
+        return await loop.run_in_executor(_CHAT_EXECUTOR, call)
+    finally:
+        CHAT_BLOCKING_TASKS_IN_FLIGHT.dec()
+
+
+async def _load_session_dataframe_async(db: Session, *, session: ChatSession) -> tuple[Any, str] | None:
+    for upload in list_uploads(db, session_id=session.id):
+        loaded = await _run_chat_blocking(_load_dataframe_from_upload, upload)
+        if loaded is not None:
+            return loaded
+    return None
+
+
 def _build_upload_summary(uploads: list[ChatUpload]) -> str:
     if not uploads:
         return "No uploads are attached to this chat yet."
@@ -630,6 +685,46 @@ def _try_chatworkspace_reply(
         return None
 
 
+async def _try_chatworkspace_reply_stream(
+    *,
+    prompt: str,
+    dataframe: Any | None,
+) -> AsyncIterator[ChatStreamEvent]:
+    if dataframe is None or not settings.openai_api_key:
+        return
+
+    try:
+        from langchain_openai import ChatOpenAI
+        from ai_data_science_team.multiagents.chat_workspace import ChatWorkspace
+    except ImportError as exc:
+        logger.info("ChatWorkspace dependencies unavailable, using fallback reply path: %s", exc)
+        return
+
+    try:
+        workspace = ChatWorkspace(
+            model=ChatOpenAI(model=settings.openai_model, temperature=0, streaming=True)
+        )
+        runtime_session_id = workspace.create_session()
+        workspace.upload_dataset(runtime_session_id, "uploaded_dataset", dataframe)
+        async for event in workspace.astream(runtime_session_id, prompt):
+            if event.type == "progress":
+                yield ChatStreamEvent(type="progress")
+            elif event.type == "response" and event.response is not None:
+                artifacts = _normalize_chatworkspace_artifact(
+                    event.response.artifact_type,
+                    event.response.artifact_data,
+                )
+                yield ChatStreamEvent(
+                    type="final",
+                    delta=event.response.text,
+                    text=event.response.text,
+                    artifacts=artifacts
+                    or [{"type": "report", "title": "AI Workspace Response", "content": event.response.text}],
+                )
+    except Exception as exc:
+        logger.warning("ChatWorkspace streaming failed, using fallback reply path: %s", exc)
+
+
 def build_assistant_reply(
     prompt: str,
     *,
@@ -775,6 +870,44 @@ def generate_assistant_reply(
         dataframe=dataframe,
         dataset_name=dataset_name,
     )
+
+
+async def stream_assistant_reply(
+    db: Session,
+    *,
+    session: ChatSession,
+    prompt: str,
+) -> AsyncIterator[ChatStreamEvent]:
+    start = perf_counter()
+    try:
+        CHAT_STREAM_EVENTS_TOTAL.labels(type="progress").inc()
+        yield ChatStreamEvent(type="progress")
+
+        uploads = list_uploads(db, session_id=session.id)
+        loaded_dataframe = await _load_session_dataframe_async(db, session=session)
+        dataframe = loaded_dataframe[0] if loaded_dataframe is not None else None
+        dataset_name = loaded_dataframe[1] if loaded_dataframe is not None else None
+
+        async for event in _try_chatworkspace_reply_stream(prompt=prompt, dataframe=dataframe):
+            CHAT_STREAM_EVENTS_TOTAL.labels(type=event.type).inc()
+            yield event
+            if event.type == "final":
+                return
+
+        text, artifacts = await _run_chat_blocking(
+            build_assistant_reply,
+            prompt,
+            uploads=uploads,
+            dataframe=dataframe,
+            dataset_name=dataset_name,
+        )
+        CHAT_STREAM_EVENTS_TOTAL.labels(type="final").inc()
+        yield ChatStreamEvent(type="final", delta=text, text=text, artifacts=artifacts)
+    except Exception as exc:
+        CHAT_STREAM_EVENTS_TOTAL.labels(type="error").inc()
+        yield ChatStreamEvent(type="error", error=str(exc))
+    finally:
+        CHAT_STREAM_DURATION.observe(perf_counter() - start)
 
 
 def message_to_dict(message: ChatMessage) -> dict:

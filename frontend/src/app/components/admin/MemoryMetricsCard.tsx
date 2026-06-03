@@ -1,4 +1,3 @@
-import React from "react";
 import { Cpu, TrendingUp, TrendingDown, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { cn } from "../../lib/utils";
 import type { MemoryStats } from "../../api/admin";

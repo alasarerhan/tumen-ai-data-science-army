@@ -1,6 +1,6 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router";
-import { Activity, Send, Radio, RefreshCw, WifiOff, Wifi } from "lucide-react";
+import { Send, Radio, RefreshCw, WifiOff, Wifi } from "lucide-react";
 import { AppShell } from "../components/layout/AppShell";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";

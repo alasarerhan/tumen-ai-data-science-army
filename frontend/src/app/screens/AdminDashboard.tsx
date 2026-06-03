@@ -40,7 +40,9 @@ export default function AdminDashboard() {
     try {
       const stats = await getQueueStats();
       setQueueStats(stats);
-    } catch {}
+    } catch (err: unknown) {
+      console.warn("[AdminDashboard] Failed to fetch queue stats", err);
+    }
   }, []);
 
   const fetchDlqEvents = useCallback(async () => {

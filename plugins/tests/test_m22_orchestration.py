@@ -455,8 +455,9 @@ class TestWorkflowResolver:
         resolver = WorkflowResolver(model=None)
         result = resolver.resolve(user_goal="Analyse sales data")
         assert result["scenario"] == WorkflowResolver.DYNAMIC
-        # Without a model the spec is empty → errors
-        assert result["errors"]
+        assert result["errors"] == []
+        assert result["spec"]["name"] == "dynamic_data_science_workflow"
+        assert len(result["spec"]["steps"]) == 1
 
     def test_dynamic_scenario_with_mocked_model(self):
         spec = _make_spec("generated_wf", n_steps=1)

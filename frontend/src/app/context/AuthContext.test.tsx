@@ -239,7 +239,7 @@ describe("AuthContext", () => {
     const intervalRegistrations: Array<{ callback: () => void; delay: number }> = [];
     const setIntervalSpy = vi
       .spyOn(window, "setInterval")
-      .mockImplementation(((handler: TimerHandler, timeout?: number) => {
+      .mockImplementation(((handler: Parameters<typeof window.setInterval>[0], timeout?: number) => {
         if (typeof handler === "function") {
           intervalRegistrations.push({
             callback: handler as () => void,
@@ -247,7 +247,7 @@ describe("AuthContext", () => {
           });
         }
         return 1 as unknown as ReturnType<typeof setInterval>;
-      }) as typeof window.setInterval);
+      }) as unknown as typeof window.setInterval);
 
     render(
       <BrowserRouter>

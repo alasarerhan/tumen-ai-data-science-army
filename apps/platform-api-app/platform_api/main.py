@@ -33,6 +33,7 @@ from platform_api.routes.scheduler import router as scheduler_router
 from platform_api.routes.strategy import router as strategy_router
 from platform_api.routes.versioning import router as versioning_router
 from platform_api.routes.workflows import router as workflows_router
+from platform_api.routes.workflow_node_types import router as workflow_node_types_router
 
 logger = logging.getLogger(__name__)
 
@@ -118,6 +119,7 @@ def _register_routers(app: FastAPI) -> None:
     app.include_router(runs_router)
     app.include_router(artifacts_router)
     app.include_router(workflows_router)
+    app.include_router(workflow_node_types_router)
     app.include_router(strategy_router)
     app.include_router(logs_router)
     app.include_router(data_sources_router)

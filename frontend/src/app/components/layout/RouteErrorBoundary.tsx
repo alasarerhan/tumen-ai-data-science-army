@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { isRouteErrorResponse, useLocation, useNavigate, useRouteError } from "react-router";
 import { AlertTriangle, Home, RefreshCw } from "lucide-react";
 import { Button } from "../ui/button";

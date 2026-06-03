@@ -17,7 +17,21 @@ from platform_api.core.service_errors import NotFoundError, UnprocessableEntityE
 logger = logging.getLogger(__name__)
 
 
-ALLOWED_SIGNAL_TYPES = {"pause", "resume", "skip", "modify", "annotate", "cancel"}
+ALLOWED_SIGNAL_TYPES = {
+    "pause",
+    "resume",
+    "skip",
+    "modify",
+    "annotate",
+    "cancel",
+    "node_started",
+    "node_progress",
+    "node_succeeded",
+    "node_failed",
+    "artifact_created",
+    "approval_required",
+    "run_completed",
+}
 
 
 def _parse_uuid(value: str, label: str) -> uuid.UUID:
@@ -60,7 +74,7 @@ def emit_signal(
     target_step: str | None,
     note: str | None,
     payload: dict | None,
-    created_by_user_id: uuid.UUID,
+    created_by_user_id: uuid.UUID | None,
 ) -> WorkflowSignalEvent:
     if signal_type not in ALLOWED_SIGNAL_TYPES:
         allowed = ", ".join(sorted(ALLOWED_SIGNAL_TYPES))

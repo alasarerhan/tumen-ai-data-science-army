@@ -207,7 +207,7 @@ export default function WorkflowDetail() {
       .then((result) => {
         if (!cancelled) setWorkflow(result);
       })
-      .catch((err) => {
+      .catch((err: unknown) => {
         if (!cancelled) {
           setLoadError(err instanceof Error ? err.message : "Failed to load workflow");
         }

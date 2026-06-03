@@ -26,7 +26,6 @@ from pathlib import Path
 from unittest.mock import patch
 
 import pytest
-from pytest import approx
 from fastapi.testclient import TestClient
 
 from platform_api.auth.dependencies import get_principal

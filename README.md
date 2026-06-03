@@ -15,11 +15,13 @@ Users can upload CSV/Excel files, ask questions in natural language (English or 
 ## Core Capabilities
 
 - Conversational analytics with SSE streaming
+- CSV/Excel uploads and SQL Server data source setup for governed analysis
 - Multi-step workflow design and execution
 - Scheduled runs (cron-like and natural-language scheduling)
 - Artifact generation (tables, charts, reports)
 - Tenant-aware architecture for workspace-level isolation
 - Admin/operability surfaces (run status, monitoring-oriented views)
+- Categorized settings for user, workspace, data source, security, notification, and operations configuration
 
 ## High-Level Architecture
 
@@ -83,6 +85,7 @@ Important variables used across local/release profiles:
 - `DEPLOYMENT_PROFILE` (`local` or `release`)
 - `AUTH_MODE` (`dev` or `oidc`)
 - `DATABASE_URL`
+- `DATA_SOURCE_SECRET_KEY`
 - `OPENAI_API_KEY`
 - `OPENAI_MODEL`
 - `OPENAI_MODEL_STRATEGY`

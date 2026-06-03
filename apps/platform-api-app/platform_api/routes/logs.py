@@ -5,11 +5,12 @@ import json
 import logging
 from datetime import UTC, datetime
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
 from platform_api.authz.dependencies import require_workspace_member
+from platform_api.core.config import settings
 from platform_api.db.session import get_db
 from platform_api.services.run_service import get_run_by_id_for_workspace
 
@@ -54,7 +55,7 @@ async def stream_run_logs(
     workspace = context["workspace"]
     run = get_run_by_id_for_workspace(db, run_id=run_id, workspace_id=workspace.id)
 
-    # Try Prefect logs first; fall back to mock stream
+    # Try Prefect logs first; fall back to mock stream only for local verification.
     try:
         from platform_api.orchestration.prefect_gateway import get_prefect_flow_run_logs  # type: ignore[import]
 
@@ -64,8 +65,10 @@ async def stream_run_logs(
             yield await _sse_event({"ts": datetime.now(UTC).isoformat(), "level": "INFO", "msg": "__STREAM_END__"})
 
         return StreamingResponse(prefect_stream(), media_type="text/event-stream")
-    except (ImportError, AttributeError, Exception):
-        pass
+    except (ImportError, AttributeError, Exception) as exc:
+        if not (settings.is_local_profile() and settings.allow_local_run_fallback):
+            logger.error("Prefect log stream unavailable and local fallback is disabled: %s", exc)
+            raise HTTPException(status_code=503, detail="Run log stream is unavailable") from exc
 
     return StreamingResponse(
         _mock_log_stream(str(run.id), run.status),

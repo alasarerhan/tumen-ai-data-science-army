@@ -37,12 +37,14 @@ type DataSourceHealthKey = keyof typeof healthConfig;
 const typeIcon = {
   "Local File": <FileText size={18} className="text-emerald-600" />,
   "SQL": <Database size={18} className="text-sky-600" />,
+  "SQL Server": <Database size={18} className="text-blue-700" />,
   "MCP Plugin": <Plug size={18} className="text-violet-600" />,
 };
 
 const typeBg = {
   "Local File": "bg-emerald-50 dark:bg-emerald-900/20",
   "SQL": "bg-sky-50 dark:bg-sky-900/20",
+  "SQL Server": "bg-blue-50 dark:bg-blue-900/20",
   "MCP Plugin": "bg-violet-50 dark:bg-violet-900/20",
 };
 
@@ -62,6 +64,13 @@ const WIZARD_TYPES = [
     color: "text-sky-600 bg-sky-50",
   },
   {
+    id: "sql_server",
+    label: "SQL Server",
+    icon: <Database size={20} />,
+    desc: "Microsoft SQL Server with secure server-side credential handling.",
+    color: "text-blue-700 bg-blue-50",
+  },
+  {
     id: "mcp",
     label: "MCP Plugin",
     icon: <Plug size={20} />,
@@ -73,6 +82,7 @@ const WIZARD_TYPES = [
 function getKindLabel(kind: string) {
   if (kind === "file") return "Local File";
   if (kind === "mcp") return "MCP Plugin";
+  if (kind === "sql_server") return "SQL Server";
   return "SQL";
 }
 
@@ -112,6 +122,16 @@ export default function DataSources() {
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [formName, setFormName] = useState("");
   const [formUri, setFormUri] = useState("");
+  const [sqlServerForm, setSqlServerForm] = useState({
+    host: "",
+    port: "1433",
+    database: "",
+    username: "",
+    password: "",
+    encrypt: true,
+    trustServerCertificate: false,
+    driver: "pymssql",
+  });
   const [testingId, setTestingId] = useState<string | null>(null);
   const [wizardTesting, setWizardTesting] = useState(false);
   const [wizardTestResult, setWizardTestResult] = useState<{ status: "ok" | "error"; message: string } | null>(null);
@@ -131,12 +151,17 @@ export default function DataSources() {
       : "Failed to load data sources";
   }, [dataSourcesQuery.error, pageError]);
 
-  const reviewConnection = selectedType ? normalizeConnectionUri(selectedType, formUri) : formUri;
+  const sqlServerDisplay = `${sqlServerForm.username || "user"}@${sqlServerForm.host || "host"}:${sqlServerForm.port || "1433"}/${sqlServerForm.database || "database"}`;
+  const reviewConnection = selectedType === "sql_server"
+    ? sqlServerDisplay
+    : selectedType ? normalizeConnectionUri(selectedType, formUri) : formUri;
   const canContinueFromStep1 = Boolean(selectedType);
-  const canTestConnection = Boolean(formName.trim() && formUri.trim() && selectedType);
+  const canTestConnection = selectedType === "sql_server"
+    ? Boolean(formName.trim() && sqlServerForm.host.trim() && sqlServerForm.database.trim() && sqlServerForm.username.trim() && sqlServerForm.password.trim())
+    : Boolean(formName.trim() && formUri.trim() && selectedType);
 
   const stepTitle =
-    selectedType === "file" ? "Local Path" : selectedType === "mcp" ? "Plugin Module" : "Connection URI";
+    selectedType === "file" ? "Local Path" : selectedType === "mcp" ? "Plugin Module" : selectedType === "sql_server" ? "SQL Server Details" : "Connection URI";
   const stepPlaceholder =
     selectedType === "file"
       ? "C:\\data\\exports or /data/warehouse"
@@ -157,6 +182,16 @@ export default function DataSources() {
     setSelectedType(null);
     setFormName("");
     setFormUri("");
+    setSqlServerForm({
+      host: "",
+      port: "1433",
+      database: "",
+      username: "",
+      password: "",
+      encrypt: true,
+      trustServerCertificate: false,
+      driver: "pymssql",
+    });
     setWizardTesting(false);
     setWizardTestResult(null);
   };
@@ -188,16 +223,36 @@ export default function DataSources() {
   };
 
   const handleWizardTest = async () => {
-    if (!workspaceId || !selectedType || !formName.trim() || !formUri.trim()) return;
+    if (!workspaceId || !selectedType || !canTestConnection) return;
     setWizardTesting(true);
     setPageError(null);
     setWizardTestResult(null);
     try {
+      const payload = selectedType === "sql_server"
+        ? {
+            workspace_id: workspaceId,
+            name: formName.trim(),
+            kind: "sql_server",
+            metadata: {
+              provider: "sql_server",
+              host: sqlServerForm.host.trim(),
+              port: Number(sqlServerForm.port || 1433),
+              database: sqlServerForm.database.trim(),
+              username: sqlServerForm.username.trim(),
+              password: sqlServerForm.password,
+              encrypt: sqlServerForm.encrypt,
+              trust_server_certificate: sqlServerForm.trustServerCertificate,
+              driver: sqlServerForm.driver,
+            },
+          }
+        : {
+            workspace_id: workspaceId,
+            name: formName.trim(),
+            kind: selectedType,
+            connection_uri: normalizeConnectionUri(selectedType, formUri),
+          };
       const created = await createDataSourceMutation.mutateAsync({
-        workspace_id: workspaceId,
-        name: formName.trim(),
-        kind: selectedType,
-        connection_uri: normalizeConnectionUri(selectedType, formUri),
+        ...payload,
       });
       const result = await testDataSourceMutation.mutateAsync(created.id);
       setWizardTestResult({
@@ -261,7 +316,7 @@ export default function DataSources() {
 
                 <div className="w-48 flex-shrink-0">
                   <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">{ds.name}</p>
-                  <Badge variant={ds.kind === "sql" ? "info" : ds.kind === "mcp" ? "violet" : "success"} size="sm">
+                  <Badge variant={ds.kind === "sql" || ds.kind === "sql_server" ? "info" : ds.kind === "mcp" ? "violet" : "success"} size="sm">
                     {kindLabel}
                   </Badge>
                 </div>
@@ -376,25 +431,118 @@ export default function DataSources() {
                       onChange={(e) => setFormName(e.target.value)}
                     />
                   </div>
-                  <div className="space-y-1.5">
-                    <label className="block text-xs font-medium text-slate-600 dark:text-slate-400">{stepTitle}</label>
-                    <input
-                      type={selectedType === "sql" ? "password" : "text"}
-                      autoComplete="off"
-                      spellCheck={false}
-                      className="h-9 w-full rounded-[6px] border border-slate-200 bg-white px-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-                      placeholder={stepPlaceholder}
-                      value={formUri}
-                      onChange={(e) => setFormUri(e.target.value)}
-                    />
-                    <p className="text-[10px] text-slate-400">
-                      {selectedType === "file"
-                        ? "Absolute path will be normalized to file:/// URI format."
-                        : selectedType === "mcp"
-                          ? "Module names will be normalized to mcp://module.path."
-                          : "Use a database URI such as postgresql://user:pass@host/db or sqlite:///C:/data/app.db."}
-                    </p>
-                  </div>
+                  {selectedType === "sql_server" ? (
+                    <div className="space-y-3">
+                      <p className="text-xs font-medium text-slate-600 dark:text-slate-400">{stepTitle}</p>
+                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_96px]">
+                        <label className="space-y-1.5">
+                          <span className="block text-xs font-medium text-slate-600 dark:text-slate-400">Host</span>
+                          <input
+                            autoComplete="off"
+                            spellCheck={false}
+                            className="h-9 w-full rounded-[6px] border border-slate-200 bg-white px-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                            placeholder="sql.company.local"
+                            value={sqlServerForm.host}
+                            onChange={(e) => setSqlServerForm((value) => ({ ...value, host: e.target.value }))}
+                          />
+                        </label>
+                        <label className="space-y-1.5">
+                          <span className="block text-xs font-medium text-slate-600 dark:text-slate-400">Port</span>
+                          <input
+                            inputMode="numeric"
+                            className="h-9 w-full rounded-[6px] border border-slate-200 bg-white px-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                            value={sqlServerForm.port}
+                            onChange={(e) => setSqlServerForm((value) => ({ ...value, port: e.target.value }))}
+                          />
+                        </label>
+                      </div>
+                      <label className="space-y-1.5">
+                        <span className="block text-xs font-medium text-slate-600 dark:text-slate-400">Database</span>
+                        <input
+                          autoComplete="off"
+                          spellCheck={false}
+                          className="h-9 w-full rounded-[6px] border border-slate-200 bg-white px-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                          placeholder="analytics"
+                          value={sqlServerForm.database}
+                          onChange={(e) => setSqlServerForm((value) => ({ ...value, database: e.target.value }))}
+                        />
+                      </label>
+                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                        <label className="space-y-1.5">
+                          <span className="block text-xs font-medium text-slate-600 dark:text-slate-400">Username</span>
+                          <input
+                            autoComplete="username"
+                            spellCheck={false}
+                            className="h-9 w-full rounded-[6px] border border-slate-200 bg-white px-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                            value={sqlServerForm.username}
+                            onChange={(e) => setSqlServerForm((value) => ({ ...value, username: e.target.value }))}
+                          />
+                        </label>
+                        <label className="space-y-1.5">
+                          <span className="block text-xs font-medium text-slate-600 dark:text-slate-400">Password</span>
+                          <input
+                            type="password"
+                            autoComplete="current-password"
+                            className="h-9 w-full rounded-[6px] border border-slate-200 bg-white px-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                            value={sqlServerForm.password}
+                            onChange={(e) => setSqlServerForm((value) => ({ ...value, password: e.target.value }))}
+                          />
+                        </label>
+                      </div>
+                      <label className="space-y-1.5">
+                        <span className="block text-xs font-medium text-slate-600 dark:text-slate-400">Driver</span>
+                        <select
+                          className="h-9 w-full rounded-[6px] border border-slate-200 bg-white px-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                          value={sqlServerForm.driver}
+                          onChange={(e) => setSqlServerForm((value) => ({ ...value, driver: e.target.value }))}
+                        >
+                          <option value="pymssql">pymssql</option>
+                          <option value="pyodbc">ODBC Driver</option>
+                        </select>
+                      </label>
+                      <div className="flex flex-wrap gap-4 rounded-[6px] bg-slate-50 p-3 dark:bg-slate-800">
+                        <label className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
+                          <input
+                            type="checkbox"
+                            checked={sqlServerForm.encrypt}
+                            onChange={(e) => setSqlServerForm((value) => ({ ...value, encrypt: e.target.checked }))}
+                          />
+                          Encrypt connection
+                        </label>
+                        <label className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
+                          <input
+                            type="checkbox"
+                            checked={sqlServerForm.trustServerCertificate}
+                            onChange={(e) => setSqlServerForm((value) => ({ ...value, trustServerCertificate: e.target.checked }))}
+                          />
+                          Trust server certificate
+                        </label>
+                      </div>
+                      <p className="text-[10px] text-slate-400">
+                        Passwords are sent only to the backend secret boundary and are never returned in API responses.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-1.5">
+                      <label className="block text-xs font-medium text-slate-600 dark:text-slate-400">{stepTitle}</label>
+                      <input
+                        type={selectedType === "sql" ? "password" : "text"}
+                        autoComplete="off"
+                        spellCheck={false}
+                        className="h-9 w-full rounded-[6px] border border-slate-200 bg-white px-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                        placeholder={stepPlaceholder}
+                        value={formUri}
+                        onChange={(e) => setFormUri(e.target.value)}
+                      />
+                      <p className="text-[10px] text-slate-400">
+                        {selectedType === "file"
+                          ? "Absolute path will be normalized to file:/// URI format."
+                          : selectedType === "mcp"
+                            ? "Module names will be normalized to mcp://module.path."
+                            : "Use a database URI such as postgresql://user:pass@host/db or sqlite:///C:/data/app.db."}
+                      </p>
+                    </div>
+                  )}
                 </div>
               ) : null}
 

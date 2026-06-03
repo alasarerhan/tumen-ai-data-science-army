@@ -181,6 +181,7 @@ vi.mock("@monaco-editor/react", () => ({
 import WorkflowDesigner from "../screens/WorkflowDesigner";
 import * as workflowsApi from "../api/workflows";
 import * as runsApi from "../api/runs";
+import * as schedulerApi from "../api/scheduler";
 
 function renderWithProviders() {
   const queryClient = new QueryClient({
@@ -347,6 +348,47 @@ describe("WorkflowDesigner", () => {
     const scheduleButton = screen.getByRole("button", { name: /schedule/i });
     await act(async () => {
       fireEvent.click(scheduleButton);
+    });
+
+    await waitFor(() => {
+      expect(schedulerApi.createScheduledDeployment).toHaveBeenCalledWith("new", {
+        workspace_id: "test-workspace",
+        cron: "0 8 * * 1-5",
+        timezone: "UTC",
+      });
+    });
+  });
+
+  it("should pause and resume an existing schedule", async () => {
+    vi.mocked(schedulerApi.getWorkflowSchedule).mockResolvedValueOnce({
+      deployment_id: "dep-1",
+      deployment_name: "Test deployment",
+      workflow_spec_id: "new",
+      cron: "0 8 * * 1-5",
+      timezone: "UTC",
+      enabled: true,
+      next_run_at: null,
+      last_run_at: null,
+      last_run_status: null,
+    });
+
+    renderWithProviders();
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: /pause schedule/i })).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /pause schedule/i }));
+
+    await waitFor(() => {
+      expect(schedulerApi.pauseScheduledDeployment).toHaveBeenCalledWith("dep-1", "test-workspace");
+      expect(screen.getByRole("button", { name: /resume schedule/i })).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /resume schedule/i }));
+
+    await waitFor(() => {
+      expect(schedulerApi.resumeScheduledDeployment).toHaveBeenCalledWith("dep-1", "test-workspace");
     });
   });
 

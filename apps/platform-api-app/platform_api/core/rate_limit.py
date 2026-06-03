@@ -73,8 +73,14 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         client_host = request.client.host if request.client else "unknown"
         return f"ip:{client_host}"
 
-    def _rate_limit_key(self, client_id: str) -> str:
-        return f"ratelimit:{client_id}"
+    def _bucket_for_path(self, path: str) -> str:
+        for auth_path in self._auth_paths:
+            if path.startswith(auth_path):
+                return auth_path
+        return "__default__"
+
+    def _rate_limit_key(self, client_id: str, path: str) -> str:
+        return f"ratelimit:{client_id}:{self._bucket_for_path(path)}"
 
     def _get_rpm_for_path(self, path: str) -> int:
         for auth_path, rpm in self._auth_paths.items():
@@ -87,7 +93,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             return await call_next(request)
 
         client_id = self._get_client_id(request)
-        key = self._rate_limit_key(client_id)
+        key = self._rate_limit_key(client_id, request.url.path)
         now = time.time()
         window_start = now - self._window_seconds
         rpm = self._get_rpm_for_path(request.url.path)

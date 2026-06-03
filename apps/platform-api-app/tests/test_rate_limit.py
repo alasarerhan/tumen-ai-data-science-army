@@ -164,6 +164,33 @@ class TestRateLimitAuthPaths:
         response = client.post("/v1/auth/login")
         assert response.status_code == 429
 
+    def test_auth_path_limit_is_isolated_from_other_paths(self):
+        app = FastAPI()
+        app.add_middleware(
+            RateLimitMiddleware,
+            requests_per_minute=100,
+            redis_url=None,
+            auth_paths={"/v1/auth/login": 2, "/v1/me": 10},
+        )
+
+        @app.get("/v1/me")
+        async def me():
+            return {"id": "test-user"}
+
+        @app.post("/v1/auth/login")
+        async def login():
+            return {"token": "test"}
+
+        client = TestClient(app)
+
+        for _ in range(5):
+            response = client.get("/v1/me")
+            assert response.status_code == 200
+
+        response = client.post("/v1/auth/login")
+        assert response.status_code == 200
+        assert response.headers["X-RateLimit-Remaining"] == "1"
+
 
 class TestRateLimitSlidingWindow:
     """Tests for sliding window expiration."""

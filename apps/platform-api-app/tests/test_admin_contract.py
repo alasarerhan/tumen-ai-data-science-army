@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import pytest
 from fastapi.testclient import TestClient
+from fastapi.routing import APIRoute
 
 from platform_api.auth.dependencies import get_principal
 from platform_api.auth.models import Principal
@@ -49,3 +50,21 @@ def test_scheduler_status_returns_restricted_metadata_for_tenant_admin(admin_cli
     assert body["message"] == "Scheduler status is restricted to platform operators."
     assert body["is_leader"] is False
     assert body["jobs"] == []
+
+
+def test_admin_and_finops_routes_require_tenant_admin(app):
+    protected_routes = [
+        route
+        for route in app.routes
+        if isinstance(route, APIRoute)
+        and (route.path.startswith("/v1/admin") or route.path.startswith("/v1/finops"))
+    ]
+
+    assert protected_routes, "Expected admin or finops routes to be registered"
+    missing = [
+        route.path
+        for route in protected_routes
+        if not any(dependency.call is require_tenant_admin for dependency in route.dependant.dependencies)
+    ]
+
+    assert missing == []

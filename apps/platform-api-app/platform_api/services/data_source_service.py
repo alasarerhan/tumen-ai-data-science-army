@@ -2,11 +2,13 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import re
 import sqlite3
 import uuid
 from datetime import UTC, datetime
 from pathlib import Path
 from urllib.parse import urlparse
+from urllib.parse import quote
 
 from sqlalchemy import text
 from sqlalchemy import create_engine
@@ -15,6 +17,7 @@ from sqlalchemy.orm import Session
 from platform_api.core.service_errors import NotFoundError
 from platform_api.db.models import DataSource
 from platform_api.db.tenant_query import TenantQuery
+from platform_api.services.secret_store_service import get_data_source_secret, put_data_source_secret
 
 
 def _parse_uuid(value: uuid.UUID | str, label: str) -> uuid.UUID:
@@ -52,20 +55,35 @@ def create_data_source(
     user_id: uuid.UUID,
     name: str,
     kind: str,
-    connection_uri: str,
+    connection_uri: str | None,
     metadata: dict | None = None,
 ) -> DataSource:
+    prepared_uri, prepared_metadata, secret_value = _prepare_connection(kind, connection_uri, metadata)
     ds = DataSource(
         tenant_id=tenant_id,
         workspace_id=workspace_id,
         created_by_user_id=user_id,
         name=name,
         kind=kind,
-        connection_uri=connection_uri,
-        metadata_json=json.dumps(metadata) if metadata else None,
+        connection_uri=prepared_uri,
+        metadata_json=json.dumps(prepared_metadata) if prepared_metadata else None,
     )
     db.add(ds)
     db.flush()
+    if secret_value:
+        prepared_metadata = prepared_metadata or {}
+        prepared_metadata["secret_ref"] = put_data_source_secret(
+            db,
+            tenant_id=tenant_id,
+            workspace_id=workspace_id,
+            data_source_id=ds.id,
+            created_by_user_id=user_id,
+            purpose="sql_server_password",
+            value=secret_value,
+        )
+        ds.metadata_json = json.dumps(prepared_metadata)
+        db.add(ds)
+        db.flush()
     return ds
 
 
@@ -82,10 +100,28 @@ def update_data_source(
         ds.name = name
     if kind is not None:
         ds.kind = kind
-    if connection_uri is not None:
-        ds.connection_uri = connection_uri
     if metadata is not None:
-        ds.metadata_json = json.dumps(metadata)
+        effective_kind = kind or ds.kind
+        prepared_uri, prepared_metadata, secret_value = _prepare_connection(
+            effective_kind,
+            connection_uri or ds.connection_uri,
+            metadata,
+        )
+        if secret_value:
+            prepared_metadata = prepared_metadata or {}
+            prepared_metadata["secret_ref"] = put_data_source_secret(
+                db,
+                tenant_id=ds.tenant_id,
+                workspace_id=ds.workspace_id,
+                data_source_id=ds.id,
+                created_by_user_id=ds.created_by_user_id,
+                purpose="sql_server_password",
+                value=secret_value,
+            )
+        ds.connection_uri = prepared_uri
+        ds.metadata_json = json.dumps(prepared_metadata)
+    elif connection_uri is not None:
+        ds.connection_uri = connection_uri
     ds.updated_at = datetime.now(UTC)
     db.add(ds)
     db.flush()
@@ -97,10 +133,11 @@ def test_data_source_connection(
     *,
     ds: DataSource,
 ) -> dict:
-    parsed = urlparse(ds.connection_uri)
-    scheme = parsed.scheme.lower()
-
+    connection_uri: str | None = None
     try:
+        connection_uri = _connection_uri_for_test(db, ds)
+        parsed = urlparse(connection_uri)
+        scheme = parsed.scheme.lower()
         if scheme == "file":
             result = _test_local_path(parsed)
         elif scheme == "mcp":
@@ -110,12 +147,12 @@ def test_data_source_connection(
         elif scheme == "duckdb":
             result = _test_duckdb_connection(parsed)
         else:
-            result = _test_sqlalchemy_connection(ds.connection_uri)
+            result = _test_sqlalchemy_connection(connection_uri)
         status = "ok"
     except Exception as exc:
         result = {
             "status": "error",
-            "message": str(exc),
+            "message": _sanitize_error_message(str(exc), ds, connection_uri),
         }
         status = "error"
 
@@ -130,6 +167,66 @@ def test_data_source_connection(
     db.add(ds)
     db.flush()
     return metadata["connection_test"]
+
+
+def _prepare_connection(kind: str, connection_uri: str | None, metadata: dict | None) -> tuple[str, dict | None, str | None]:
+    if kind != "sql_server":
+        if not connection_uri:
+            raise ValueError("Connection URI is required")
+        return connection_uri, metadata, None
+
+    prepared = dict(metadata or {})
+    password = str(prepared.pop("password", "") or "")
+    host = str(prepared.get("host", "")).strip()
+    database = str(prepared.get("database", "")).strip()
+    username = str(prepared.get("username", "")).strip()
+    if not host or not database or not username:
+        raise ValueError("SQL Server host, database, and username are required")
+    port = int(prepared.get("port") or 1433)
+    driver = str(prepared.get("driver") or "pymssql").strip().lower()
+    scheme = "mssql+pyodbc" if driver == "pyodbc" else "mssql+pymssql"
+    safe_uri = f"{scheme}://{quote(username)}@{host}:{port}/{quote(database)}"
+    return safe_uri, prepared, password or None
+
+
+def _connection_uri_for_test(db: Session, ds: DataSource) -> str:
+    if ds.kind != "sql_server":
+        return ds.connection_uri
+    metadata = json.loads(ds.metadata_json) if ds.metadata_json else {}
+    password = get_data_source_secret(
+        db,
+        ref=metadata.get("secret_ref"),
+        tenant_id=ds.tenant_id,
+        workspace_id=ds.workspace_id,
+    )
+    if not password:
+        raise ValueError("SQL Server secret is not available. Re-enter credentials before testing.")
+    parsed = urlparse(ds.connection_uri)
+    username = parsed.username or str(metadata.get("username") or "")
+    host = parsed.hostname or str(metadata.get("host") or "")
+    port = parsed.port or int(metadata.get("port") or 1433)
+    database = parsed.path.lstrip("/") or str(metadata.get("database") or "")
+    query_parts = []
+    if metadata.get("encrypt") is not None:
+        query_parts.append(f"encrypt={'yes' if metadata.get('encrypt') else 'no'}")
+    if metadata.get("trust_server_certificate") is not None:
+        query_parts.append(f"TrustServerCertificate={'yes' if metadata.get('trust_server_certificate') else 'no'}")
+    query = f"?{'&'.join(query_parts)}" if query_parts else ""
+    return f"{parsed.scheme}://{quote(username)}:{quote(password)}@{host}:{port}/{quote(database)}{query}"
+
+
+def _sanitize_error_message(message: str, ds: DataSource, connection_uri: str | None = None) -> str:
+    metadata = json.loads(ds.metadata_json) if ds.metadata_json else {}
+    username = str(metadata.get("username") or "")
+    sanitized = message
+    if username:
+        sanitized = sanitized.replace(username, "<username>")
+    if connection_uri:
+        parsed = urlparse(connection_uri)
+        if parsed.password:
+            sanitized = sanitized.replace(parsed.password, "****")
+    sanitized = re.sub(r"://([^:/@\s]+):([^@\s]+)@", r"://\1:****@", sanitized)
+    return sanitized
 
 
 def _test_local_path(parsed) -> dict:

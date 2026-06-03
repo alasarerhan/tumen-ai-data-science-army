@@ -1,4 +1,4 @@
-import { test, expect, clearAuth, loginAsDev } from '../fixtures/test-fixtures';
+import { test, expect, clearAuth, loginThroughDevForm } from '../fixtures/test-fixtures';
 
 test.describe('Login', () => {
   test.beforeEach(async ({ page }) => {
@@ -13,7 +13,7 @@ test.describe('Login', () => {
   });
 
   test('should login with dev token', async ({ page }) => {
-    await loginAsDev(page);
+    await loginThroughDevForm(page);
     await expect(page).toHaveURL(/.*dashboard/, { timeout: 10000 });
   });
 
@@ -26,7 +26,7 @@ test.describe('Login', () => {
   });
 
   test('should redirect to dashboard if already authenticated', async ({ page }) => {
-    await loginAsDev(page);
+    await loginThroughDevForm(page);
     await expect(page).toHaveURL(/.*dashboard/, { timeout: 10000 });
     
     await page.goto('/');

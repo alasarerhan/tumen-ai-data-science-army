@@ -74,4 +74,36 @@ describe("ArtifactCard", () => {
     expect(screen.getByText("Executive Summary")).toBeInTheDocument();
     expect(screen.getByText("Result")).toBeInTheDocument();
   });
+
+  it("sanitizes unsafe report markdown before rendering", () => {
+    const { container } = render(
+      <ArtifactCard
+        artifact={{
+          type: "report",
+          title: "Unsafe Report",
+          content: "Click [bad](javascript:alert(1))<script>alert('x')</script><img src=\"javascript:alert(1)\" onerror=\"alert(1)\" />",
+        }}
+      />,
+    );
+
+    expect(screen.getByText("Unsafe Report")).toBeInTheDocument();
+    expect(container.querySelector("script")).toBeNull();
+    expect(container.querySelector("a[href^='javascript']")).toBeNull();
+    expect(container.querySelector("img[onerror]")).toBeNull();
+  });
+
+  it("renders table cell markup as text instead of executable html", () => {
+    const { container } = render(
+      <ArtifactCard
+        artifact={{
+          type: "table",
+          columns: ["payload"],
+          records: [{ payload: "<img src=x onerror=alert(1)>" }],
+        }}
+      />,
+    );
+
+    expect(screen.getByText("<img src=x onerror=alert(1)>")).toBeInTheDocument();
+    expect(container.querySelector("img[onerror]")).toBeNull();
+  });
 });

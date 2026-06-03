@@ -114,3 +114,8 @@
 - Performance Dashboard: [DataDog/Grafana URL]
 - CI Dashboard: https://github.com/[org]/[repo]/actions
 - Status Page: https://status.example.com
+# Legacy Launch Checklist Template
+
+> This file is not the active release source of truth. Use
+> `docs/release-readiness-checklist.md` for current release evidence, owners,
+> open risk, and go/no-go decisions.

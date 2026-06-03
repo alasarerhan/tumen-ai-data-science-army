@@ -18,6 +18,7 @@ export function FileDropZone({ onFiles, disabled }: FileDropZoneProps) {
 
   return (
     <div
+      data-testid="file-upload"
       className={cn(
         "rounded-md border border-dashed px-4 py-4 text-center transition-colors",
         isOver ? "border-indigo-500 bg-indigo-50" : "border-slate-300 bg-slate-50",

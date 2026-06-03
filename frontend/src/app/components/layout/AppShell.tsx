@@ -218,7 +218,13 @@ export function AppShell({ children }: AppShellProps) {
             <button type="button" onClick={() => navigate("/settings")} className="rounded-full">
               <Avatar user={shellUser} size={32} />
             </button>
-            <button type="button" onClick={handleLogout} className="rounded p-2 text-slate-500 hover:bg-slate-100" aria-label="Sign out">
+            <button
+              type="button"
+              data-testid="logout"
+              onClick={handleLogout}
+              className="rounded p-2 text-slate-500 hover:bg-slate-100"
+              aria-label="Sign out"
+            >
               <LogOut size={16} />
             </button>
           </div>

@@ -16,6 +16,8 @@ Business analysts, operations managers, and executives have data but lack the te
 
 **How users interact with it (the user journey):**
 
+Current scope note: users can work from uploaded CSV/Excel files and can also connect governed SQL Server data sources when the analysis needs live or centrally managed data access.
+
 1. **Sign in** through Google (your company email becomes your identity)
 2. **Create a workspace** — think of it as a project folder for a specific business problem
 3. **Upload data** — drag and drop a CSV or Excel file into the AI Workspace chat
@@ -206,7 +208,8 @@ AI_DATASCIENCE_TEAM/
 │   ├── package.json                   # JavaScript dependencies
 │   └── vite.config.ts                 # Build configuration
 │
-├── ai-data-science-team/              # The Python backend and agent library
+├── apps/platform-api-app/             # The FastAPI backend application
+├── ai_data_science_team/              # The Python agent library
 │   ├── apps/
 │   │   └── platform-api-app/          # FastAPI backend service
 │   │       ├── platform_api/
@@ -259,25 +262,25 @@ AI_DATASCIENCE_TEAM/
 
 **`frontend/src/app/api/`** — Functions that call the backend. Each file corresponds to a backend route group. Open this folder when the frontend isn't talking to the backend correctly.
 
-**`ai-data-science-team/apps/platform-api-app/platform_api/routes/`** — API endpoints. Each file defines the URLs the frontend can call. `chat.py` handles `/v1/chat/*`, `workflows.py` handles `/v1/workflows/*`. Open this folder when you need to add a new API endpoint or fix request/response handling.
+**`apps/platform-api-app/platform_api/routes/`** — API endpoints. Each file defines the URLs the frontend can call. `chat.py` handles `/v1/chat/*`, `workflows.py` handles `/v1/workflows/*`. Open this folder when you need to add a new API endpoint or fix request/response handling.
 
-**`ai-data-science-team/apps/platform-api-app/platform_api/services/`** — Business logic. Routes delegate to services for the actual work. `chat_service.py` handles chat logic, `run_service.py` handles pipeline execution. Open this folder when you need to understand or modify how something actually works.
+**`apps/platform-api-app/platform_api/services/`** — Business logic. Routes delegate to services for the actual work. `chat_service.py` handles chat logic, `run_service.py` handles pipeline execution. Open this folder when you need to understand or modify how something actually works.
 
-**`ai-data-science-team/apps/platform-api-app/platform_api/db/models.py`** — Database schema. Every table is defined here as a Python class. Open this file when you need to add a new table or understand what columns exist.
+**`apps/platform-api-app/platform_api/db/models.py`** — Database schema. Every table is defined here as a Python class. Open this file when you need to add a new table or understand what columns exist.
 
-**`ai-data-science-team/apps/platform-api-app/alembic/versions/`** — Database migrations. Each file is a numbered change to the database schema. Open this folder when you need to see how the database evolved or add a new migration.
+**`apps/platform-api-app/alembic/versions/`** — Database migrations. Each file is a numbered change to the database schema. Open this folder when you need to see how the database evolved or add a new migration.
 
-**`ai-data-science-team/ai_data_science_team/agents/`** — Individual AI agents. Each file is a specialist: cleaning, visualization, ML, etc. Open this folder when you need to modify how an agent works or add a new one.
+**`ai_data_science_team/agents/`** — Individual AI agents. Each file is a specialist: cleaning, visualization, ML, etc. Open this folder when you need to modify how an agent works or add a new one.
 
-**`ai-data-science-team/ai_data_science_team/multiagents/`** — Agent teams and coordinators. `chat_workspace.py` is the main conversational interface; `chat_router.py` decides which agent handles each message. Open this folder when you need to change how agents work together.
+**`ai_data_science_team/multiagents/`** — Agent teams and coordinators. `chat_workspace.py` is the main conversational interface; `chat_router.py` decides which agent handles each message. Open this folder when you need to change how agents work together.
 
 ### Entry Points — Where Things Start
 
 **Frontend**: `frontend/src/main.tsx` — This is the first code that runs. It mounts the React app into the HTML page.
 
-**Backend**: `ai-data-science-team/apps/platform-api-app/platform_api/main.py` — This creates the FastAPI application, registers all routes, and starts the server.
+**Backend**: `apps/platform-api-app/platform_api/main.py` — This creates the FastAPI application, registers all routes, and starts the server.
 
-**Agent Library**: `ai-data-science-team/ai_data_science_team/__init__.py` — This exports the public API of the agent library.
+**Agent Library**: `ai_data_science_team/__init__.py` — This exports the public API of the agent library.
 
 ### Naming Conventions
 
@@ -645,7 +648,7 @@ Every log entry has a consistent JSON structure with fields like `tenant_id`, `w
 
 ```bash
 # Navigate to backend
-cd ai-data-science-team/apps/platform-api-app
+cd apps/platform-api-app
 
 # Create virtual environment
 python -m venv .venv
@@ -687,7 +690,7 @@ npm run dev
 
 ```bash
 # Backend tests
-cd ai-data-science-team/apps/platform-api-app
+cd apps/platform-api-app
 pytest
 
 # Frontend tests

@@ -646,7 +646,12 @@ export default function WorkflowDesigner() {
           </div>
         </aside>
 
-        <section className="min-h-0" onDrop={onDrop} onDragOver={(event) => event.preventDefault()}>
+        <section
+          data-testid="designer-canvas"
+          className="min-h-0"
+          onDrop={onDrop}
+          onDragOver={(event) => event.preventDefault()}
+        >
           <ReactFlow
             nodes={nodes}
             edges={edges}
@@ -758,7 +763,7 @@ export default function WorkflowDesigner() {
             </div>
           </div>
 
-          <div className="min-h-0 flex-1">
+          <div className="min-h-0 flex-1" data-testid="yaml-editor">
             <Editor
               language="yaml"
               value={yamlText}

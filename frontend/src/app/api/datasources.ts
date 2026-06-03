@@ -19,7 +19,7 @@ export const createDataSource = (body: {
   workspace_id: string;
   name: string;
   kind: string;
-  connection_uri: string;
+  connection_uri?: string;
   metadata?: Record<string, unknown>;
 }) => apiPost<DataSource>("/v1/data-sources", body);
 

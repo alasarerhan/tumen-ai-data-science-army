@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { BrowserRouter } from "react-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
@@ -75,5 +75,25 @@ describe("DataSources", () => {
     await waitFor(() => {
       expect(screen.getByRole("heading", { level: 1 })).toBeInTheDocument();
     });
+  });
+
+  it("should render SQL Server structured connection fields", async () => {
+    renderWithProviders();
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: /add data source/i })).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /add data source/i }));
+    fireEvent.click(screen.getByRole("button", { name: /sql server/i }));
+    fireEvent.click(screen.getByRole("button", { name: /continue/i }));
+
+    expect(screen.getByText("SQL Server Details")).toBeInTheDocument();
+    expect(screen.getByText("Host")).toBeInTheDocument();
+    expect(screen.getByText("Database")).toBeInTheDocument();
+    expect(screen.getByText("Username")).toBeInTheDocument();
+    expect(screen.getByText("Password")).toBeInTheDocument();
+    expect(screen.getByText("Encrypt connection")).toBeInTheDocument();
+    expect(screen.getByText("Trust server certificate")).toBeInTheDocument();
   });
 });

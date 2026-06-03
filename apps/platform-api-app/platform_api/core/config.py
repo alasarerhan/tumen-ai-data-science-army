@@ -52,6 +52,7 @@ class Settings(BaseSettings):
     chat_stream_chunk_ms: int = 35
     chat_worker_max_threads: int = 4
     chat_upload_max_mb: int = 50
+    data_source_secret_key: str = ""
 
     # Signal stream
     signal_stream_poll_ms: int = 500

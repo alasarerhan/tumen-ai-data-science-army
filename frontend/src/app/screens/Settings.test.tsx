@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { BrowserRouter } from "react-router";
 
 vi.mock("react-router", async () => {
@@ -74,5 +74,21 @@ describe("Settings", () => {
     await waitFor(() => {
       expect(screen.getByRole("heading", { level: 2 })).toBeInTheDocument();
     });
+  });
+
+  it("should expose categorized data source, security, and operations settings", async () => {
+    renderWithProviders();
+
+    fireEvent.click(screen.getByRole("button", { name: /data sources/i }));
+    expect(screen.getByText("Allowed source types")).toBeInTheDocument();
+    expect(screen.getByText("SQL Server form")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /security/i }));
+    expect(screen.getByText("Authentication mode")).toBeInTheDocument();
+    expect(screen.getByText("Security report triage")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /operations/i }));
+    expect(screen.getByText("Health endpoint")).toBeInTheDocument();
+    expect(screen.getByText("Monitoring links")).toBeInTheDocument();
   });
 });

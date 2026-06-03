@@ -26,6 +26,12 @@ The earlier "built, not yet integrated" wording was therefore too broad. It stil
 | `workflow_resolver.py` | Staged | Implemented and tested, not wired into the production request path |
 | `signals.py` | Bridged in staged mode | Production `workflow_signal_events` are mirrored into the staged M22 signal store for runtime consumption when `staged_m22` is enabled |
 
+## 2026-06-03 Lifecycle Parity Decision
+
+`staged_m22` is not promoted to the default production execution mode. The current evidence proves the canonical `/v1/runs` path and the M22 primitives independently, but logs/artifacts/signals/retry/scheduler behavior are not yet exercised through a single RuntimeEngine-backed platform lifecycle.
+
+See `docs/m22-lifecycle-parity-matrix.md` for the parity matrix and command evidence.
+
 ## Newly Integrated Guard Rails
 
 - `platform_api.services.run_orchestration_service` now selects an execution adapter behind the stable `/v1/runs` API.
@@ -76,7 +82,7 @@ Keep and integrate deliberately. The accurate statement is now:
 - [x] Route production run creation through `run_orchestration_service` and the Prefect gateway
 - [x] Prefer Prefect-backed log streaming before any local/mock fallback
 - [x] Add M22 imports to `platform-api-app` where the advanced facade replaces or augments the current gateway path
-- [ ] Create execution endpoints that explicitly exercise `RuntimeEngine`
+- [ ] Create execution endpoints or a parity harness that explicitly exercise `RuntimeEngine`
 - [x] Register the production agent catalog in `AgentRegistry` at startup
 - [x] Finalize `ContextStore` persistence backing as `Redis`
 - [x] Connect `SignalStore` to `workflow_signal_events` through staged-mode mirroring

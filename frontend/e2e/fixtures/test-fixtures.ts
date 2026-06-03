@@ -51,7 +51,35 @@ export const mockRuns = [
   },
 ];
 
+async function isolateRateLimitBucket(page: Page) {
+  await page.setExtraHTTPHeaders({
+    'X-User-Id': `e2e-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+  });
+}
+
 export async function loginAsDev(page: Page) {
+  await isolateRateLimitBucket(page);
+  await page.context().addCookies([
+    {
+      name: 'access_token',
+      value: process.env.VITE_DEV_AUTH_TOKEN || 'dev',
+      domain: '127.0.0.1',
+      path: '/',
+      httpOnly: true,
+      secure: false,
+      sameSite: 'Strict',
+    },
+  ]);
+  await page.addInitScript(() => {
+    localStorage.setItem('workspace_id', 'test-workspace');
+    sessionStorage.setItem('auth_session_started_at', String(Date.now()));
+  });
+  await page.goto('/dashboard');
+  await expect(page).toHaveURL(/.*dashboard/, { timeout: 10000 });
+}
+
+export async function loginThroughDevForm(page: Page) {
+  await isolateRateLimitBucket(page);
   await page.goto('/');
   await page.getByRole('button', { name: /developer token/i }).click();
   await page.fill('input[name="token"]', 'dev');
@@ -60,10 +88,13 @@ export async function loginAsDev(page: Page) {
 }
 
 export async function clearAuth(page: Page) {
+  await isolateRateLimitBucket(page);
   await page.goto('/');
+  await page.context().clearCookies();
   await page.evaluate(() => {
     localStorage.removeItem('auth_token');
     localStorage.removeItem('workspace_id');
+    sessionStorage.removeItem('auth_session_started_at');
   });
 }
 

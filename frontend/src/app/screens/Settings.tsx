@@ -14,14 +14,20 @@ import {
   AlertTriangle,
   Plus,
   Copy,
+  Database,
+  Shield,
+  Activity,
 } from "lucide-react";
 
 const SETTINGS_NAV = [
   { id: "profile", label: "Profile", icon: <User size={16} /> },
   { id: "workspace", label: "Workspace", icon: <Building size={16} /> },
   { id: "members", label: "Members & RBAC", icon: <Users size={16} /> },
+  { id: "data-sources", label: "Data Sources", icon: <Database size={16} /> },
+  { id: "security", label: "Security", icon: <Shield size={16} /> },
   { id: "api-keys", label: "API Keys", icon: <Key size={16} /> },
   { id: "notifications", label: "Notifications", icon: <Bell size={16} /> },
+  { id: "operations", label: "Operations", icon: <Activity size={16} /> },
   { id: "danger", label: "Danger Zone", icon: <AlertTriangle size={16} /> },
 ];
 
@@ -50,6 +56,28 @@ function SectionHeader({ title }: { title: string }) {
   return (
     <div className="border-b border-slate-200 dark:border-slate-700 pb-3 mb-5">
       <h2 className="text-slate-900 dark:text-slate-50" style={{ fontSize: "20px", fontWeight: 600 }}>{title}</h2>
+    </div>
+  );
+}
+
+function SettingRow({
+  label,
+  value,
+  status,
+}: {
+  label: string;
+  value: string;
+  status?: "configured" | "not-configured" | "read-only";
+}) {
+  const variant = status === "configured" ? "success" : status === "not-configured" ? "warning" : "neutral";
+  const statusLabel = status === "configured" ? "Configured" : status === "not-configured" ? "Not configured" : "Read-only";
+  return (
+    <div className="flex items-center justify-between gap-4 border-b border-slate-100 py-3 last:border-b-0 dark:border-slate-800">
+      <div className="min-w-0">
+        <p className="text-sm font-medium text-slate-800 dark:text-slate-200">{label}</p>
+        <p className="truncate text-xs text-slate-500 dark:text-slate-400">{value}</p>
+      </div>
+      {status ? <Badge variant={variant} size="sm">{statusLabel}</Badge> : null}
     </div>
   );
 }
@@ -253,6 +281,34 @@ export default function Settings() {
               </div>
             )}
 
+            {/* Data Sources */}
+            {activeSection === "data-sources" && (
+              <div>
+                <SectionHeader title="Data Sources" />
+                <div className="rounded-[8px] border border-slate-200 bg-white px-4 dark:border-slate-700 dark:bg-slate-900">
+                  <SettingRow label="Allowed source types" value="CSV, Excel, local files, SQL URI, SQL Server, MCP plugin" status="configured" />
+                  <SettingRow label="SQL Server form" value="Host, port, database, username, password, encryption, certificate trust, and driver fields" status="configured" />
+                  <SettingRow label="Credential handling" value="Passwords are accepted only by the backend secret boundary and are not returned to the browser" status="configured" />
+                  <SettingRow label="Connection testing" value="Workspace-scoped test endpoint with credential-safe messages" status="configured" />
+                  <SettingRow label="Default SQL driver" value="pymssql; ODBC Driver is available as an advanced option" status="read-only" />
+                </div>
+              </div>
+            )}
+
+            {/* Security */}
+            {activeSection === "security" && (
+              <div>
+                <SectionHeader title="Security" />
+                <div className="rounded-[8px] border border-slate-200 bg-white px-4 dark:border-slate-700 dark:bg-slate-900">
+                  <SettingRow label="Authentication mode" value="Local verification uses dev auth; release profile defaults to OIDC" status="read-only" />
+                  <SettingRow label="CSRF policy" value="Cookie-authenticated browser mutations require a CSRF token" status="configured" />
+                  <SettingRow label="Session policy" value="30 minute idle timeout and 8 hour absolute timeout in the frontend auth context" status="configured" />
+                  <SettingRow label="Secret policy" value="Data source secrets are not displayed after submission" status="configured" />
+                  <SettingRow label="Security report triage" value="Verified findings still require owner, decision, and regression evidence" status="not-configured" />
+                </div>
+              </div>
+            )}
+
             {/* API Keys */}
             {activeSection === "api-keys" && (
               <div>
@@ -350,6 +406,20 @@ export default function Settings() {
                     <Badge variant="success" dot size="md">Email</Badge>
                     <Badge variant="neutral" size="md">Slack</Badge>
                   </div>
+                </div>
+              </div>
+            )}
+
+            {/* Operations */}
+            {activeSection === "operations" && (
+              <div>
+                <SectionHeader title="Operations" />
+                <div className="rounded-[8px] border border-slate-200 bg-white px-4 dark:border-slate-700 dark:bg-slate-900">
+                  <SettingRow label="Health endpoint" value="/healthz on the platform API" status="configured" />
+                  <SettingRow label="Readiness endpoint" value="/ready requires live smoke evidence before release sign-off" status="not-configured" />
+                  <SettingRow label="Metrics endpoint" value="/metrics requires live smoke evidence before release sign-off" status="not-configured" />
+                  <SettingRow label="Scheduler and DLQ" value="Admin dashboard surfaces scheduler, queue, replay, and cleanup controls" status="configured" />
+                  <SettingRow label="Monitoring links" value="Release checklist owner, dashboard, incident, and rollback fields are still placeholders" status="not-configured" />
                 </div>
               </div>
             )}

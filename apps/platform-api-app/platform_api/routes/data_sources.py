@@ -5,7 +5,7 @@ import re
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, Field, field_validator
 from sqlalchemy.orm import Session
 
 from platform_api.authz.dependencies import require_workspace_member
@@ -37,6 +37,8 @@ ALLOWED_CONNECTION_SCHEMES = [
     "redshift://",
     "oracle://",
     "mssql://",
+    "mssql+pymssql://",
+    "mssql+pyodbc://",
     "clickhouse://",
 ]
 
@@ -74,6 +76,8 @@ def _mask_connection_uri(uri: str) -> str:
 
 
 def _ds_to_dict(ds: DataSource) -> dict:
+    metadata = json.loads(ds.metadata_json) if ds.metadata_json else {}
+    safe_metadata = _safe_metadata(metadata)
     return {
         "id": str(ds.id),
         "workspace_id": str(ds.workspace_id),
@@ -81,10 +85,20 @@ def _ds_to_dict(ds: DataSource) -> dict:
         "name": ds.name,
         "kind": ds.kind,
         "connection_uri": _mask_connection_uri(ds.connection_uri),
-        "metadata": json.loads(ds.metadata_json) if ds.metadata_json else {},
+        "metadata": safe_metadata,
         "created_at": ds.created_at.isoformat() if ds.created_at else None,
         "updated_at": ds.updated_at.isoformat() if ds.updated_at else None,
     }
+
+
+def _safe_metadata(metadata: dict) -> dict:
+    safe = dict(metadata)
+    safe.pop("password", None)
+    safe.pop("secret_value", None)
+    if "secret_ref" in safe:
+        safe["has_secret"] = True
+        safe.pop("secret_ref", None)
+    return safe
 
 
 @router.get("")
@@ -102,12 +116,14 @@ class CreateDataSourceRequest(BaseModel):
     workspace_id: str
     name: str
     kind: str
-    connection_uri: str
-    metadata: dict = {}
+    connection_uri: str | None = None
+    metadata: dict = Field(default_factory=dict)
     
     @field_validator('connection_uri')
     @classmethod
-    def validate_connection_uri(cls, v: str) -> str:
+    def validate_connection_uri(cls, v: str | None) -> str | None:
+        if v is None:
+            return None
         return _validate_connection_uri(v)
 
 
@@ -119,16 +135,19 @@ async def create_ds(
 ) -> dict:
     workspace = context["workspace"]
     user = context["user"]
-    ds = create_data_source(
-        db,
-        tenant_id=workspace.tenant_id,
-        workspace_id=workspace.id,
-        user_id=user.id,
-        name=body.name,
-        kind=body.kind,
-        connection_uri=body.connection_uri,
-        metadata=body.metadata or None,
-    )
+    try:
+        ds = create_data_source(
+            db,
+            tenant_id=workspace.tenant_id,
+            workspace_id=workspace.id,
+            user_id=user.id,
+            name=body.name,
+            kind=body.kind,
+            connection_uri=body.connection_uri,
+            metadata=body.metadata or None,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     db.commit()
     db.refresh(ds)
     return _ds_to_dict(ds)
@@ -162,14 +181,17 @@ async def update_ds(
     except ValueError as exc:
         raise HTTPException(status_code=400, detail="Invalid ds_id") from exc
     ds = get_data_source(db, ds_id=ds_uuid, workspace_id=workspace.id)
-    ds = update_data_source(
-        db,
-        ds=ds,
-        name=body.name,
-        kind=body.kind,
-        connection_uri=body.connection_uri,
-        metadata=body.metadata,
-    )
+    try:
+        ds = update_data_source(
+            db,
+            ds=ds,
+            name=body.name,
+            kind=body.kind,
+            connection_uri=body.connection_uri,
+            metadata=body.metadata,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     db.commit()
     db.refresh(ds)
     return _ds_to_dict(ds)

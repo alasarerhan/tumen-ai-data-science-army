@@ -20,9 +20,14 @@
 - Severity: Critical
 - Confidence: 95
 - Title: Unsandboxed dynamic exec path with capability escape
+- Decision: fix
+- Owner: Platform security
+- Target date: 2026-06-10
+- Status: Open
+- Required evidence: sandboxed execution regression test and changed-surface security rerun
 - Files:
-- `ai-data-science-team/ai_data_science_team/templates/agent_templates.py:919`
-- `ai-data-science-team/ai_data_science_team/agents/sql_database_agent.py:827`
+- `ai_data_science_team/templates/agent_templates.py:919`
+- `ai_data_science_team/agents/sql_database_agent.py:827`
 - Notes: Verified with local proof-of-behavior against helper execution path.
 
 ### VF-002
@@ -30,15 +35,25 @@
 - Severity: High
 - Confidence: 98
 - Title: Real OpenAI key in local .env files
+- Decision: fix
+- Owner: Platform operations
+- Target date: 2026-06-05
+- Status: Open
+- Required evidence: key revoked/rotated, local `.env` untracked/clean, and secret scan rerun
 - Files:
-- `ai-data-science-team/.env:19`
-- `ai-data-science-team/apps/platform-api-app/.env:19`
+- `.env:19`
+- `apps/platform-api-app/.env:19`
 
 ### VF-003
 - Source: `sc-ci-cd`
 - Severity: Medium
 - Confidence: 90
 - Title: Unpinned GitHub Actions tags
+- Decision: defer
+- Owner: DevOps
+- Target date: 2026-06-14
+- Status: Open
+- Required evidence: pinned action SHAs or accepted-risk record
 - Files:
 - `.github/workflows/ci.yml:53`
 - `.github/workflows/release-gates.yml:21`
@@ -49,15 +64,25 @@
 - Severity: Medium
 - Confidence: 88
 - Title: Weak default DB secrets in IaC/dev deployment templates
+- Decision: fix
+- Owner: Platform operations
+- Target date: 2026-06-10
+- Status: Open
+- Required evidence: non-default secret generation path and deployment template regression check
 - Files:
-- `ai-data-science-team/apps/platform-api-app/helm/platform/templates/secret-db.yaml:25`
-- `ai-data-science-team/apps/platform-api-app/helm/platform/values.yaml:165`
-- `ai-data-science-team/apps/platform-api-app/docker-compose.yml:5`
+- `apps/platform-api-app/helm/platform/templates/secret-db.yaml:25`
+- `apps/platform-api-app/helm/platform/values.yaml:165`
+- `apps/platform-api-app/docker-compose.yml:5`
 
 ### VF-005
 - Source: `sc-lang-python`
 - Severity: Low
 - Confidence: 92
 - Title: Sandbox runner script indentation defect (control reliability issue)
+- Decision: fix
+- Owner: Platform security
+- Target date: 2026-06-07
+- Status: Open
+- Required evidence: sandbox runner unit test and security scan rerun
 - Files:
-- `ai-data-science-team/ai_data_science_team/utils/sandbox.py:346`
+- `ai_data_science_team/utils/sandbox.py:346`

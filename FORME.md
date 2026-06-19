@@ -6,13 +6,17 @@
 
 ## 1. The Big Picture (Project Overview)
 
-**AI Data Science Team** is a platform that lets business users talk to their data like they'd talk to a data scientist. Upload a spreadsheet, ask questions in plain English (or Turkish), and get back charts, insights, and strategic recommendations — no coding required.
+**AI Data Science Team** is an agentic data science and ML operations platform. Its job is to automate the work normally done by data scientists and ML engineers: bring data in, analyze it, create features, train models, evaluate results, deploy or hand off models, monitor performance, and rerun the right workflow when the data or model quality changes.
 
-Think of it as hiring a team of AI specialists who never sleep: one cleans your messy data, another finds patterns, a third builds predictive models, and a fourth writes up the business implications. You just describe what you want; they figure out how to do it.
+Chat is not the main product. Chat is the control room. Users can still ask questions in plain English or Turkish, but the long-term center of the product is the workflow graph: specialist agents connected together, scheduled, monitored, inspected, and improved over time.
+
+Think of it as running a small data science and ML operations department through software. One agent cleans data, another profiles it, another builds features, another trains a model, another evaluates it, another writes the report, and future ModelOps agents monitor drift, serving health, and retraining needs.
 
 **What problem this solves and for whom:**
 
-Business analysts, operations managers, and executives have data but lack the technical skills to extract insights. They either wait weeks for the data science team or make decisions on gut feeling. This platform gives them an AI-powered data science team on demand — upload data, ask questions, get answers with visualizations and recommendations.
+Business analysts, operations managers, data scientists, ML engineers, and executives all need reliable data work, but they need different surfaces. Analysts need answers and reports. Data scientists need repeatable workflows and artifact lineage. ML engineers need model versions, deployment handoff, drift monitoring, and retraining loops. Executives need trusted summaries and risk-aware recommendations.
+
+This platform gives them an AI-powered DS/ML team that can be used in two ways: one-off exploration through AI Workspace, and durable automation through workflow graphs that run on demand or on a schedule.
 
 **How users interact with it (the user journey):**
 
@@ -20,22 +24,24 @@ Current scope note: users can work from uploaded CSV/Excel files and can also co
 
 1. **Sign in** through Google (your company email becomes your identity)
 2. **Create a workspace** — think of it as a project folder for a specific business problem
-3. **Upload data** — drag and drop a CSV or Excel file into the AI Workspace chat
-4. **Ask questions** — "Which products are declining?", "Predict next quarter's revenue", "What's causing customer churn?"
-5. **Review results** — the AI responds with tables, charts, and written analysis
-6. **Iterate** — ask follow-up questions, request different visualizations, or ask for strategic recommendations
-7. **Build workflows** — for repeatable analyses, use the Workflow Designer to create automated pipelines that run on a schedule
+3. **Connect data** — upload CSV/Excel files or connect governed SQL Server data sources
+4. **Build a workflow** — use the Workflow Designer to connect agent steps such as profiling, cleaning, feature engineering, model training, evaluation, reporting, approval, and export
+5. **Run or schedule it** — trigger the workflow once or make it run periodically
+6. **Monitor execution** — inspect run status, logs, signals, node outputs, artifacts, and failures
+7. **Review outputs** — open profiles, charts, feature sets, models, metrics, reports, and export bundles
+8. **Ask the control-plane chat** — query authorized platform state, workflow health, artifact provenance, model status, and governed operational actions
+9. **Automate improvement** — future ModelOps workflows should monitor drift, create retraining candidates, request approval, and redeploy or hand off models safely
 
-**If this were a restaurant:**
+**If this were a mission control center:**
 
-Imagine a restaurant where you're the customer and the kitchen is staffed entirely by AI chefs, each with a specialty:
+Imagine a mission control center for data science work:
 
-- **You (the customer)** walk in and describe what you want: "I have these ingredients (your data) and I want a meal that highlights what's working and what's not (your analysis request)."
-- **The Maître d' (Chat Router)** listens to your request and decides which chef should handle it — the pastry chef for desserts (visualizations), the sous chef for prep work (data cleaning), or the head chef for the main course (modeling).
-- **The Kitchen (Agent System)** is divided into stations: prep (data cleaning), cooking (analysis), plating (visualization), and menu design (strategic recommendations).
-- **The Order System (Orchestration)** ensures your order goes through each station in the right sequence, with timing and retries if something goes wrong.
-- **The Filing Cabinet (Database)** stores every order, every recipe, and every result so you can revisit them later.
-- **The Private Dining Room (Multi-tenancy)** ensures that when you order, only you see your food — other customers' orders are completely separate.
+- **The workflow board** shows every mission: which data source is used, which agents run, which outputs are expected, and what is scheduled.
+- **The specialist agents** do the actual work: profiling, cleaning, modeling, monitoring, reporting, and recommendations.
+- **The run monitor** shows whether each step is queued, running, succeeded, failed, waiting for approval, or producing artifacts.
+- **The output room** stores every profile, chart, feature set, model, metric, report, and export manifest.
+- **The control-plane chat** lets users inspect the system through the platform catalog instead of a fixed list of supported question templates.
+- **The governance layer** keeps tenants, workspaces, roles, secrets, approvals, and audit trails separate and safe.
 
 ---
 
@@ -48,7 +54,7 @@ Imagine a restaurant where you're the customer and the kitchen is staffed entire
 │                              USER'S BROWSER                                  │
 │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐ │
 │  │ AI Workspace│  │  Workflow   │  │   Runs      │  │     Admin Dashboard │ │
-│  │   (Chat)    │  │  Designer   │  │   Monitor   │  │   (FinOps/Health)   │ │
+│  │(Control Chat)│ │  Designer   │  │   Monitor   │  │   (FinOps/Health)   │ │
 │  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘  └──────────┬──────────┘ │
 └─────────┼────────────────┼────────────────┼────────────────────┼───────────┘
           │                │                │                    │
@@ -117,6 +123,7 @@ This is what users see and touch. Built with React, it's a single-page applicati
 All the real work happens here. FastAPI is a Python web framework that's fast (as the name suggests) and enforces type safety — if you send the wrong data, it rejects it before it reaches your code. The API is organized into "routes" (endpoints), each handling a specific concern:
 
 - `/v1/chat/*` — conversations with AI
+- `/v1/control-plane/*` — catalog-backed platform queries and governed actions for chat, future CLI, and future MCP adapters
 - `/v1/workflows/*` — saving and loading workflow definitions
 - `/v1/runs/*` — triggering and monitoring pipeline executions
 - `/v1/scheduler/*` — cron-based scheduling
@@ -146,8 +153,20 @@ This is the secret sauce. The platform includes a library of AI "agents" — spe
 - **Strategic Agent**: Synthesizes results into business recommendations
 - **SQL Analyst**: Answers questions by querying databases
 - **Orchestrator Agent**: Coordinates multiple agents for complex tasks
+- **Model Serving Agent**: Packages model inference behavior for serving and prediction workflows
+- **Model Monitoring Agent**: Watches model quality, drift, and operational health signals
+- **Model Explainability Agent**: Produces explainability artifacts and feature-importance narratives
 
 *Why multiple agents and not one big agent?* Specialization improves quality. A data cleaning agent trained on cleaning tasks outperforms a generalist trying to do everything. Also, this is more cost-efficient — simple tasks use cheaper models, complex tasks use expensive ones.
+
+**The Observation Room (Agent and Workflow Observability)**
+
+For this platform to feel trustworthy, users must be able to see what happened. The target product needs visual screens for both levels:
+
+- **Agent-level views**: what one agent received, which tools it used, which code/query/artifact it produced, how long it took, how much it cost, whether it retried, and why it failed.
+- **Workflow-level views**: how a full pipeline ran, which nodes succeeded or failed, which artifacts were produced, how repeated runs compare, and how data flowed into models and reports.
+
+This does not mean exposing raw private reasoning. The product should show auditable traces, tool calls, outputs, validation results, errors, timing, and lineage.
 
 **The Real-Time Stream (SSE — Server-Sent Events)**
 
@@ -169,11 +188,17 @@ When you chat with the AI, responses stream in word by word, not all at once. SS
 
 ### Clever Choices Worth Noting
 
-**Hybrid Orchestration**: We use two orchestration systems — LangGraph for interactive chat (real-time, stateful, agent routing) and Prefect for production runs (scheduled, retried, monitored). This seems redundant but serves different needs: chat needs immediate feedback; scheduled runs need reliability guarantees.
+**Hybrid Orchestration**: The current system has separate concerns: interactive agent experiences, workflow definitions, scheduled/monitored production runs, and staged M22 runtime primitives. The public production contract remains `/v1/runs`; future advanced runtime work must preserve that contract while improving dependency-aware execution, traces, artifacts, and signals.
 
 **Agent Registry Pattern**: Every agent registers itself with metadata (capabilities, cost tier, input/output schemas). The orchestrator queries this registry to find the right agent for a task. This makes the system extensible — add a new agent, register it, and it's automatically available.
 
 **Workflow Signals (HITL)**: Human-in-the-loop isn't blocking. The pipeline runs, and if a human wants to intervene, they send a "signal" that the pipeline can react to. This avoids the complexity of pausing and resuming workflows.
+
+**Chat as Control Plane**: AI Workspace should not be treated as the main analytics product. It is becoming the natural-language control plane for the platform. Chat should map user language to catalog-backed platform queries and governed action plans, not to a fixed list of supported question templates. Answers come from a separate Universal Platform Control Plane catalog and resolver layer, not from the DS/ML agent registry or analytical ChatWorkspace routing. Mutating actions must be planned first, role-checked, explicitly confirmed when risky, and audited.
+
+**Universal Platform Catalog**: Every platform object that chat can query should be registered as a descriptor: workflows, runs, data sources, artifacts, approvals, settings, admin health, release docs, safe agent traces, and future model surfaces. If a surface is not in the catalog, the platform should not pretend chat can reliably answer it.
+
+**Typed Artifact Lineage**: The important product objects are not just messages. They are datasets, profiles, cleaned datasets, feature sets, models, metrics, evaluation reports, deployments, monitor signals, dashboards, and reports. The workflow graph should make these artifacts visible and traceable.
 
 **Multi-Tenant Isolation at Database Level**: Row-Level Security (RLS) policies in PostgreSQL ensure that even if the API has a bug, one tenant's queries can never return another tenant's data. Defense in depth.
 
@@ -189,7 +214,7 @@ AI_DATASCIENCE_TEAM/
 │   ├── src/
 │   │   ├── app/
 │   │   │   ├── screens/               # Page-level components
-│   │   │   │   ├── AIWorkspace.tsx    # Chat interface
+│   │   │   │   ├── AIWorkspace.tsx    # Exploration and control-plane chat
 │   │   │   │   ├── WorkflowDesigner.tsx # Visual workflow builder
 │   │   │   │   ├── RunsList.tsx       # Pipeline execution history
 │   │   │   │   ├── Dashboard.tsx      # Overview page
@@ -256,13 +281,13 @@ AI_DATASCIENCE_TEAM/
 
 ### What Lives Where
 
-**`frontend/src/app/screens/`** — The pages users see. Each file is a complete screen: AIWorkspace is the chat interface, WorkflowDesigner is the visual builder, RunsList shows execution history. Open this folder when you need to change what a page looks like or how users interact with it.
+**`frontend/src/app/screens/`** — The pages users see. Each file is a complete screen: AIWorkspace is the exploration/control-plane chat, WorkflowDesigner is the visual builder, RunsList shows execution history. Open this folder when you need to change what a page looks like or how users interact with it.
 
 **`frontend/src/app/components/`** — Reusable building blocks. The `ui/` subfolder contains generic components (buttons, inputs, dialogs) that could be used anywhere. The `chat/` and `workflow/` subfolders contain domain-specific components. Open this folder when you need to fix a button or add a new type of chart.
 
 **`frontend/src/app/api/`** — Functions that call the backend. Each file corresponds to a backend route group. Open this folder when the frontend isn't talking to the backend correctly.
 
-**`apps/platform-api-app/platform_api/routes/`** — API endpoints. Each file defines the URLs the frontend can call. `chat.py` handles `/v1/chat/*`, `workflows.py` handles `/v1/workflows/*`. Open this folder when you need to add a new API endpoint or fix request/response handling.
+**`apps/platform-api-app/platform_api/routes/`** — API endpoints. Each file defines the URLs the frontend can call. `chat.py` handles `/v1/chat/*`, `control_plane.py` handles `/v1/control-plane/*`, and `workflows.py` handles `/v1/workflows/*`. Open this folder when you need to add a new API endpoint or fix request/response handling.
 
 **`apps/platform-api-app/platform_api/services/`** — Business logic. Routes delegate to services for the actual work. `chat_service.py` handles chat logic, `run_service.py` handles pipeline execution. Open this folder when you need to understand or modify how something actually works.
 
@@ -294,36 +319,37 @@ AI_DATASCIENCE_TEAM/
 
 ## 4. Connections & Data Flow — How Things Talk to Each Other
 
-### User Journey 1: Chatting with AI
+### User Journey 1: AI Workspace Exploration and Control
 
-When a user asks "What are my top-selling products?", here's what happens:
+When a user asks an exploratory data question or an operational platform-state question, here's what happens:
 
 ```
 1. USER TYPES MESSAGE
-   └── AIWorkspace.tsx captures input, calls streamChatMessage()
+   └── AIWorkspace.tsx captures input and calls the chat API
 
 2. FRONTEND SENDS REQUEST
    └── POST /v1/chat/sessions/{id}/messages/stream
-   └── Body: { workspace_id, content: "What are my top-selling products?" }
+   └── Body: { workspace_id, content: "<user request>" }
 
 3. BACKEND RECEIVES REQUEST
    └── chat.py validates the user has access to this session
    └── Creates a "pending" message in the database (for durability)
 
 4. CHAT SERVICE PROCESSES
-   └── chat_service.py calls ChatWorkspace.chat()
-   └── ChatWorkspace asks IntentRouter: "What kind of question is this?"
-   └── IntentRouter returns: "pandas_data_analyst" (data analysis question)
+   └── chat_service.py checks whether the request is a platform-state/control-plane query
+   └── Platform-state queries use the Universal Platform Control Plane catalog, policy engine, and resolvers
+   └── Exploratory data-analysis requests continue through ChatWorkspace.chat()
+   └── ChatWorkspace can still use IntentRouter for analytical routing
 
 5. AGENT EXECUTES
    └── PandasDataAnalyst is instantiated
    └── It loads the uploaded DataFrame from the session
-   └── It generates Python code to find top-selling products
+   └── It generates Python code for the requested analysis
    └── It executes the code and gets results
 
 6. RESPONSE STREAMS BACK
    └── The agent's response is streamed word-by-word via SSE
-   └── Each chunk: data: {"type": "delta", "delta": "The top-selling..."}
+   └── Each chunk: data: {"type": "delta", "delta": "<partial answer>"}
    └── Final message includes artifacts (table data, chart config)
 
 7. FRONTEND RENDERS
@@ -363,14 +389,15 @@ When a user builds an automated pipeline:
    └── WorkflowSpec record created in database
 
 5. USER CLICKS "SCHEDULE"
-   └── POST /v1/scheduler/deployments
-   └── Backend creates a Prefect deployment
-   └── Prefect registers the cron schedule
+   └── POST /v1/workflows/{id}/schedule
+   └── Backend creates or links the scheduled deployment
+   └── The schedule is visible from the workflow and schedule surfaces
 
 6. SCHEDULED RUN TRIGGERS (Monday 8am)
-   └── Prefect worker picks up the scheduled job
-   └── POST /v1/runs to start execution
-   └── RuntimeEngine loads the workflow spec
+   └── The platform uses /v1/runs as the public execution contract
+   └── WorkflowRun and node execution records are created
+   └── The current production path remains Prefect/queue-backed
+   └── M22 RuntimeEngine stays staged until lifecycle parity is proven
 
 7. WORKFLOW EXECUTES
    └── Step 1: Data Loader Agent fetches data
@@ -381,13 +408,14 @@ When a user builds an automated pipeline:
 
 8. USER VIEWS RESULTS
    └── RunsList shows the completed run
-   └── RunDetail shows step-by-step execution
+   └── RunDetail shows logs, status, signals, and artifacts
    └── Artifacts (charts, reports) are downloadable
+   └── Observability screens now include trace-backed cockpit metrics, Run Detail Trace Inspector with cost/token/evaluation/version metadata and artifact previews, run heatmaps, artifact lineage/output board, and artifact-backed ModelOps state; richer lineage workflows and production ModelOps stores remain future work
 ```
 
 **What could go wrong:**
 
-- **Prefect is down**: The run is queued locally and retried when Prefect recovers.
+- **Orchestration dependency is unavailable**: The run must fail or degrade according to the active profile and documented fallback policy.
 - **Agent fails mid-pipeline**: The run is marked as "failed" with error details. The user can retry from the failed step.
 - **Schedule conflict**: If two workflows try to run simultaneously, queue limits prevent resource exhaustion.
 

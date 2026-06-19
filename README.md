@@ -1,8 +1,8 @@
 # TÜMEN AI Data Science Platform
 
-TÜMEN AI Data Science Team is an AI-powered analytics platform that helps business users analyze data without writing code.
+TÜMEN AI Data Science Team is an agentic data science and ML operations platform.
 
-Users can upload CSV/Excel files, ask questions in natural language (English or Turkish), and get streamed insights, charts, and strategic recommendations. The platform also supports repeatable, scheduled workflows.
+The core product is not a chat application. Users design, run, monitor, debug, and automate data science and machine learning work through governed agent workflows. Chat remains an important interface, but its strategic role is the control plane: users query authorized platform state and plan governed operational actions through the Universal Platform Control Plane catalog.
 
 ## What This Project Includes
 
@@ -14,11 +14,13 @@ Users can upload CSV/Excel files, ask questions in natural language (English or 
 
 ## Core Capabilities
 
-- Conversational analytics with SSE streaming
+- Agentic DS/ML workflow design and execution
+- Universal Platform Control Plane for catalog-backed workflow, run, artifact, admin/ops, release-doc, and governed action questions
 - CSV/Excel uploads and SQL Server data source setup for governed analysis
-- Multi-step workflow design and execution
 - Scheduled runs (cron-like and natural-language scheduling)
-- Artifact generation (tables, charts, reports)
+- Artifact generation (tables, charts, reports) plus first-pass Reports artifact lineage and output board
+- Run monitoring, signals, retry/cancel, and HITL approvals
+- Agent discovery, catalog browsing, trace-backed cockpit metrics, Run Detail Trace Inspector, first-pass workflow run matrix, and first-pass artifact lineage/output inspection
 - Tenant-aware architecture for workspace-level isolation
 - Admin/operability surfaces (run status, monitoring-oriented views)
 - Categorized settings for user, workspace, data source, security, notification, and operations configuration
@@ -26,7 +28,7 @@ Users can upload CSV/Excel files, ask questions in natural language (English or 
 ## High-Level Architecture
 
 - Frontend: React, TypeScript, Vite, TanStack Query, Radix UI, React Flow, ECharts
-- API Layer: FastAPI services for auth, chat, workflows, runs, scheduler, artifacts
+- API Layer: FastAPI services for auth, chat, Universal Platform Control Plane, workflows, runs, scheduler, artifacts
 - Data Layer: PostgreSQL for core entities and run history
 - Orchestration: Prefect-based run/schedule orchestration
 - AI Layer: multi-agent workflows powered by OpenAI models
@@ -92,7 +94,10 @@ Important variables used across local/release profiles:
 - `CORS_ORIGINS`
 - `PREFECT_DEFAULT_DEPLOYMENT_ID`
 
-Use `.env.example` files in app directories as templates.
+Use the repo-root `.env` as the single local environment file. App-directory
+`.env.example` files are templates only; do not create separate
+`frontend/.env`, `frontend/.env.local`, or `apps/platform-api-app/.env` files for
+normal local development.
 
 ## Troubleshooting
 
@@ -105,6 +110,8 @@ Use `.env.example` files in app directories as templates.
 ## Additional Documentation
 
 - Project deep-dive: `FORME.md`
+- Product strategy and roadmap: `docs/product-strategy-agentic-dsml-platform.md`
+- Universal Platform Control Plane: `docs/universal-platform-control-plane.md`
 - Frontend details: `frontend/README.md`
 - Backend/app-specific docs: `apps/*/README.md`
 

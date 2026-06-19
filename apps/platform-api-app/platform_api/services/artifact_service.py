@@ -3,7 +3,7 @@ from __future__ import annotations
 import uuid
 import json
 
-from sqlalchemy import select
+from sqlalchemy import and_, or_, select
 from sqlalchemy.orm import Session
 
 from platform_api.db.models import Artifact, WorkflowRun, Workspace, WorkspaceMembership
@@ -106,6 +106,18 @@ def create_system_artifact_record(
     return artifact
 
 
+def get_artifact_parent_ids(artifact: Artifact) -> list[str]:
+    if not artifact.parent_artifact_ids_json:
+        return []
+    try:
+        values = json.loads(artifact.parent_artifact_ids_json)
+    except (TypeError, ValueError):
+        return []
+    if not isinstance(values, list):
+        return []
+    return [str(value) for value in values if value is not None]
+
+
 def list_artifacts_for_workspace(
     db: Session,
     *,
@@ -113,9 +125,40 @@ def list_artifacts_for_workspace(
     user_id: uuid.UUID,
     cursor: str | None = None,
     limit: int = 20,
+    workflow_run_id: str | None = None,
+    kind: str | None = None,
 ) -> list[Artifact]:
     workspace = _authorized_workspace(db, workspace_id=workspace_id, user_id=user_id)
-    return TenantQuery(db, Artifact).for_workspace(workspace.id).list(limit=limit, cursor=cursor)
+    stmt = select(Artifact).where(
+        Artifact.workspace_id == workspace.id,
+        Artifact.tenant_id == workspace.tenant_id,
+    )
+
+    if kind:
+        stmt = stmt.where(Artifact.kind == kind)
+
+    if workflow_run_id:
+        stmt = stmt.where(Artifact.workflow_run_id == _parse_uuid(workflow_run_id, "workflow_run_id"))
+
+    stmt = stmt.order_by(Artifact.created_at.desc(), Artifact.id.desc())
+
+    if cursor:
+        cursor_uuid = _parse_uuid(cursor, "cursor")
+        cursor_stmt = select(Artifact).where(
+            Artifact.id == cursor_uuid,
+            Artifact.workspace_id == workspace.id,
+            Artifact.tenant_id == workspace.tenant_id,
+        )
+        cursor_row = db.execute(cursor_stmt).scalar_one_or_none()
+        if cursor_row is not None:
+            stmt = stmt.where(
+                or_(
+                    Artifact.created_at < cursor_row.created_at,
+                    and_(Artifact.created_at == cursor_row.created_at, Artifact.id < cursor_uuid),
+                )
+            )
+
+    return list(db.execute(stmt.limit(limit + 1)).scalars().all())
 
 
 def get_artifact_for_workspace_with_run(

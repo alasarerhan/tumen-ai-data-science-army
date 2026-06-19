@@ -15,6 +15,7 @@ from sqlalchemy.orm import Session
 
 from platform_api.authz.dependencies import require_tenant_admin
 from platform_api.db.session import get_db
+from platform_api.services.runtime_engine_parity_service import build_runtime_engine_parity_report
 
 router = APIRouter(prefix="/v1/admin", tags=["admin"])
 
@@ -161,6 +162,14 @@ async def get_scheduler_status(
         "restricted": True,
         "message": "Scheduler status is restricted to platform operators.",
     }
+
+
+@router.get("/runtime-engine/parity")
+async def get_runtime_engine_parity_report(
+    _context: dict = Depends(require_tenant_admin),
+) -> dict:
+    """Run a deterministic RuntimeEngine parity harness for tenant admins."""
+    return build_runtime_engine_parity_report()
 
 
 @router.get("/memory", response_model=MemoryStatsResponse)

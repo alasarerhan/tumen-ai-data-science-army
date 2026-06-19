@@ -9,29 +9,13 @@ from ai_data_science_team.signals import SignalType, WorkflowSignal
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from platform_api.control_plane.actions import ALLOWED_SIGNAL_TYPES
 from platform_api.core.config import settings
+from platform_api.core.service_errors import NotFoundError, UnprocessableEntityError, ValidationError
 from platform_api.db.models import WorkflowRun, WorkflowSignalEvent
 from platform_api.orchestration.runtime_state import get_orchestration_signal_store
-from platform_api.core.service_errors import NotFoundError, UnprocessableEntityError, ValidationError
 
 logger = logging.getLogger(__name__)
-
-
-ALLOWED_SIGNAL_TYPES = {
-    "pause",
-    "resume",
-    "skip",
-    "modify",
-    "annotate",
-    "cancel",
-    "node_started",
-    "node_progress",
-    "node_succeeded",
-    "node_failed",
-    "artifact_created",
-    "approval_required",
-    "run_completed",
-}
 
 
 def _parse_uuid(value: str, label: str) -> uuid.UUID:

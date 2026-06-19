@@ -25,7 +25,7 @@ from starlette.types import ASGIApp
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_MAX_BODY_BYTES = 10 * 1024 * 1024
+_DEFAULT_MAX_BODY_BYTES = 10 * 1024 * 1024
 
 
 class RequestSizeLimitMiddleware(BaseHTTPMiddleware):
@@ -46,7 +46,7 @@ class RequestSizeLimitMiddleware(BaseHTTPMiddleware):
     def __init__(
         self,
         app: ASGIApp,
-        max_body_bytes: int = DEFAULT_MAX_BODY_BYTES,
+        max_body_bytes: int = _DEFAULT_MAX_BODY_BYTES,
         skip_paths: Optional[List[str]] = None,
         route_limits: Optional[List[Tuple[str, int]]] = None,
     ) -> None:
@@ -94,5 +94,4 @@ class RequestSizeLimitMiddleware(BaseHTTPMiddleware):
 
 __all__ = [
     "RequestSizeLimitMiddleware",
-    "DEFAULT_MAX_BODY_BYTES",
 ]

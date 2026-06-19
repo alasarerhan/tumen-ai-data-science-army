@@ -13,6 +13,10 @@ from platform_api.core.config import settings
 from platform_api.db.models import WorkflowNodeExecution, WorkflowRun
 from platform_api.db.session import SessionLocal
 from platform_api.services.artifact_service import create_system_artifact_record
+from platform_api.services.agent_execution_trace_service import (
+    complete_agent_execution_trace,
+    start_agent_execution_trace,
+)
 from platform_api.services.signal_service import emit_signal
 from platform_api.services.workflow_node_executor_service import (
     NodeExecutionContext,
@@ -131,6 +135,7 @@ class WorkflowWorker:
             payload={"node_type": node.node_type},
             created_by_user_id=run.requested_by_user_id,
         )
+        trace = start_agent_execution_trace(db, run=run, node=node)
 
         executor = self.node_executors.get(node.node_type)
         if executor is None:
@@ -154,6 +159,7 @@ class WorkflowWorker:
             run.finished_at = node.finished_at
             run.updated_at = node.updated_at
             db.add(run)
+            complete_agent_execution_trace(db, trace=trace, status=node.status, error=node.error)
             return node.status
 
         try:
@@ -180,6 +186,7 @@ class WorkflowWorker:
                 payload={"node_type": node.node_type},
                 created_by_user_id=run.requested_by_user_id,
             )
+            complete_agent_execution_trace(db, trace=trace, status=node.status, error=node.error)
             return node.status
 
         produced_artifact_ids = []
@@ -220,6 +227,14 @@ class WorkflowWorker:
         node.finished_at = datetime.now(UTC) if node.status != "waiting_approval" else None
         node.updated_at = datetime.now(UTC)
         db.add(node)
+        complete_agent_execution_trace(
+            db,
+            trace=trace,
+            status=node.status,
+            output=output,
+            artifact_ids=produced_artifact_ids,
+            error=node.error,
+        )
         if node.status == "waiting_approval":
             run.status = "WAITING_APPROVAL"
             db.add(run)

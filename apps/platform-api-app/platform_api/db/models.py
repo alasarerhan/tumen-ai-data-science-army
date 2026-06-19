@@ -9,6 +9,7 @@ from sqlalchemy import (
     Enum as SAEnum,
     ForeignKey,
     ForeignKeyConstraint,
+    Float,
     Index,
     String,
     Text,
@@ -246,6 +247,58 @@ class WorkflowNodeExecution(Base):
     )
 
 
+class AgentExecutionTrace(Base):
+    __tablename__ = "agent_execution_traces"
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["workspace_id", "tenant_id"],
+            ["workspaces.id", "workspaces.tenant_id"],
+            ondelete="CASCADE",
+        ),
+        Index("ix_agent_execution_traces_node_created", "workflow_node_execution_id", "created_at"),
+        Index("ix_agent_execution_traces_workspace_created", "workspace_id", "created_at"),
+        Index("ix_agent_execution_traces_run_status", "workflow_run_id", "status"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    tenant_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False
+    )
+    workspace_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=False
+    )
+    workflow_run_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("workflow_runs.id", ondelete="CASCADE"), nullable=False
+    )
+    workflow_node_execution_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("workflow_node_executions.id", ondelete="CASCADE"), nullable=False
+    )
+    node_id: Mapped[str] = mapped_column(String(150), nullable=False)
+    node_type: Mapped[str] = mapped_column(String(120), nullable=False)
+    attempt: Mapped[int] = mapped_column(default=1, nullable=False)
+    executor_kind: Mapped[str] = mapped_column(String(120), nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="running")
+    input_summary_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    output_summary_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    tool_calls_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    artifact_ids_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    token_usage_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    cost_summary_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    evaluation_summary_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    version_metadata_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    error_summary: Mapped[str | None] = mapped_column(Text, nullable=True)
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    duration_ms: Mapped[int | None] = mapped_column(nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.current_timestamp(), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.current_timestamp(),
+        onupdate=func.current_timestamp(),
+        nullable=False,
+    )
+
+
 class TenantQuotaEvent(Base):
     __tablename__ = "tenant_quota_events"
     __table_args__ = (
@@ -293,6 +346,137 @@ class Artifact(Base):
     )
 
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.current_timestamp(), nullable=False)
+
+
+class ModelRegistryEntry(Base):
+    __tablename__ = "model_registry_entries"
+    __table_args__ = (
+        UniqueConstraint("workspace_id", "model_name", "version", name="uq_model_registry_workspace_name_version"),
+        ForeignKeyConstraint(
+            ["workspace_id", "tenant_id"],
+            ["workspaces.id", "workspaces.tenant_id"],
+            ondelete="CASCADE",
+        ),
+        Index("ix_model_registry_workspace_stage_created", "workspace_id", "stage", "created_at"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    tenant_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False
+    )
+    workspace_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=False
+    )
+    model_name: Mapped[str] = mapped_column(String(200), nullable=False)
+    version: Mapped[str] = mapped_column(String(80), nullable=False)
+    stage: Mapped[str] = mapped_column(String(40), nullable=False, default="candidate")
+    artifact_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("artifacts.id", ondelete="SET NULL"), nullable=True
+    )
+    workflow_run_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("workflow_runs.id", ondelete="SET NULL"), nullable=True
+    )
+    owner_user_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    approval_state: Mapped[str] = mapped_column(String(50), nullable=False, default="not_reviewed")
+    deployment_state: Mapped[str] = mapped_column(String(50), nullable=False, default="not_deployed")
+    monitoring_status: Mapped[str] = mapped_column(String(50), nullable=False, default="not_configured")
+    drift_status: Mapped[str] = mapped_column(String(50), nullable=False, default="unknown")
+    performance_status: Mapped[str] = mapped_column(String(50), nullable=False, default="unknown")
+    model_card_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    rollback_artifact_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("artifacts.id", ondelete="SET NULL"), nullable=True
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.current_timestamp(), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.current_timestamp(),
+        onupdate=func.current_timestamp(),
+        nullable=False,
+    )
+
+
+class ModelMonitorSnapshot(Base):
+    __tablename__ = "model_monitor_snapshots"
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["workspace_id", "tenant_id"],
+            ["workspaces.id", "workspaces.tenant_id"],
+            ondelete="CASCADE",
+        ),
+        Index("ix_model_monitor_workspace_created", "workspace_id", "created_at"),
+        Index("ix_model_monitor_model_status", "model_id", "status"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    tenant_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False
+    )
+    workspace_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=False
+    )
+    model_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("model_registry_entries.id", ondelete="CASCADE"), nullable=False
+    )
+    artifact_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("artifacts.id", ondelete="SET NULL"), nullable=True
+    )
+    monitor_type: Mapped[str] = mapped_column(String(80), nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="unknown")
+    metric_name: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    metric_value: Mapped[float | None] = mapped_column(Float, nullable=True)
+    threshold_value: Mapped[float | None] = mapped_column(Float, nullable=True)
+    baseline_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    owner_user_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    remediation_workflow: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.current_timestamp(), nullable=False)
+
+
+class ModelDeploymentRecord(Base):
+    __tablename__ = "model_deployment_records"
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["workspace_id", "tenant_id"],
+            ["workspaces.id", "workspaces.tenant_id"],
+            ondelete="CASCADE",
+        ),
+        Index("ix_model_deployments_workspace_env_status", "workspace_id", "environment", "status"),
+        Index("ix_model_deployments_model_created", "model_id", "created_at"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    tenant_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False
+    )
+    workspace_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=False
+    )
+    model_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("model_registry_entries.id", ondelete="CASCADE"), nullable=False
+    )
+    environment: Mapped[str] = mapped_column(String(80), nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="planned")
+    endpoint_url: Mapped[str | None] = mapped_column(Text, nullable=True)
+    deployed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    rollback_model_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("model_registry_entries.id", ondelete="SET NULL"), nullable=True
+    )
+    rollback_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    health_status: Mapped[str] = mapped_column(String(50), nullable=False, default="unknown")
+    last_health_check_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_by_user_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.current_timestamp(), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.current_timestamp(),
+        onupdate=func.current_timestamp(),
+        nullable=False,
+    )
 
 
 class WorkflowSpec(Base):

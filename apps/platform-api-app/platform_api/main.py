@@ -1,14 +1,13 @@
 from __future__ import annotations
 
 import logging
-from typing import Optional
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 
 from platform_api.core.config import settings
 from platform_api.core.csrf import CsrfProtectionMiddleware
+from platform_api.core.idempotency import IdempotencyMiddleware
 from platform_api.core.observability import configure_logging, setup_observability
 from platform_api.core.rate_limit import RateLimitMiddleware
 from platform_api.core.request_size_limit import RequestSizeLimitMiddleware
@@ -17,6 +16,7 @@ from platform_api.routes.admin import router as admin_router
 from platform_api.routes.artifacts import router as artifacts_router
 from platform_api.routes.auth import router as auth_router
 from platform_api.routes.chat import router as chat_router
+from platform_api.routes.control_plane import router as control_plane_router
 from platform_api.routes.data_sources import router as data_sources_router
 from platform_api.routes.discovery import router as discovery_router
 from platform_api.routes.errors import router as errors_router
@@ -25,6 +25,7 @@ from platform_api.routes.health import router as health_router
 from platform_api.routes.hitl import router as hitl_router
 from platform_api.routes.logs import router as logs_router
 from platform_api.routes.me import router as me_router
+from platform_api.routes.modelops import router as modelops_router
 from platform_api.routes.prefect import router as prefect_router
 from platform_api.routes.provisioning import router as provisioning_router
 from platform_api.routes.run_signals import router as run_signals_router
@@ -47,11 +48,13 @@ def create_app() -> FastAPI:
     The last middleware added is the first to process the request.
 
     Current order (request flow):
-    1. CORSMiddleware - Handle CORS preflight
-    2. RateLimitMiddleware - Enforce rate limits
-    3. RequestSizeLimitMiddleware - Reject oversized requests
-    4. GZipMiddleware - Compress responses
-    5. metrics_and_logging_middleware (from setup_observability) - Log & metrics
+     1. CORSMiddleware - Handle CORS preflight
+     2. IdempotencyMiddleware - Return cached responses for duplicate idempotency keys
+     3. CsrfProtectionMiddleware - Validate CSRF tokens for mutations
+     4. RateLimitMiddleware - Enforce rate limits
+     5. RequestSizeLimitMiddleware - Reject oversized requests
+     6. GZipMiddleware - Compress responses
+     7. metrics_and_logging_middleware (from setup_observability) - Log & metrics
 
     IMPORTANT: The observability middleware (added in setup_observability) reads
     tenant context from ContextVars. If auth middleware is added, it MUST be
@@ -100,6 +103,11 @@ def _register_middlewares(app: FastAPI) -> None:
 
     app.add_middleware(CsrfProtectionMiddleware)
 
+    app.add_middleware(
+        IdempotencyMiddleware,
+        redis_url=settings.agent_cache_redis_url or None,
+    )
+
     origins = [o.strip() for o in settings.cors_origins.split(",") if o.strip()]
     app.add_middleware(
         CORSMiddleware,
@@ -123,8 +131,10 @@ def _register_routers(app: FastAPI) -> None:
     app.include_router(strategy_router)
     app.include_router(logs_router)
     app.include_router(data_sources_router)
+    app.include_router(modelops_router)
     app.include_router(hitl_router)
     app.include_router(chat_router)
+    app.include_router(control_plane_router)
     app.include_router(errors_router)
     app.include_router(run_signals_router)
     app.include_router(finops_router)

@@ -26,6 +26,8 @@ from platform_api.core.file_security import (
 from platform_api.core.malware_scan import enforce_scan_mode
 from platform_api.db.models import ChatMessage, ChatMessageRole, ChatSession, ChatSessionStatus, ChatUpload
 from platform_api.core.service_errors import NotFoundError, ValidationError
+from platform_api.control_plane.actions import plan_action_from_text
+from platform_api.control_plane.query import build_context_for_chat_session, chat_platform_reply
 from platform_api.services.workflow_chain_validator import inspect_workflow_spec
 
 logger = logging.getLogger(__name__)
@@ -656,6 +658,16 @@ def _normalize_chatworkspace_artifact(artifact_type: str | None, artifact_data: 
     return []
 
 
+def _get_chatworkspace_session_store():
+    if settings.agent_cache_redis_url:
+        try:
+            from ai_data_science_team.redis_stores import RedisChatSessionStore
+            return RedisChatSessionStore(redis_url=settings.agent_cache_redis_url)
+        except Exception as exc:
+            logger.info("RedisChatSessionStore unavailable, using in-memory fallback: %s", exc)
+    return None
+
+
 def _try_chatworkspace_reply(
     *,
     prompt: str,
@@ -672,7 +684,10 @@ def _try_chatworkspace_reply(
         return None
 
     try:
-        workspace = ChatWorkspace(model=ChatOpenAI(model=settings.openai_model, temperature=0))
+        workspace = ChatWorkspace(
+            model=ChatOpenAI(model=settings.openai_model, temperature=0),
+            session_store=_get_chatworkspace_session_store(),
+        )
         runtime_session_id = workspace.create_session()
         workspace.upload_dataset(runtime_session_id, "uploaded_dataset", dataframe)
         response = workspace.chat(runtime_session_id, prompt)
@@ -702,7 +717,8 @@ async def _try_chatworkspace_reply_stream(
 
     try:
         workspace = ChatWorkspace(
-            model=ChatOpenAI(model=settings.openai_model, temperature=0, streaming=True)
+            model=ChatOpenAI(model=settings.openai_model, temperature=0, streaming=True),
+            session_store=_get_chatworkspace_session_store(),
         )
         runtime_session_id = workspace.create_session()
         workspace.upload_dataset(runtime_session_id, "uploaded_dataset", dataframe)
@@ -846,6 +862,10 @@ def generate_assistant_reply(
     session: ChatSession,
     prompt: str,
 ) -> tuple[str, list[dict]]:
+    platform_reply = _try_platform_control_reply(db, session=session, prompt=prompt)
+    if platform_reply is not None:
+        return platform_reply
+
     uploads = list_uploads(db, session_id=session.id)
     loaded_dataframe = _load_session_dataframe(db, session=session)
     dataframe = loaded_dataframe[0] if loaded_dataframe is not None else None
@@ -883,6 +903,13 @@ async def stream_assistant_reply(
         CHAT_STREAM_EVENTS_TOTAL.labels(type="progress").inc()
         yield ChatStreamEvent(type="progress")
 
+        platform_reply = _try_platform_control_reply(db, session=session, prompt=prompt)
+        if platform_reply is not None:
+            text, artifacts = platform_reply
+            CHAT_STREAM_EVENTS_TOTAL.labels(type="final").inc()
+            yield ChatStreamEvent(type="final", delta=text, text=text, artifacts=artifacts)
+            return
+
         uploads = list_uploads(db, session_id=session.id)
         loaded_dataframe = await _load_session_dataframe_async(db, session=session)
         dataframe = loaded_dataframe[0] if loaded_dataframe is not None else None
@@ -908,6 +935,19 @@ async def stream_assistant_reply(
         yield ChatStreamEvent(type="error", error=str(exc))
     finally:
         CHAT_STREAM_DURATION.observe(perf_counter() - start)
+
+
+def _try_platform_control_reply(
+    db: Session,
+    *,
+    session: ChatSession,
+    prompt: str,
+) -> tuple[str, list[dict]] | None:
+    ctx = build_context_for_chat_session(db, session)
+    if ctx is None:
+        return None
+    action_plan = plan_action_from_text(prompt)
+    return chat_platform_reply(ctx, prompt, action_plan=action_plan)
 
 
 def message_to_dict(message: ChatMessage) -> dict:

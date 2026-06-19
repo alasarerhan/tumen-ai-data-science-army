@@ -111,31 +111,7 @@ def validate_etag(record: Any, if_match: str, include_fields: list[str] | None =
         )
 
 
-def etag_matches(record: Any, if_none_match: str, include_fields: list[str] | None = None) -> bool:
-    """Check If-None-Match header for conditional GET requests.
-
-    Returns True if the resource hasn't been modified (client can use cached version).
-
-    Parameters
-    ----------
-    record : Any
-        Database model instance.
-    if_none_match : str
-        ETag value from If-None-Match header.
-    include_fields : list[str] | None
-        Additional fields to include in the hash.
-
-    Returns
-    -------
-    bool
-        True if ETag matches (resource not modified).
-    """
-    current_etag = compute_etag(record, include_fields)
-    return if_none_match == current_etag
-
-
 __all__ = [
     "compute_etag",
     "validate_etag",
-    "etag_matches",
 ]

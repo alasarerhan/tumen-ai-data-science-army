@@ -83,6 +83,82 @@ def _validate_code_safety(code: str) -> Optional[str]:
     return None
 
 
+def _validate_read_only_sql_query(sql_text: str) -> Optional[str]:
+    """Validate SQL-agent query text before direct execution."""
+    if not sql_text or not isinstance(sql_text, str):
+        return "SQL query must be a non-empty string."
+
+    stripped = sql_text.strip()
+    if not stripped:
+        return "SQL query must be a non-empty string."
+
+    lowered = stripped.lower()
+    if not lowered.startswith("select"):
+        return "Only read-only SELECT queries are allowed."
+
+    forbidden_keywords = [
+        "insert", "update", "delete", "drop", "alter", "truncate",
+        "create", "replace", "merge", "call", "exec", "execute",
+        "grant", "revoke", "into outfile", "into dumpfile",
+        "load_file", "benchmark", "sleep", "waitfor", "pg_sleep",
+    ]
+    for keyword in forbidden_keywords:
+        if re.search(rf"\b{re.escape(keyword)}\b", lowered):
+            return f"Write operations are not allowed; detected forbidden keyword: '{keyword}'."
+
+    for pattern in ("--", "/*", "*/", "#"):
+        if pattern in stripped:
+            return f"SQL comments are not allowed for security reasons; detected: '{pattern}'."
+
+    semicolon_count = stripped.count(";")
+    if semicolon_count > 1:
+        return "Multiple SQL statements are not allowed."
+    if semicolon_count == 1 and not stripped.endswith(";"):
+        return "Semicolon detected in unexpected position."
+
+    if re.search(r"\bunion\b\s+(all\s+)?\bselect\b", lowered):
+        return "UNION SELECT is not allowed for security reasons."
+
+    return None
+
+
+def _extract_sql_query_from_agent_code(code: str, function_name: str) -> Optional[str]:
+    """Extract a static sql_query assignment from legacy generated SQL-agent code without executing it."""
+    if not code or not function_name:
+        return None
+
+    try:
+        tree = ast.parse(code)
+    except SyntaxError:
+        return None
+
+    for node in tree.body:
+        if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            continue
+        if node.name != function_name:
+            continue
+        for child in ast.walk(node):
+            if not isinstance(child, ast.Assign):
+                continue
+            has_sql_query_target = any(
+                isinstance(target, ast.Name) and target.id == "sql_query"
+                for target in child.targets
+            )
+            if has_sql_query_target and isinstance(child.value, ast.Constant) and isinstance(child.value.value, str):
+                return child.value.value
+            if (
+                has_sql_query_target
+                and isinstance(child.value, ast.Call)
+                and isinstance(child.value.func, ast.Attribute)
+                and child.value.func.attr == "strip"
+                and isinstance(child.value.func.value, ast.Constant)
+                and isinstance(child.value.func.value.value, str)
+            ):
+                return child.value.func.value.value.strip()
+
+    return None
+
+
 class BaseAgent(CompiledStateGraph):
     """
     A generic base class for agents that interact with compiled state graphs.
@@ -879,64 +955,42 @@ def node_func_execute_agent_from_sql_connection(
 
     print("    * EXECUTING AGENT CODE ON SQL CONNECTION")
 
-    is_engine = isinstance(connection, sql.engine.base.Engine)
-    connection = connection.connect() if is_engine else connection
     agent_code = state.get(code_snippet_key)
-
-    code_validation_error = _validate_code_safety(agent_code)
-    if code_validation_error:
-        logger.warning(f"Code validation failed: {_sanitize_log_message(code_validation_error)}")
-        return {result_key: None, error_key: f"{error_message_prefix}{code_validation_error}"}
 
     if connection is None:
         raise ValueError("Connection object not found.")
 
-    logger.warning(
-        "SECURITY: Executing user code with live SQL connection. "
-        "Consider using parameterized queries and read-only connections."
-    )
+    sql_query = state.get("sql_query_code")
+    if not sql_query:
+        sql_query = _extract_sql_query_from_agent_code(agent_code, agent_function_name)
+    if not sql_query:
+        return {
+            result_key: None,
+            error_key: (
+                f"{error_message_prefix}SQL query text not found. "
+                "Dynamic SQL-agent Python execution is disabled."
+            ),
+        }
 
-    local_vars: Dict[str, Any] = {}
-    safe_globals: Dict[str, Any] = {
-        "__builtins__": {
-            "abs": abs, "all": all, "any": any, "bool": bool, "dict": dict,
-            "enumerate": enumerate, "float": float, "int": int, "len": len,
-            "list": list, "max": max, "min": min, "range": range, "sum": sum,
-            "zip": zip, "set": set, "tuple": tuple, "isinstance": isinstance,
-            "map": map, "filter": filter, "sorted": sorted, "reversed": reversed,
-            "print": print, "str": str, "type": type, "object": object,
-            "ValueError": ValueError, "TypeError": TypeError, "KeyError": KeyError,
-            "Exception": Exception, "property": property, "getattr": getattr,
-            "setattr": setattr, "hasattr": hasattr, "round": round, "pow": pow,
-            "divmod": divmod, "abs": abs, "min": min, "max": max, "sum": sum,
-            "True": True, "False": False, "None": None,
-        },
-        "pd": pd,
-        "sql": sql,
-        "json": json,
-    }
-    
-    try:
-        exec(agent_code, safe_globals, local_vars)
-    except Exception as e:
-        return {result_key: None, error_key: f"{error_message_prefix}Code execution failed: {str(e)}"}
-
-    agent_function = local_vars.get(agent_function_name, None)
-    if agent_function is None or not callable(agent_function):
-        raise ValueError(
-            f"Agent function '{agent_function_name}' not found or not callable in the provided code."
-        )
+    validation_error = _validate_read_only_sql_query(sql_query)
+    if validation_error:
+        logger.warning("SQL validation failed: %s", _sanitize_log_message(validation_error))
+        return {result_key: None, error_key: f"{error_message_prefix}{validation_error}"}
 
     agent_error = None
     result = None
+    is_engine = isinstance(connection, sql.engine.base.Engine)
+    conn = connection.connect() if is_engine else connection
     try:
-        result = agent_function(connection)
+        result = pd.read_sql(sql_query, conn)
 
         if post_processing is not None:
             result = post_processing(result)
     except Exception as e:
-        print(e)
         agent_error = f"{error_message_prefix}{str(e)}"
+    finally:
+        if is_engine:
+            conn.close()
 
     output = {result_key: result, error_key: agent_error}
     return output

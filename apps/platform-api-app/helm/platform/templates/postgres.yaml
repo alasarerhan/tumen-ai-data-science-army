@@ -4,6 +4,10 @@ Set postgres.enabled=true to deploy a single-pod Postgres alongside
 the Platform API.  This is NOT suitable for production.
 */}}
 {{- if .Values.postgres.enabled -}}
+{{- $postgresPassword := .Values.postgres.password | default "" -}}
+{{- if or (not $postgresPassword) (eq $postgresPassword "changeme") (eq $postgresPassword "postgres") (eq $postgresPassword "password") }}
+{{- fail "postgres.password must be set to a non-default value when postgres.enabled=true." }}
+{{- end }}
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -52,7 +56,7 @@ spec:
             - name: POSTGRES_USER
               value: {{ .Values.db.user | quote }}
             - name: POSTGRES_PASSWORD
-              value: {{ .Values.postgres.password | quote }}
+              value: {{ $postgresPassword | quote }}
           volumeMounts:
             - name: data
               mountPath: /var/lib/postgresql/data

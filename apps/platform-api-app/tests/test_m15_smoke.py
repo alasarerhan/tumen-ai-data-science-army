@@ -51,6 +51,9 @@ def _run(*args: str, check: bool = True) -> subprocess.CompletedProcess:
     )
 
 
+_HELM_SECRET_OVERRIDE = ("--set", "db.password=local-smoke-db-password-20260604")
+
+
 # ---------------------------------------------------------------------------
 # TG3-1: helm lint
 # ---------------------------------------------------------------------------
@@ -59,7 +62,7 @@ def _run(*args: str, check: bool = True) -> subprocess.CompletedProcess:
 @skip_no_helm
 def test_helm_lint_passes():
     """helm lint must exit 0 with no errors on the bundled chart."""
-    result = _run(_HELM, "lint", str(_CHART))
+    result = _run(_HELM, "lint", str(_CHART), *_HELM_SECRET_OVERRIDE)
     assert result.returncode == 0, (
         f"helm lint failed:\nSTDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}"
     )
@@ -68,7 +71,7 @@ def test_helm_lint_passes():
 @skip_no_helm
 def test_helm_lint_no_errors_in_output():
     """helm lint stdout must not contain the word 'Error'."""
-    result = _run(_HELM, "lint", str(_CHART))
+    result = _run(_HELM, "lint", str(_CHART), *_HELM_SECRET_OVERRIDE)
     assert "Error" not in result.stdout, (
         f"helm lint reported errors:\n{result.stdout}"
     )
@@ -82,7 +85,7 @@ def test_helm_lint_no_errors_in_output():
 @skip_no_helm
 def test_helm_template_renders_without_error():
     """helm template must render all manifests without error."""
-    result = _run(_HELM, "template", "platform-test", str(_CHART))
+    result = _run(_HELM, "template", "platform-test", str(_CHART), *_HELM_SECRET_OVERRIDE)
     assert result.returncode == 0, (
         f"helm template failed:\nSTDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}"
     )
@@ -91,7 +94,7 @@ def test_helm_template_renders_without_error():
 @skip_no_helm
 def test_helm_template_contains_deployment():
     """Rendered output must include at least one Deployment kind."""
-    result = _run(_HELM, "template", "platform-test", str(_CHART))
+    result = _run(_HELM, "template", "platform-test", str(_CHART), *_HELM_SECRET_OVERRIDE)
     assert "kind: Deployment" in result.stdout, (
         "No Deployment found in rendered Helm templates"
     )
@@ -100,7 +103,7 @@ def test_helm_template_contains_deployment():
 @skip_no_helm
 def test_helm_template_contains_service():
     """Rendered output must include at least one Service kind."""
-    result = _run(_HELM, "template", "platform-test", str(_CHART))
+    result = _run(_HELM, "template", "platform-test", str(_CHART), *_HELM_SECRET_OVERRIDE)
     assert "kind: Service" in result.stdout, (
         "No Service found in rendered Helm templates"
     )
@@ -109,7 +112,7 @@ def test_helm_template_contains_service():
 @skip_no_helm
 def test_helm_template_contains_configmap_or_secret():
     """Rendered output must include a ConfigMap or Secret."""
-    result = _run(_HELM, "template", "platform-test", str(_CHART))
+    result = _run(_HELM, "template", "platform-test", str(_CHART), *_HELM_SECRET_OVERRIDE)
     assert ("kind: ConfigMap" in result.stdout or "kind: Secret" in result.stdout), (
         "No ConfigMap or Secret found in rendered Helm templates"
     )
@@ -120,6 +123,7 @@ def test_helm_template_with_custom_values():
     """helm template with custom replicas and image tag must succeed."""
     result = _run(
         _HELM, "template", "platform-test", str(_CHART),
+        *_HELM_SECRET_OVERRIDE,
         "--set", "replicaCount=2",
         "--set", "image.tag=v1.2.3",
     )
@@ -131,7 +135,7 @@ def test_helm_template_with_custom_values():
 @skip_no_helm
 def test_helm_template_api_version_v1():
     """All rendered resources must use a supported apiVersion."""
-    result = _run(_HELM, "template", "platform-test", str(_CHART))
+    result = _run(_HELM, "template", "platform-test", str(_CHART), *_HELM_SECRET_OVERRIDE)
     lines = result.stdout.splitlines()
     api_lines = [ln for ln in lines if ln.startswith("apiVersion:")]
     assert len(api_lines) > 0, "No apiVersion lines found in rendered output"
@@ -166,6 +170,7 @@ def test_kind_cluster_create_and_helm_install():
         # helm install with --wait (up to 120 s)
         install = _run(
             _HELM, "install", "platform-smoke", str(_CHART),
+            *_HELM_SECRET_OVERRIDE,
             "--kube-context", f"kind-{cluster_name}",
             "--wait", "--timeout", "120s",
             check=False,

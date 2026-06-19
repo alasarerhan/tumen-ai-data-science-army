@@ -21,12 +21,29 @@ from platform_api.schemas.pagination import build_paginated_response, MAX_PAGE_S
 from platform_api.schemas.artifacts import CreateArtifactRequest
 from platform_api.services.artifact_service import (
     create_artifact_record,
+    get_artifact_parent_ids,
     get_artifact_for_workspace,
     list_artifacts_for_workspace,
 )
 from platform_api.services.identity_service import get_or_create_user
 
 router = APIRouter(prefix="/v1/artifacts", tags=["artifacts"])
+
+
+def _artifact_response(artifact) -> dict:
+    return {
+        "id": str(artifact.id),
+        "tenant_id": str(artifact.tenant_id),
+        "workspace_id": str(artifact.workspace_id),
+        "workflow_run_id": str(artifact.workflow_run_id) if artifact.workflow_run_id else None,
+        "kind": artifact.kind,
+        "uri": artifact.uri,
+        "artifact_type": artifact.kind,
+        "storage_uri": artifact.uri,
+        "produced_by_node_id": artifact.produced_by_node_id,
+        "parent_artifact_ids": get_artifact_parent_ids(artifact),
+        "created_at": artifact.created_at.isoformat() if artifact.created_at else None,
+    }
 
 
 @router.post("")  # workspace_id in body — service-level membership check
@@ -47,48 +64,32 @@ async def create_artifact(
         parent_artifact_ids=payload.parent_artifact_ids,
     )
     db.commit()
-    return {
-        "id": str(artifact.id),
-        "tenant_id": str(artifact.tenant_id),
-        "workspace_id": str(artifact.workspace_id),
-        "workflow_run_id": str(artifact.workflow_run_id) if artifact.workflow_run_id else None,
-        "kind": artifact.kind,
-        "uri": artifact.uri,
-        "artifact_type": artifact.kind,
-        "storage_uri": artifact.uri,
-        "produced_by_node_id": artifact.produced_by_node_id,
-        "parent_artifact_ids": payload.parent_artifact_ids,
-    }
+    return _artifact_response(artifact)
 
 
 @router.get("")
 async def list_artifacts(
     cursor: Optional[str] = Query(default=None, description="Pagination cursor (artifact ID)"),
     limit: int = Query(default=20, ge=1, le=MAX_PAGE_SIZE, description="Items per page"),
+    workflow_run_id: Optional[str] = Query(default=None, description="Filter by workflow run ID"),
+    kind: Optional[str] = Query(default=None, min_length=2, max_length=100, description="Filter by artifact kind"),
     context: dict = Depends(require_workspace_member),
     db: Session = Depends(get_db),
 ) -> dict:
     user = context["user"]
     workspace = context["workspace"]
     artifacts = list_artifacts_for_workspace(
-        db, workspace_id=str(workspace.id), user_id=user.id, cursor=cursor, limit=limit
+        db,
+        workspace_id=str(workspace.id),
+        user_id=user.id,
+        cursor=cursor,
+        limit=limit,
+        workflow_run_id=workflow_run_id,
+        kind=kind,
     )
     paginated = build_paginated_response(artifacts, limit)
     return {
-        "items": [
-            {
-                "id": str(artifact.id),
-                "kind": artifact.kind,
-                "uri": artifact.uri,
-                "artifact_type": artifact.kind,
-                "storage_uri": artifact.uri,
-                "produced_by_node_id": artifact.produced_by_node_id,
-                "parent_artifact_ids": [],
-                "workflow_run_id": str(artifact.workflow_run_id) if artifact.workflow_run_id else None,
-                "created_at": artifact.created_at.isoformat() if artifact.created_at else None,
-            }
-            for artifact in paginated["items"]
-        ],
+        "items": [_artifact_response(artifact) for artifact in paginated["items"]],
         "next_cursor": paginated["next_cursor"],
         "has_more": paginated["has_more"],
     }

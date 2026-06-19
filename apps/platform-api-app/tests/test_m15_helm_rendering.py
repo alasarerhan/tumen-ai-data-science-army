@@ -413,10 +413,9 @@ class TestBundledPostgres:
             "postgres.enabled should be false by default for production safety"
         )
 
-    def test_postgres_password_has_default(self):
+    def test_postgres_password_requires_override_when_enabled(self):
         assert "password" in self.v["postgres"]
-        # It can be non-empty (it's only for dev/CI anyway)
-        assert self.v["postgres"]["password"]
+        assert self.v["postgres"]["password"] == ""
 
 
 # ---------------------------------------------------------------------------

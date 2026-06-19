@@ -153,6 +153,9 @@ db:
   # The secret must have a key named `POSTGRES_PASSWORD`
   existingSecret: ""
   existingSecretKey: "POSTGRES_PASSWORD"
+  # Required when existingSecret is empty and postgres.enabled=false.
+  # Set via a private values override or --set db.password=<strong-value>.
+  password: ""
 
 # ---------------------------------------------------------------------------
 # Bundled PostgreSQL (for development / CI — not for production)
@@ -162,7 +165,8 @@ postgres:
   image:
     repository: postgres
     tag: "16-alpine"
-  password: "postgres"
+  # Required when postgres.enabled=true. Weak defaults are rejected by templates.
+  password: ""
   storage:
     size: 5Gi
     storageClass: ""

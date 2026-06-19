@@ -20,6 +20,10 @@ from platform_api.services.run_service import (
     list_workflow_runs_for_workspace,
 )
 from platform_api.services.run_orchestration_service import create_orchestration_run_id
+from platform_api.services.agent_execution_trace_service import (
+    agent_execution_trace_to_dict,
+    list_agent_execution_traces_for_run,
+)
 from platform_api.services.workflow_node_execution_service import (
     create_node_executions_for_run,
     list_node_executions_for_run,
@@ -250,6 +254,19 @@ async def list_run_nodes(
     run = get_run_by_id_for_workspace(db, run_id=run_id, workspace_id=workspace.id)
     nodes = list_node_executions_for_run(db, workflow_run_id=run.id)
     return {"items": [node_execution_to_dict(node) for node in nodes]}
+
+
+@router.get("/{run_id}/agent-traces")
+async def list_run_agent_traces(
+    run_id: str,
+    workspace_id: str,
+    context: dict = Depends(require_workspace_member),
+    db: Session = Depends(get_db),
+) -> dict:
+    workspace = context["workspace"]
+    run = get_run_by_id_for_workspace(db, run_id=run_id, workspace_id=workspace.id)
+    traces = list_agent_execution_traces_for_run(db, workflow_run_id=run.id)
+    return {"items": [agent_execution_trace_to_dict(trace) for trace in traces]}
 
 
 class RetryNodeRequest(BaseModel):

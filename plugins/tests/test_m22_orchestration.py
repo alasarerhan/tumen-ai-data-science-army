@@ -873,13 +873,15 @@ class TestOrchestratorAgent:
         from ai_data_science_team import OrchestratorAgent  # noqa: F401
         assert OrchestratorAgent is not None
 
-    def test_orchestration_module_import(self):
-        """All M22 primitives accessible from orchestration module."""
-        from ai_data_science_team.orchestration import (  # noqa: F401
+    def test_orchestration_primitives_from_package(self):
+        """All M22 primitives accessible from top-level package (facade removed)."""
+        from ai_data_science_team import (  # noqa: F401
             AgentRegistry,
+            AgentMetadata,
             ContextStore,
             OrchestratorAgent,
             RuntimeEngine,
+            RunResult,
             SignalStore,
             WorkflowResolver,
             WorkflowSignal,

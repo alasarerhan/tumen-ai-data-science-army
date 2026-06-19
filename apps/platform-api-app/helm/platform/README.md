@@ -100,10 +100,16 @@ helm install platform ./helm/platform \
 | `db.user` | `platform` | Database user |
 | `db.existingSecret` | `""` | Name of existing K8s Secret with DB password |
 | `db.existingSecretKey` | `POSTGRES_PASSWORD` | Key inside the Secret |
+| `db.password` | `""` | Required only when `db.existingSecret` is empty and `postgres.enabled=false`; weak defaults are rejected |
 
 When `db.existingSecret` is empty, a `Secret` named `<release>-db` is
-created automatically from `db.password` (default: `changeme`).  Always
-override this with a real password or use `existingSecret` in production.
+created automatically from `db.password`. The chart fails rendering if
+`db.password` is empty or a weak default such as `changeme`, `postgres`, or
+`password`. Use `db.existingSecret` for production.
+
+When `postgres.enabled=true`, set `postgres.password` to a non-default value.
+The bundled PostgreSQL deployment is for development/CI only and also rejects
+empty or weak password defaults.
 
 ### `autoscaling`
 

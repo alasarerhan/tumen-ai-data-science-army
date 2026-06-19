@@ -11,9 +11,10 @@ from fastapi.testclient import TestClient
 
 from platform_api.auth.dependencies import get_principal
 from platform_api.auth.models import Principal
-from platform_api.db.models import Artifact, WorkflowNodeExecution
+from platform_api.db.models import AgentExecutionTrace, Artifact, WorkflowNodeExecution
 from platform_api.db.session import get_db
 from platform_api.main import create_app
+from platform_api.services.agent_execution_trace_service import agent_execution_trace_to_dict
 from platform_api.services.workflow_ir_service import validate_workflow_ir_v2
 from platform_api.services.run_service import create_workflow_run_record
 from platform_api.services.workflow_node_catalog_service import list_supported_node_types
@@ -267,6 +268,118 @@ def test_dataset_profile_executor_reads_dataset_and_writes_profile(seeded_db, tm
     profile_path = result["artifacts"][0]["uri"]
     assert "workflow-runs" in profile_path
     assert (tmp_path / "artifacts" / "workflow-runs" / str(run.id) / "profile" / "profile.json").exists()
+
+
+def test_worker_records_safe_agent_execution_trace(admin_client):
+    client, sdb = admin_client
+    db = sdb["db"]
+    workspace = sdb["workspace"]
+    user = sdb["user_admin"]
+    run = create_workflow_run_record(
+        db,
+        tenant_id=workspace.tenant_id,
+        workspace_id=workspace.id,
+        user_id=user.id,
+        flow_key="trace-test",
+        prefect_flow_run_id=f"prefect-{uuid.uuid4().hex}",
+        parameters={},
+        input_artifact_ids=[],
+    )
+    node = WorkflowNodeExecution(
+        tenant_id=workspace.tenant_id,
+        workspace_id=workspace.id,
+        workflow_run_id=run.id,
+        node_id="agent-step",
+        node_type="custom.agent",
+        execution_index=0,
+        status="queued",
+        inputs_json=json.dumps({"config": {"instruction": "summarize", "password": "do-not-store"}, "api_token": "secret"}),
+        logs_json="[]",
+    )
+    db.add(node)
+    db.flush()
+
+    def _executor(ctx: NodeExecutionContext) -> dict:
+        return {
+            "outputs": {
+                "metric": 0.91,
+                "secret_token": "do-not-store",
+                "tool_calls": [{"name": "sql.query", "args": {"query": "select 1", "password": "do-not-store"}}],
+                "token_usage": {"prompt_tokens": 120, "completion_tokens": 30, "api_key": "do-not-store"},
+                "cost_summary": {"usd": 0.04, "credential": "do-not-store"},
+                "evaluation_summary": {"auc": 0.91},
+                "version_metadata": {"agent_version": "m22.1", "secret": "do-not-store"},
+            },
+            "logs": ["done"],
+        }
+
+    status = WorkflowWorker(node_executors={"custom.agent": _executor})._execute_node(db, run, node)
+    db.commit()
+
+    assert status == "succeeded"
+    trace = db.query(AgentExecutionTrace).filter_by(workflow_node_execution_id=node.id).one()
+    body = agent_execution_trace_to_dict(trace)
+    assert body["status"] == "succeeded"
+    assert body["attempt"] == 1
+    assert body["input_summary"]["config_keys"] == ["instruction"]
+    assert "api_token" not in body["input_summary"]["input_keys"]
+    assert {"metric", "tool_calls", "cost_summary", "evaluation_summary", "version_metadata"}.issubset(
+        set(body["output_summary"]["output_keys"])
+    )
+    assert "token_usage" not in body["output_summary"]["output_keys"]
+    assert body["tool_calls"] == [{"name": "sql.query", "arg_keys": ["query"]}]
+    assert body["token_usage"] == {"prompt_tokens": 120, "completion_tokens": 30}
+    assert body["cost_summary"] == {"usd": 0.04}
+    assert body["evaluation_summary"] == {"auc": 0.91}
+    assert body["version_metadata"] == {"agent_version": "m22.1"}
+    assert "do-not-store" not in json.dumps(body)
+
+    response = client.get(f"/v1/runs/{run.id}/agent-traces?workspace_id={workspace.id}")
+    assert response.status_code == 200, response.text
+    assert response.json()["items"][0]["id"] == str(trace.id)
+
+
+def test_worker_records_failed_agent_trace_without_secret_leak(seeded_db):
+    db = seeded_db["db"]
+    workspace = seeded_db["workspace"]
+    user = seeded_db["user_admin"]
+    run = create_workflow_run_record(
+        db,
+        tenant_id=workspace.tenant_id,
+        workspace_id=workspace.id,
+        user_id=user.id,
+        flow_key="trace-failure",
+        prefect_flow_run_id=f"prefect-{uuid.uuid4().hex}",
+        parameters={},
+        input_artifact_ids=[],
+    )
+    node = WorkflowNodeExecution(
+        tenant_id=workspace.tenant_id,
+        workspace_id=workspace.id,
+        workflow_run_id=run.id,
+        node_id="agent-step",
+        node_type="failing.agent",
+        execution_index=0,
+        status="queued",
+        inputs_json=json.dumps({"config": {"instruction": "fail"}}),
+        logs_json="[]",
+    )
+    db.add(node)
+    db.flush()
+
+    def _executor(ctx: NodeExecutionContext) -> dict:
+        raise RuntimeError("failed to connect mssql://user:password@db-host with api_token=secret")
+
+    status = WorkflowWorker(node_executors={"failing.agent": _executor})._execute_node(db, run, node)
+    db.commit()
+
+    assert status == "failed"
+    trace = db.query(AgentExecutionTrace).filter_by(workflow_node_execution_id=node.id).one()
+    body = agent_execution_trace_to_dict(trace)
+    assert body["status"] == "failed"
+    assert "mssql://[redacted]@db-host" in body["error_summary"]
+    assert "password" not in body["error_summary"]
+    assert "api_token" not in body["error_summary"]
 
 
 @pytest.mark.real_llm

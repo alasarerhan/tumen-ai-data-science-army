@@ -2,7 +2,7 @@ services:
   postgres:
     image: postgres:16
     environment:
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD before running docker compose}
       POSTGRES_USER: postgres
       POSTGRES_DB: platform
     ports:
@@ -19,7 +19,7 @@ services:
     build: .
     environment:
       DEPLOYMENT_PROFILE: local
-      DATABASE_URL: postgresql+psycopg://postgres:postgres@postgres:5432/platform
+      DATABASE_URL: postgresql+psycopg://postgres:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD before running docker compose}@postgres:5432/platform
       AUTH_MODE: dev
       ALLOW_LOCAL_RUN_FALLBACK: "true"
     ports:

@@ -8,6 +8,7 @@ import Workflows from "./screens/Workflows";
 import WorkflowDetail from "./screens/WorkflowDetail";
 import WorkflowDesigner from "./screens/WorkflowDesigner";
 import Reports from "./screens/Reports";
+import ModelOps from "./screens/ModelOps";
 import StrategicReport from "./screens/StrategicReport";
 import CloudOps from "./screens/CloudOps";
 import HITLApproval from "./screens/HITLApproval";
@@ -49,6 +50,7 @@ export const router = createBrowserRouter([
       { path: "/workflows/:id", Component: WorkflowDetail, errorElement: React.createElement(RouteErrorBoundary) },
       { path: "/workflows/:id/designer", Component: WorkflowDesigner, errorElement: React.createElement(RouteErrorBoundary) },
       { path: "/reports", Component: Reports, errorElement: React.createElement(RouteErrorBoundary) },
+      { path: "/modelops", Component: ModelOps, errorElement: React.createElement(RouteErrorBoundary) },
       { path: "/reports/:id", Component: StrategicReport, errorElement: React.createElement(RouteErrorBoundary) },
       { path: "/deployments", Component: CloudOps, errorElement: React.createElement(RouteErrorBoundary) },
       { path: "/approvals/:id", Component: HITLApproval, errorElement: React.createElement(RouteErrorBoundary) },

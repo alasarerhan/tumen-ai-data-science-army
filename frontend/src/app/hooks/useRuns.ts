@@ -1,7 +1,18 @@
 // BUSINESS SCIENCE UNIVERSITY / AI DATA SCIENCE TEAM
 // M25 — useRuns React Query hooks
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getRuns, getRun, triggerRun, cancelRun, retryRun, type Run } from "../api/runs";
+import { useQueries, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  getRuns,
+  getRun,
+  getRunAgentTraces,
+  getRunNodes,
+  triggerRun,
+  cancelRun,
+  retryRun,
+  type AgentExecutionTrace,
+  type Run,
+  type WorkflowNodeExecution,
+} from "../api/runs";
 
 export function useRuns(workspace_id: string | null) {
   return useQuery<{ items: Run[] }>({
@@ -18,6 +29,26 @@ export function useRun(run_id: string | undefined, workspace_id: string | null) 
     queryFn: () => getRun(run_id!, workspace_id!),
     enabled: !!run_id && !!workspace_id,
     refetchInterval: 3_000,
+  });
+}
+
+export function useRunAgentTraces(run_id: string | undefined, workspace_id: string | null, enabled = true) {
+  return useQuery<{ items: AgentExecutionTrace[] }>({
+    queryKey: ["run-agent-traces", run_id, workspace_id],
+    queryFn: () => getRunAgentTraces(run_id!, workspace_id!),
+    enabled: enabled && !!run_id && !!workspace_id,
+    refetchInterval: 5_000,
+  });
+}
+
+export function useRunNodesForRuns(run_ids: string[], workspace_id: string | null) {
+  return useQueries({
+    queries: run_ids.map((run_id) => ({
+      queryKey: ["run-nodes", run_id, workspace_id],
+      queryFn: () => getRunNodes(run_id, workspace_id!),
+      enabled: !!workspace_id && !!run_id,
+      refetchInterval: 5_000,
+    })),
   });
 }
 

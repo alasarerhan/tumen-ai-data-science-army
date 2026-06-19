@@ -82,6 +82,7 @@ const AGENT_NODE_TYPE_MAP: Record<string, string> = {
   ApprovalGateAgent: "approval.wait",
 };
 
+/** @internal Resolves node type from data, used only within this module. */
 export function resolveNodeType(data: WorkflowNodeData): string {
   return data.nodeType ?? (data.agent ? AGENT_NODE_TYPE_MAP[data.agent] : undefined) ?? "report.generate";
 }

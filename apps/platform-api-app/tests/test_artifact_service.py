@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import uuid
 from datetime import UTC, datetime
 
@@ -240,6 +241,74 @@ def test_list_artifacts_for_workspace_filters_and_orders(seeded_db: dict[str, ob
     assert len(artifacts) == 2
     assert artifacts[0].id == second.id
     assert artifacts[-1].id == first.id
+
+
+def test_list_artifacts_for_workspace_filters_kind_run_and_preserves_parent_ids(seeded_db: dict[str, object]) -> None:
+    # Arrange
+    db = seeded_db["db"]
+    workspace = seeded_db["workspace"]
+    run = _create_run_in_workspace(seeded_db, workspace.id)
+    user_id = seeded_db["user_admin"].id
+
+    parent = artifact_service.create_artifact_record(
+        db,
+        workspace_id=str(workspace.id),
+        workflow_run_id=str(run.id),
+        kind="dataset",
+        uri="local://artifacts/source.csv",
+        user_id=user_id,
+    )
+    model = artifact_service.create_artifact_record(
+        db,
+        workspace_id=str(workspace.id),
+        workflow_run_id=str(run.id),
+        kind="model",
+        uri="local://artifacts/model.pkl",
+        user_id=user_id,
+        produced_by_node_id="train",
+        parent_artifact_ids=[str(parent.id)],
+    )
+    _metrics = artifact_service.create_artifact_record(
+        db,
+        workspace_id=str(workspace.id),
+        workflow_run_id=str(run.id),
+        kind="metrics",
+        uri="local://artifacts/metrics.json",
+        user_id=user_id,
+        parent_artifact_ids=[str(model.id)],
+    )
+
+    # Act
+    artifacts = artifact_service.list_artifacts_for_workspace(
+        db,
+        workspace_id=str(workspace.id),
+        user_id=user_id,
+        workflow_run_id=str(run.id),
+        kind="model",
+    )
+
+    # Assert
+    assert [artifact.id for artifact in artifacts] == [model.id]
+    assert artifact_service.get_artifact_parent_ids(model) == [str(parent.id)]
+
+
+def test_get_artifact_parent_ids_tolerates_malformed_legacy_payload(seeded_db: dict[str, object]) -> None:
+    # Arrange
+    db = seeded_db["db"]
+    workspace = seeded_db["workspace"]
+    user_id = seeded_db["user_admin"].id
+    artifact = artifact_service.create_artifact_record(
+        db,
+        workspace_id=str(workspace.id),
+        workflow_run_id=None,
+        kind="report",
+        uri="local://artifacts/report.html",
+        user_id=user_id,
+    )
+    artifact.parent_artifact_ids_json = json.dumps({"unexpected": "object"})
+
+    # Act / Assert
+    assert artifact_service.get_artifact_parent_ids(artifact) == []
 
 
 def test_get_artifact_for_workspace_success_and_error_paths(seeded_db: dict[str, object]) -> None:

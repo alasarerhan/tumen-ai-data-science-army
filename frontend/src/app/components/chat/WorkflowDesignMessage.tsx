@@ -160,10 +160,10 @@ export function WorkflowDesignMessage({
           <textarea
             value={feedback}
             onChange={(e) => setFeedback(e.target.value)}
-            placeholder="Describe what you want to change..."
+            aria-label="Workflow change request"
+            placeholder="Describe what you want to change…"
             className="w-full resize-none rounded-md border border-slate-300 p-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
             rows={3}
-            autoFocus
           />
           <div className="flex gap-2">
             <Button

@@ -3,8 +3,9 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { Loader2 } from "lucide-react";
 import { cn } from "../../lib/utils";
 
+/** Public CVA variant API — exported for downstream button composition via `cva(b)` pattern. */
 export const buttonVariants = cva(
-  "inline-flex items-center justify-center whitespace-nowrap font-medium transition-all duration-75 outline-none select-none disabled:cursor-not-allowed disabled:opacity-40 active:scale-[0.98]",
+  "inline-flex items-center justify-center whitespace-nowrap font-medium transition-colors duration-75 focus-visible:outline-none select-none disabled:cursor-not-allowed disabled:opacity-40 active:scale-[0.98]",
   {
     variants: {
       variant: {
@@ -20,7 +21,7 @@ export const buttonVariants = cva(
           "bg-transparent text-slate-600 hover:bg-slate-100 hover:text-slate-900 focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2",
         destructive:
           "bg-red-600 text-white hover:bg-red-700 active:bg-red-800 focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2",
-        link: "h-auto p-0 text-indigo-600 hover:underline",
+        link: "h-auto p-0 text-indigo-600 hover:underline focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2",
       },
       size: {
         xs: "h-7 rounded-[6px] px-2.5 text-xs gap-1",

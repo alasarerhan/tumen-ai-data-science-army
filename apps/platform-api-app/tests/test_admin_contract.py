@@ -52,6 +52,19 @@ def test_scheduler_status_returns_restricted_metadata_for_tenant_admin(admin_cli
     assert body["jobs"] == []
 
 
+def test_runtime_engine_parity_report_is_tenant_admin_readable(admin_client):
+    client, _seeded_db = admin_client
+
+    response = client.get("/v1/admin/runtime-engine/parity")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] == "passed"
+    assert body["promotion_decision"] == "do_not_promote_default_until_reviewed"
+    assert body["checks"]["logs_mapped"] is True
+    assert body["checks"]["cancel_mapped"] is True
+
+
 def test_admin_and_finops_routes_require_tenant_admin(app):
     protected_routes = [
         route

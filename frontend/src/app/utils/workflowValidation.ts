@@ -26,6 +26,7 @@ export function getWorkflowValidationLabel(status: WorkflowValidationStatus): st
   }
 }
 
+/** @internal Resolves a workflow spec by flow key, used only within this module. */
 export function resolveWorkflowForFlowKey(
   workflows: WorkflowSpec[],
   flowKey: string | null | undefined,

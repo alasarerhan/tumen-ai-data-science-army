@@ -3,6 +3,7 @@ import remarkGfm from "remark-gfm";
 import rehypeSanitize from "rehype-sanitize";
 import { cn } from "../../lib/utils";
 import type { ChatMessageDto } from "../../api/chat";
+import type { PlatformActionPlan } from "../../api/controlPlane";
 import { ArtifactCard } from "./ArtifactCard";
 import { WorkflowDesignMessage } from "./WorkflowDesignMessage";
 
@@ -34,13 +35,15 @@ interface ChatMessageProps {
   onWorkflowApprove?: (artifactId: string, workflowSpec: Extract<ChatMessageDto["artifacts"][number], { type: "workflow_design" }>["workflow_spec"]) => void;
   onWorkflowModify?: (artifactId: string, feedback: string) => void;
   onWorkflowCancel?: (artifactId: string) => void;
+  onPlatformActionConfirm?: (actionPlan: PlatformActionPlan) => void;
 }
 
 export function ChatMessage({ 
   message, 
   onWorkflowApprove, 
   onWorkflowModify, 
-  onWorkflowCancel 
+  onWorkflowCancel,
+  onPlatformActionConfirm,
 }: ChatMessageProps) {
   const isAssistant = message.role === "assistant";
 
@@ -56,7 +59,13 @@ export function ChatMessage({
         />
       );
     }
-    return <ArtifactCard key={`${message.id}-artifact-${idx}`} artifact={artifact} />;
+    return (
+      <ArtifactCard
+        key={`${message.id}-artifact-${idx}`}
+        artifact={artifact}
+        onPlatformActionConfirm={onPlatformActionConfirm}
+      />
+    );
   };
 
   return (

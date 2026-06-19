@@ -82,6 +82,7 @@ export function getWorkflowAgentCatalog(ruleset?: WorkflowChainRuleset) {
   }));
 }
 
+/** @internal Canonicalizes agent name via alias map, used only within this module. */
 export function canonicalizeAgent(candidate: string | undefined | null, ruleset?: WorkflowChainRuleset): string | null {
   if (!candidate) return null;
   return buildRuleMaps(ruleset).aliasMap.get(normalizeName(candidate)) ?? null;

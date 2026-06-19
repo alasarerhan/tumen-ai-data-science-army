@@ -7,6 +7,7 @@ import {
   Database,
   Bot,
   BarChart2,
+  LineChart,
   Cloud,
   Settings,
   ChevronLeft,
@@ -42,6 +43,7 @@ const navItems: NavItem[] = [
   { label: "Data Sources", icon: <Database size={18} />, to: "/data-sources" },
   { label: "Agents", icon: <Bot size={18} />, to: "/agents" },
   { label: "Reports", icon: <BarChart2 size={18} />, to: "/reports" },
+  { label: "ModelOps", icon: <LineChart size={18} />, to: "/modelops" },
   { label: "Deployments", icon: <Cloud size={18} />, to: "/deployments" },
 ];
 
@@ -167,11 +169,18 @@ export function AppShell({ children }: AppShellProps) {
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-slate-50">
-      {mobileOpen ? <div className="fixed inset-0 z-30 bg-black/40 lg:hidden" onClick={() => setMobileOpen(false)} /> : null}
+      {mobileOpen ? (
+        <button
+          type="button"
+          className="fixed inset-0 z-30 bg-black/40 lg:hidden"
+          onClick={() => setMobileOpen(false)}
+          aria-label="Close navigation"
+        />
+      ) : null}
 
       <aside
         className={cn(
-          "hidden border-r border-slate-200 bg-white transition-all duration-150 lg:block",
+          "hidden border-r border-slate-200 bg-white transition-[width] duration-150 lg:block",
           collapsed ? "w-16" : "w-60",
         )}
       >

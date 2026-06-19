@@ -1,6 +1,6 @@
 # M22 Orchestration Layer Status
 
-- Status: Canonical API path integrated; advanced M22 facade still staged
+- Status: Canonical API path integrated; advanced M22 facade still staged with parity harness
 - Date: 2026-04-27
 - Owners: Platform Architecture
 
@@ -26,9 +26,9 @@ The earlier "built, not yet integrated" wording was therefore too broad. It stil
 | `workflow_resolver.py` | Staged | Implemented and tested, not wired into the production request path |
 | `signals.py` | Bridged in staged mode | Production `workflow_signal_events` are mirrored into the staged M22 signal store for runtime consumption when `staged_m22` is enabled |
 
-## 2026-06-03 Lifecycle Parity Decision
+## 2026-06-04 Lifecycle Parity Decision
 
-`staged_m22` is not promoted to the default production execution mode. The current evidence proves the canonical `/v1/runs` path and the M22 primitives independently, but logs/artifacts/signals/retry/scheduler behavior are not yet exercised through a single RuntimeEngine-backed platform lifecycle.
+`staged_m22` is not promoted to the default production execution mode. A deterministic RuntimeEngine parity harness now exists at `platform_api.services.runtime_engine_parity_service` and is exposed read-only to tenant admins through `/v1/admin/runtime-engine/parity`. The harness maps RuntimeEngine logs, signals, artifacts, retry, cancel, and scheduler non-replacement status to current platform contracts, but it is still evidence for review rather than default runtime promotion.
 
 See `docs/m22-lifecycle-parity-matrix.md` for the parity matrix and command evidence.
 
@@ -39,6 +39,7 @@ See `docs/m22-lifecycle-parity-matrix.md` for the parity matrix and command evid
 - `staged_m22` is now an explicit local/staging-only mode. Release profile rejects it fail-closed until lifecycle parity is proven.
 - `staged_m22` currently bootstraps Redis-backed `ContextStore` session metadata around the canonical run creation path instead of replacing the execution engine outright.
 - Production signal writes now mirror into the staged M22 `SignalStore` using the run's canonical orchestration session id.
+- `/v1/admin/runtime-engine/parity` is tenant-admin gated and returns a deterministic harness report with `promotion_decision=do_not_promote_default_until_reviewed`.
 
 ## Integration Path
 
@@ -82,7 +83,7 @@ Keep and integrate deliberately. The accurate statement is now:
 - [x] Route production run creation through `run_orchestration_service` and the Prefect gateway
 - [x] Prefer Prefect-backed log streaming before any local/mock fallback
 - [x] Add M22 imports to `platform-api-app` where the advanced facade replaces or augments the current gateway path
-- [ ] Create execution endpoints or a parity harness that explicitly exercise `RuntimeEngine`
+- [x] Create execution endpoints or a parity harness that explicitly exercise `RuntimeEngine`
 - [x] Register the production agent catalog in `AgentRegistry` at startup
 - [x] Finalize `ContextStore` persistence backing as `Redis`
 - [x] Connect `SignalStore` to `workflow_signal_events` through staged-mode mirroring
@@ -94,5 +95,7 @@ Keep and integrate deliberately. The accurate statement is now:
 - `STRATEGY.md` Section 3
 - `ai_data_science_team/orchestration.py`
 - `platform_api/services/run_orchestration_service.py`
+- `platform_api/services/runtime_engine_parity_service.py`
+- `platform_api/routes/admin.py`
 - `platform_api/routes/logs.py`
 - `plugins/tests/test_m22_orchestration.py`

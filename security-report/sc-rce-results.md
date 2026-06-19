@@ -1,5 +1,7 @@
 ﻿# sc-rce Results
 
+Status update: 2026-06-04 fixed with regression coverage; full security scan rerun remains pending.
+
 ## Finding: RCE-001
 - Severity: Critical
 - Confidence: 95
@@ -17,3 +19,4 @@
 - Remove in-process `exec` path for untrusted/generated code.
 - Execute generated SQL/data code in isolated subprocess/container with strict seccomp/apparmor and read-only mounts.
 - Do not expose high-capability modules (`pd`, `sql`) directly to untrusted code; pass pre-validated query primitives instead.
+- Fix evidence: `node_func_execute_agent_from_sql_connection` now validates direct SQL query text and runs `pd.read_sql` without executing generated Python; `tests/test_sql_agent_security.py` passed 3 tests on 2026-06-04.

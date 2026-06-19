@@ -1,5 +1,7 @@
 ﻿# sc-iac Results
 
+Status update: 2026-06-04 fixed with regression coverage; full security scan rerun remains pending.
+
 ## Finding: IAC-001
 - Severity: Medium
 - Confidence: 88
@@ -13,3 +15,4 @@
 - Remediation:
 - Require non-default password input for all non-local profiles.
 - Fail chart rendering/deployment when default secrets remain.
+- Fix evidence: Helm DB secret templates now fail on empty/weak passwords, `values.yaml` ships empty password fields, docker compose requires `POSTGRES_PASSWORD`, and `tests/test_iac_secret_defaults.py` passed 4 tests on 2026-06-04.

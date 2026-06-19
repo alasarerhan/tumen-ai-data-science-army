@@ -1,4 +1,12 @@
-Proje Geliştirme ve Strateji Belgesi: Otonom Stratejik Danışmanlık Platformu
+# DEPRECATED — canonical strategy is at `docs/STRATEGY.md`
+
+> Bu kök dosya artık **canonical değil**. Yeni birleştirilmiş, İngilizce canonical strateji belgesi için bkz: [`docs/STRATEGY.md`](docs/STRATEGY.md).
+>
+> Buradaki içerik (Türkçe, 2026-03-04, v1.4) tarihsel referans olarak korunmuştur. Canonical sürüm Türkçe locked-decisions bölümünü ve İngilizce güncel roadmap/positioning'i tek dosyada birleştirir.
+
+---
+
+# Proje Geliştirme ve Strateji Belgesi: Otonom Stratejik Danışmanlık Platformu
 
   Belge Sürümü: 1.4
   Tarih: 04 Mart 2026

@@ -1,215 +1,89 @@
-﻿import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate, useParams } from "react-router";
+import {
+  AlertCircle,
+  ArrowLeft,
+  CheckCircle2,
+  Clock,
+  Copy,
+  Download,
+  FileText,
+  GitBranch,
+  History,
+  Pencil,
+  Play,
+} from "lucide-react";
 import { AppShell } from "../components/layout/AppShell";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
 import { useAuth } from "../context/AuthContext";
-import { getWorkflow, type WorkflowSpec } from "../api/workflows";
+import { getWorkflow, getWorkflowVersions, type WorkflowSpec, type WorkflowVersionEntry } from "../api/workflows";
 import { formatRelativeTime } from "../utils/time";
 import { cn } from "../lib/utils";
-import {
-  ArrowLeft,
-  GitBranch,
-  History,
-  Save,
-  Play,
-  Pencil,
-  Copy,
-  Clock,
-  CheckCircle2,
-  RotateCcw,
-  Download,
-  Upload,
-  AlertCircle,
-  X,
-} from "lucide-react";
 
-type WorkflowStatus = "published" | "draft" | "archived";
+type WorkflowStatus = WorkflowSpec["status"];
+
 const statusVariant: Record<WorkflowStatus, "success" | "warning" | "neutral"> = {
   published: "success",
   draft: "warning",
   archived: "neutral",
 };
-const SAVE_FEEDBACK_DELAY_MS = 800;
-const SAVE_RESET_DELAY_MS = 2000;
 
-// Mock YAML specs per workflow
-const YAML_SPECS: Record<string, string> = {
-  wf1: `name: sales_intelligence_pipeline
-version: "3.0.0"
-description: "End-to-end sales data analysis with ML-powered forecasting"
+function serializeWorkflowSpec(workflow: WorkflowSpec): string {
+  return JSON.stringify(
+    {
+      id: workflow.id,
+      name: workflow.name,
+      version: workflow.version,
+      status: workflow.status,
+      spec: workflow.spec,
+      validation_summary: workflow.validation_summary,
+    },
+    null,
+    2,
+  );
+}
 
-triggers:
-  - type: schedule
-    cron: "0 6 * * 1-5"
-  - type: manual
+function countWorkflowNodes(workflowSpec: Record<string, unknown>): number {
+  const graph = workflowSpec.graph as { nodes?: unknown[] } | undefined;
+  if (Array.isArray(graph?.nodes)) return graph.nodes.length;
+  return Array.isArray(workflowSpec.steps) ? workflowSpec.steps.length : 0;
+}
 
-agents:
-  - id: data_loader
-    type: eda
-    name: DataLoader
-    config:
-      source: "sales_db"
-      query: "SELECT * FROM sales WHERE date >= :start_date"
-      output: raw_sales
-
-  - id: data_cleaner
-    type: eda
-    name: DataCleaner
-    depends_on: [data_loader]
-    config:
-      input: raw_sales
-      strategies:
-        missing_values: median
-        outliers: iqr_1.5
-      output: clean_sales
-
-  - id: eda_agent
-    type: eda
-    name: EDA Agent
-    depends_on: [data_cleaner]
-    config:
-      input: clean_sales
-      generate:
-        - correlation_matrix
-        - distribution_plots
-        - trend_analysis
-      output: eda_results
-
-  - id: ml_agent
-    type: ml
-    name: H2O AutoML
-    depends_on: [data_cleaner]
-    config:
-      input: clean_sales
-      target: revenue_next_quarter
-      max_models: 20
-      max_runtime_secs: 300
-      output: ml_model
-
-  - id: hitl_gate
-    type: hitl
-    name: HITL Gate
-    depends_on: [ml_agent]
-    config:
-      reviewers: ["alex@acme.com"]
-      timeout_hours: 24
-      auto_approve_threshold: 0.92
-
-  - id: narrative_agent
-    type: strategic
-    name: NarrativeAgent
-    depends_on: [hitl_gate, eda_agent]
-    config:
-      template: executive_summary
-      audience: c_suite
-      output: final_report
-
-outputs:
-  - id: final_report
-    format: HTML
-    destination: s3://insights-bucket/reports/
-
-retry:
-  max_attempts: 3
-  backoff: exponential
-`,
-  wf2: `name: customer_churn_ml
-version: "5.0.0"
-description: "Predicts customer churn using H2O AutoML"
-
-triggers:
-  - type: schedule
-    cron: "0 8 * * 1"
-
-agents:
-  - id: data_loader
-    type: eda
-    name: DataLoader
-    config:
-      source: "crm_db"
-      output: raw_customers
-
-  - id: feature_engineer
-    type: eda
-    name: DataCleaner
-    depends_on: [data_loader]
-    config:
-      input: raw_customers
-      features:
-        - tenure_months
-        - avg_monthly_spend
-        - support_tickets_90d
-        - login_frequency
-      output: feature_matrix
-
-  - id: churn_model
-    type: ml
-    name: H2O AutoML
-    depends_on: [feature_engineer]
-    config:
-      input: feature_matrix
-      target: churned
-      output: churn_predictions
-
-  - id: shap_explainer
-    type: ml
-    name: SHAP Explainer
-    depends_on: [churn_model]
-    config:
-      model: churn_model
-      output: shap_values
-
-outputs:
-  - id: churn_predictions
-    format: CSV
-`,
-  default: `name: workflow
-version: "1.0.0"
-description: "AI agent workflow"
-
-triggers:
-  - type: manual
-
-agents:
-  - id: agent_1
-    type: eda
-    name: DataLoader
-    config:
-      source: "default"
-      output: data
-
-outputs:
-  - id: data
-    format: JSON
-`,
-};
-
-// Mock version history
-const VERSION_HISTORY = [
-  { version: "v3", authorName: "AI System", timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2), message: "Add HITL gate with auto-approve threshold", isCurrent: true },
-  { version: "v2", authorName: "AI System", timestamp: new Date(Date.now() - 1000 * 60 * 60 * 48), message: "Tune H2O AutoML max runtime to 300s", isCurrent: false },
-  { version: "v1", authorName: "AI System", timestamp: new Date(Date.now() - 1000 * 60 * 60 * 120), message: "Initial workflow definition", isCurrent: false },
-];
+function countWorkflowEdges(workflowSpec: Record<string, unknown>): number {
+  const graph = workflowSpec.graph as { edges?: unknown[] } | undefined;
+  if (Array.isArray(graph?.edges)) return graph.edges.length;
+  const steps = Array.isArray(workflowSpec.steps) ? workflowSpec.steps : [];
+  return steps.reduce((count, step) => count + (((step as { depends_on?: unknown[] }).depends_on?.length) ?? 0), 0);
+}
 
 export default function WorkflowDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { workspaceId } = useAuth();
   const [workflow, setWorkflow] = useState<WorkflowSpec | null>(null);
+  const [versions, setVersions] = useState<WorkflowVersionEntry[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<"spec" | "history">("spec");
 
   useEffect(() => {
     if (!id || !workspaceId) return;
     let cancelled = false;
     setLoadError(null);
-    getWorkflow(id, workspaceId)
-      .then((result) => {
-        if (!cancelled) setWorkflow(result);
+    Promise.all([
+      getWorkflow(id, workspaceId),
+      getWorkflowVersions(id, workspaceId).catch(() => ({ versions: [] })),
+    ])
+      .then(([workflowResult, versionResult]) => {
+        if (cancelled) return;
+        setWorkflow(workflowResult);
+        setVersions(versionResult.versions ?? []);
       })
       .catch((err: unknown) => {
         if (!cancelled) {
           setLoadError(err instanceof Error ? err.message : "Failed to load workflow");
+          setWorkflow(null);
+          setVersions([]);
         }
       });
     return () => {
@@ -217,24 +91,15 @@ export default function WorkflowDetail() {
     };
   }, [id, workspaceId]);
 
-  const yamlContent = YAML_SPECS[id ?? "default"] ?? YAML_SPECS.default;
-
-  const [activeTab, setActiveTab] = useState<"spec" | "history">("spec");
-  const [editorValue, setEditorValue] = useState(yamlContent);
-  const [isDirty, setIsDirty] = useState(false);
-  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved">("idle");
-  const [showRestoreConfirm, setShowRestoreConfirm] = useState<string | null>(null);
+  const editorValue = useMemo(() => (workflow ? serializeWorkflowSpec(workflow) : ""), [workflow]);
 
   if (!workflow) {
     return (
       <AppShell>
-        <div className="p-6 flex flex-col items-center justify-center h-full text-slate-500">
+        <div className="flex h-full flex-col items-center justify-center p-6 text-slate-500">
           <AlertCircle size={40} className="mb-3 text-slate-300" />
           <p className="text-sm">{loadError ?? "Workflow not found."}</p>
-          <button
-            className="mt-4 text-sm text-indigo-600 hover:underline"
-            onClick={() => navigate("/workflows")}
-          >
+          <button className="mt-4 text-sm text-indigo-600 hover:underline" onClick={() => navigate("/workflows")}>
             Back to Workflows
           </button>
         </div>
@@ -243,63 +108,32 @@ export default function WorkflowDetail() {
   }
 
   const workflowSpec = workflow.spec as Record<string, unknown>;
-  const graph = workflowSpec.graph as { nodes?: unknown[]; edges?: unknown[] } | undefined;
-  const steps = Array.isArray(workflowSpec.steps) ? workflowSpec.steps : [];
-  const nodeCount = Array.isArray(graph?.nodes) ? graph.nodes.length : steps.length;
-  const edgeCount = Array.isArray(graph?.edges)
-    ? graph.edges.length
-    : steps.reduce((count, step) => count + (((step as { depends_on?: unknown[] }).depends_on?.length) ?? 0), 0);
+  const nodeCount = countWorkflowNodes(workflowSpec);
+  const edgeCount = countWorkflowEdges(workflowSpec);
   const validation = workflow.validation_summary;
   const validationVariant =
     validation.status === "safe" ? "success" : validation.status === "invalid" ? "danger" : "warning";
   const validationTitle =
-    validation.status === "safe"
-      ? "Chain Safe"
-      : validation.status === "invalid"
-      ? "Invalid Chain"
-      : "Advisory Chain";
-
-  const handleEditorChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setEditorValue(e.target.value);
-    setIsDirty(true);
-    setSaveState("idle");
-  };
-
-  const handleSave = () => {
-    setSaveState("saving");
-    setTimeout(() => {
-      setSaveState("saved");
-      setIsDirty(false);
-      setTimeout(() => setSaveState("idle"), SAVE_RESET_DELAY_MS);
-    }, SAVE_FEEDBACK_DELAY_MS);
-  };
-
-  const handleRestoreConfirmed = () => {
-    setShowRestoreConfirm(null);
-    setEditorValue(yamlContent);
-    setIsDirty(false);
-    setSaveState("idle");
-  };
+    validation.status === "safe" ? "Chain Safe" : validation.status === "invalid" ? "Invalid Chain" : "Advisory Chain";
 
   return (
     <AppShell>
-      <div className="flex flex-col h-full overflow-hidden">
-        {/* Top bar */}
-        <div className="flex items-center justify-between px-6 py-3 border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 flex-shrink-0">
+      <div className="flex h-full flex-col overflow-hidden">
+        <div className="flex flex-shrink-0 items-center justify-between border-b border-slate-200 bg-white px-6 py-3 dark:border-slate-700 dark:bg-slate-900">
           <div className="flex items-center gap-3">
             <button
               onClick={() => navigate("/workflows")}
-              className="p-1.5 rounded-[6px] text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              className="rounded-[6px] p-1.5 text-slate-500 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800"
               aria-label="Back to workflows"
             >
               <ArrowLeft size={16} />
             </button>
             <div className="flex items-center gap-2">
-              <div className="size-7 rounded-[6px] bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center">
+              <div className="flex size-7 items-center justify-center rounded-[6px] bg-indigo-50 dark:bg-indigo-900/30">
                 <GitBranch size={14} className="text-indigo-600 dark:text-indigo-400" />
               </div>
               <div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <h1 className="text-sm font-semibold text-slate-900 dark:text-slate-50">{workflow.name}</h1>
                   <Badge variant={statusVariant[workflow.status]} size="sm">
                     {workflow.status.charAt(0).toUpperCase() + workflow.status.slice(1)}
@@ -307,13 +141,8 @@ export default function WorkflowDetail() {
                   <Badge variant={validationVariant} size="sm">
                     {validationTitle}
                   </Badge>
-                  {isDirty && (
-                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 font-medium">
-                      Unsaved
-                    </span>
-                  )}
                 </div>
-                <p className="text-xs text-slate-400 font-mono">{workflow.version}</p>
+                <p className="font-mono text-xs text-slate-400">v{workflow.version}</p>
               </div>
             </div>
           </div>
@@ -327,46 +156,28 @@ export default function WorkflowDetail() {
             >
               Open Designer
             </Button>
-            <Button
-              variant="secondary"
-              size="sm"
-              leadingIcon={<Play size={13} />}
-              disabled={validation.status === "invalid"}
-            >
+            <Button variant="secondary" size="sm" leadingIcon={<Play size={13} />} disabled={validation.status === "invalid"}>
               Run
             </Button>
-            <Button
-              variant="primary"
-              size="sm"
-              leadingIcon={
-                saveState === "saving"
-                  ? <div className="size-3 rounded-full border-2 border-white border-t-transparent animate-spin" />
-                  : saveState === "saved"
-                  ? <CheckCircle2 size={13} />
-                  : <Save size={13} />
-              }
-              onClick={handleSave}
-              disabled={!isDirty || saveState === "saving"}
-            >
-              {saveState === "saving" ? "Saving..." : saveState === "saved" ? "Saved" : "Save"}
+            <Button variant="secondary" size="sm" leadingIcon={<FileText size={13} />} disabled title="Versioned spec edits require a dedicated update API.">
+              Read-only
             </Button>
           </div>
         </div>
 
-        {/* Tabs */}
-        <div className="flex border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 flex-shrink-0 px-6">
+        <div className="flex flex-shrink-0 border-b border-slate-200 bg-white px-6 dark:border-slate-700 dark:bg-slate-900">
           {[
-            { key: "spec", label: "Spec Editor", icon: <GitBranch size={13} /> },
+            { key: "spec", label: "Spec", icon: <GitBranch size={13} /> },
             { key: "history", label: "Version History", icon: <History size={13} /> },
           ].map((tab) => (
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key as "spec" | "history")}
               className={cn(
-                "flex items-center gap-1.5 px-4 py-2.5 text-xs font-medium border-b-2 -mb-px transition-colors",
+                "-mb-px flex items-center gap-1.5 border-b-2 px-4 py-2.5 text-xs font-medium transition-colors",
                 activeTab === tab.key
                   ? "border-indigo-600 text-indigo-600 dark:text-indigo-400"
-                  : "border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                  : "border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300",
               )}
             >
               {tab.icon}
@@ -375,28 +186,28 @@ export default function WorkflowDetail() {
           ))}
         </div>
 
-        {/* Content */}
         <div className="flex-1 overflow-hidden">
           {activeTab === "spec" ? (
             <div className="flex h-full">
-              {/* YAML Editor */}
-              <div className="flex-1 flex flex-col overflow-hidden">
-                {/* Editor toolbar */}
-                <div className="flex items-center justify-between px-4 py-2 bg-slate-800 dark:bg-slate-950 border-b border-slate-700 flex-shrink-0">
+              <div className="flex flex-1 flex-col overflow-hidden">
+                <div className="flex flex-shrink-0 items-center justify-between border-b border-slate-700 bg-slate-800 px-4 py-2 dark:bg-slate-950">
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-mono text-slate-400">workflow.yaml</span>
-                    <span className="text-[10px] px-1.5 py-0.5 bg-slate-700 rounded text-slate-300 font-mono">YAML</span>
+                    <span className="font-mono text-[10px] text-slate-400">workflow.spec.json</span>
+                    <span className="rounded bg-slate-700 px-1.5 py-0.5 font-mono text-[10px] text-slate-300">JSON</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <button
-                      className="text-[11px] text-slate-400 hover:text-slate-200 flex items-center gap-1 transition-colors"
+                      className="flex items-center gap-1 text-[11px] text-slate-400 transition-colors hover:text-slate-200"
                       onClick={() => navigator.clipboard?.writeText(editorValue)}
+                      aria-label="Copy workflow spec JSON"
                     >
                       <Copy size={11} />
                       Copy
                     </button>
                     <button
-                      className="text-[11px] text-slate-400 hover:text-slate-200 flex items-center gap-1 transition-colors"
+                      className="flex items-center gap-1 text-[11px] text-slate-400 transition-colors hover:text-slate-200"
+                      onClick={() => navigator.clipboard?.writeText(editorValue)}
+                      aria-label="Export workflow spec JSON"
                     >
                       <Download size={11} />
                       Export
@@ -404,61 +215,45 @@ export default function WorkflowDetail() {
                   </div>
                 </div>
 
-                {/* Line numbers + editor */}
-                <div className="flex flex-1 overflow-hidden bg-slate-900 dark:bg-slate-950 font-mono">
-                  {/* Line numbers */}
-                  <div
-                    className="select-none text-right pr-4 pl-4 pt-4 text-[12px] leading-[1.6] text-slate-600 border-r border-slate-700 flex-shrink-0 overflow-hidden"
-                    style={{ minWidth: "48px" }}
-                  >
-                    {editorValue.split("\n").map((_, i) => (
-                      <div key={i}>{i + 1}</div>
+                <div className="flex flex-1 overflow-hidden bg-slate-900 font-mono dark:bg-slate-950">
+                  <div className="min-w-12 flex-shrink-0 select-none overflow-hidden border-r border-slate-700 px-4 pt-4 text-right text-[12px] leading-[1.6] text-slate-600">
+                    {editorValue.split("\n").map((_, index) => (
+                      <div key={index}>{index + 1}</div>
                     ))}
                   </div>
-
-                  {/* Textarea */}
                   <textarea
                     value={editorValue}
-                    onChange={handleEditorChange}
+                    readOnly
                     spellCheck={false}
-                    className="flex-1 resize-none bg-transparent text-slate-200 text-[12px] leading-[1.6] px-4 pt-4 pb-4 focus:outline-none font-mono overflow-auto"
+                    aria-label="Workflow spec JSON"
+                    className="flex-1 resize-none overflow-auto bg-transparent px-4 pb-4 pt-4 font-mono text-[12px] leading-[1.6] text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     style={{ tabSize: 2 }}
                   />
                 </div>
               </div>
 
-              {/* Right panel: Schema hints + metadata */}
-              <div className="w-64 border-l border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 flex flex-col overflow-hidden flex-shrink-0">
-                {/* Workflow metadata */}
-                <div className="p-4 border-b border-slate-100 dark:border-slate-800">
-                  <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-3">Metadata</p>
+              <div className="flex w-72 flex-shrink-0 flex-col overflow-hidden border-l border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
+                <div className="border-b border-slate-100 p-4 dark:border-slate-800">
+                  <p className="mb-3 text-[10px] font-semibold uppercase tracking-wide text-slate-400">Metadata</p>
                   <div className="space-y-2">
-                    <div className="flex justify-between text-xs">
-                      <span className="text-slate-500">Author</span>
-                      <span className="text-slate-700 dark:text-slate-300">--</span>
-                    </div>
-                    <div className="flex justify-between text-xs">
-                      <span className="text-slate-500">Modified</span>
-                      <span className="text-slate-700 dark:text-slate-300">{workflow.updated_at ? formatRelativeTime(workflow.updated_at) : "--"}</span>
-                    </div>
-                    <div className="flex justify-between text-xs">
-                      <span className="text-slate-500">Nodes</span>
-                      <span className="text-slate-700 dark:text-slate-300">{nodeCount}</span>
-                    </div>
-                    <div className="flex justify-between text-xs">
-                      <span className="text-slate-500">Edges</span>
-                      <span className="text-slate-700 dark:text-slate-300">{edgeCount}</span>
-                    </div>
-                    <div className="flex justify-between text-xs">
-                      <span className="text-slate-500">Chain</span>
-                      <span className="text-slate-700 dark:text-slate-300">{validationTitle}</span>
-                    </div>
+                    {[
+                      ["Modified", workflow.updated_at ? formatRelativeTime(workflow.updated_at) : "--"],
+                      ["Nodes", String(nodeCount)],
+                      ["Edges", String(edgeCount)],
+                      ["Chain", validationTitle],
+                      ["Created", workflow.created_at ? formatRelativeTime(workflow.created_at) : "--"],
+                    ].map(([label, value]) => (
+                      <div key={label} className="flex justify-between gap-3 text-xs">
+                        <span className="text-slate-500">{label}</span>
+                        <span className="text-right text-slate-700 dark:text-slate-300">{value}</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
 
                 {(validation.errors.length > 0 || validation.warnings.length > 0) && (
-                  <div className="p-4 border-b border-slate-100 dark:border-slate-800">
-                    <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-3">Validation</p>
+                  <div className="border-b border-slate-100 p-4 dark:border-slate-800">
+                    <p className="mb-3 text-[10px] font-semibold uppercase tracking-wide text-slate-400">Validation</p>
                     <div className="space-y-2">
                       {validation.errors.map((message) => (
                         <p key={message} className="rounded bg-red-50 px-2 py-1 text-[11px] text-red-700 dark:bg-red-950/30 dark:text-red-300">
@@ -474,155 +269,92 @@ export default function WorkflowDetail() {
                   </div>
                 )}
 
-                {/* Schema reference */}
-                <div className="p-4 flex-1 overflow-y-auto">
-                  <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-3">Schema Reference</p>
+                <div className="flex-1 overflow-y-auto p-4">
+                  <p className="mb-3 text-[10px] font-semibold uppercase tracking-wide text-slate-400">Spec Contract</p>
                   <div className="space-y-3">
                     {[
-                      { key: "name", type: "string", required: true, desc: "Unique workflow identifier" },
-                      { key: "version", type: "semver", required: true, desc: "Semantic version" },
-                      { key: "description", type: "string", required: false, desc: "Human-readable description" },
-                      { key: "triggers", type: "list", required: true, desc: "schedule, manual, or webhook" },
-                      { key: "agents", type: "list", required: true, desc: "Ordered agent definitions" },
-                      { key: "outputs", type: "list", required: false, desc: "Output artifacts" },
-                      { key: "retry", type: "object", required: false, desc: "Retry configuration" },
-                    ].map((field) => (
-                      <div key={field.key} className="text-[11px] space-y-0.5">
-                        <div className="flex items-center gap-1.5">
-                          <code className="text-indigo-600 dark:text-indigo-400 font-mono">{field.key}</code>
-                          <span className="text-slate-400 font-mono">{field.type}</span>
-                          {field.required && (
-                            <span className="text-[9px] px-1 py-px bg-red-50 dark:bg-red-900/20 text-red-500 rounded">required</span>
-                          )}
-                        </div>
-                        <p className="text-slate-500 leading-relaxed">{field.desc}</p>
+                      ["name", "Workflow display name and version grouping key"],
+                      ["status", "draft, published, or archived"],
+                      ["spec", "Persisted workflow graph or step document from API"],
+                      ["validation_summary", "Backend chain validation status and messages"],
+                    ].map(([field, description]) => (
+                      <div key={field} className="space-y-0.5 text-[11px]">
+                        <code className="font-mono text-indigo-600 dark:text-indigo-400">{field}</code>
+                        <p className="leading-relaxed text-slate-500">{description}</p>
                       </div>
                     ))}
                   </div>
-                </div>
-
-                {/* Actions */}
-                <div className="p-4 border-t border-slate-100 dark:border-slate-800 space-y-2">
-                  <button className="w-full flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
-                    <Upload size={12} />
-                    Import from file
-                  </button>
-                  <button className="w-full flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
-                    <Download size={12} />
-                    Export as YAML
-                  </button>
                 </div>
               </div>
             </div>
           ) : (
-            /* Version History Panel */
             <div className="h-full overflow-y-auto bg-white dark:bg-slate-900">
-              <div className="max-w-2xl mx-auto p-6">
-                <h2 className="text-sm font-semibold text-slate-800 dark:text-slate-200 mb-1">Version History</h2>
-                <p className="text-xs text-slate-500 mb-6">All saved versions of this workflow spec.</p>
+              <div className="mx-auto max-w-2xl p-6">
+                <h2 className="mb-1 text-sm font-semibold text-slate-800 dark:text-slate-200">Version History</h2>
+                <p className="mb-6 text-xs text-slate-500">
+                  Real version records from the versioning API. Restore and diff remain disabled until the backend contract is complete.
+                </p>
 
-                <div className="relative">
-                  {/* Timeline line */}
-                  <div className="absolute left-[15px] top-4 bottom-4 w-px bg-slate-200 dark:bg-slate-700" />
-
-                  <div className="space-y-4">
-                    {VERSION_HISTORY.map((v) => (
-                      <div key={v.version} className="flex gap-4 items-start">
-                        {/* Timeline dot */}
-                        <div className={cn(
-                          "relative z-10 size-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5",
-                          v.isCurrent
-                            ? "bg-indigo-600 text-white"
-                            : "bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 text-slate-400"
-                        )}>
-                          {v.isCurrent ? <CheckCircle2 size={14} /> : <Clock size={12} />}
-                        </div>
-
-                        {/* Card */}
-                        <div className={cn(
-                          "flex-1 rounded-[8px] border p-4 transition-shadow",
-                          v.isCurrent
-                            ? "border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-900/10"
-                            : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:shadow-sm"
-                        )}>
-                          <div className="flex items-start justify-between mb-2">
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm font-semibold text-slate-900 dark:text-slate-50 font-mono">{v.version}</span>
-                              {v.isCurrent && (
-                                <span className="text-[10px] px-1.5 py-0.5 bg-indigo-600 text-white rounded font-medium">Current</span>
-                              )}
-                            </div>
-                            <div className="flex items-center gap-1">
-                              {!v.isCurrent && (
-                                <button
-                                  onClick={() => setShowRestoreConfirm(v.version)}
-                                  className="flex items-center gap-1 text-xs text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 px-2 py-1 rounded hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors"
-                                >
-                                  <RotateCcw size={11} />
-                                  Restore
-                                </button>
-                              )}
-                              <button
-                                className="flex items-center gap-1 text-xs text-slate-500 hover:text-slate-700 px-2 py-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                              >
-                                <Copy size={11} />
-                                Copy
-                              </button>
-                            </div>
-                          </div>
-                          <p className="text-xs text-slate-600 dark:text-slate-400 mb-3">
-                            {v.message}
-                          </p>
-                          <div className="flex items-center gap-2">
-                            <div className="size-[18px] rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-[9px] font-semibold text-slate-500">AI</div>
-                            <span className="text-xs text-slate-500">{v.authorName}</span>
-                            <span className="text-slate-300 dark:text-slate-600">·</span>
-                            <span className="text-xs text-slate-400">{formatRelativeTime(v.timestamp)}</span>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
+                {versions.length === 0 ? (
+                  <div className="rounded-[8px] border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                    No version history records yet. Current workflow spec v{workflow.version} is loaded from the workflow API.
                   </div>
-                </div>
+                ) : (
+                  <div className="relative">
+                    <div className="absolute bottom-4 left-[15px] top-4 w-px bg-slate-200 dark:bg-slate-700" />
+                    <div className="space-y-4">
+                      {versions.map((version) => (
+                        <div key={version.id} className="flex items-start gap-4">
+                          <div
+                            className={cn(
+                              "relative z-10 mt-0.5 flex size-8 flex-shrink-0 items-center justify-center rounded-full",
+                              version.version === workflow.version
+                                ? "bg-indigo-600 text-white"
+                                : "border-2 border-slate-200 bg-white text-slate-400 dark:border-slate-700 dark:bg-slate-800",
+                            )}
+                          >
+                            {version.version === workflow.version ? <CheckCircle2 size={14} /> : <Clock size={12} />}
+                          </div>
+                          <div
+                            className={cn(
+                              "flex-1 rounded-[8px] border p-4",
+                              version.version === workflow.version
+                                ? "border-indigo-200 bg-indigo-50 dark:border-indigo-800 dark:bg-indigo-900/10"
+                                : "border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900",
+                            )}
+                          >
+                            <div className="mb-2 flex items-start justify-between gap-3">
+                              <div className="flex items-center gap-2">
+                                <span className="font-mono text-sm font-semibold text-slate-900 dark:text-slate-50">v{version.version}</span>
+                                {version.version === workflow.version ? (
+                                  <span className="rounded bg-indigo-600 px-1.5 py-0.5 text-[10px] font-medium text-white">Current</span>
+                                ) : null}
+                              </div>
+                              <Button variant="ghost" size="xs" disabled title="Restore requires a version restore API.">
+                                Restore
+                              </Button>
+                            </div>
+                            <p className="mb-3 text-xs text-slate-600 dark:text-slate-400">
+                              {version.changelog || "No changelog recorded."}
+                            </p>
+                            <div className="flex items-center gap-2 text-xs text-slate-500">
+                              <span>{version.created_by || "unknown"}</span>
+                              <span className="text-slate-300 dark:text-slate-600">.</span>
+                              <span>{version.created_at ? formatRelativeTime(version.created_at) : "--"}</span>
+                              <span className="text-slate-300 dark:text-slate-600">.</span>
+                              <span>{version.status}</span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}
         </div>
       </div>
-
-      {/* Restore confirmation modal */}
-      {showRestoreConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowRestoreConfirm(null)} />
-          <div className="relative bg-white dark:bg-slate-900 rounded-[12px] shadow-xl w-full max-w-sm mx-4 p-6">
-            <button
-              onClick={() => setShowRestoreConfirm(null)}
-              className="absolute top-4 right-4 p-1 rounded text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800"
-            >
-              <X size={14} />
-            </button>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="size-9 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
-                <RotateCcw size={16} className="text-amber-600" />
-              </div>
-              <div>
-                <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-50">Restore version {showRestoreConfirm}?</h3>
-                <p className="text-xs text-slate-500">This will overwrite your current spec.</p>
-              </div>
-            </div>
-            <div className="flex gap-2 justify-end">
-              <Button variant="ghost" size="sm" onClick={() => setShowRestoreConfirm(null)}>Cancel</Button>
-              <Button variant="primary" size="sm" onClick={handleRestoreConfirmed}>
-                Restore
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
     </AppShell>
   );
 }
-
-
-
-

@@ -49,7 +49,7 @@ const DEPLOYMENT_STAGES = [
 
 const ACTIVITY_FEED = [
   { agent: "IaC Agent", tool: "terraform_apply", status: "success", time: "2h ago", input: '{ "workspace": "prod", "auto_approve": true }', output: "Apply complete! Resources: 3 added, 0 changed, 0 destroyed." },
-  { agent: "Containerization", tool: "docker_push", status: "success", time: "1h ago", input: '{ "tag": "v3.2.1", "registry": "123456789.ecr.us-east-1.amazonaws.com" }', output: "Digest: sha256:abc123def456..." },
+  { agent: "Containerization", tool: "docker_push", status: "success", time: "1h ago", input: '{ "tag": "v3.2.1", "registry": "123456789.ecr.us-east-1.amazonaws.com" }', output: "Digest: sha256:abc123def456…" },
   { agent: "CI/CD Agent", tool: "generate_workflow", status: "running", time: "5m ago", input: '{ "platform": "github", "branch": "main", "env": "production" }', output: "" },
   { agent: "IaC Agent", tool: "terraform_plan", status: "success", time: "2h 5m ago", input: '{ "workspace": "prod" }', output: "Plan: 3 to add, 0 to change, 0 to destroy." },
 ];
@@ -142,13 +142,15 @@ export default function CloudOps() {
                       </Badge>
                       <button
                         onClick={() => setExpandedStage(expandedStage === idx ? null : idx)}
+                        aria-expanded={expandedStage === idx}
+                        aria-controls={`deployment-stage-${idx}`}
                         className="mt-2 text-xs text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1"
                       >
                         View Logs {expandedStage === idx ? <ChevronDown size={11} /> : <ChevronRight size={11} />}
                       </button>
                     </div>
                     {expandedStage === idx && (
-                      <div className="mt-2 p-3 rounded-[6px] bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-xs space-y-2">
+                      <div id={`deployment-stage-${idx}`} className="mt-2 p-3 rounded-[6px] bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-xs space-y-2">
                         <div className="flex flex-wrap gap-1">
                           {stage.toolCalls.map((tc) => (
                             <code key={tc} className="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-700 rounded text-slate-600 dark:text-slate-300">{tc}</code>
@@ -183,6 +185,8 @@ export default function CloudOps() {
                 <div key={idx}>
                   <button
                     onClick={() => setExpandedActivity(expandedActivity === idx ? null : idx)}
+                    aria-expanded={expandedActivity === idx}
+                    aria-controls={`agent-activity-${idx}`}
                     className="w-full flex items-center gap-3 px-5 py-3 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors text-left"
                   >
                     <span className="text-[10px] px-1.5 py-0.5 rounded font-medium flex-shrink-0" style={{
@@ -202,7 +206,7 @@ export default function CloudOps() {
                     <span className="text-xs text-slate-400 flex-shrink-0">{item.time}</span>
                   </button>
                   {expandedActivity === idx && (
-                    <div className="px-5 pb-3 ml-3 space-y-2 text-xs">
+                    <div id={`agent-activity-${idx}`} className="px-5 pb-3 ml-3 space-y-2 text-xs">
                       <div>
                         <p className="text-slate-400 mb-1">Input</p>
                         <code className="block bg-slate-50 dark:bg-slate-800 px-2 py-1.5 rounded text-slate-600 dark:text-slate-300">{item.input}</code>
@@ -268,7 +272,7 @@ export default function CloudOps() {
       {/* New Deployment Modal */}
       {showNewDeployment && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowNewDeployment(false)} />
+          <button type="button" className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowNewDeployment(false)} aria-label="Close new deployment" />
           <div className="relative bg-white dark:bg-slate-900 rounded-[12px] shadow-xl w-full max-w-[560px] mx-4 overflow-hidden" role="dialog" aria-modal="true" aria-label="New Deployment">
             <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
               <h2 className="text-base font-semibold text-slate-900 dark:text-slate-50">Configure New Deployment</h2>
@@ -292,51 +296,51 @@ export default function CloudOps() {
               {wizardStep === 1 && (
                 <>
                   <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-slate-600 dark:text-slate-400">Cloud Provider</label>
-                    <select className="w-full h-9 px-3 text-sm rounded-[6px] border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <label htmlFor="cloud-provider" className="text-xs font-medium text-slate-600 dark:text-slate-400">Cloud Provider</label>
+                    <select id="cloud-provider" name="cloud_provider" className="w-full h-9 px-3 text-sm rounded-[6px] border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
                       <option>AWS</option>
                       <option>GCP</option>
                       <option>Azure</option>
                     </select>
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-slate-600 dark:text-slate-400">Resource Type</label>
-                    <select className="w-full h-9 px-3 text-sm rounded-[6px] border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <label htmlFor="resource-type" className="text-xs font-medium text-slate-600 dark:text-slate-400">Resource Type</label>
+                    <select id="resource-type" name="resource_type" className="w-full h-9 px-3 text-sm rounded-[6px] border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
                       <option>ECS Cluster</option>
                       <option>Lambda</option>
                       <option>EC2 Auto Scaling</option>
                     </select>
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-slate-600 dark:text-slate-400">Region</label>
-                    <input defaultValue="us-east-1" className="w-full h-9 px-3 text-sm rounded-[6px] border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                    <label htmlFor="deployment-region" className="text-xs font-medium text-slate-600 dark:text-slate-400">Region</label>
+                    <input id="deployment-region" name="deployment_region" autoComplete="off" defaultValue="us-east-1" className="w-full h-9 px-3 text-sm rounded-[6px] border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
                   </div>
                 </>
               )}
               {wizardStep === 2 && (
                 <>
                   <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-slate-600 dark:text-slate-400">Base Image</label>
-                    <input defaultValue="python:3.11-slim" className="w-full h-9 px-3 text-sm rounded-[6px] border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                    <label htmlFor="base-image" className="text-xs font-medium text-slate-600 dark:text-slate-400">Base Image</label>
+                    <input id="base-image" name="base_image" autoComplete="off" defaultValue="python:3.11-slim" className="w-full h-9 px-3 text-sm rounded-[6px] border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-slate-600 dark:text-slate-400">Registry URL</label>
-                    <input defaultValue="123456789.dkr.ecr.us-east-1.amazonaws.com" className="w-full h-9 px-3 text-sm rounded-[6px] border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                    <label htmlFor="registry-url" className="text-xs font-medium text-slate-600 dark:text-slate-400">Registry URL</label>
+                    <input id="registry-url" name="registry_url" type="url" autoComplete="off" defaultValue="123456789.dkr.ecr.us-east-1.amazonaws.com" className="w-full h-9 px-3 text-sm rounded-[6px] border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
                   </div>
                 </>
               )}
               {wizardStep === 3 && (
                 <>
                   <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-slate-600 dark:text-slate-400">Platform</label>
-                    <select className="w-full h-9 px-3 text-sm rounded-[6px] border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <label htmlFor="ci-platform" className="text-xs font-medium text-slate-600 dark:text-slate-400">Platform</label>
+                    <select id="ci-platform" name="ci_platform" className="w-full h-9 px-3 text-sm rounded-[6px] border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
                       <option>GitHub Actions</option>
                       <option>GitLab CI</option>
                     </select>
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-slate-600 dark:text-slate-400">Branch Trigger</label>
-                    <input defaultValue="main" className="w-full h-9 px-3 text-sm rounded-[6px] border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                    <label htmlFor="branch-trigger" className="text-xs font-medium text-slate-600 dark:text-slate-400">Branch Trigger</label>
+                    <input id="branch-trigger" name="branch_trigger" autoComplete="off" defaultValue="main" className="w-full h-9 px-3 text-sm rounded-[6px] border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
                   </div>
                 </>
               )}

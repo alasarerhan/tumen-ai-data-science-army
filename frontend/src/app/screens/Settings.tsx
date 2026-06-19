@@ -173,13 +173,16 @@ export default function Settings() {
                 </div>
                 <div className="space-y-4">
                   {[
-                    { label: "Full Name", value: fullName, setter: (v: string) => { setFullName(v); setUnsaved(true); } },
-                    { label: "Email", value: user?.email ?? "", disabled: true },
-                    { label: "Job Title", value: jobTitle, setter: (v: string) => { setJobTitle(v); setUnsaved(true); } },
+                    { id: "profile-full-name", name: "full_name", label: "Full Name", value: fullName, autoComplete: "name", setter: (v: string) => { setFullName(v); setUnsaved(true); } },
+                    { id: "profile-email", name: "email", label: "Email", value: user?.email ?? "", autoComplete: "email", disabled: true },
+                    { id: "profile-job-title", name: "job_title", label: "Job Title", value: jobTitle, autoComplete: "organization-title", setter: (v: string) => { setJobTitle(v); setUnsaved(true); } },
                   ].map((field) => (
                     <div key={field.label} className="space-y-1.5">
-                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">{field.label}</label>
+                      <label htmlFor={field.id} className="block text-sm font-medium text-slate-700 dark:text-slate-300">{field.label}</label>
                       <input
+                        id={field.id}
+                        name={field.name}
+                        autoComplete={field.autoComplete}
                         value={field.value}
                         disabled={field.disabled}
                         onChange={(e) => field.setter?.(e.target.value)}
@@ -201,13 +204,16 @@ export default function Settings() {
                 <SectionHeader title="Workspace" />
                 <div className="space-y-4">
                   {[
-                    { label: "Workspace Name", value: "ACME Analytics" },
-                    { label: "Slug", value: "acme-analytics", mono: true },
-                    { label: "Region", value: "us-east-1", disabled: true },
+                    { id: "workspace-name", name: "workspace_name", label: "Workspace Name", value: "ACME Analytics", autoComplete: "off" },
+                    { id: "workspace-slug", name: "workspace_slug", label: "Slug", value: "acme-analytics", autoComplete: "off", mono: true },
+                    { id: "workspace-region", name: "workspace_region", label: "Region", value: "us-east-1", autoComplete: "off", disabled: true },
                   ].map((field) => (
                     <div key={field.label} className="space-y-1.5">
-                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">{field.label}</label>
+                      <label htmlFor={field.id} className="block text-sm font-medium text-slate-700 dark:text-slate-300">{field.label}</label>
                       <input
+                        id={field.id}
+                        name={field.name}
+                        autoComplete={field.autoComplete}
                         defaultValue={field.value}
                         disabled={field.disabled}
                         className={cn(
@@ -252,7 +258,8 @@ export default function Settings() {
                           <td className="px-4 py-3">
                             <select
                               defaultValue="Admin"
-                              className="h-8 px-2 text-xs rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 focus:outline-none"
+                              name={`role_${shellUser.id}`}
+                              className="h-8 px-2 text-xs rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                               aria-label={`Role for ${shellUser.name}`}
                             >
                               <option>Admin</option>
@@ -269,8 +276,8 @@ export default function Settings() {
                 <div className="bg-slate-50 dark:bg-slate-800 rounded-[8px] p-4 space-y-3">
                   <p className="text-sm font-medium text-slate-700 dark:text-slate-300">Invite Member</p>
                   <div className="flex gap-2">
-                    <input type="email" autoComplete="off" spellCheck={false} placeholder="email@company.com" className="flex-1 h-9 px-3 text-sm rounded-[6px] border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-                    <select className="h-9 px-2 text-sm rounded-[6px] border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 focus:outline-none">
+                    <input type="email" name="invite_email" aria-label="Invite email" autoComplete="off" spellCheck={false} placeholder="email@company.com" className="flex-1 h-9 px-3 text-sm rounded-[6px] border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                    <select name="invite_role" aria-label="Invite role" className="h-9 px-2 text-sm rounded-[6px] border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
                       <option>Viewer</option>
                       <option>Editor</option>
                       <option>Admin</option>
@@ -323,12 +330,16 @@ export default function Settings() {
                     <p className="text-sm font-medium text-slate-800 dark:text-slate-200">New API Key</p>
                     <div className="flex gap-2">
                       <input
+                        id="api-key-name"
+                        name="api_key_name"
+                        autoComplete="off"
+                        aria-label="API key name"
                         value={newKeyName}
                         onChange={(e) => setNewKeyName(e.target.value)}
                         placeholder="Key name…"
                         className="flex-1 h-9 px-3 text-sm rounded-[6px] border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                       />
-                      <select className="h-9 px-2 text-sm rounded-[6px] border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 focus:outline-none">
+                      <select name="api_key_expiration" aria-label="API key expiration" className="h-9 px-2 text-sm rounded-[6px] border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
                         <option>Never</option>
                         <option>30 days</option>
                         <option>90 days</option>
@@ -447,12 +458,16 @@ export default function Settings() {
       {showDeleteModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
-          <div className="relative bg-white dark:bg-slate-900 rounded-[12px] shadow-xl w-full max-w-[448px] mx-4 p-6 space-y-4" role="dialog" aria-modal="true">
-            <h2 className="text-base font-semibold text-slate-900 dark:text-slate-50">Delete Workspace</h2>
+          <div className="relative bg-white dark:bg-slate-900 rounded-[12px] shadow-xl w-full max-w-[448px] mx-4 p-6 space-y-4" role="dialog" aria-modal="true" aria-labelledby="delete-workspace-title">
+            <h2 id="delete-workspace-title" className="text-base font-semibold text-slate-900 dark:text-slate-50">Delete Workspace</h2>
             <p className="text-sm text-slate-600 dark:text-slate-400">
               Type <strong className="font-mono text-slate-800 dark:text-slate-200">ACME Analytics</strong> to confirm:
             </p>
             <input
+              id="delete-workspace-confirm"
+              name="delete_workspace_confirm"
+              autoComplete="off"
+              aria-label="Delete workspace confirmation"
               value={deleteConfirm}
               onChange={(e) => setDeleteConfirm(e.target.value)}
               className="w-full h-9 px-3 text-sm rounded-[6px] border border-red-300 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-red-500"

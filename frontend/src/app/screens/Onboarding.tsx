@@ -76,7 +76,7 @@ export default function Onboarding() {
             <React.Fragment key={label}>
               <div className="flex flex-col items-center gap-1">
                 <div className={cn(
-                  "size-7 rounded-full text-xs font-semibold flex items-center justify-center transition-all",
+                  "size-7 rounded-full text-xs font-semibold flex items-center justify-center transition-colors",
                   isCompleted ? "bg-emerald-500 text-white" : isCurrent ? "bg-indigo-600 text-white ring-4 ring-indigo-100 dark:ring-indigo-900/50" : "bg-slate-200 dark:bg-slate-700 text-slate-500"
                 )}>
                   {isCompleted ? <CheckCircle2 size={14} /> : num}
@@ -103,8 +103,11 @@ export default function Onboarding() {
             </div>
             <div className="space-y-3">
               <div className="space-y-1.5">
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Workspace Name</label>
+                <label htmlFor="onboarding-workspace-name" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Workspace Name</label>
                 <input
+                  id="onboarding-workspace-name"
+                  name="workspace_name"
+                  autoComplete="organization"
                   value={workspaceName}
                   onChange={(e) => setWorkspaceName(e.target.value)}
                   className="w-full h-9 px-3 text-sm rounded-[6px] border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -112,15 +115,15 @@ export default function Onboarding() {
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Slug</label>
+                <p className="block text-sm font-medium text-slate-700 dark:text-slate-300">Slug</p>
                 <div className="flex items-center h-9 px-3 rounded-[6px] border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800">
                   <span className="text-slate-400 text-sm">insight.ai/</span>
                   <span className="text-sm font-mono text-slate-700 dark:text-slate-200">{slug || "your-workspace"}</span>
                 </div>
               </div>
               <div className="space-y-1.5">
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Region</label>
-                <select className="w-full h-9 px-3 text-sm rounded-[6px] border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <label htmlFor="onboarding-region" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Region</label>
+                <select id="onboarding-region" name="region" className="w-full h-9 px-3 text-sm rounded-[6px] border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
                   <option>us-east-1 (N. Virginia)</option>
                   <option>eu-west-1 (Ireland)</option>
                   <option>ap-southeast-1 (Singapore)</option>
@@ -148,7 +151,7 @@ export default function Onboarding() {
                 <button
                   key={type.label}
                   onClick={() => setStep(3)}
-                  className="w-full flex items-center gap-3 p-3 rounded-[8px] border border-slate-200 dark:border-slate-700 hover:border-indigo-400 dark:hover:border-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-all text-left"
+                  className="w-full flex items-center gap-3 p-3 rounded-[8px] border border-slate-200 dark:border-slate-700 hover:border-indigo-400 dark:hover:border-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors text-left"
                 >
                   <div className={cn("size-8 rounded-[6px] flex items-center justify-center text-sm", type.color)}>→</div>
                   <div>
@@ -172,27 +175,31 @@ export default function Onboarding() {
             </div>
             <div className="space-y-3">
               <div className="space-y-1.5">
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Email addresses</label>
+                <label htmlFor="onboarding-invite-email" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Email addresses</label>
                 <div className="min-h-[80px] p-2 rounded-[6px] border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 flex flex-wrap gap-1.5 items-start">
                   {emails.map((email) => (
                     <span key={email} className="flex items-center gap-1 px-2 py-0.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 rounded text-xs">
                       {email}
-                      <button onClick={() => setEmails(emails.filter((e) => e !== email))} className="text-indigo-400 hover:text-indigo-600">×</button>
+                      <button onClick={() => setEmails(emails.filter((e) => e !== email))} className="text-indigo-400 hover:text-indigo-600" aria-label={`Remove ${email}`}>×</button>
                     </span>
                   ))}
                   <input
                     type="email"
+                    id="onboarding-invite-email"
+                    name="invite_email"
+                    aria-label="Invite email"
+                    autoComplete="email"
                     value={emailInput}
                     onChange={(e) => setEmailInput(e.target.value)}
                     onKeyDown={(e) => { if (e.key === "Enter" || e.key === ",") { e.preventDefault(); addEmail(); } }}
                     placeholder="Add email and press Enter…"
-                    className="flex-1 min-w-[160px] text-sm bg-transparent text-slate-800 dark:text-slate-200 placeholder:text-slate-400 outline-none"
+                    className="flex-1 min-w-[160px] rounded-sm text-sm bg-transparent text-slate-800 dark:text-slate-200 placeholder:text-slate-400 outline-none focus:ring-2 focus:ring-indigo-500"
                   />
                 </div>
               </div>
               <div className="space-y-1.5">
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Role for all invitees</label>
-                <select className="w-full h-9 px-3 text-sm rounded-[6px] border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none">
+                <label htmlFor="onboarding-invite-role" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Role for all invitees</label>
+                <select id="onboarding-invite-role" name="invite_role" className="w-full h-9 px-3 text-sm rounded-[6px] border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
                   <option>Viewer</option>
                   <option>Editor</option>
                   <option>Admin</option>

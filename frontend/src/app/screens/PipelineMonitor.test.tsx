@@ -159,9 +159,10 @@ describe("PipelineMonitor", () => {
 
   it("shows loading state while fetching runs", async () => {
     vi.mocked(runsApi.getRuns).mockImplementation(() => new Promise(() => {}));
+    vi.mocked(workflowsApi.getWorkflows).mockImplementation(() => new Promise(() => {}));
     renderPipelineMonitor();
 
-    expect(screen.getByText("Loading...")).toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent("Loading");
   });
 
   it("shows error state when runs fetch fails", async () => {

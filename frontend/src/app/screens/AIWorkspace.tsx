@@ -9,6 +9,7 @@ import {
   type ChatMessageDto,
   type WorkflowDesignArtifact,
 } from "../api/chat";
+import { executeControlPlaneAction, type PlatformActionPlan } from "../api/controlPlane";
 import { triggerScheduledWorkflow } from "../api/scheduler";
 import { ChatMessage } from "../components/chat/ChatMessage";
 import { FileDropZone } from "../components/chat/FileDropZone";
@@ -261,6 +262,23 @@ export default function AIWorkspace() {
     setWorkspaceNotice("Workflow proposal dismissed.");
   };
 
+  const handlePlatformActionConfirm = async (actionPlan: PlatformActionPlan) => {
+    if (!workspaceId) return;
+    setSessionError(null);
+    setWorkspaceNotice(null);
+    try {
+      const result = await executeControlPlaneAction({
+        workspace_id: workspaceId,
+        action_name: actionPlan.action_name,
+        arguments: actionPlan.arguments,
+        confirmed: true,
+      });
+      setWorkspaceNotice(`${result.summary}${result.audit_id ? ` Audit: ${result.audit_id}` : ""}`);
+    } catch (err: unknown) {
+      setSessionError(err instanceof Error ? err.message : "Failed to execute platform action");
+    }
+  };
+
   return (
     <AppShell>
       <div className="grid h-full grid-cols-12 gap-0">
@@ -346,6 +364,7 @@ export default function AIWorkspace() {
                   onWorkflowApprove={handleWorkflowApprove}
                   onWorkflowModify={handleWorkflowModify}
                   onWorkflowCancel={handleWorkflowCancel}
+                  onPlatformActionConfirm={handlePlatformActionConfirm}
                 />
               ))}
             </AsyncState>
@@ -356,8 +375,9 @@ export default function AIWorkspace() {
               <textarea
                 value={prompt}
                 onChange={(event) => setPrompt(event.target.value)}
-                className="min-h-[72px] flex-1 resize-none rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
-                placeholder="Ask AI to analyze, forecast, or generate a report..."
+                aria-label="Chat prompt"
+                className="min-h-[72px] flex-1 resize-none rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                placeholder="Ask AI to analyze, forecast, or generate a report…"
               />
               <Button
                 variant="primary"

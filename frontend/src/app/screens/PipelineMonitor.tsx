@@ -293,7 +293,7 @@ export default function PipelineMonitor() {
                 </span>
                 {(logsStream.reconnectAttempts > 0 || signalsStream.reconnectAttempts > 0) && (
                   <span className="text-xs text-amber-600">
-                    Reconnecting... ({Math.max(logsStream.reconnectAttempts, signalsStream.reconnectAttempts)})
+                    Reconnecting… ({Math.max(logsStream.reconnectAttempts, signalsStream.reconnectAttempts)})
                   </span>
                 )}
               </div>
@@ -345,10 +345,13 @@ export default function PipelineMonitor() {
             <div className="space-y-4 p-4">
               <div className="space-y-2 rounded-md border border-slate-200 bg-slate-50 p-3">
                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Send Signal</p>
+                <label htmlFor="signal-type" className="sr-only">Signal type</label>
                 <select
+                  id="signal-type"
+                  name="signal_type"
                   value={signalType}
                   onChange={(event) => setSignalType(event.target.value as SignalDto["signal_type"])}
-                  className="h-8 w-full rounded border border-slate-300 px-2 text-sm"
+                  className="h-8 w-full rounded border border-slate-300 px-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 >
                   {SIGNAL_TYPES.map((type) => (
                     <option key={type} value={type}>
@@ -356,17 +359,23 @@ export default function PipelineMonitor() {
                     </option>
                   ))}
                 </select>
+                <label htmlFor="signal-target-step" className="sr-only">Target step</label>
                 <input
+                  id="signal-target-step"
+                  name="target_step"
                   value={targetStep}
                   onChange={(event) => setTargetStep(event.target.value)}
                   placeholder="Target step (optional)"
-                  className="h-8 w-full rounded border border-slate-300 px-2 text-sm"
+                  className="h-8 w-full rounded border border-slate-300 px-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
+                <label htmlFor="signal-note" className="sr-only">Signal note</label>
                 <textarea
+                  id="signal-note"
+                  name="signal_note"
                   value={note}
                   onChange={(event) => setNote(event.target.value)}
                   placeholder="Note or payload summary"
-                  className="min-h-20 w-full resize-none rounded border border-slate-300 px-2 py-1 text-sm"
+                  className="min-h-20 w-full resize-none rounded border border-slate-300 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
                 <Button
                   variant="primary"
@@ -378,7 +387,7 @@ export default function PipelineMonitor() {
                     void handleEmitSignal();
                   }}
                 >
-                  {submittingSignal ? "Sending..." : "Emit Signal"}
+                  {submittingSignal ? "Sending…" : "Emit Signal"}
                 </Button>
               </div>
 

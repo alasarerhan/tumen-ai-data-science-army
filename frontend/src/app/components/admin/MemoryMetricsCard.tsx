@@ -69,7 +69,7 @@ export function MemoryMetricsCard({ stats, loading, className }: MemoryMetricsCa
             <div className="mt-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
               <div
                 className={cn(
-                  "h-full rounded-full transition-all",
+                  "h-full rounded-full transition-[width,background-color]",
                   memoryHealth === "healthy" && "bg-emerald-500",
                   memoryHealth === "warning" && "bg-amber-500",
                   memoryHealth === "critical" && "bg-red-500",

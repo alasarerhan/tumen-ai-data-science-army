@@ -622,8 +622,9 @@ export default function WorkflowDesigner() {
                 <input
                   value={catalogSearch}
                   onChange={(event) => setCatalogSearch(event.target.value)}
+                  aria-label="Search node catalog"
                   placeholder="Search nodes"
-                  className="min-w-0 flex-1 text-xs outline-none"
+                  className="min-w-0 flex-1 rounded-sm text-xs outline-none focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
             </div>
@@ -677,18 +678,23 @@ export default function WorkflowDesigner() {
                 <CheckCircle2 size={12} /> {specError || yamlError ? "Invalid" : "Valid"}
               </span>
             </div>
-            <label className="text-xs font-medium text-slate-600">Workflow name</label>
+            <label htmlFor="workflow-designer-name" className="text-xs font-medium text-slate-600">Workflow name</label>
             <input
+              id="workflow-designer-name"
+              name="workflow_name"
+              autoComplete="off"
               value={flowName}
               onChange={(event) => setFlowName(event.target.value)}
-              className="h-8 w-full rounded border border-slate-300 px-2 text-sm"
+              className="h-8 w-full rounded border border-slate-300 px-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
-            <label className="text-xs font-medium text-slate-600">Description</label>
+            <label htmlFor="workflow-designer-description" className="text-xs font-medium text-slate-600">Description</label>
             <textarea
+              id="workflow-designer-description"
+              name="workflow_description"
               value={description}
               onChange={(event) => setDescription(event.target.value)}
               rows={2}
-              className="w-full resize-none rounded border border-slate-300 px-2 py-1 text-sm"
+              className="w-full resize-none rounded border border-slate-300 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
           </div>
 

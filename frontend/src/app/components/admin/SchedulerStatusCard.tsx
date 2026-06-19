@@ -60,7 +60,7 @@ export function SchedulerStatusCard({ status, loading, className }: SchedulerSta
             {status.restricted
               ? "Tenant admins can view queue health, but scheduler leadership remains platform-scoped."
               : status.is_leader
-              ? `Leading: ${status.leader_id?.slice(0, 12)}...`
+              ? `Leading: ${status.leader_id?.slice(0, 12)}…`
               : "Waiting for leadership"}
           </span>
         </div>

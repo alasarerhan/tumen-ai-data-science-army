@@ -175,11 +175,13 @@ export default function HITLApproval() {
 
             {/* Modification input */}
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+              <label htmlFor="approval-modification" className="text-sm font-medium text-slate-700 dark:text-slate-300">
                 Request Changes <span className="text-slate-400 font-normal">(optional)</span>
               </label>
               <div className="relative">
                 <textarea
+                  id="approval-modification"
+                  name="approval_modification"
                   rows={3}
                   value={modification}
                   onChange={(e) => setModification(e.target.value.slice(0, 500))}

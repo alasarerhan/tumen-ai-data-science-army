@@ -89,7 +89,7 @@ export function DlqTable({ events, loading, error, onRefresh, onReplay }: DlqTab
                     <code className="rounded bg-slate-100 px-1 text-xs">{event.event_type}</code>
                   </td>
                   <td className="px-4 py-2 text-xs text-slate-600">
-                    {event.aggregate_type}/{event.aggregate_id.slice(0, 8)}...
+                    {event.aggregate_type}/{event.aggregate_id.slice(0, 8)}…
                   </td>
                   <td className="px-4 py-2">
                     <div className="flex items-center gap-1 text-xs text-red-600 max-w-[200px] truncate">

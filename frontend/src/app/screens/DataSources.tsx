@@ -300,7 +300,7 @@ export default function DataSources() {
         ) : null}
 
         <div className="overflow-hidden rounded-[8px] border border-slate-200 bg-white shadow-sm divide-y divide-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:divide-slate-800">
-          {loadingDs ? <p className="py-12 text-center text-sm text-slate-400">Loading data sources...</p> : null}
+          {loadingDs ? <p className="py-12 text-center text-sm text-slate-400" role="status" aria-live="polite" aria-busy="true">Loading data sources…</p> : null}
           {!loadingDs && dataSources.length === 0 ? (
             <p className="py-12 text-center text-sm text-slate-400">No data sources connected yet.</p>
           ) : null}
@@ -381,7 +381,7 @@ export default function DataSources() {
 
       {showModal ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={resetWizard} />
+          <button type="button" className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={resetWizard} aria-label="Close add data source" />
           <div className="relative mx-4 w-full max-w-[560px] rounded-[12px] bg-white shadow-xl dark:bg-slate-900" role="dialog" aria-modal="true" aria-label="Add Data Source">
             <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4 dark:border-slate-700">
               <h2 className="text-base font-semibold text-slate-900 dark:text-slate-50">Add Data Source</h2>
@@ -399,7 +399,7 @@ export default function DataSources() {
                       key={type.id}
                       onClick={() => setSelectedType(type.id)}
                       className={cn(
-                        "w-full rounded-[8px] border-2 p-4 text-left transition-all flex items-start gap-4",
+                        "w-full rounded-[8px] border-2 p-4 text-left transition-colors flex items-start gap-4",
                         selectedType === type.id
                           ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20"
                           : "border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600",
@@ -423,8 +423,11 @@ export default function DataSources() {
               {wizardStep === 2 && selectedType ? (
                 <div className="space-y-4">
                   <div className="space-y-1.5">
-                    <label className="block text-xs font-medium text-slate-600 dark:text-slate-400">Display Name</label>
+                    <label htmlFor="data-source-display-name" className="block text-xs font-medium text-slate-600 dark:text-slate-400">Display Name</label>
                     <input
+                      id="data-source-display-name"
+                      name="data_source_display_name"
+                      autoComplete="off"
                       className="h-9 w-full rounded-[6px] border border-slate-200 bg-white px-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                       placeholder="My Data Source"
                       value={formName}
@@ -435,9 +438,11 @@ export default function DataSources() {
                     <div className="space-y-3">
                       <p className="text-xs font-medium text-slate-600 dark:text-slate-400">{stepTitle}</p>
                       <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_96px]">
-                        <label className="space-y-1.5">
-                          <span className="block text-xs font-medium text-slate-600 dark:text-slate-400">Host</span>
+                        <div className="space-y-1.5">
+                          <label htmlFor="sql-server-host" className="block text-xs font-medium text-slate-600 dark:text-slate-400">Host</label>
                           <input
+                            id="sql-server-host"
+                            name="sql_server_host"
                             autoComplete="off"
                             spellCheck={false}
                             className="h-9 w-full rounded-[6px] border border-slate-200 bg-white px-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
@@ -445,20 +450,25 @@ export default function DataSources() {
                             value={sqlServerForm.host}
                             onChange={(e) => setSqlServerForm((value) => ({ ...value, host: e.target.value }))}
                           />
-                        </label>
-                        <label className="space-y-1.5">
-                          <span className="block text-xs font-medium text-slate-600 dark:text-slate-400">Port</span>
+                        </div>
+                        <div className="space-y-1.5">
+                          <label htmlFor="sql-server-port" className="block text-xs font-medium text-slate-600 dark:text-slate-400">Port</label>
                           <input
+                            id="sql-server-port"
+                            name="sql_server_port"
+                            type="number"
                             inputMode="numeric"
                             className="h-9 w-full rounded-[6px] border border-slate-200 bg-white px-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                             value={sqlServerForm.port}
                             onChange={(e) => setSqlServerForm((value) => ({ ...value, port: e.target.value }))}
                           />
-                        </label>
+                        </div>
                       </div>
-                      <label className="space-y-1.5">
-                        <span className="block text-xs font-medium text-slate-600 dark:text-slate-400">Database</span>
+                      <div className="space-y-1.5">
+                        <label htmlFor="sql-server-database" className="block text-xs font-medium text-slate-600 dark:text-slate-400">Database</label>
                         <input
+                          id="sql-server-database"
+                          name="sql_server_database"
                           autoComplete="off"
                           spellCheck={false}
                           className="h-9 w-full rounded-[6px] border border-slate-200 bg-white px-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
@@ -466,32 +476,38 @@ export default function DataSources() {
                           value={sqlServerForm.database}
                           onChange={(e) => setSqlServerForm((value) => ({ ...value, database: e.target.value }))}
                         />
-                      </label>
+                      </div>
                       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                        <label className="space-y-1.5">
-                          <span className="block text-xs font-medium text-slate-600 dark:text-slate-400">Username</span>
+                        <div className="space-y-1.5">
+                          <label htmlFor="sql-server-username" className="block text-xs font-medium text-slate-600 dark:text-slate-400">Username</label>
                           <input
+                            id="sql-server-username"
+                            name="sql_server_username"
                             autoComplete="username"
                             spellCheck={false}
                             className="h-9 w-full rounded-[6px] border border-slate-200 bg-white px-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                             value={sqlServerForm.username}
                             onChange={(e) => setSqlServerForm((value) => ({ ...value, username: e.target.value }))}
                           />
-                        </label>
-                        <label className="space-y-1.5">
-                          <span className="block text-xs font-medium text-slate-600 dark:text-slate-400">Password</span>
+                        </div>
+                        <div className="space-y-1.5">
+                          <label htmlFor="sql-server-password" className="block text-xs font-medium text-slate-600 dark:text-slate-400">Password</label>
                           <input
+                            id="sql-server-password"
+                            name="sql_server_password"
                             type="password"
                             autoComplete="current-password"
                             className="h-9 w-full rounded-[6px] border border-slate-200 bg-white px-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                             value={sqlServerForm.password}
                             onChange={(e) => setSqlServerForm((value) => ({ ...value, password: e.target.value }))}
                           />
-                        </label>
+                        </div>
                       </div>
-                      <label className="space-y-1.5">
-                        <span className="block text-xs font-medium text-slate-600 dark:text-slate-400">Driver</span>
+                      <div className="space-y-1.5">
+                        <label htmlFor="sql-server-driver" className="block text-xs font-medium text-slate-600 dark:text-slate-400">Driver</label>
                         <select
+                          id="sql-server-driver"
+                          name="sql_server_driver"
                           className="h-9 w-full rounded-[6px] border border-slate-200 bg-white px-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                           value={sqlServerForm.driver}
                           onChange={(e) => setSqlServerForm((value) => ({ ...value, driver: e.target.value }))}
@@ -499,18 +515,22 @@ export default function DataSources() {
                           <option value="pymssql">pymssql</option>
                           <option value="pyodbc">ODBC Driver</option>
                         </select>
-                      </label>
+                      </div>
                       <div className="flex flex-wrap gap-4 rounded-[6px] bg-slate-50 p-3 dark:bg-slate-800">
-                        <label className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
+                        <label htmlFor="sql-server-encrypt" className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
                           <input
+                            id="sql-server-encrypt"
+                            name="sql_server_encrypt"
                             type="checkbox"
                             checked={sqlServerForm.encrypt}
                             onChange={(e) => setSqlServerForm((value) => ({ ...value, encrypt: e.target.checked }))}
                           />
                           Encrypt connection
                         </label>
-                        <label className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
+                        <label htmlFor="sql-server-trust-server-certificate" className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
                           <input
+                            id="sql-server-trust-server-certificate"
+                            name="sql_server_trust_server_certificate"
                             type="checkbox"
                             checked={sqlServerForm.trustServerCertificate}
                             onChange={(e) => setSqlServerForm((value) => ({ ...value, trustServerCertificate: e.target.checked }))}
@@ -524,8 +544,10 @@ export default function DataSources() {
                     </div>
                   ) : (
                     <div className="space-y-1.5">
-                      <label className="block text-xs font-medium text-slate-600 dark:text-slate-400">{stepTitle}</label>
+                      <label htmlFor="data-source-uri" className="block text-xs font-medium text-slate-600 dark:text-slate-400">{stepTitle}</label>
                       <input
+                        id="data-source-uri"
+                        name="data_source_uri"
                         type={selectedType === "sql" ? "password" : "text"}
                         autoComplete="off"
                         spellCheck={false}

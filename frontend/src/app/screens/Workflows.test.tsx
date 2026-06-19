@@ -128,7 +128,7 @@ describe("Workflows", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /new workflow/i }));
 
-    expect(mockNavigate).toHaveBeenCalledWith("/workflows/new/designer");
+    expect(mockNavigate).toHaveBeenCalledWith("/workflows/new");
   });
 
   it("should filter workflows by search", async () => {

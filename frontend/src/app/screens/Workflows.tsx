@@ -95,7 +95,7 @@ export default function Workflows() {
               Build, publish, and manage your agent pipelines.
             </p>
           </div>
-          <Button variant="primary" size="md" leadingIcon={<Plus size={14} />} onClick={() => navigate("/workflows/new/designer")}>
+          <Button variant="primary" size="md" leadingIcon={<Plus size={14} />} onClick={() => navigate("/workflows/new")}>
             New Workflow
           </Button>
         </div>
@@ -104,7 +104,8 @@ export default function Workflows() {
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
             type="text"
-            placeholder="Search workflows..."
+            aria-label="Search workflows"
+            placeholder="Search workflows…"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             className="h-9 w-full rounded-[6px] border border-slate-200 bg-white pl-8 pr-3 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
@@ -152,9 +153,12 @@ export default function Workflows() {
                         {schedule && (
                           <ScheduleStatusBadge hasSchedule={!!schedule} enabled={schedule.enabled} />
                         )}
-                        <div className="relative" onClick={(event) => event.stopPropagation()}>
+                        <div className="relative">
                           <button
-                            onClick={() => setOpenMenu(openMenu === wf.id ? null : wf.id)}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              setOpenMenu(openMenu === wf.id ? null : wf.id);
+                            }}
                             className="rounded p-1 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
                             aria-label="Workflow actions"
                           >
@@ -176,7 +180,8 @@ export default function Workflows() {
                               ].map((item) => (
                                 <button
                                   key={item.label}
-                                  onClick={() => {
+                                  onClick={(event) => {
+                                    event.stopPropagation();
                                     setOpenMenu(null);
                                     item.action?.();
                                   }}

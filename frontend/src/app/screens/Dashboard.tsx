@@ -114,25 +114,25 @@ export default function Dashboard() {
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
           <StatCard
             label="Active Runs"
-            value={loadingRuns ? "..." : activeRunsCount}
+            value={loadingRuns ? "…" : activeRunsCount}
             icon={<Play size={16} className="text-indigo-600" />}
             iconColor="bg-indigo-50 dark:bg-indigo-900/30"
           />
           <StatCard
             label="Workflows"
-            value={workflowsQuery.isLoading ? "..." : workflows.length}
+            value={workflowsQuery.isLoading ? "…" : workflows.length}
             icon={<GitBranch size={16} className="text-violet-600" />}
             iconColor="bg-violet-50 dark:bg-violet-900/30"
           />
           <StatCard
             label="Agents"
-            value={agentsQuery.isLoading ? "..." : agents.length}
+            value={agentsQuery.isLoading ? "…" : agents.length}
             icon={<Bot size={16} className="text-emerald-600" />}
             iconColor="bg-emerald-50 dark:bg-emerald-900/30"
           />
           <StatCard
             label="Data Sources"
-            value={dataSourcesQuery.isLoading ? "..." : dataSources.length}
+            value={dataSourcesQuery.isLoading ? "…" : dataSources.length}
             delta={!dataSourcesQuery.isLoading && dataSources.length > 0 ? `${dataSources.length} connected` : undefined}
             icon={<Database size={16} className="text-sky-600" />}
             iconColor="bg-sky-50 dark:bg-sky-900/30"

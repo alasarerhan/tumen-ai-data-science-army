@@ -1,4 +1,4 @@
-import { apiGet, apiPost, qs } from "./client";
+import { apiGet, qs } from "./client";
 
 export interface Artifact {
   id: string;
@@ -7,6 +7,10 @@ export interface Artifact {
   workflow_run_id: string | null;
   kind: string;
   uri: string;
+  artifact_type?: string;
+  storage_uri?: string;
+  produced_by_node_id: string | null;
+  parent_artifact_ids: string[];
   created_at: string | null;
 }
 
@@ -24,14 +28,9 @@ export const getArtifacts = (params: {
   workspace_id: string;
   workflow_run_id?: string;
   kind?: string;
+  cursor?: string;
+  limit?: number;
 }) => apiGet<{ items: Artifact[] }>(`/v1/artifacts${qs(params)}`);
-
-export const registerArtifact = (body: {
-  workspace_id: string;
-  workflow_run_id?: string;
-  kind: string;
-  uri: string;
-}) => apiPost<Artifact>("/v1/artifacts", body);
 
 export const getArtifactAccess = (artifact_id: string, workspace_id: string) =>
   apiGet<ArtifactAccess>(`/v1/artifacts/${artifact_id}/access${qs({ workspace_id })}`);

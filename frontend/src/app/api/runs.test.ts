@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { getRuns, getRun, triggerRun, cancelRun, retryRun } from "./runs";
+import { getRuns, getRun, getRunAgentTraces, getRunNodes, triggerRun, cancelRun, retryRun } from "./runs";
 import * as client from "./client";
 
 vi.mock("./client", () => ({
@@ -44,6 +44,30 @@ describe("runs API", () => {
       const result = await getRun("run-1", "ws-123");
 
       expect(client.apiGet).toHaveBeenCalledWith("/v1/runs/run-1?workspace_id=ws-123");
+      expect(result).toEqual(mockResponse);
+    });
+  });
+
+  describe("getRunAgentTraces", () => {
+    it("calls GET /v1/runs/:id/agent-traces with workspace_id", async () => {
+      const mockResponse = { items: [] };
+      vi.mocked(client.apiGet).mockResolvedValue(mockResponse);
+
+      const result = await getRunAgentTraces("run-1", "ws-123");
+
+      expect(client.apiGet).toHaveBeenCalledWith("/v1/runs/run-1/agent-traces?workspace_id=ws-123");
+      expect(result).toEqual(mockResponse);
+    });
+  });
+
+  describe("getRunNodes", () => {
+    it("calls GET /v1/runs/:id/nodes with workspace_id", async () => {
+      const mockResponse = { items: [] };
+      vi.mocked(client.apiGet).mockResolvedValue(mockResponse);
+
+      const result = await getRunNodes("run-1", "ws-123");
+
+      expect(client.apiGet).toHaveBeenCalledWith("/v1/runs/run-1/nodes?workspace_id=ws-123");
       expect(result).toEqual(mockResponse);
     });
   });

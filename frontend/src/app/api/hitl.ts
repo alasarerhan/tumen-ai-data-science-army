@@ -15,9 +15,6 @@ export interface HitlApproval {
   updated_at: string | null;
 }
 
-export const getHitlItems = (params: { workspace_id: string; status?: string }) =>
-  apiGet<{ items: HitlApproval[] }>(`/v1/hitl${qs(params)}`);
-
 export const getHitlItem = (id: string, workspace_id: string) =>
   apiGet<HitlApproval>(`/v1/hitl/${id}${qs({ workspace_id })}`);
 

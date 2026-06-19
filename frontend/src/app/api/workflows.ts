@@ -21,6 +21,18 @@ export interface WorkflowSpec {
   updated_at: string | null;
 }
 
+export interface WorkflowVersionEntry {
+  id: string;
+  workflow_id: string;
+  version: number;
+  spec: Record<string, unknown>;
+  changelog: string | null;
+  status: string;
+  created_at: string | null;
+  published_at: string | null;
+  created_by: string | null;
+}
+
 export const getWorkflows = (params: {
   workspace_id: string;
   name?: string;
@@ -45,5 +57,10 @@ export const publishWorkflow = (id: string, workspace_id: string) =>
 export const archiveWorkflow = (id: string, workspace_id: string) =>
   apiPost<{ id: string; name: string; version: number; status: string }>(
     `/v1/workflows/${id}/archive${qs({ workspace_id })}`,
+  );
+
+export const getWorkflowVersions = (id: string, workspace_id: string, limit = 10) =>
+  apiGet<{ versions: WorkflowVersionEntry[] }>(
+    `/v1/versioning/workflows/${id}/versions${qs({ workspace_id, limit })}`,
   );
 

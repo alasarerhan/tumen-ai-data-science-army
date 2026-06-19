@@ -5,6 +5,7 @@ import {
   createWorkflow,
   publishWorkflow,
   archiveWorkflow,
+  getWorkflowVersions,
 } from "./workflows";
 import * as client from "./client";
 
@@ -156,6 +157,20 @@ describe("workflows API", () => {
 
       expect(client.apiPost).toHaveBeenCalledWith(
         "/v1/workflows/wf-123/archive?workspace_id=ws-123",
+      );
+      expect(result).toEqual(mockResponse);
+    });
+  });
+
+  describe("getWorkflowVersions", () => {
+    it("calls GET /v1/versioning/workflows/:id/versions", async () => {
+      const mockResponse = { versions: [] };
+      vi.mocked(client.apiGet).mockResolvedValue(mockResponse);
+
+      const result = await getWorkflowVersions("wf-123", "ws-123");
+
+      expect(client.apiGet).toHaveBeenCalledWith(
+        "/v1/versioning/workflows/wf-123/versions?workspace_id=ws-123&limit=10",
       );
       expect(result).toEqual(mockResponse);
     });

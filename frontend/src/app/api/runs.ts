@@ -61,11 +61,35 @@ export interface WorkflowNodeExecution {
 export const getRunNodes = (run_id: string, workspace_id: string) =>
   apiGet<{ items: WorkflowNodeExecution[] }>(`/v1/runs/${run_id}/nodes${qs({ workspace_id })}`);
 
-export const retryRunNode = (run_id: string, node_id: string, workspace_id: string) =>
-  apiPost<WorkflowNodeExecution>(`/v1/runs/${run_id}/nodes/${node_id}/retry`, { workspace_id });
+export interface AgentExecutionTrace {
+  id: string;
+  tenant_id: string;
+  workspace_id: string;
+  workflow_run_id: string;
+  workflow_node_execution_id: string;
+  node_id: string;
+  node_type: string;
+  attempt: number;
+  executor_kind: string;
+  status: "running" | "succeeded" | "failed" | "waiting_approval" | string;
+  input_summary: Record<string, unknown>;
+  output_summary: Record<string, unknown>;
+  tool_calls: Array<Record<string, unknown>>;
+  artifact_ids: string[];
+  token_usage: Record<string, unknown>;
+  cost_summary: Record<string, unknown>;
+  evaluation_summary: Record<string, unknown>;
+  version_metadata: Record<string, unknown>;
+  error_summary: string | null;
+  started_at: string | null;
+  finished_at: string | null;
+  duration_ms: number | null;
+  created_at: string | null;
+  updated_at: string | null;
+}
 
-export const resumeRun = (run_id: string, workspace_id: string) =>
-  apiPost<{ resumed_nodes: WorkflowNodeExecution[] }>(`/v1/runs/${run_id}/resume`, { workspace_id });
+export const getRunAgentTraces = (run_id: string, workspace_id: string) =>
+  apiGet<{ items: AgentExecutionTrace[] }>(`/v1/runs/${run_id}/agent-traces${qs({ workspace_id })}`);
 
 export const cancelRun = (run_id: string, workspace_id: string) =>
   apiPost<Run>(`/v1/runs/${run_id}/cancel`, { workspace_id });

@@ -25,6 +25,36 @@ vi.mock("../hooks/useRuns", () => ({
     error: null,
     refetch: vi.fn(),
   }),
+  useRunNodesForRuns: vi.fn().mockReturnValue([
+    {
+      data: {
+        items: [
+          {
+            id: "node-exec-1",
+            tenant_id: "tenant-1",
+            workspace_id: "test-workspace",
+            workflow_run_id: "run-1",
+            node_id: "train",
+            node_type: "model.train",
+            status: "succeeded",
+            inputs: {},
+            outputs: {},
+            logs: [],
+            error: null,
+            retry_count: 1,
+            produced_artifact_ids: ["artifact-1", "artifact-2"],
+            started_at: "2026-06-04T10:00:00Z",
+            finished_at: "2026-06-04T10:05:00Z",
+            created_at: "2026-06-04T10:00:00Z",
+            updated_at: "2026-06-04T10:05:00Z",
+          },
+        ],
+      },
+      isLoading: false,
+      isFetching: false,
+      error: null,
+    },
+  ]),
   useTriggerRun: vi.fn().mockReturnValue({ mutateAsync: vi.fn().mockResolvedValue({}) }),
   useRetryRun: vi.fn().mockReturnValue({ mutateAsync: vi.fn().mockResolvedValue({}) }),
   useCancelRun: vi.fn().mockReturnValue({ mutateAsync: vi.fn().mockResolvedValue({}) }),
@@ -104,6 +134,16 @@ describe("RunsList", () => {
     await waitFor(() => {
       expect(screen.getByText("test-flow")).toBeInTheDocument();
       expect(screen.getByText("Advisory Chain")).toBeInTheDocument();
+    });
+  });
+
+  it("renders workflow run matrix with node execution details", async () => {
+    renderWithProviders();
+
+    await waitFor(() => {
+      expect(screen.getByText("Workflow Run Matrix")).toBeInTheDocument();
+      expect(screen.getByText("model.train")).toBeInTheDocument();
+      expect(screen.getByText("R1 / A2")).toBeInTheDocument();
     });
   });
 

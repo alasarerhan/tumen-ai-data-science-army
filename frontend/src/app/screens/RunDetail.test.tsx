@@ -59,6 +59,36 @@ vi.mock("../api/runs", () => ({
     finished_at: "2026-04-14T09:10:00Z",
   }),
   getRuns: vi.fn().mockResolvedValue({ items: [] }),
+  getRunAgentTraces: vi.fn().mockResolvedValue({
+    items: [
+      {
+        id: "trace-1",
+        tenant_id: "tenant-1",
+        workspace_id: "test-workspace",
+        workflow_run_id: "run-1",
+        workflow_node_execution_id: "node-exec-1",
+        node_id: "train",
+        node_type: "model.train",
+        attempt: 1,
+        executor_kind: "model.train",
+        status: "succeeded",
+        input_summary: { input_keys: ["config"], config_keys: ["target_column"] },
+        output_summary: { output_keys: ["model"], artifact_count: 1 },
+        tool_calls: [{ name: "h2o.train", arg_keys: ["target"] }],
+        artifact_ids: ["artifact-1"],
+        token_usage: { prompt_tokens: 120, completion_tokens: 40 },
+        cost_summary: { usd: 0.08 },
+        evaluation_summary: { auc: 0.91 },
+        version_metadata: { agent_version: "m22.1", model_family: "h2o" },
+        error_summary: null,
+        started_at: "2026-04-14T09:04:00Z",
+        finished_at: "2026-04-14T09:06:00Z",
+        duration_ms: 120000,
+        created_at: "2026-04-14T09:04:00Z",
+        updated_at: "2026-04-14T09:06:00Z",
+      },
+    ],
+  }),
   cancelRun: vi.fn().mockResolvedValue({}),
   retryRun: vi.fn().mockResolvedValue({}),
   buildPrefectRunUrl: vi.fn(() => "https://prefect.example/flow-runs/flow-run/prefect-run-1"),
@@ -152,6 +182,28 @@ describe("RunDetail", () => {
     await waitFor(() => {
       expect(screen.getByText("Artifacts")).toBeInTheDocument();
     });
+  });
+
+  it("renders safe agent traces", async () => {
+    renderWithProviders();
+
+    fireEvent.click(await screen.findByText("Agent Traces"));
+
+    await waitFor(() => {
+      expect(screen.getAllByText("model.train").length).toBeGreaterThan(0);
+    });
+    expect(screen.getAllByText("h2o.train (target)").length).toBeGreaterThan(0);
+    expect(screen.getByText("Token Usage")).toBeInTheDocument();
+    expect(screen.getByText("Cost Summary")).toBeInTheDocument();
+    expect(screen.getByText("Evaluation Summary")).toBeInTheDocument();
+    expect(screen.getByText("Version Metadata")).toBeInTheDocument();
+    expect(screen.getByText("Artifact Previews")).toBeInTheDocument();
+    expect(screen.getAllByText("artifact-1").length).toBeGreaterThan(0);
+    expect(screen.getByText("Trace Inspector")).toBeInTheDocument();
+    expect(screen.getByText("Executor")).toBeInTheDocument();
+    expect(screen.getByText("Input Summary")).toBeInTheDocument();
+    expect(screen.getByText("Output Summary")).toBeInTheDocument();
+    expect(screen.queryByText("do-not-store")).not.toBeInTheDocument();
   });
 
   it("should switch tabs on click", async () => {

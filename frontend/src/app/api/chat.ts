@@ -1,5 +1,6 @@
 import { BASE_URL, apiDelete, apiGet, apiPost, qs, withCsrfHeader } from "./client";
 import { readSseStream } from "./sse";
+import type { PlatformQueryResultArtifact } from "./controlPlane";
 
 export interface ChatSessionDto {
   id: string;
@@ -64,7 +65,13 @@ export interface WorkflowDesignArtifact {
   };
 }
 
-export type ArtifactDto = ChartArtifact | TableArtifact | CodeArtifact | ReportArtifact | WorkflowDesignArtifact;
+export type ArtifactDto =
+  | ChartArtifact
+  | TableArtifact
+  | CodeArtifact
+  | ReportArtifact
+  | WorkflowDesignArtifact
+  | PlatformQueryResultArtifact;
 
 export interface ChatMessageDto {
   id: string;

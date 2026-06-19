@@ -1,4 +1,4 @@
-import { apiDelete, apiGet, apiPost, apiPut, qs } from "./client";
+import { apiDelete, apiGet, apiPost, qs } from "./client";
 
 export interface DataSource {
   id: string;
@@ -22,17 +22,6 @@ export const createDataSource = (body: {
   connection_uri?: string;
   metadata?: Record<string, unknown>;
 }) => apiPost<DataSource>("/v1/data-sources", body);
-
-export const updateDataSource = (
-  id: string,
-  body: {
-    workspace_id: string;
-    name?: string;
-    kind?: string;
-    connection_uri?: string;
-    metadata?: Record<string, unknown>;
-  },
-) => apiPut<DataSource>(`/v1/data-sources/${id}`, body);
 
 export const deleteDataSource = (id: string, workspace_id: string) =>
   apiDelete(`/v1/data-sources/${id}${qs({ workspace_id })}`);

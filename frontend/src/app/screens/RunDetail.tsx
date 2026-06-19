@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router";
-import { ChevronLeft, Copy, Download, ExternalLink, FileText, RefreshCw, Terminal, XCircle } from "lucide-react";
+import { Activity, AlertTriangle, ChevronLeft, Copy, Download, ExternalLink, FileText, RefreshCw, Terminal, Wrench, XCircle } from "lucide-react";
 import { AppShell } from "../components/layout/AppShell";
 import { RunStatusBadge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
@@ -11,12 +11,12 @@ import { buildRunLogsStreamUrl } from "../api/logs";
 import { buildPrefectRunUrl } from "../api/runs";
 import { useEventSource } from "../hooks/useEventSource";
 import { useArtifactAccess, useRunArtifacts } from "../hooks/useArtifacts";
-import { useCancelRun, useRetryRun, useRun, useRuns } from "../hooks/useRuns";
+import { useCancelRun, useRetryRun, useRun, useRunAgentTraces, useRuns } from "../hooks/useRuns";
 import { useWorkflows } from "../hooks/useWorkflows";
 import { formatDuration, formatRelativeTime } from "../utils/time";
-import type { Run } from "../api/runs";
+import type { AgentExecutionTrace, Run } from "../api/runs";
 
-const TABS = ["Overview", "Logs", "Artifacts", "Strategy Report"] as const;
+const TABS = ["Overview", "Logs", "Artifacts", "Agent Traces", "Strategy Report"] as const;
 type Tab = (typeof TABS)[number];
 
 type LogEvent = {
@@ -52,6 +52,47 @@ function formatParameterLabel(key: string): string {
     .replace(/\s+/g, " ")
     .trim()
     .replace(/\b\w/g, (value) => value.toUpperCase());
+}
+
+function formatTraceDuration(value: number | null | undefined): string {
+  if (value === null || value === undefined) return "--";
+  if (value < 1000) return `${value} ms`;
+  return `${(value / 1000).toFixed(1)} s`;
+}
+
+function listSummaryKeys(value: unknown): string {
+  if (!value || typeof value !== "object") return "--";
+  const keys = Array.isArray(value) ? value : (value as Record<string, unknown>).output_keys ?? (value as Record<string, unknown>).input_keys ?? [];
+  if (!Array.isArray(keys) || keys.length === 0) return "--";
+  return keys.map(String).slice(0, 6).join(", ");
+}
+
+function summaryEntries(value: Record<string, unknown>): Array<{ key: string; value: string }> {
+  return Object.entries(value)
+    .slice(0, 8)
+    .map(([key, raw]) => ({
+      key: formatParameterLabel(key),
+      value: Array.isArray(raw) ? raw.map(String).join(", ") : typeof raw === "object" && raw !== null ? JSON.stringify(raw) : String(raw),
+    }));
+}
+
+function hasSummary(value: Record<string, unknown> | undefined): boolean {
+  return Boolean(value && Object.keys(value).length > 0);
+}
+
+function renderSummaryValue(raw: unknown): string {
+  if (Array.isArray(raw)) return raw.map(String).join(", ");
+  if (typeof raw === "object" && raw !== null) return JSON.stringify(raw);
+  if (raw === null || raw === undefined || raw === "") return "--";
+  return String(raw);
+}
+
+function toolLabel(tool: Record<string, unknown>): string {
+  const name = String(tool.name ?? "tool");
+  if (Array.isArray(tool.arg_keys) && tool.arg_keys.length > 0) {
+    return `${name} (${tool.arg_keys.map(String).join(", ")})`;
+  }
+  return name;
 }
 
 function buildStrategyReport(run: Run | null, artifacts: Artifact[]) {
@@ -139,10 +180,12 @@ export default function RunDetail() {
   const [activeTab, setActiveTab] = useState<Tab>("Overview");
   const [runError, setRunError] = useState<string | null>(null);
   const [artifactsError, setArtifactsError] = useState<string | null>(null);
+  const [selectedTraceId, setSelectedTraceId] = useState<string | null>(null);
   const runQuery = useRun(id, workspaceId);
   const runsQuery = useRuns(workspaceId);
   const workflowsQuery = useWorkflows(workspaceId);
   const artifactsQuery = useRunArtifacts(id, workspaceId, activeTab === "Artifacts" || activeTab === "Strategy Report");
+  const tracesQuery = useRunAgentTraces(id, workspaceId, activeTab === "Agent Traces");
   const cancelRunMutation = useCancelRun(workspaceId);
   const retryRunMutation = useRetryRun(workspaceId);
   const artifactAccessMutation = useArtifactAccess(workspaceId);
@@ -153,8 +196,10 @@ export default function RunDetail() {
     () => (runsQuery.data?.items ?? []).filter((item) => item.id !== id).slice(0, 5),
     [runsQuery.data, id],
   );
-  const artifacts = artifactsQuery.data?.items ?? [];
+  const artifacts = useMemo(() => artifactsQuery.data?.items ?? [], [artifactsQuery.data?.items]);
+  const traces = useMemo(() => tracesQuery.data?.items ?? [], [tracesQuery.data?.items]);
   const loadingArtifacts = artifactsQuery.isLoading;
+  const loadingTraces = tracesQuery.isLoading;
   const normalizedRunStatus = useMemo(() => normalizeRunStatus(run?.status), [run?.status]);
   const prefectRunUrl = useMemo(() => buildPrefectRunUrl(run?.prefect_flow_run_id), [run?.prefect_flow_run_id]);
   const sourceWorkflow = useMemo(() => {
@@ -166,6 +211,33 @@ export default function RunDetail() {
   }, [run?.flow_key, workflowsQuery.data?.items]);
   const workflowValidation = sourceWorkflow?.validation_summary ?? null;
   const strategyReport = useMemo(() => buildStrategyReport(run, artifacts), [artifacts, run]);
+  const traceStats = {
+    total: traces.length,
+    failures: traces.filter((trace) => normalizeRunStatus(trace.status) === "failed").length,
+    artifacts: traces.reduce((sum, trace) => sum + trace.artifact_ids.length, 0),
+    toolCalls: traces.reduce((sum, trace) => sum + trace.tool_calls.length, 0),
+    tracesWithTokenUsage: traces.filter((trace) => hasSummary(trace.token_usage)).length,
+    tracesWithCostSummary: traces.filter((trace) => hasSummary(trace.cost_summary)).length,
+    averageDurationMs:
+      traces.length > 0
+        ? Math.round(
+            traces.reduce((sum, trace) => sum + (typeof trace.duration_ms === "number" ? trace.duration_ms : 0), 0) /
+              traces.length,
+          )
+        : null,
+  };
+  const selectedTrace = useMemo<AgentExecutionTrace | null>(() => {
+    if (traces.length === 0) return null;
+    return traces.find((trace) => trace.id === selectedTraceId) ?? traces[0];
+  }, [selectedTraceId, traces]);
+  const selectedTraceArtifacts = useMemo(() => {
+    if (!selectedTrace) return [];
+    const byId = new Map(artifacts.map((artifact) => [artifact.id, artifact]));
+    return selectedTrace.artifact_ids.map((artifactId) => ({
+      artifactId,
+      artifact: byId.get(artifactId) ?? null,
+    }));
+  }, [artifacts, selectedTrace]);
 
   useEffect(() => {
     if (runQuery.error) {
@@ -204,6 +276,16 @@ export default function RunDetail() {
       logsStream.clear();
     }
   }, [activeTab, id, logsStream]);
+
+  useEffect(() => {
+    if (traces.length === 0) {
+      setSelectedTraceId(null);
+      return;
+    }
+    if (!selectedTraceId || !traces.some((trace) => trace.id === selectedTraceId)) {
+      setSelectedTraceId(traces[0].id);
+    }
+  }, [selectedTraceId, traces]);
 
   const visibleLogs = logsStream.events
     .map((event) => ({
@@ -506,6 +588,244 @@ export default function RunDetail() {
                           </div>
                         </div>
                       ))}
+                    </div>
+                  </AsyncState>
+                ) : null}
+
+                {activeTab === "Agent Traces" ? (
+                  <AsyncState
+                    isLoading={loadingTraces}
+                    error={tracesQuery.error instanceof Error ? tracesQuery.error.message : null}
+                    isEmpty={!loadingTraces && traces.length === 0}
+                    emptyTitle="No agent traces"
+                    emptyDescription="Agent traces are created when workflow nodes execute through the worker."
+                    onRetry={() => {
+                      void tracesQuery.refetch();
+                    }}
+                  >
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-4 gap-3">
+                        <div className="rounded-md border border-slate-200 bg-white p-3">
+                          <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-slate-400">
+                            <Activity size={13} /> Traces
+                          </div>
+                          <p className="mt-2 text-lg font-semibold text-slate-900">{traceStats.total}</p>
+                        </div>
+                        <div className="rounded-md border border-slate-200 bg-white p-3">
+                          <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-slate-400">
+                            <AlertTriangle size={13} /> Failures
+                          </div>
+                          <p className="mt-2 text-lg font-semibold text-slate-900">{traceStats.failures}</p>
+                        </div>
+                        <div className="rounded-md border border-slate-200 bg-white p-3">
+                          <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-slate-400">
+                            <Terminal size={13} /> Tool Calls
+                          </div>
+                          <p className="mt-2 text-lg font-semibold text-slate-900">{traceStats.toolCalls}</p>
+                        </div>
+                        <div className="rounded-md border border-slate-200 bg-white p-3">
+                          <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-slate-400">
+                            <Wrench size={13} /> Avg Duration
+                          </div>
+                          <p className="mt-2 text-lg font-semibold text-slate-900">
+                            {formatTraceDuration(traceStats.averageDurationMs)}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.35fr)_minmax(280px,0.85fr)]">
+                        <div className="overflow-hidden rounded-md border border-slate-200 bg-white">
+                          <div className="grid grid-cols-[1.2fr_1fr_0.7fr_0.8fr_0.8fr] border-b border-slate-200 bg-slate-50 px-3 py-2 text-xs font-medium uppercase tracking-wide text-slate-500">
+                            <span>Node</span>
+                            <span>Type</span>
+                            <span>Status</span>
+                            <span>Attempt</span>
+                            <span>Duration</span>
+                          </div>
+                          {traces.map((trace) => (
+                            <div
+                              key={trace.id}
+                              className={`border-b border-slate-100 px-3 py-3 last:border-b-0 ${
+                                selectedTrace?.id === trace.id ? "bg-indigo-50/50" : ""
+                              }`}
+                            >
+                              <button
+                                type="button"
+                                className="grid w-full grid-cols-[1.2fr_1fr_0.7fr_0.8fr_0.8fr] items-center gap-2 text-left text-sm"
+                                onClick={() => setSelectedTraceId(trace.id)}
+                              >
+                                <span className="truncate font-medium text-slate-800">{trace.node_id}</span>
+                                <span className="truncate text-slate-600">{trace.node_type}</span>
+                                <RunStatusBadge status={trace.status} />
+                                <span className="text-slate-600">{trace.attempt}</span>
+                                <span className="text-slate-600">{formatTraceDuration(trace.duration_ms)}</span>
+                              </button>
+                              <div className="mt-3 grid grid-cols-3 gap-3 text-xs text-slate-600">
+                                <div>
+                                  <p className="font-medium text-slate-500">Inputs</p>
+                                  <p className="mt-1 truncate">{listSummaryKeys(trace.input_summary)}</p>
+                                </div>
+                                <div>
+                                  <p className="font-medium text-slate-500">Outputs</p>
+                                  <p className="mt-1 truncate">{listSummaryKeys(trace.output_summary)}</p>
+                                </div>
+                                <div>
+                                  <p className="font-medium text-slate-500">Artifacts</p>
+                                  <p className="mt-1 truncate">{trace.artifact_ids.length ? trace.artifact_ids.join(", ") : "--"}</p>
+                                </div>
+                              </div>
+                              {trace.tool_calls.length > 0 ? (
+                                <div className="mt-3 rounded-md bg-slate-50 px-3 py-2 text-xs text-slate-600">
+                                  {trace.tool_calls.map((tool, index) => (
+                                    <p key={`${trace.id}-tool-${index}`}>{toolLabel(tool)}</p>
+                                  ))}
+                                </div>
+                              ) : null}
+                              {trace.error_summary ? (
+                                <p className="mt-3 rounded-md bg-red-50 px-3 py-2 text-xs text-red-700">{trace.error_summary}</p>
+                              ) : null}
+                            </div>
+                          ))}
+                        </div>
+
+                        {selectedTrace ? (
+                          <div className="rounded-md border border-slate-200 bg-white p-4">
+                            <div className="mb-3">
+                              <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Trace Inspector</p>
+                              <h3 className="mt-1 truncate text-sm font-semibold text-slate-900">{selectedTrace.node_id}</h3>
+                              <p className="mt-0.5 truncate text-xs text-slate-500">{selectedTrace.node_type}</p>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2 text-xs text-slate-600">
+                              <div className="rounded bg-slate-50 px-2 py-1.5">
+                                <p className="font-medium text-slate-500">Executor</p>
+                                <p className="mt-0.5 truncate">{selectedTrace.executor_kind}</p>
+                              </div>
+                              <div className="rounded bg-slate-50 px-2 py-1.5">
+                                <p className="font-medium text-slate-500">Attempt</p>
+                                <p className="mt-0.5">{selectedTrace.attempt}</p>
+                              </div>
+                              <div className="rounded bg-slate-50 px-2 py-1.5">
+                                <p className="font-medium text-slate-500">Started</p>
+                                <p className="mt-0.5 truncate">{formatDateTime(selectedTrace.started_at)}</p>
+                              </div>
+                              <div className="rounded bg-slate-50 px-2 py-1.5">
+                                <p className="font-medium text-slate-500">Finished</p>
+                                <p className="mt-0.5 truncate">{formatDateTime(selectedTrace.finished_at)}</p>
+                              </div>
+                            </div>
+
+                            <div className="mt-4 space-y-3">
+                              <div>
+                                <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Input Summary</p>
+                                <div className="mt-2 space-y-1 text-xs text-slate-600">
+                                  {summaryEntries(selectedTrace.input_summary).map((entry) => (
+                                    <p key={entry.key} className="truncate">
+                                      <span className="font-medium text-slate-500">{entry.key}:</span> {entry.value}
+                                    </p>
+                                  ))}
+                                </div>
+                              </div>
+                              <div>
+                                <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Output Summary</p>
+                                <div className="mt-2 space-y-1 text-xs text-slate-600">
+                                  {summaryEntries(selectedTrace.output_summary).map((entry) => (
+                                    <p key={entry.key} className="truncate">
+                                      <span className="font-medium text-slate-500">{entry.key}:</span> {entry.value}
+                                    </p>
+                                  ))}
+                                </div>
+                              </div>
+                              <div>
+                                <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Tool Calls</p>
+                                <div className="mt-2 space-y-1 text-xs text-slate-600">
+                                  {selectedTrace.tool_calls.length > 0
+                                    ? selectedTrace.tool_calls.map((tool, index) => (
+                                        <p key={`${selectedTrace.id}-inspector-tool-${index}`}>{toolLabel(tool)}</p>
+                                      ))
+                                    : <p>--</p>}
+                                </div>
+                              </div>
+                              <div>
+                                <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Version Metadata</p>
+                                <div className="mt-2 space-y-1 text-xs text-slate-600">
+                                  {hasSummary(selectedTrace.version_metadata)
+                                    ? summaryEntries(selectedTrace.version_metadata).map((entry) => (
+                                        <p key={entry.key} className="truncate">
+                                          <span className="font-medium text-slate-500">{entry.key}:</span> {renderSummaryValue(entry.value)}
+                                        </p>
+                                      ))
+                                    : <p>not captured</p>}
+                                </div>
+                              </div>
+                              <div>
+                                <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Token Usage</p>
+                                <div className="mt-2 space-y-1 text-xs text-slate-600">
+                                  {hasSummary(selectedTrace.token_usage)
+                                    ? summaryEntries(selectedTrace.token_usage).map((entry) => (
+                                        <p key={entry.key} className="truncate">
+                                          <span className="font-medium text-slate-500">{entry.key}:</span> {renderSummaryValue(entry.value)}
+                                        </p>
+                                      ))
+                                    : <p>not captured</p>}
+                                </div>
+                              </div>
+                              <div>
+                                <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Cost Summary</p>
+                                <div className="mt-2 space-y-1 text-xs text-slate-600">
+                                  {hasSummary(selectedTrace.cost_summary)
+                                    ? summaryEntries(selectedTrace.cost_summary).map((entry) => (
+                                        <p key={entry.key} className="truncate">
+                                          <span className="font-medium text-slate-500">{entry.key}:</span> {renderSummaryValue(entry.value)}
+                                        </p>
+                                      ))
+                                    : <p>not captured</p>}
+                                </div>
+                              </div>
+                              <div>
+                                <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Evaluation Summary</p>
+                                <div className="mt-2 space-y-1 text-xs text-slate-600">
+                                  {hasSummary(selectedTrace.evaluation_summary)
+                                    ? summaryEntries(selectedTrace.evaluation_summary).map((entry) => (
+                                        <p key={entry.key} className="truncate">
+                                          <span className="font-medium text-slate-500">{entry.key}:</span> {renderSummaryValue(entry.value)}
+                                        </p>
+                                      ))
+                                    : <p>not captured</p>}
+                                </div>
+                              </div>
+                              <div>
+                                <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Artifact Previews</p>
+                                <div className="mt-2 space-y-2">
+                                  {selectedTraceArtifacts.length > 0
+                                    ? selectedTraceArtifacts.map(({ artifactId, artifact }) => (
+                                        <div key={artifactId} className="rounded-md bg-slate-50 px-2 py-2 text-xs text-slate-600">
+                                          <div className="flex items-center justify-between gap-2">
+                                            <span className="truncate font-medium text-slate-700">{artifact?.kind ?? "preview not available"}</span>
+                                            {artifact ? (
+                                              <button
+                                                type="button"
+                                                className="text-indigo-600 hover:underline"
+                                                onClick={() => {
+                                                  void handleArtifactOpen(artifact.id);
+                                                }}
+                                              >
+                                                Open
+                                              </button>
+                                            ) : null}
+                                          </div>
+                                          <p className="mt-1 truncate font-mono text-[11px] text-slate-400">{artifactId}</p>
+                                        </div>
+                                      ))
+                                    : <span className="text-xs text-slate-400">--</span>}
+                                </div>
+                              </div>
+                              {selectedTrace.error_summary ? (
+                                <p className="rounded-md bg-red-50 px-3 py-2 text-xs text-red-700">{selectedTrace.error_summary}</p>
+                              ) : null}
+                            </div>
+                          </div>
+                        ) : null}
+                      </div>
                     </div>
                   </AsyncState>
                 ) : null}

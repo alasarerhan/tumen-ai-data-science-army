@@ -33,6 +33,73 @@ vi.mock("../hooks/useDiscovery", () => ({
     error: null,
     refetch: vi.fn(),
   }),
+  useAgentExecutionSummary: () => ({
+    data: {
+      type: "platform_query_result",
+      summary: "Control plane resolved node executions.",
+      query: "agent execution traces",
+      plan: { query: "agent execution traces", resource_keys: ["run.nodes"], filters: {}, limit: 100 },
+      sections: [
+        {
+          resource_key: "run.nodes",
+          label: "Run Node Executions",
+          status: "ok",
+          message: null,
+          columns: ["node_type", "status", "retry_count"],
+          records: [
+            { node_type: "model.train", status: "failed", retry_count: 1 },
+            { node_type: "model.train", status: "succeeded", retry_count: 0 },
+          ],
+          metrics: {},
+          links: [],
+          relationships: [],
+          provenance: {
+            resource_key: "run.nodes",
+            resolver: "run_nodes",
+            generated_at: "2026-06-04T10:00:00Z",
+            filters: {},
+            redactions: [],
+          },
+        },
+        {
+          resource_key: "agent.traces",
+          label: "Agent Execution Traces",
+          status: "ok",
+          message: null,
+          columns: ["node_id", "node_type", "attempt", "status", "duration_ms", "tool_call_count"],
+          records: [
+            {
+              node_id: "train",
+              node_type: "model.train",
+              attempt: 1,
+              status: "failed",
+              duration_ms: 1200,
+              tool_call_count: 2,
+              artifact_ids: ["model-1"],
+              token_usage: { prompt_tokens: 100, completion_tokens: 25 },
+              cost_summary: { usd: 0.05 },
+              evaluation_summary: { auc: 0.89 },
+              version_metadata: { agent_version: "m22.1" },
+              error_summary: "training failed",
+            },
+          ],
+          metrics: {},
+          links: [],
+          relationships: [],
+          provenance: {
+            resource_key: "agent.traces",
+            resolver: "agent_traces",
+            generated_at: "2026-06-04T10:00:00Z",
+            filters: {},
+            redactions: [],
+          },
+        },
+      ],
+    },
+    isLoading: false,
+    error: null,
+    refetch: vi.fn(),
+  }),
 }));
 
 vi.mock("../lib/utils", () => ({
@@ -75,6 +142,23 @@ describe("Agents", () => {
 
     await waitFor(() => {
       expect(screen.getByRole("heading", { level: 1 })).toBeInTheDocument();
+    });
+  });
+
+  it("should show agent cockpit execution summary", async () => {
+    renderWithProviders();
+
+    await waitFor(() => {
+      expect(screen.getByText("Agent Cockpit")).toBeInTheDocument();
+      expect(screen.getByText("2 node execution records from platform runs.")).toBeInTheDocument();
+      expect(screen.getByText("model.train")).toBeInTheDocument();
+      expect(screen.getByText("50%")).toBeInTheDocument();
+      expect(screen.getByText("Tool Calls")).toBeInTheDocument();
+      expect(screen.getByText("Token Fields")).toBeInTheDocument();
+      expect(screen.getByText("Cost Fields")).toBeInTheDocument();
+      expect(screen.getByText("Eval/Version")).toBeInTheDocument();
+      expect(screen.getAllByText("2").length).toBeGreaterThan(0);
+      expect(screen.getByText("1x training failed")).toBeInTheDocument();
     });
   });
 

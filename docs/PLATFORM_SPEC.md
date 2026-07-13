@@ -79,7 +79,7 @@ Durum: 📋 katalogda · ✍️ detay spec yazıldı · 🚧 implementasyonda ·
 | G1 | Otomatik Drift Hesabı | P0 | 1 | ✅ | specs/G1-auto-drift.md |
 | G2 | Auto-Retraining Orchestrator | P0 | 1 | ✅ | specs/G2-auto-retraining.md |
 | G3 | Gerçek Model Serving/Deploy | P1 | 2 | ✍️ | specs/G3-model-serving.md |
-| G4 | Batch Scoring + model.predict | P0 | 1 | ✍️ | specs/G4-batch-scoring.md |
+| G4 | Batch Scoring + model.predict | P0 | 1 | ✅ | specs/G4-batch-scoring.md |
 | G5 | Registry Promotion | P1 | 2 | ✍️ | specs/G5-registry-promotion.md |
 | G6 | Cost Optimization | P2 | 3 | ✍️ | specs/G6-cost-optimization.md |
 | G7 | Incident / Alerting | P2 | 3 | ✍️ | specs/G7-alerting.md |

@@ -192,7 +192,6 @@ implementation.md
 specification.md
 tasks.md
 
-
 *.claude/
 *.codex/
 *.github/
@@ -216,4 +215,6 @@ nul
 *.broken_*
 
 .dfmt/
+
+# WrongStack agent coordination (local-only)
 .wrongstack/

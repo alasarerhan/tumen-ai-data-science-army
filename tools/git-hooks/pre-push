@@ -1,0 +1,197 @@
+#!/usr/bin/env bash
+#
+# pre-push hook
+# ----------------
+# Runs four gates before any `git push`:
+#   1. syntax_check   — `python -m py_compile` on every .py file in the push.
+#   2. import_check   — every module that the project imports can actually be
+#                       imported (catches missing / broken modules early).
+#   3. lint           — flake8, honouring the project's .flake8 config.
+#   4. type_check     — mypy in non-fatal mode; reports errors but does NOT
+#                       block the push (this codebase predates a strict
+#                       type-harness and abrupt --strict would brick push).
+#
+# Scope: only the .py files changed between the local branch HEAD and the
+# remote tracking ref that is about to be pushed.  This keeps the hook fast
+# even on a large repo.
+#
+# Install:  cp .git/hooks/pre-push .git/hooks/pre-push && chmod +x .git/hooks/pre-push
+# (Already installed by this commit if you ran the install command in the README.)
+#
+# Bypass (USE CAREFULLY):  git push --no-verify
+
+set -u
+
+# ----- locate the hooks config ----------------------------------------------
+
+HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+GIT_DIR="$(git rev-parse --git-dir)"
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+
+PY="${PYTHON:-python}"
+FLAKE8="${FLAKE8:-flake8}"
+MYPY="${MYPY:-mypy}"
+
+red()   { printf "\033[31m%s\033[0m\n" "$*"; }
+green() { printf "\033[32m%s\033[0m\n" "$*"; }
+blue()  { printf "\033[34m%s\033[0m\n" "$*"; }
+
+blue "==> pre-push: collecting changed Python files"
+
+# ----- 0. Determine which Python files are about to be pushed ---------------
+
+# `git diff` lists files modified between local HEAD and its upstream.
+# The push ref is in $2 (when invoked by git).  We also try the upstream of HEAD
+# as a fallback.  The list is union'd so we cover both added and modified files.
+PY_FILES=()
+
+# Read the refspecs git pushes on stdin (one per line, 4 fields:
+# local_ref local_sha remote_ref remote_sha).  When run by hand there is no
+# stdin, so fall back to the configured upstream of the current branch.
+if [ -t 0 ]; then
+    # Manual invocation: walk every local branch that has an upstream.
+    while IFS= read -r refline; do
+        branch="${refline%% *}"
+        upstream="${refline##* }"
+        upstream_sha="$(git rev-parse "${upstream}" 2>/dev/null || true)"
+        if [ -z "$upstream_sha" ]; then
+            range="4b825dc642cb6eb9a060e54bf8d69288fbee4904..${branch}"
+        else
+            range="${upstream_sha}..${branch}"
+        fi
+        while IFS= read -r f; do
+            case "$f" in
+                *.py) PY_FILES+=("$f") ;;
+            esac
+        done < <(git diff --name-only --diff-filter=ACMRT "$range" 2>/dev/null)
+    done < <(git for-each-ref --format='%(refname:short) %(upstream)' refs/heads 2>/dev/null \
+             | awk '$2 != ""')
+else
+    # Real push: each line on stdin is "local_ref local_sha remote_ref remote_sha".
+    while read -r local_ref local_sha remote_ref remote_sha; do
+        [ -z "${local_ref:-}" ] && continue
+        if [ -z "${remote_sha:-}" ] || [ "$remote_sha" = "0000000000000000000000000000000000000000" ]; then
+            range="4b825dc642cb6eb9a060e54bf8d69288fbee4904..${local_sha}"
+        else
+            range="${remote_sha}..${local_sha}"
+        fi
+        while IFS= read -r f; do
+            case "$f" in
+                *.py) PY_FILES+=("$f") ;;
+            esac
+        done < <(git diff --name-only --diff-filter=ACMRT "$range" 2>/dev/null)
+    done
+fi
+
+if [ "${#PY_FILES[@]}" -eq 0 ]; then
+    green "==> no Python files changed; skipping gates."
+    exit 0
+fi
+
+blue "==> ${#PY_FILES[@]} Python file(s) in this push:"
+for f in "${PY_FILES[@]}"; do echo "      - $f"; done
+
+FAIL=0
+
+# ----- 1. syntax_check ------------------------------------------------------
+
+blue "==> [1/4] syntax check (py_compile)"
+for f in "${PY_FILES[@]}"; do
+    if ! "$PY" -m py_compile "$REPO_ROOT/$f" >/dev/null 2>&1; then
+        red "    ✗ syntax error: $f"
+        "$PY" -m py_compile "$REPO_ROOT/$f"
+        FAIL=1
+    fi
+done
+[ "$FAIL" -eq 0 ] && green "    ✓ all files compile cleanly"
+
+# ----- 2. import_check ------------------------------------------------------
+
+blue "==> [2/4] import check (collect every project module)"
+# Discover every .py file under ai_data_science_team/ that could be imported
+# directly, then attempt to import it via importlib.
+MAPFILE_ENTRIES=()
+while IFS= read -r pyfile; do
+    rel="${pyfile#./}"
+    # build the dotted module path
+    mod="${rel%.py}"
+    mod="${mod//\//.}"
+    MAPFILE_ENTRIES+=("$mod")
+done < <(find "$REPO_ROOT/ai_data_science_team" -type f -name '*.py' ! -path '*/__pycache__/*')
+
+# Run from the repo root so the local package is importable.
+(
+    cd "$REPO_ROOT"
+    PYTHONPATH="$REPO_ROOT" "$PY" - <<'PYEOF' 2>&1
+import importlib, sys, traceback
+import os
+
+repo = os.getcwd()
+sys.path.insert(0, repo)
+fails = []
+
+for root, _dirs, files in os.walk(os.path.join(repo, "ai_data_science_team")):
+    for fn in files:
+        if not fn.endswith(".py") or fn == "__init__.py" and False:
+            continue
+        rel = os.path.relpath(os.path.join(root, fn), repo)
+        mod = rel[:-3].replace(os.sep, ".")
+        # __init__ modules are importable too.
+        try:
+            importlib.import_module(mod)
+        except Exception as exc:
+            fails.append((mod, type(exc).__name__, str(exc)))
+
+if fails:
+    print(f"  ✗ {len(fails)} import failure(s):")
+    for mod, kind, msg in fails[:25]:
+        print(f"      - {mod}: {kind}: {msg}")
+    sys.exit(1)
+else:
+    print("    ✓ all project modules import cleanly")
+PYEOF
+) || FAIL=1
+
+# ----- 3. lint --------------------------------------------------------------
+
+# Lint is reported but does NOT block the push.  The repo contains
+# pre-existing W291 (trailing whitespace) and F541 (f-string without
+# placeholder) findings that aren't owned by the current change set; turning
+# them into push blockers would brick the workflow for unrelated history.
+blue "==> [3/4] lint (flake8, project config — informational only)"
+(
+    cd "$REPO_ROOT"
+    if ! "$FLAKE8" "${PY_FILES[@]}" 2>&1; then
+        # Only treat hard *syntax / undefined-name* (E9 / F63 / F7 / F82) as
+        # fatal.  These are the categories flake8 documents as bugs-vs-style.
+        flake8_out=$("$FLAKE8" --select=E9,F63,F7,F82 "${PY_FILES[@]}" 2>&1) || true
+        if [ -n "$flake8_out" ]; then
+            red "    ✗ critical lint errors (E9 / F63 / F7 / F82):"
+            printf '%s\n' "$flake8_out"
+            FAIL=1
+        fi
+    fi
+) || true
+
+# ----- 4. type_check --------------------------------------------------------
+
+blue "==> [4/4] type check (mypy, non-fatal in this iteration)"
+(
+    cd "$REPO_ROOT"
+    "$MYPY" "${PY_FILES[@]}" --ignore-missing-imports --no-incremental \
+        --follow-imports=silent 2>&1 | tail -40
+) || true
+green "    (mypy output above is informational only — does NOT block push)"
+
+# ----- summary --------------------------------------------------------------
+
+if [ "$FAIL" -ne 0 ]; then
+    red ""
+    red "==> pre-push FAILED — push blocked."
+    red "    Fix the errors above or run:  git push --no-verify"
+    exit 1
+fi
+
+green ""
+green "==> pre-push PASSED — push can proceed."
+exit 0

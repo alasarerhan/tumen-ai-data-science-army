@@ -1,9 +1,6 @@
+# App-specific dependencies for sql-database-agent-app.
+# Install shared base first: pip install -r ../../requirements.txt
+
 ai-data-science-team
-streamlit
-sqlalchemy
-pandas
 asyncio
-langchain
-langchain-openai
 langgraph
-openai

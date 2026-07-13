@@ -59,7 +59,7 @@ Durum: 📋 katalogda · ✍️ detay spec yazıldı · 🚧 implementasyonda ·
 | D3 | Feature Store | P2 | 3 | ✍️ | specs/D3-feature-store.md |
 | D4 | Imbalanced Data | P1 | 2 | ✍️ | specs/D4-imbalanced-data.md |
 | E1 | Sklearn/XGBoost/LightGBM Trainer | P0 | 1 | ✅ | specs/E1-multi-engine-trainer.md |
-| E2 | Hyperparameter Optimization | P0 | 1 | ✍️ | specs/E2-hpo.md |
+| E2 | Hyperparameter Optimization | P0 | 1 | ✅ | specs/E2-hpo.md |
 | E3 | Deep Learning (Tabular/TS) | P1 | 2 | ✍️ | specs/E3-deep-learning.md |
 | E4 | NLP / Text Analytics | P1 | 2 | ✍️ | specs/E4-nlp.md |
 | E5 | Computer Vision | P3 | 4 | ✍️ | specs/E5-computer-vision.md |

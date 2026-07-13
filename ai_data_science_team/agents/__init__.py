@@ -13,3 +13,10 @@ from ai_data_science_team.agents.model_monitoring_agent import make_model_monito
 from ai_data_science_team.agents.api_connector_agent import make_api_connector_agent, APIConnectorAgent
 from ai_data_science_team.agents.document_parser_agent import make_document_parser_agent, DocumentParserAgent
 from ai_data_science_team.agents.model_serving_agent import make_model_serving_agent, ModelServingAgent
+from ai_data_science_team.agents.ab_testing_agent import (
+    make_ab_testing_agent,
+    ABTestingAgent,
+    AGENT_NAME as AB_TESTING_AGENT_NAME,
+    NODE_TYPE as AB_TESTING_NODE_TYPE,
+    AB_TESTING_TOOLS,
+)

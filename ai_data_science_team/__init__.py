@@ -6,6 +6,7 @@ from ai_data_science_team.agents import (
     DataWranglingAgent,
     FeatureEngineeringAgent,
     OrchestratorAgent,
+    ABTestingAgent,
 )
 
 from ai_data_science_team.ds_agents import (

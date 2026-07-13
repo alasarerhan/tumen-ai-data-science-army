@@ -58,7 +58,7 @@ Durum: 📋 katalogda · ✍️ detay spec yazıldı · 🚧 implementasyonda ·
 | D2 | Feature Selection + Leakage | P1 | 2 | ✍️ | specs/D2-feature-selection.md |
 | D3 | Feature Store | P2 | 3 | ✍️ | specs/D3-feature-store.md |
 | D4 | Imbalanced Data | P1 | 2 | ✍️ | specs/D4-imbalanced-data.md |
-| E1 | Sklearn/XGBoost/LightGBM Trainer | P0 | 1 | ✍️ | specs/E1-multi-engine-trainer.md |
+| E1 | Sklearn/XGBoost/LightGBM Trainer | P0 | 1 | ✅ | specs/E1-multi-engine-trainer.md |
 | E2 | Hyperparameter Optimization | P0 | 1 | ✍️ | specs/E2-hpo.md |
 | E3 | Deep Learning (Tabular/TS) | P1 | 2 | ✍️ | specs/E3-deep-learning.md |
 | E4 | NLP / Text Analytics | P1 | 2 | ✍️ | specs/E4-nlp.md |

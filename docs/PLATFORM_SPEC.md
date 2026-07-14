@@ -41,7 +41,7 @@ Durum: 📋 katalogda · ✍️ detay spec yazıldı · 🚧 implementasyonda ·
 | A3 | Bayesian Analysis | P2 | 3 | ✅ | specs/A3-bayesian-analysis.md |
 | A4 | Hypothesis Testing Danışmanı | P1 | 2 | ✅ | specs/A4-hypothesis-testing.md |
 | A5 | Causal Inference | P2 | 3 | ✅ | specs/A5-causal-inference.md |
-| A6 | Uplift Modeling | P3 | 4 | ✍️ | specs/A6-uplift-modeling.md |
+| A6 | Uplift Modeling | P3 | 4 | ✅ | specs/A6-uplift-modeling.md |
 | B1 | Data Profiling genişletmesi | P1 | 2 | ✍️ | specs/B1-data-profiling.md |
 | B2 | Data Validation / Kalite Kapısı | P0 | 1 | ✅ | specs/B2-data-validation.md |
 | B3 | Schema Inference & Mapping | P1 | 2 | ✍️ | specs/B3-schema-inference.md |

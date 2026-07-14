@@ -195,7 +195,12 @@ def profile_column(
     n_unique = int(series.dropna().nunique())
 
     is_numeric = bool(pd.api.types.is_numeric_dtype(series))
-    is_categorical = bool(pd.api.types.is_string_dtype(series) or pd.api.types.is_categorical_dtype(series))
+    # `is_categorical_dtype` is deprecated in pandas 2.x; use
+    # isinstance directly on the dtype for forward-compat.
+    is_categorical = bool(
+        pd.api.types.is_string_dtype(series)
+        or isinstance(series.dtype, pd.CategoricalDtype)
+    )
 
     stats: Dict[str, Any] = {}
     if is_numeric and n - n_missing > 0:

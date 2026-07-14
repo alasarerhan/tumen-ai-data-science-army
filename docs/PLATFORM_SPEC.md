@@ -48,7 +48,7 @@ Durum: 📋 katalogda · ✍️ detay spec yazıldı · 🚧 implementasyonda ·
 | B4 | Deduplication & Entity Resolution | P2 | 3 | ✍️ | specs/B4-entity-resolution.md |
 | B5 | PII Detection & Anonymization | P1 | 2 | ✍️ | specs/B5-pii-detection.md |
 | B6 | Synthetic Data | P2 | 3 | ✍️ | specs/B6-synthetic-data.md |
-| B7 | Data Ingestion / ELT | P1 | 2 | ✍️ | specs/B7-data-ingestion.md |
+| B7 | Data Ingestion / ELT | P1 | 2 | ✅ | specs/B7-data-ingestion.md |
 | B8 | SQL Optimizer | P2 | 3 | ✍️ | specs/B8-sql-optimizer.md |
 | C1 | Insight Mining (EDA eki) | P2 | 3 | ✍️ | specs/C1-insight-mining.md |
 | C2 | Dashboard Kompozisyonu | P2 | 3 | ✍️ | specs/C2-dashboard-composition.md |

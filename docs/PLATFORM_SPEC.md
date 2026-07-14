@@ -62,7 +62,7 @@ Durum: 📋 katalogda · ✍️ detay spec yazıldı · 🚧 implementasyonda ·
 | F1 | Evaluation genişletmesi | P1 | 2 | ✅ | specs/F1-evaluation-ext.md |
 | F2 | Champion–Challenger | P0 | 1 | ✅ | specs/F2-champion-challenger.md |
 | F3 | Fairness & Bias Audit | P2 | 3 | ✅ | specs/F3-fairness-audit.md |
-| F4 | Model Card | P2 | 3 | ✍️ | specs/F4-model-card.md |
+| F4 | Model Card | P2 | 3 | ✅ | specs/F4-model-card.md |
 | F5 | Robustness Test | P3 | 4 | ✍️ | specs/F5-robustness-test.md |
 | F6 | LLM-as-Judge (agent kalite) | P1 | 2 | ✍️ | specs/F6-llm-judge.md |
 | G1 | Otomatik Drift Hesabı | P0 | 1 | ✅ | specs/G1-auto-drift.md |

@@ -52,7 +52,7 @@ Durum: 📋 katalogda · ✍️ detay spec yazıldı · 🚧 implementasyonda ·
 | C4 | Root Cause Analysis | P1 | 2 | ✅ | specs/C4-root-cause-analysis.md |
 | C5 | Rapor genişletmesi (şablon/export) | P2 | 3 | ✅ | specs/C5-report-templates.md |
 | D2 | Feature Selection + Leakage | P1 | 2 | ✅ | specs/D2-feature-selection.md |
-| D3 | Feature Store | P2 | 3 | ✍️ | specs/D3-feature-store.md |
+| D3 | Feature Store | P2 | 3 | ✅ | specs/D3-feature-store.md |
 | D4 | Imbalanced Data | P1 | 2 | ✍️ | specs/D4-imbalanced-data.md |
 | E1 | Sklearn/XGBoost/LightGBM Trainer | P0 | 1 | ✅ | specs/E1-multi-engine-trainer.md |
 | E2 | Hyperparameter Optimization | P0 | 1 | ✅ | specs/E2-hpo.md |

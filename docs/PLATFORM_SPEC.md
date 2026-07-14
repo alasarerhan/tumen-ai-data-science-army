@@ -80,10 +80,10 @@ Durum: 📋 katalogda · ✍️ detay spec yazıldı · 🚧 implementasyonda ·
 | H7 | REST API Data Source | P2 | 3 | ✅ | specs/H7-rest-api-source.md |
 | I2 | Data Catalog & Semantik Katman | P1 | 2 | ✅ | specs/I2-data-catalog.md |
 | I3 | Experiment Tracking / Leaderboard | P1 | 2 | ✅ | specs/I3-experiment-tracking.md |
-| J1 | Otonom İnvestigasyon | P1 | 2 | ✍️ | specs/J1-autonomous-investigation.md |
+| J1 | Otonom İnvestigasyon | P1 | 2 | ✅ | specs/J1-autonomous-investigation.md |
 | J4 | Model Evaluation Store | P1 | 2 | ✅ | specs/J4-evaluation-store.md |
-| J6 | Responsible AI Dashboard | P2 | 3 | ✍️ | specs/J6-responsible-ai.md |
-| J7 | Governance Katmanı | P2 | 3 | ✍️ | specs/J7-governance.md |
+| J6 | Responsible AI Dashboard | P2 | 3 | ✅ | specs/J6-responsible-ai.md |
+| J7 | Governance Katmanı | P2 | 3 | ✅ | specs/J7-governance.md |
 | J11 | Shadow/Canary Deployment | P2 | 3 | ✅ | specs/J11-shadow-canary.md |
 | J12 | Uçtan Uca Lineage Grafı | P2 | 3 | ✅ | specs/J12-lineage-graph.md |
 | J13 | Data Diff Paneli | P2 | 3 | ✅ | specs/J13-data-diff.md |

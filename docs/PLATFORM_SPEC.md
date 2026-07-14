@@ -84,9 +84,9 @@ Durum: 📋 katalogda · ✍️ detay spec yazıldı · 🚧 implementasyonda ·
 | J4 | Model Evaluation Store | P1 | 2 | ✅ | specs/J4-evaluation-store.md |
 | J6 | Responsible AI Dashboard | P2 | 3 | ✍️ | specs/J6-responsible-ai.md |
 | J7 | Governance Katmanı | P2 | 3 | ✍️ | specs/J7-governance.md |
-| J11 | Shadow/Canary Deployment | P2 | 3 | ✍️ | specs/J11-shadow-canary.md |
-| J12 | Uçtan Uca Lineage Grafı | P2 | 3 | ✍️ | specs/J12-lineage-graph.md |
-| J13 | Data Diff Paneli | P2 | 3 | ✍️ | specs/J13-data-diff.md |
+| J11 | Shadow/Canary Deployment | P2 | 3 | ✅ | specs/J11-shadow-canary.md |
+| J12 | Uçtan Uca Lineage Grafı | P2 | 3 | ✅ | specs/J12-lineage-graph.md |
+| J13 | Data Diff Paneli | P2 | 3 | ✅ | specs/J13-data-diff.md |
 | K2 | ModelOps Kontrol Merkezi | P0 | 1 | ✅ | specs/K2-modelops-center.md |
 
 ---

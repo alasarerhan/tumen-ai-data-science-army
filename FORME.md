@@ -95,14 +95,18 @@ Top-level map:
 ```text
 .
 |-- ai_data_science_team/        # Core agent library
-|   |-- agents/                  # Specialist data and ML agents
-|   |-- connectors/              # Data connection abstractions
-|   |-- ds_agents/               # Data-science-focused agents
-|   |-- ml_agents/               # ML, MLflow, evaluation, time-series agents
-|   |-- multiagents/             # Chat workspace and multi-agent orchestration
-|   |-- parsers/                 # Parsing helpers
-|   |-- templates/               # Prompt/code templates
-|   `-- tools/                   # Agent tools
+|   |-- agents/                  # 52 @tool-wrapped LangGraph agents (Phase 4)
+|   |-- connectors/              # Data connection abstractions (local_file, sql)
+|   |-- multiagents/             # Supervisor + workflow_resolver
+|   |   `-- supervisor_ds_team/  # 15-file package (Phase 7C L2 split)
+|   |       |-- __init__.py      # make_supervisor_ds_team orchestrator
+|   |       |-- _class.py        # SupervisorDSTeam OO wrapper
+|   |       `-- nodes/           # 12 worker nodes (loader, merge, sql, eda, …)
+|   |-- tools/                   # 52 deterministic tool modules (Phase 4)
+|   |-- templates/               # Prompt/code templates (agent_templates.py)
+|   |-- agent_registry.py        # Central agent registry
+|   |-- tool_registry.py         # Central tool registry
+|   |-- signals.py / runtime_engine.py  # Cross-cutting platform primitives
 |-- apps/
 |   |-- platform-api-app/        # FastAPI backend
 |   |-- ai-pipeline-studio-app/  # Example/product app
@@ -115,13 +119,18 @@ Top-level map:
 |   |-- src/app/hooks/           # React data hooks
 |   |-- src/app/context/         # Auth context
 |   `-- e2e/                     # Playwright tests
-|-- docs/                        # Strategy and product docs
-|-- tests/                       # Root Python tests
-|-- tools/                       # Utility scripts
+|-- docs/                        # Strategy and product docs (incl. PHASE_4_COMPLETION.md)
+|-- tests/                       # 106 test files (1757 passing)
+|-- tools/                       # Utility scripts (git-hooks/, build helpers)
 |-- requirements.txt             # Core Python dependencies
 |-- pyproject.toml               # Python package/test metadata
 `-- setup.py                     # Package setup metadata
 ```
+
+**Phase 4 status (current):** 52/52 spec modules implemented across
+`ai_data_science_team/tools/` (52 deterministic modules) and
+`ai_data_science_team/agents/` (52 LangGraph react-agent wrappers).
+See `docs/PHASE_4_COMPLETION.md` for the full report.
 
 `frontend/` is where you go when the screen looks wrong, a button calls the wrong endpoint, or a workflow UI needs to change. Important entry points are `frontend/src/app/App.tsx`, `frontend/src/app/routes.ts`, and `frontend/src/app/api/client.ts`.
 
@@ -131,7 +140,39 @@ Top-level map:
 
 `apps/*-app/` contains product/example applications around the core library. The main production-style API appears to be `apps/platform-api-app/`.
 
-`docs/` contains planning and strategy material. It is useful when you want to understand product intent rather than runtime behavior.
+`docs/` contains planning and strategy material, plus the
+`docs/PHASE_4_COMPLETION.md` summary covering what was built and how
+to extend it.
+
+### Phase 4 Tool / Agent Layout (the `ai_data_science_team` core)
+
+Post-Phase 4, the agent library follows a strict two-layer
+deterministic-plus-LLM pattern:
+
+```text
+ai_data_science_team/tools/<tool_module>.py       # 52 modules
+    `-- __all__ = [function_names]                  # public surface
+        `-- public functions returning dataclasses   # LLM-free
+
+ai_data_science_team/agents/<tool_module>_agent.py  # 52 agents
+    |-- AGENT_NAME = "<tool_module>_agent"         # e.g. "a3_bayesian_agent"
+    |-- NODE_TYPE  = "<namespace>.<verb>"           # e.g. "model.bayesian_update"
+    |-- <tool_module>_<fn>_wrapped()               # 2-11 @tool wrappers
+    `-- make_<tool_module>_agent(model, checkpointer=None)  # factory
+        `-- <Spec>Agent(BaseAgent)                  # OO wrapper
+```
+
+Naming convention (final, after Phase 7C cleanup):
+
+- Tool file names are the tool's short name (e.g. `quality.py`,
+  `a3_bayesian.py`, `b7_data_ingestion.py`) — **no spec-phase
+  prefix on the class or function names** (no `B2Agent`, no
+  `B2_VALIDATION_TOOL_NAMES`).
+- Public surface is declared via `__all__`; there is no separate
+  `*_TOOL_NAMES` registry constant.
+- The factory function and `AGENT_NAME` constant both match the
+  tool's filename (e.g. `make_quality_agent` /
+  `AGENT_NAME = "quality_agent"`).
 
 Non-obvious naming conventions:
 
@@ -248,6 +289,9 @@ What could go wrong:
 | Playwright | End-to-end frontend tests | Tests browser behavior | Requires browser dependencies |
 | Vitest | Frontend unit tests | Fast React/TypeScript tests | Mocked tests can miss integration problems |
 | Pytest | Python tests | Standard Python testing tool | Integration tests may need API keys/services |
+| LangChain `@tool` (Phase 4) | Wraps deterministic Python tool functions as LLM-callable tools | Bridges deterministic stats/ML libraries and LLM planners | Wrapper introspection happens at decoration time; missing `__all__` exports cause `F821` |
+| LangGraph react-agent (Phase 4) | State-machine agent runner that calls @tool functions | Each agent uses `tools.X` registry; no need for custom routing logic | `Runnable`-only stubs needed in tests (not plain objects with `.invoke()`) |
+| `pre-commit` `pre-push` hook (Phase 4/7) | Runs 4 gates on push: `py_compile`, importlib scan, `flake8` (E9/F63/F7/F82), `mypy` | Catches syntax errors, broken imports, undefined names **before** they reach CI | Large output can SIGPIPE — hook caps printed errors at 50 lines + temp file |
 
 Cost implications:
 
@@ -460,3 +504,38 @@ Admin/operator surfaces fail: verify the user role and workspace/tenant membersh
 - Actual cloud cost numbers
 
 Those should be added when deployment information is available.
+
+## 9. Phase Status and What's Next
+
+**Phase 4 (spec implementation) is complete.** All 52 spec modules
+listed in `docs/PLATFORM_SPEC.md` are implemented, tested, and
+documented. The full breakdown is in `docs/PHASE_4_COMPLETION.md`.
+
+| Phase | Scope | Status | Key Output |
+|---|---|---|---|
+| Phase 1 | P0 (workflow + core agents) | ✅ Done | 12 spec modules |
+| Phase 2 | P1 (data, evaluation, model) | ✅ Done | 27 spec modules |
+| Phase 3 | P2 (governance, lineage) | ✅ Done | 24 spec modules |
+| Phase 4 | P3 (UI components, dev tools) | ✅ Done | 3 spec modules |
+| Phase 5 | L1 agent wrapper layer | ✅ Done | 49 agents above 52 tools |
+| Phase 6 | Agent integration tests | ✅ Done | 49 agent test files (830 tests) |
+| Phase 7A | B2 → quality naming refactor | ✅ Done | Quality case study |
+| Phase 7C | `_TOOL_NAMES` removal | ✅ Done | 29 constants removed |
+| Phase 7C | `AGENT_NAME` convention | ✅ Done | 50/50 spec prefixes removed |
+| **Phase 7D** | **This documentation update** | **✅ Done** | **This file** |
+
+**Next probable phases** (not yet committed):
+
+- **Phase 8 — End-to-end integration:** drive the supervisor_ds_team
+  with real LangGraph runs that exercise the full tool → agent →
+  workflow loop. Currently the L1 agent tests are LLM-free.
+- **Phase 9 — Platform runtime wiring:** the FastAPI backend in
+  `apps/platform-api-app` needs to call into the new agents
+  through a stable contract. The current routing code is dormant
+  (LLM-free tests cover the unit-level wiring).
+- **Phase 10 — Production deployment:** containerize, configure
+  Prefect workers / Redis / Postgres, and run the smoke tests
+  from the §8 quick reference card.
+
+See `docs/PHASE_4_COMPLETION.md` for the full Phase-4 metrics and
+the per-spec implementation breakdown.

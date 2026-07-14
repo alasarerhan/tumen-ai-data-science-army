@@ -72,7 +72,7 @@ Durum: 📋 katalogda · ✍️ detay spec yazıldı · 🚧 implementasyonda ·
 | G5 | Registry Promotion | P1 | 2 | ✅ | specs/G5-registry-promotion.md |
 | G7 | Incident / Alerting | P2 | 3 | ✍️ | specs/G7-alerting.md |
 | H1 | Snowflake Connector | P1 | 2 | ✅ | specs/H1-snowflake.md |
-| H2 | BigQuery Connector | P1 | 2 | ✍️ | specs/H2-bigquery.md |
+| H2 | BigQuery Connector | P1 | 2 | ✅ | specs/H2-bigquery.md |
 | H3 | Tableau Connector | P1 | 2 | ✍️ | specs/H3-tableau.md |
 | H4 | PowerBI Connector | P1 | 2 | ✍️ | specs/H4-powerbi.md |
 | H5 | Google Sheets Connector | P2 | 3 | ✍️ | specs/H5-google-sheets.md |

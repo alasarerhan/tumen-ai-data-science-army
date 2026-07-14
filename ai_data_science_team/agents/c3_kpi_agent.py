@@ -47,7 +47,7 @@ from ai_data_science_team.tools.c3_kpi import (
 
 logger = logging.getLogger(__name__)
 
-AGENT_NAME = "c3_agent"
+AGENT_NAME = "c3_kpi_agent"
 NODE_TYPE = "kpi.compute"
 
 

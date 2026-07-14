@@ -38,7 +38,7 @@ from ai_data_science_team.tools.c5_reports import (
 
 logger = logging.getLogger(__name__)
 
-AGENT_NAME = "c5_agent"
+AGENT_NAME = "c5_reports_agent"
 NODE_TYPE = "report.render"
 
 

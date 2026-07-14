@@ -43,7 +43,7 @@ from ai_data_science_team.tools.j11_shadow_canary import (
 
 logger = logging.getLogger(__name__)
 
-AGENT_NAME = "j11_agent"
+AGENT_NAME = "j11_shadow_canary_agent"
 NODE_TYPE = "deploy.shadow"
 
 

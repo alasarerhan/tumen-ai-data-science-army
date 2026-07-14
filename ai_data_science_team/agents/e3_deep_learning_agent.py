@@ -41,7 +41,7 @@ from ai_data_science_team.tools.e3_deep_learning import (
 
 logger = logging.getLogger(__name__)
 
-AGENT_NAME = "e3_agent"
+AGENT_NAME = "e3_deep_learning_agent"
 NODE_TYPE = "model.train.deep"
 
 

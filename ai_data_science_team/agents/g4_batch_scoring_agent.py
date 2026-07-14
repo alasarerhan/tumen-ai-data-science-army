@@ -41,7 +41,7 @@ from ai_data_science_team.tools.g4_batch_scoring import (
 
 logger = logging.getLogger(__name__)
 
-AGENT_NAME = "g4_agent"
+AGENT_NAME = "g4_batch_scoring_agent"
 NODE_TYPE = "deploy.batch_score"
 
 

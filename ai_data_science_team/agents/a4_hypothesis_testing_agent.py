@@ -38,7 +38,7 @@ from ai_data_science_team.tools.a4_hypothesis_testing import (
 
 logger = logging.getLogger(__name__)
 
-AGENT_NAME = "a4_agent"
+AGENT_NAME = "a4_hypothesis_testing_agent"
 NODE_TYPE = "model.hypothesis_test"
 
 

@@ -50,7 +50,7 @@ from ai_data_science_team.tools.j7_governance import (
 
 logger = logging.getLogger(__name__)
 
-AGENT_NAME = "j7_agent"
+AGENT_NAME = "j7_governance_agent"
 NODE_TYPE = "governance.evaluate"
 
 

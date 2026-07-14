@@ -35,7 +35,7 @@ from ai_data_science_team.tools.h4_powerbi import (
 
 logger = logging.getLogger(__name__)
 
-AGENT_NAME = "h4_agent"
+AGENT_NAME = "h4_powerbi_agent"
 NODE_TYPE = "source.powerbi"
 
 

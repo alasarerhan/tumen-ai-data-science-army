@@ -40,7 +40,7 @@ from ai_data_science_team.tools.e2_hpo import (
 
 logger = logging.getLogger(__name__)
 
-AGENT_NAME = "e2_agent"
+AGENT_NAME = "e2_hpo_agent"
 NODE_TYPE = "model.hpo"
 
 

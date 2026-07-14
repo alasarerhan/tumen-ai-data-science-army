@@ -42,7 +42,7 @@ from ai_data_science_team.tools.j13_data_diff import (
 
 logger = logging.getLogger(__name__)
 
-AGENT_NAME = "j13_agent"
+AGENT_NAME = "j13_data_diff_agent"
 NODE_TYPE = "data.dif"
 
 

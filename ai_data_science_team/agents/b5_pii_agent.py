@@ -40,7 +40,7 @@ from ai_data_science_team.tools.b5_pii import (
 
 logger = logging.getLogger(__name__)
 
-AGENT_NAME = "b5_agent"
+AGENT_NAME = "b5_pii_agent"
 NODE_TYPE = "data.pii_anonymize"
 
 

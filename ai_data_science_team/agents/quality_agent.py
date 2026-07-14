@@ -38,7 +38,7 @@ from ai_data_science_team.tools.quality import (
 
 logger = logging.getLogger(__name__)
 
-AGENT_NAME = "b2_agent"
+AGENT_NAME = "quality_agent"
 NODE_TYPE = "data.validate"
 
 

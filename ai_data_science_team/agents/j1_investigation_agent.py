@@ -43,7 +43,7 @@ from ai_data_science_team.tools.j1_investigation import (
 
 logger = logging.getLogger(__name__)
 
-AGENT_NAME = "j1_agent"
+AGENT_NAME = "j1_investigation_agent"
 NODE_TYPE = "kpi.investigate"
 
 

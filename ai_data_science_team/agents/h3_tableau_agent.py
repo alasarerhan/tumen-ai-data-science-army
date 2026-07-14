@@ -35,7 +35,7 @@ from ai_data_science_team.tools.h3_tableau import (
 
 logger = logging.getLogger(__name__)
 
-AGENT_NAME = "h3_agent"
+AGENT_NAME = "h3_tableau_agent"
 NODE_TYPE = "source.tableau"
 
 

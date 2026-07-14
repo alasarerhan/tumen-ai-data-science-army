@@ -43,7 +43,7 @@ from ai_data_science_team.tools.d2_features import (
 
 logger = logging.getLogger(__name__)
 
-AGENT_NAME = "d2_agent"
+AGENT_NAME = "d2_features_agent"
 NODE_TYPE = "feature.select"
 
 

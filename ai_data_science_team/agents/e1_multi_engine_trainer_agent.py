@@ -40,7 +40,7 @@ from ai_data_science_team.tools.e1_multi_engine_trainer import (
 
 logger = logging.getLogger(__name__)
 
-AGENT_NAME = "e1_agent"
+AGENT_NAME = "e1_multi_engine_trainer_agent"
 NODE_TYPE = "model.train"
 
 

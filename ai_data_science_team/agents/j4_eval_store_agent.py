@@ -41,7 +41,7 @@ from ai_data_science_team.tools.j4_eval_store import (
 
 logger = logging.getLogger(__name__)
 
-AGENT_NAME = "j4_agent"
+AGENT_NAME = "j4_eval_store_agent"
 NODE_TYPE = "evaluation.store"
 
 

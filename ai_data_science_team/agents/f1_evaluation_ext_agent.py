@@ -40,7 +40,7 @@ from ai_data_science_team.tools.f1_evaluation_ext import (
 
 logger = logging.getLogger(__name__)
 
-AGENT_NAME = "f1_agent"
+AGENT_NAME = "f1_evaluation_ext_agent"
 NODE_TYPE = "model.evaluate.ext"
 
 

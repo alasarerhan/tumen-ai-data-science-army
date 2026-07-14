@@ -37,7 +37,7 @@ from ai_data_science_team.tools.b1_profiling import (
 
 logger = logging.getLogger(__name__)
 
-AGENT_NAME = "b1_agent"
+AGENT_NAME = "b1_profiling_agent"
 NODE_TYPE = "data.profile"
 
 

@@ -40,7 +40,7 @@ from ai_data_science_team.tools.g1_drift import (
 
 logger = logging.getLogger(__name__)
 
-AGENT_NAME = "g1_agent"
+AGENT_NAME = "g1_drift_agent"
 NODE_TYPE = "monitor.drift"
 
 

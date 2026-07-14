@@ -46,7 +46,7 @@ from ai_data_science_team.tools.e12_clustering import (
 
 logger = logging.getLogger(__name__)
 
-AGENT_NAME = "e12_agent"
+AGENT_NAME = "e12_clustering_agent"
 NODE_TYPE = "model.train.cluster"
 
 

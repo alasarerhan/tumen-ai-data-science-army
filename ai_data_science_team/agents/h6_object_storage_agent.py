@@ -35,7 +35,7 @@ from ai_data_science_team.tools.h6_object_storage import (
 
 logger = logging.getLogger(__name__)
 
-AGENT_NAME = "h6_agent"
+AGENT_NAME = "h6_object_storage_agent"
 NODE_TYPE = "source.object_storage"
 
 

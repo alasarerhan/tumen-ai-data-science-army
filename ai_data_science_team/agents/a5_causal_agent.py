@@ -37,7 +37,7 @@ from ai_data_science_team.tools.a5_causal import (
 
 logger = logging.getLogger(__name__)
 
-AGENT_NAME = "a5_agent"
+AGENT_NAME = "a5_causal_agent"
 NODE_TYPE = "model.causal_infer"
 
 

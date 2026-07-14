@@ -44,7 +44,7 @@ from ai_data_science_team.tools.g5_promotion import (
 
 logger = logging.getLogger(__name__)
 
-AGENT_NAME = "g5_agent"
+AGENT_NAME = "g5_promotion_agent"
 NODE_TYPE = "deploy.promote"
 
 

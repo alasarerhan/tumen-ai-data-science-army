@@ -45,7 +45,7 @@ from ai_data_science_team.tools.d4_balance import (
 
 logger = logging.getLogger(__name__)
 
-AGENT_NAME = "d4_agent"
+AGENT_NAME = "d4_balance_agent"
 NODE_TYPE = "model.balance"
 
 

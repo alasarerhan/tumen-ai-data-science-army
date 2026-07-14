@@ -47,7 +47,7 @@ from ai_data_science_team.tools.g7_alerting import (
 
 logger = logging.getLogger(__name__)
 
-AGENT_NAME = "g7_agent"
+AGENT_NAME = "g7_alerting_agent"
 NODE_TYPE = "incident.raise"
 
 

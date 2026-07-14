@@ -51,7 +51,7 @@ from ai_data_science_team.tools.i2_catalog import (
 
 logger = logging.getLogger(__name__)
 
-AGENT_NAME = "i2_agent"
+AGENT_NAME = "i2_catalog_agent"
 NODE_TYPE = "catalog.search"
 
 

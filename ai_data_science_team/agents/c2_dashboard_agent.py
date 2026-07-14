@@ -40,7 +40,7 @@ from ai_data_science_team.tools.c2_dashboard import (
 
 logger = logging.getLogger(__name__)
 
-AGENT_NAME = "c2_agent"
+AGENT_NAME = "c2_dashboard_agent"
 NODE_TYPE = "dashboard.compose"
 
 

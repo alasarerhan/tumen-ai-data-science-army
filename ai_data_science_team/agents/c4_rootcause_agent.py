@@ -40,7 +40,7 @@ from ai_data_science_team.tools.c4_rootcause import (
 
 logger = logging.getLogger(__name__)
 
-AGENT_NAME = "c4_agent"
+AGENT_NAME = "c4_rootcause_agent"
 NODE_TYPE = "kpi.root_cause"
 
 

@@ -42,7 +42,7 @@ from ai_data_science_team.tools.g3_model_serving import (
 
 logger = logging.getLogger(__name__)
 
-AGENT_NAME = "g3_agent"
+AGENT_NAME = "g3_model_serving_agent"
 NODE_TYPE = "deploy.serve"
 
 

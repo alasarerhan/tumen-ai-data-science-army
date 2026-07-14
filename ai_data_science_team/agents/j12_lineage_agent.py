@@ -42,7 +42,7 @@ from ai_data_science_team.tools.j12_lineage import (
 
 logger = logging.getLogger(__name__)
 
-AGENT_NAME = "j12_agent"
+AGENT_NAME = "j12_lineage_agent"
 NODE_TYPE = "lineage.render"
 
 

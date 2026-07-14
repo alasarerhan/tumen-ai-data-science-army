@@ -42,7 +42,7 @@ from ai_data_science_team.tools.g2_retrain_orchestrator import (
 
 logger = logging.getLogger(__name__)
 
-AGENT_NAME = "g2_agent"
+AGENT_NAME = "g2_retrain_orchestrator_agent"
 NODE_TYPE = "monitor.retrain"
 
 

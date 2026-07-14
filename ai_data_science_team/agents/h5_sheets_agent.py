@@ -35,7 +35,7 @@ from ai_data_science_team.tools.h5_sheets import (
 
 logger = logging.getLogger(__name__)
 
-AGENT_NAME = "h5_agent"
+AGENT_NAME = "h5_sheets_agent"
 NODE_TYPE = "source.sheets"
 
 

@@ -50,7 +50,7 @@ from ai_data_science_team.tools.c1_insight import (
 
 logger = logging.getLogger(__name__)
 
-AGENT_NAME = "c1_agent"
+AGENT_NAME = "c1_insight_agent"
 NODE_TYPE = "insight.mine"
 
 

@@ -604,12 +604,3 @@ __all__ = [
     "design_experiment",
 ]
 
-
-POWER_ANALYSIS_TOOL_NAMES = [
-    "pa_solve_power",
-    "pa_required_sample_size",
-    "pa_minimum_detectable_effect",
-    "pa_estimate_runtime",
-    "pa_suggest_stratification",
-    "pa_design_experiment",
-]

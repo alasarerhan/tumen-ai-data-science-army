@@ -41,7 +41,7 @@ from ai_data_science_team.tools.f4_model_card import (
 
 logger = logging.getLogger(__name__)
 
-AGENT_NAME = "f4_agent"
+AGENT_NAME = "f4_model_card_agent"
 NODE_TYPE = "model.card"
 
 

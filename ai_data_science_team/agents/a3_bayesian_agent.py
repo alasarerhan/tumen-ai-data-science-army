@@ -38,7 +38,7 @@ from ai_data_science_team.tools.a3_bayesian import (
 
 logger = logging.getLogger(__name__)
 
-AGENT_NAME = "a3_agent"
+AGENT_NAME = "a3_bayesian_agent"
 NODE_TYPE = "model.bayesian_update"
 
 

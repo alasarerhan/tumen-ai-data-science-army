@@ -43,7 +43,7 @@ from ai_data_science_team.tools.b3_schema import (
 
 logger = logging.getLogger(__name__)
 
-AGENT_NAME = "b3_agent"
+AGENT_NAME = "b3_schema_agent"
 NODE_TYPE = "schema.infer"
 
 

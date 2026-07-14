@@ -35,7 +35,7 @@ from ai_data_science_team.tools.h7_rest_api import (
 
 logger = logging.getLogger(__name__)
 
-AGENT_NAME = "h7_agent"
+AGENT_NAME = "h7_rest_api_agent"
 NODE_TYPE = "source.rest_api"
 
 

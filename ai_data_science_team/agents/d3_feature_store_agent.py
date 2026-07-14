@@ -47,7 +47,7 @@ from ai_data_science_team.tools.d3_feature_store import (
 
 logger = logging.getLogger(__name__)
 
-AGENT_NAME = "d3_agent"
+AGENT_NAME = "d3_feature_store_agent"
 NODE_TYPE = "feature.register"
 
 

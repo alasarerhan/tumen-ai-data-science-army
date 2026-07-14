@@ -40,7 +40,7 @@ from ai_data_science_team.tools.i3_leaderboard import (
 
 logger = logging.getLogger(__name__)
 
-AGENT_NAME = "i3_agent"
+AGENT_NAME = "i3_leaderboard_agent"
 NODE_TYPE = "experiment.leaderboard"
 
 

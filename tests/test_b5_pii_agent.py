@@ -107,7 +107,7 @@ class TestModuleSurface:
     def test_constants(self):
         # AGENT_NAME is the lowercase spec_id + "_agent" (template generator's
         # convention: e.g. "a3_agent" for spec A3, "j13_agent" for J13).
-        assert AGENT_NAME == "b5_agent"
+        assert AGENT_NAME == "b5_pii_agent"
         assert NODE_TYPE == "data.pii_anonymize"
 
     def test_tool_count_matches_registry(self):

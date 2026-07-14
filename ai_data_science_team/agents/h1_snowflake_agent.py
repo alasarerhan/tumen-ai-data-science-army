@@ -37,7 +37,7 @@ from ai_data_science_team.tools.h1_snowflake import (
 
 logger = logging.getLogger(__name__)
 
-AGENT_NAME = "h1_agent"
+AGENT_NAME = "h1_snowflake_agent"
 NODE_TYPE = "source.snowflake"
 
 

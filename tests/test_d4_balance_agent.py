@@ -113,7 +113,7 @@ class TestModuleSurface:
     def test_constants(self):
         # AGENT_NAME is the lowercase spec_id + "_agent" (template generator's
         # convention: e.g. "a3_agent" for spec A3, "j13_agent" for J13).
-        assert AGENT_NAME == "d4_agent"
+        assert AGENT_NAME == "d4_balance_agent"
         assert NODE_TYPE == "model.balance"
 
     def test_tool_count_matches_registry(self):

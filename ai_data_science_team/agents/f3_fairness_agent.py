@@ -43,7 +43,7 @@ from ai_data_science_team.tools.f3_fairness import (
 
 logger = logging.getLogger(__name__)
 
-AGENT_NAME = "f3_agent"
+AGENT_NAME = "f3_fairness_agent"
 NODE_TYPE = "model.fairness_audit"
 
 

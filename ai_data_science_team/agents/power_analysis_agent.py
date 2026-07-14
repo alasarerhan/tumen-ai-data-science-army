@@ -570,7 +570,7 @@ def make_power_analysis_agent(
                 continue
             # Route by tool name when known — this is unambiguous because
             # :mod:`langchain_core.messages.ToolMessage` populates ``name``
-            # with the tool id (matches POWER_ANALYSIS_TOOL_NAMES).
+            # with the tool id (matches the @tool wrapper name).
             tool_name = getattr(msg, "name", None)
             if tool_name == "pa_solve_power":
                 design_artifact["solve_power_runs"].append(art)

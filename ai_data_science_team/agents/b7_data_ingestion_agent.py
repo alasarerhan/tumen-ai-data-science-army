@@ -41,7 +41,7 @@ from ai_data_science_team.tools.b7_data_ingestion import (
 
 logger = logging.getLogger(__name__)
 
-AGENT_NAME = "b7_agent"
+AGENT_NAME = "b7_data_ingestion_agent"
 NODE_TYPE = "data.ingest"
 
 

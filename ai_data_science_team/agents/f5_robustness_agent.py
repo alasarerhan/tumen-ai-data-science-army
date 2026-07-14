@@ -40,7 +40,7 @@ from ai_data_science_team.tools.f5_robustness import (
 
 logger = logging.getLogger(__name__)
 
-AGENT_NAME = "f5_agent"
+AGENT_NAME = "f5_robustness_agent"
 NODE_TYPE = "model.robustness"
 
 

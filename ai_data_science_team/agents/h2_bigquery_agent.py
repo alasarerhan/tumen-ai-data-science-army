@@ -35,7 +35,7 @@ from ai_data_science_team.tools.h2_bigquery import (
 
 logger = logging.getLogger(__name__)
 
-AGENT_NAME = "h2_agent"
+AGENT_NAME = "h2_bigquery_agent"
 NODE_TYPE = "source.bigquery"
 
 

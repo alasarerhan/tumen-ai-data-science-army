@@ -36,7 +36,7 @@ from ai_data_science_team.tools.f6_llm_judge import (
 
 logger = logging.getLogger(__name__)
 
-AGENT_NAME = "f6_agent"
+AGENT_NAME = "f6_llm_judge_agent"
 NODE_TYPE = "model.llm_judge"
 
 

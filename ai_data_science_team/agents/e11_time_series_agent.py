@@ -40,7 +40,7 @@ from ai_data_science_team.tools.e11_time_series import (
 
 logger = logging.getLogger(__name__)
 
-AGENT_NAME = "e11_agent"
+AGENT_NAME = "e11_time_series_agent"
 NODE_TYPE = "model.train.timeseries"
 
 

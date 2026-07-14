@@ -45,7 +45,7 @@ from ai_data_science_team.tools.j6_responsible_ai import (
 
 logger = logging.getLogger(__name__)
 
-AGENT_NAME = "j6_agent"
+AGENT_NAME = "j6_responsible_ai_agent"
 NODE_TYPE = "model.responsible_audit"
 
 

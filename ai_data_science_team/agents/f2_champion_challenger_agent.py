@@ -38,7 +38,7 @@ from ai_data_science_team.tools.f2_champion_challenger import (
 
 logger = logging.getLogger(__name__)
 
-AGENT_NAME = "f2_agent"
+AGENT_NAME = "f2_champion_challenger_agent"
 NODE_TYPE = "model.champion_challenger"
 
 

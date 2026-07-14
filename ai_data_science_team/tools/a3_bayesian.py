@@ -295,7 +295,6 @@ def normal_means_posterior(
 
 __all__ = [
     "beta_posterior",
-    "beta_posterior.credible_interval",
     "BetaPosterior",
     "bayes_decision",
     "normal_means_posterior",

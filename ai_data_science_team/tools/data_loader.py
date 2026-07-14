@@ -1,10 +1,13 @@
 from langchain.tools import tool
 
+import logging
 import pandas as pd
 import os
 from pathlib import Path
 
 from typing_extensions import Tuple, List, Dict, Optional, Union
+
+logger = logging.getLogger(__name__)
 
 ALLOW_UNSAFE_PICKLE_ENV_VAR = "ALLOW_UNSAFE_PICKLE"
 DEFAULT_MAX_MB = 20  # cap file size we attempt to load
@@ -512,8 +515,8 @@ def resolve_existing_file_path(file_path: str) -> tuple[Path | None, list[str]]:
             roots.append(pkg_root)
             for parent in list(pkg_root.parents)[: DEFAULT_MAX_DEPTH + 1]:
                 roots.append(parent)
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.warning("package-root discovery failed: %s", exc)
 
         # De-dupe while preserving order.
         out: list[Path] = []

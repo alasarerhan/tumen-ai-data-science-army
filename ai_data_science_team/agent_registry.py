@@ -111,15 +111,28 @@ class AgentMetadata:
 # ---------------------------------------------------------------------------
 
 
+# Module-level singleton state.  A class-level mutable default dict
+# (`Dict = {}`) would be shared across every subclass instance and is
+# notoriously easy to corrupt; using module-level state avoids that
+# trap while keeping the public classmethod API intact.
+_REGISTRY: Dict[str, AgentMetadata] = {}
+_LOCK: threading.Lock = threading.Lock()
+
+
 class AgentRegistry:
     """Class-level singleton registry for all platform agents.
 
     All read/write operations are exposed as class methods so callers never
-    need to create an instance.
+    need to create an instance.  Underlying state lives at module level
+    (see ``_REGISTRY`` / ``_LOCK``) to avoid class-attribute mutation
+    hazards; the classmethods below delegate to those names.
     """
 
-    _registry: Dict[str, AgentMetadata] = {}
-    _lock: threading.Lock = threading.Lock()
+    # Backwards-compat class-attribute aliases (read-only intent).
+    # ``cls._registry`` and ``cls._lock`` resolve to the module-level
+    # singletons via these descriptors.  No per-class mutable state.
+    _registry = _REGISTRY  # type: ignore[assignment]
+    _lock = _LOCK  # type: ignore[assignment]
 
     # ------------------------------------------------------------------ write
 

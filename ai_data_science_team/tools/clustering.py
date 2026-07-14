@@ -15,10 +15,13 @@ compute_silhouette      Silhouette score + per-cluster silhouette values.
 """
 from __future__ import annotations
 
+import logging
 from typing import Any, Dict, List, Optional
 
 import numpy as np
 from langchain.tools import tool
+
+logger = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------
@@ -77,8 +80,8 @@ def run_kmeans(
     if k_eff >= 2 and len(set(labels)) >= 2:
         try:
             sil = round(float(silhouette_score(X, labels)), 4)
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.warning("silhouette_score failed for k=%d: %s", k, exc)
 
     sizes = {int(k): int(v) for k, v in zip(*np.unique(labels, return_counts=True))}
     share = {str(k): round(v / n_samples, 4) for k, v in sizes.items()}
@@ -161,8 +164,8 @@ def run_dbscan(
         if non_noise_mask.sum() >= 2:
             try:
                 sil = round(float(silhouette_score(X[non_noise_mask], np.array(labels)[non_noise_mask])), 4)
-            except Exception:
-                pass
+            except Exception as exc:
+                logger.warning("silhouette_score failed for DBSCAN: %s", exc)
 
     artifact: Dict[str, Any] = {
         "labels": labels,
@@ -444,8 +447,8 @@ def compute_silhouette(
             for lab in unique_valid:
                 sub_mask = y_valid == lab
                 per_cluster[str(int(lab))] = round(float(sample_vals[sub_mask].mean()), 4)
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.warning("silhouette computation failed (metric=%s): %s", metric, exc)
 
     artifact: Dict[str, Any] = {
         "overall_silhouette": overall,

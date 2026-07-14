@@ -3,6 +3,9 @@ from langgraph.prebuilt import InjectedState
 from langchain.tools import tool
 import psutil
 
+import logging
+logger = logging.getLogger(__name__)
+
 
 def _ms_to_iso(ms: int | None) -> str | None:
     if ms is None:
@@ -66,8 +69,8 @@ def _resolve_active_run(
     if active:
         try:
             mlflow.end_run()
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.warning("mlflow.end_run failed (run_id=%s): %s", run_id, exc)
 
     return mlflow.start_run(run_id=run_id, run_name=run_name, tags=tags)
 

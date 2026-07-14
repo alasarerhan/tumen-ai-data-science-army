@@ -7,6 +7,7 @@ import pytest
 
 from ai_data_science_team.tools.i2_catalog import (
     DEFAULT_SYNONYMS,
+    Catalog,
     add_pii_badges,
     add_source,
     add_table,

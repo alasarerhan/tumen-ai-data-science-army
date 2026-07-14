@@ -1,7 +1,6 @@
 """Tests for J11 Shadow/Canary tool."""
 from __future__ import annotations
 
-import math
 
 import pytest
 

@@ -5,7 +5,6 @@ Tests for ``ai_data_science_team.tools.b7_data_ingestion`` (B7 tool layer).
 from __future__ import annotations
 
 import pandas as pd
-import pytest
 
 from ai_data_science_team.tools.b7_data_ingestion import (
     compute_watermark,

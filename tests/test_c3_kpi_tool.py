@@ -6,10 +6,6 @@ import pandas as pd
 import pytest
 
 from ai_data_science_team.tools.c3_kpi import (
-    ALARM_KINDS,
-    PERIODS,
-    AlarmRule,
-    KPIHistory,
     build_alarm,
     check_alarm,
     compute_schedule,

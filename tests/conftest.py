@@ -32,3 +32,15 @@ def tmp_path() -> Path:
         yield path
     finally:
         shutil.rmtree(path, ignore_errors=True)
+
+
+def pytest_ignore_collect(collection_path, config):
+    """Skip legacy ``... 2.py`` duplicate test files.
+
+    The repo carries historic duplicates with a trailing space + ``2.py``
+    suffix that pre-date the modernized package layout.  These files
+    have stale references and would crash collection.  They are
+    intentionally kept out of the test set until the duplicate-cleanup
+    task removes them from the working tree.
+    """
+    return " 2.py" in str(collection_path)

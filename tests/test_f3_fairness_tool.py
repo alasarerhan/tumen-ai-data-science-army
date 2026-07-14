@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
-import pytest
 
 import ai_data_science_team.tools.f3_fairness as f3
 

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import pytest
 
 import ai_data_science_team.tools.f6_llm_judge as f6
 

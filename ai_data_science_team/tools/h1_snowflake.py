@@ -10,7 +10,7 @@ remote schema.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Tuple
+from typing import Any, Dict, List, Mapping, Sequence
 
 # ---------------------------------------------------------------------------
 # Base connector protocol

@@ -27,16 +27,14 @@ are required so they can be reused outside the LangGraph runtime.
 from __future__ import annotations
 
 import math
-from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
+from typing import Any, Dict, List, Optional, Sequence
 
-import numpy as np
 import pandas as pd
 from statsmodels.stats.power import (
     NormalIndPower,
     TTestIndPower,
 )
 from statsmodels.stats.proportion import (
-    proportion_confint,
     proportion_effectsize,
 )
 

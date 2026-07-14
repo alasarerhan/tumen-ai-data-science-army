@@ -22,7 +22,7 @@ synthetic messages into the state.
 from __future__ import annotations
 
 import math
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 
 import pandas as pd
 import pytest
@@ -113,13 +113,10 @@ def _agent_with_no_op_react() -> PowerAnalysisAgent:
     # Use the module's real factory, but make it return a tiny CompiledStateGraph
     # whose ``react_agent`` node is a no-op.  This is achieved by monkeypatching
     # the ``langchain.agents.create_agent`` call to short-circuit.
-    from langchain.agents import create_agent as real_create_agent
-    from langgraph.graph import END, START, StateGraph
     from langgraph.graph.message import add_messages
     from typing_extensions import Annotated, Sequence, TypedDict
     from langchain_core.messages import BaseMessage
 
-    from ai_data_science_team.agents import power_analysis_agent as pa
 
     class _GraphState(TypedDict):
         messages: Annotated[Sequence[BaseMessage], add_messages]
@@ -135,9 +132,6 @@ def _agent_with_no_op_react() -> PowerAnalysisAgent:
     def fake_create_agent(model, tools, **kwargs):
         # Return an object whose invoke forwards to ``state['messages']``
         # unchanged (already pre-populated with tool results by the test).
-        from langgraph.prebuilt.chat_agent_executor import (
-            CompiledStateGraph as _CompiledStateGraph,
-        )
 
         class _Noop:
             name = "react_agent"

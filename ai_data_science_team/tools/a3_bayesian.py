@@ -22,9 +22,9 @@ Public surface
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from math import lgamma
-from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Tuple
+from typing import Any, Dict, Sequence, Tuple
 
 import numpy as np
 

@@ -5,7 +5,6 @@ Tests for ``ai_data_science_team.tools.f2_champion_challenger`` (F2 tool layer).
 from __future__ import annotations
 
 import numpy as np
-import pandas as pd
 import pytest
 
 from ai_data_science_team.tools.f2_champion_challenger import (

@@ -21,7 +21,6 @@ from ai_data_science_team.utils.regex import (
     add_comments_to_top,
     remove_consecutive_duplicates,
 )
-from ai_data_science_team.utils.messages import get_last_user_message_content
 from ai_data_science_team.utils.sandbox import run_code_sandboxed_subprocess
 
 from IPython.display import Image, display
@@ -1252,11 +1251,10 @@ def create_react_agent_graph(
             "data_raw": df.to_dict(),
         })
     """
-    from langchain_core.messages import HumanMessage, SystemMessage, ToolMessage
+    from langchain_core.messages import SystemMessage, ToolMessage
     from langgraph.graph import StateGraph, START, END
     from langgraph.graph.message import add_messages
     from typing_extensions import TypedDict
-    import operator
 
     if GraphState is None:
         class ReActState(TypedDict):

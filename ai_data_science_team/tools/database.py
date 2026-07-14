@@ -16,15 +16,13 @@ Tools
 from __future__ import annotations
 
 import re
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, Optional, Union
 
 import pandas as pd
 import sqlalchemy as sql
 from sqlalchemy import inspect
 
 from ai_data_science_team.tool_registry import (
-    ToolRegistry,
-    ToolDefinition,
     ToolParameter,
     register_tool,
 )

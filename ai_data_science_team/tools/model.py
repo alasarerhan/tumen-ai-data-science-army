@@ -14,14 +14,12 @@ Tools
 from __future__ import annotations
 
 import os
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Union
 
 import numpy as np
 import pandas as pd
 
 from ai_data_science_team.tool_registry import (
-    ToolRegistry,
-    ToolDefinition,
     ToolParameter,
     register_tool,
 )

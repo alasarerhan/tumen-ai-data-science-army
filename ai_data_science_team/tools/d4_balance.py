@@ -6,10 +6,9 @@ selection (smote / undersampling / class_weight / threshold_tuning)
 
 from __future__ import annotations
 
-import math
 import time
 import uuid
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple
 
 import numpy as np

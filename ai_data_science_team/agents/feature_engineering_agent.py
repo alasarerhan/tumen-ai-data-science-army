@@ -34,7 +34,6 @@ from ai_data_science_team.utils.regex import (
     format_recommended_steps,
     get_generic_summary,
 )
-from ai_data_science_team.tools.dataframe import get_dataframe_summary
 from ai_data_science_team.utils.logging import log_ai_function, log_ai_error
 from ai_data_science_team.utils.sandbox import run_code_sandboxed_subprocess
 from ai_data_science_team.utils.messages import get_last_user_message_content

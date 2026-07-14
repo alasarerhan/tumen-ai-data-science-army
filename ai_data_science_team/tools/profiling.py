@@ -14,13 +14,10 @@ from __future__ import annotations
 
 import difflib
 import re
-from typing import Any, Dict, List, Optional
 
 import pandas as pd
 
 from ai_data_science_team.tool_registry import (
-    ToolRegistry,
-    ToolDefinition,
     ToolParameter,
     register_tool,
 )

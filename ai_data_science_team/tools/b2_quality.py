@@ -27,19 +27,15 @@ The module exposes the following public functions:
 
 from __future__ import annotations
 
-import math
 from typing import (
     Any,
     Dict,
-    Iterable,
     List,
     Mapping,
     Optional,
     Sequence,
-    Tuple,
 )
 
-import numpy as np
 import pandas as pd
 
 

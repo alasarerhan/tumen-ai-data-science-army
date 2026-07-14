@@ -432,7 +432,6 @@ class RedisSignalStore:
         return f"{self._key_prefix}consumed:{session_id}"
 
     def emit(self, signal) -> Any:
-        from ai_data_science_team.signals import WorkflowSignal
 
         signal_dict = signal.to_dict()
         signal_json = json.dumps(signal_dict)
@@ -680,7 +679,6 @@ class RedisChatSessionStore:
         return len(self.list_ids())
 
     def upload_dataset(self, session_id: str, name: str, df) -> None:
-        import pandas as pd
 
         with self._lock:
             if self._redis:
@@ -710,7 +708,6 @@ class RedisChatSessionStore:
             return dict(self._df_cache.get(session_id, {}))
 
     def add_message(self, session_id: str, message) -> None:
-        from ai_data_science_team.multiagents.chat_session import ChatMessage
 
         message_dict = {
             "role": message.role,

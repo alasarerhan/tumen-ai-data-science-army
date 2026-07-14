@@ -31,11 +31,9 @@ Public surface
 from __future__ import annotations
 
 import math
-import statistics
 from dataclasses import dataclass, field
-from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Tuple
+from typing import Any, Dict, List, Mapping
 
-import numpy as np
 import pandas as pd
 
 

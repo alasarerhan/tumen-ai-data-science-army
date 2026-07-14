@@ -154,7 +154,6 @@ def detect_drift(
     print("    * Tool: detect_drift")
 
     import numpy as np
-    from scipy import stats  # noqa: ensure installed
 
     ref_df = pd.DataFrame(reference_data_raw)
     cur_df = pd.DataFrame(current_data_raw)

@@ -4,9 +4,7 @@ Tests for ``ai_data_science_team.tools.g2_retrain_orchestrator`` (G2 tool layer)
 
 from __future__ import annotations
 
-import time
 
-import pytest
 
 from ai_data_science_team.tools.g2_retrain_orchestrator import (
     build_audit_trail,

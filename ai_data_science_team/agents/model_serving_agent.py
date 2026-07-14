@@ -277,7 +277,6 @@ def run_inference(
     """
     print("    * Tool: run_inference")
 
-    import numpy as np
 
     uri = (model_uri or "").strip()
     model = _MODEL_REGISTRY.get(uri)

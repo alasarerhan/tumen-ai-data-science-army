@@ -8,8 +8,7 @@ of the connector family.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple
+from typing import Any, Dict, List, Optional
 
 
 from ai_data_science_team.tools.h1_snowflake import (

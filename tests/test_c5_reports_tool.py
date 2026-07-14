@@ -2,12 +2,10 @@
 
 from __future__ import annotations
 
-import time
 
 import pytest
 
 from ai_data_science_team.tools.c5_reports import (
-    TEMPLATES,
     build_report,
     compute_schedule,
     get_template,

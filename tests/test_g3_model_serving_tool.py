@@ -4,7 +4,6 @@ Tests for ``ai_data_science_team.tools.g3_model_serving`` (G3 tool layer).
 
 from __future__ import annotations
 
-import pytest
 
 from ai_data_science_team.tools.g3_model_serving import (
     PORT_POOL,

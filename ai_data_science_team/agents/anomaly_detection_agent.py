@@ -38,7 +38,6 @@ from langgraph.prebuilt import InjectedState
 from langgraph.types import Checkpointer
 
 from ai_data_science_team.templates import BaseAgent
-from ai_data_science_team.tool_registry import ToolRegistry
 from ai_data_science_team.utils.messages import get_tool_call_names
 from ai_data_science_team.utils.regex import format_agent_name
 

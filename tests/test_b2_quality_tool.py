@@ -4,15 +4,12 @@ Tests for ``ai_data_science_team.tools.b2_quality`` (B2 tool layer).
 
 from __future__ import annotations
 
-import math
-import re
 
 import numpy as np
 import pandas as pd
 import pytest
 
 from ai_data_science_team.tools.b2_quality import (
-    TEMPLATES,
     expectation_suite_from_template,
     summarise_suite_run,
     validate_against_suite,

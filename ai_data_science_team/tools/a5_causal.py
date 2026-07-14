@@ -22,11 +22,9 @@ Public surface
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Any, Dict, List, Mapping, Optional, Sequence
+from typing import Any, Dict, Sequence
 
 import numpy as np
-import pandas as pd
 
 
 def did_lift(

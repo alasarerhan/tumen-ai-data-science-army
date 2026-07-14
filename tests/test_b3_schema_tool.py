@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import pandas as pd
-import pytest
 
 from ai_data_science_team.tools.b3_schema import (
     ColumnInference,

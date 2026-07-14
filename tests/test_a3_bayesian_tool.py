@@ -8,7 +8,6 @@ import numpy as np
 import pytest
 
 from ai_data_science_team.tools.a3_bayesian import (
-    BetaPosterior,
     bayes_decision,
     beta_posterior,
     normal_means_posterior,

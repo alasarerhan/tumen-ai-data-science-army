@@ -196,7 +196,6 @@ def explain_with_lime(
             "LIME is required for this tool.  Install with: pip install lime"
         ) from exc
 
-    import numpy as np
 
     explain_df = pd.DataFrame(data_raw)
     background_df = pd.DataFrame(background_data_raw)

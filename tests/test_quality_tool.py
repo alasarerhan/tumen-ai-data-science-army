@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from ai_data_science_team.tools.b2_quality import (
+from ai_data_science_team.tools.quality import (
     expectation_suite_from_template,
     summarise_suite_run,
     validate_against_suite,

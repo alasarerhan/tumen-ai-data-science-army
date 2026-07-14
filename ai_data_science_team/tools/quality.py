@@ -391,12 +391,4 @@ __all__ = [
     "expectation_suite_from_template",
     "validate_against_suite",
     "summarise_suite_run",
-    "B2_VALIDATION_TOOL_NAMES",
-]
-
-
-B2_VALIDATION_TOOL_NAMES = [
-    "b2_suite_from_template",
-    "b2_validate",
-    "b2_summarise",
 ]

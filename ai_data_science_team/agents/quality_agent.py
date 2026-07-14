@@ -3,7 +3,7 @@
 Phase-5 agent wrapper for spec B2.  Wraps the deterministic
 tool layer (``ai_data_science_team.tools.b2_quality``) with
 LangChain ``@tool`` decorators and exposes the standard
-``make_b2_quality_agent`` factory + ``B2Agent`` OO
+``make_quality_agent`` factory + ``QualityAgent`` OO
 wrapper, following the same pattern as ABTestingAgent and
 PowerAnalysisAgent.
 
@@ -28,8 +28,7 @@ from ai_data_science_team.utils.regex import format_agent_name
 import pandas as pd
 from typing import List, Dict, Optional, Sequence, Mapping
 
-from ai_data_science_team.tools.b2_quality import (
-    B2_VALIDATION_TOOL_NAMES,
+from ai_data_science_team.tools.quality import (
     TEMPLATES,
     expectation_suite_from_template,
     summarise_suite_run,
@@ -131,7 +130,7 @@ def b2_summarise_suite_run_wrapped(result: Mapping[str, Any]) -> Tuple[str, dict
     }
 
 
-B2_TOOLS = [
+QUALITY_TOOLS = [
     b2_expectation_suite_from_template_wrapped,
     b2_validate_against_suite_wrapped,
     b2_summarise_suite_run_wrapped,
@@ -143,7 +142,7 @@ B2_TOOLS = [
 # ---------------------------------------------------------------------------
 
 
-def make_b2_quality_agent(
+def make_quality_agent(
     model: Any,
     checkpointer: Optional[Checkpointer] = None,
     create_react_agent_kwargs: Optional[Dict] = None,
@@ -165,7 +164,7 @@ def make_b2_quality_agent(
 
     react_agent = create_agent(
         model,
-        tools=B2_TOOLS,
+        tools=QUALITY_TOOLS,
         state_schema=GraphState,
         checkpointer=checkpointer,
         **create_react_agent_kwargs,
@@ -228,7 +227,7 @@ def make_b2_quality_agent(
 # ---------------------------------------------------------------------------
 
 
-class B2Agent(BaseAgent):
+class QualityAgent(BaseAgent):
     """OO wrapper for the B2 agent (node type ``data.validate``)."""
 
     def __init__(
@@ -251,7 +250,7 @@ class B2Agent(BaseAgent):
 
     def _make_compiled_graph(self):
         self.response = None
-        return make_b2_quality_agent(**self._params)
+        return make_quality_agent(**self._params)
 
     def update_params(self, **kwargs):
         for k, v in kwargs.items():
@@ -283,7 +282,7 @@ class B2Agent(BaseAgent):
 __all__ = [
     "AGENT_NAME",
     "NODE_TYPE",
-    "B2Agent",
-    "make_b2_quality_agent",
-    "B2_TOOLS",
+    "QualityAgent",
+    "make_quality_agent",
+    "QUALITY_TOOLS",
 ]

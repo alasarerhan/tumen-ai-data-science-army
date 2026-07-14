@@ -1,12 +1,12 @@
 """
-Tests for ``ai_data_science_team.agents.b2_quality_agent`` (B2 layer).
+Tests for ``ai_data_science_team.agents.quality_agent`` (Quality layer).
 
 Phase-6 integration tests covering:
   1. Module surface (NODE_TYPE, AGENT_NAME, tool count, tool names)
   2. Tool wrapper direct invocation (LLM-free, no LLM calls)
-  3. ``make_b2_quality_agent`` factory returns a compiled graph with the
+  3. ``make_quality_agent`` factory returns a compiled graph with the
      expected node wiring
-  4. ``B2Agent`` (BaseAgent subclass) constructs, exposes accessors,
+  4. ``QualityAgent`` (BaseAgent subclass) constructs, exposes accessors,
      rebuilds on ``update_params``, and assembles ``invoke_agent`` payloads
   5. Post-process routing (LLM-free via ``langchain.agents.create_agent``
      monkey-patch; drives the agent with synthetic messages and verifies
@@ -28,15 +28,15 @@ from langchain_core.messages import AIMessage, BaseMessage, ToolMessage
 from typing_extensions import Annotated, TypedDict
 from langgraph.graph.message import add_messages
 
-from ai_data_science_team.agents.b2_quality_agent import (
+from ai_data_science_team.agents.quality_agent import (
     expectation_suite_from_template,
     validate_against_suite,
     summarise_suite_run,
-    B2Agent,
-    make_b2_quality_agent,
+    QualityAgent,
+    make_quality_agent,
     AGENT_NAME,
     NODE_TYPE,
-    B2_TOOLS,
+    QUALITY_TOOLS,
 )
 
 
@@ -48,7 +48,7 @@ from ai_data_science_team.agents.b2_quality_agent import (
 class _StubModel:
     """No-op LangChain chat-model stand-in.
 
-    ``make_b2_quality_agent`` calls ``create_agent(model, ...)`` to bind tools;
+    ``make_quality_agent`` calls ``create_agent(model, ...)`` to bind tools;
     this stub exposes the minimal surface.  We never actually drive
     the LLM in these tests — the factory is monkey-patched in
     :func:`_agent_with_no_op_react` below.
@@ -72,7 +72,7 @@ def _ai_msg(content: str = "ok") -> AIMessage:
     return AIMessage(content=content, name=AGENT_NAME)
 
 
-def _agent_with_no_op_react(monkeypatch) -> B2Agent:
+def _agent_with_no_op_react(monkeypatch) -> QualityAgent:
     """Build an agent whose ``react_agent`` node is a no-op.
 
     We monkey-patch ``langchain.agents.create_agent`` to return a
@@ -95,7 +95,7 @@ def _agent_with_no_op_react(monkeypatch) -> B2Agent:
         return RunnableLambda(_passthrough)
 
     monkeypatch.setattr("langchain.agents.create_agent", fake_create_agent)
-    return B2Agent(model=_StubModel())
+    return QualityAgent(model=_StubModel())
 
 
 # ---------------------------------------------------------------------------
@@ -111,7 +111,7 @@ class TestModuleSurface:
         assert NODE_TYPE == "data.validate"
 
     def test_tool_count_matches_registry(self):
-        assert len(B2_TOOLS) >= 1
+        assert len(QUALITY_TOOLS) >= 1
 
     def test_tool_names_match_registry(self):
         # Loose sanity check: every wrapper name in the agent module
@@ -120,7 +120,7 @@ class TestModuleSurface:
         # tool modules use a different naming convention (e.g.
         # ``B2_VALIDATION_TOOL_NAMES`` vs ``B2_QUALITY_TOOL_NAMES``)
         # and the strict-equality check is not what this test is for.
-        wrapper_names = {t.name for t in B2_TOOLS}
+        wrapper_names = {t.name for t in QUALITY_TOOLS}
         assert len(wrapper_names) >= 1
         for wname in wrapper_names:
             assert wname.endswith("_wrapped"), (
@@ -131,7 +131,7 @@ class TestModuleSurface:
         # Verify each @tool wrapper has the StructuredTool interface
         # (name, invoke, func attrs).
         import sys
-        mod = sys.modules["ai_data_science_team.agents.b2_quality_agent"]
+        mod = sys.modules["ai_data_science_team.agents.quality_agent"]
         wrapper_names = ["b2_expectation_suite_from_template_wrapped", "b2_validate_against_suite_wrapped", "b2_summarise_suite_run_wrapped"]
         for wrapper_name in wrapper_names:
             wrapper = getattr(mod, wrapper_name)
@@ -148,7 +148,7 @@ class TestModuleSurface:
 class TestExpectationSuiteFromTemplate:
     def test_direct_call_returns_tuple(self):
         """Call expectation_suite_from_template via its @tool wrapper (LLM-free)."""
-        from ai_data_science_team.agents.b2_quality_agent import b2_expectation_suite_from_template_wrapped
+        from ai_data_science_team.agents.quality_agent import b2_expectation_suite_from_template_wrapped
         kwargs = {
             "template_name": "sample",
             "dataset": None,
@@ -166,7 +166,7 @@ class TestExpectationSuiteFromTemplate:
 class TestValidateAgainstSuite:
     def test_direct_call_returns_tuple(self):
         """Call validate_against_suite via its @tool wrapper (LLM-free)."""
-        from ai_data_science_team.agents.b2_quality_agent import b2_validate_against_suite_wrapped
+        from ai_data_science_team.agents.quality_agent import b2_validate_against_suite_wrapped
         kwargs = {
             "df": None,
             "suite": [],
@@ -184,7 +184,7 @@ class TestValidateAgainstSuite:
 class TestSummariseSuiteRun:
     def test_direct_call_returns_tuple(self):
         """Call summarise_suite_run via its @tool wrapper (LLM-free)."""
-        from ai_data_science_team.agents.b2_quality_agent import b2_summarise_suite_run_wrapped
+        from ai_data_science_team.agents.quality_agent import b2_summarise_suite_run_wrapped
         kwargs = {
             "result": None,
         }
@@ -204,10 +204,10 @@ class TestSummariseSuiteRun:
 # ---------------------------------------------------------------------------
 
 
-class TestMakeB2Agent:
+class TestMakeQualityAgent:
     def test_factory_returns_compiled_graph(self):
         from langgraph.graph import StateGraph
-        app = make_b2_quality_agent(model=_StubModel())
+        app = make_quality_agent(model=_StubModel())
         # The compiled graph has the underlying StateGraph structure
         assert hasattr(app, "nodes")
         # Standard 3-node pipeline: prepare_messages, react_agent, post_process
@@ -218,7 +218,7 @@ class TestMakeB2Agent:
 
     def test_factory_with_checkpointer(self):
         from langgraph.checkpoint.memory import InMemorySaver
-        app = make_b2_quality_agent(model=_StubModel(), checkpointer=InMemorySaver())
+        app = make_quality_agent(model=_StubModel(), checkpointer=InMemorySaver())
         assert app is not None
 
 
@@ -227,14 +227,14 @@ class TestMakeB2Agent:
 # ---------------------------------------------------------------------------
 
 
-class TestB2Agent:
+class TestQualityAgent:
     def test_init_compiles_graph(self):
-        agent = B2Agent(model=_StubModel())
+        agent = QualityAgent(model=_StubModel())
         assert agent.response is None
         assert agent._compiled_graph is not None
 
     def test_update_params_rebuilds(self):
-        agent = B2Agent(model=_StubModel())
+        agent = QualityAgent(model=_StubModel())
         before = agent._compiled_graph
         # Use a kwarg known to be supported across all agent wrappers.
         # Some wrappers accept ``temperature``; some don't.  We try
@@ -249,11 +249,11 @@ class TestB2Agent:
         assert agent._compiled_graph is not before
 
     def test_get_ai_message_when_no_response(self):
-        agent = B2Agent(model=_StubModel())
+        agent = QualityAgent(model=_StubModel())
         assert agent.get_ai_message() is None
 
     def test_invoke_agent_passes_user_instructions(self):
-        agent = B2Agent(model=_StubModel())
+        agent = QualityAgent(model=_StubModel())
         # Mock the compiled graph to capture the call
         captured = {}
         def fake_invoke(payload, **kwargs):

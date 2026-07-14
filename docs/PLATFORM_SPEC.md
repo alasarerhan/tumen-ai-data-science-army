@@ -57,7 +57,7 @@ Durum: 📋 katalogda · ✍️ detay spec yazıldı · 🚧 implementasyonda ·
 | E1 | Sklearn/XGBoost/LightGBM Trainer | P0 | 1 | ✅ | specs/E1-multi-engine-trainer.md |
 | E2 | Hyperparameter Optimization | P0 | 1 | ✅ | specs/E2-hpo.md |
 | E3 | Deep Learning (Tabular/TS) | P1 | 2 | ✅ | specs/E3-deep-learning.md |
-| E11 | Time Series genişletmesi | P2 | 3 | ✍️ | specs/E11-time-series-ext.md |
+| E11 | Time Series genişletmesi | P2 | 3 | ✅ | specs/E11-time-series-ext.md |
 | E12 | Clustering genişletmesi | P2 | 3 | ✍️ | specs/E12-clustering-ext.md |
 | F1 | Evaluation genişletmesi | P1 | 2 | ✅ | specs/F1-evaluation-ext.md |
 | F2 | Champion–Challenger | P0 | 1 | ✅ | specs/F2-champion-challenger.md |

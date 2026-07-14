@@ -70,7 +70,7 @@ Durum: 📋 katalogda · ✍️ detay spec yazıldı · 🚧 implementasyonda ·
 | G3 | Gerçek Model Serving/Deploy | P1 | 2 | ✅ | specs/G3-model-serving.md |
 | G4 | Batch Scoring + model.predict | P0 | 1 | ✅ | specs/G4-batch-scoring.md |
 | G5 | Registry Promotion | P1 | 2 | ✅ | specs/G5-registry-promotion.md |
-| G7 | Incident / Alerting | P2 | 3 | ✍️ | specs/G7-alerting.md |
+| G7 | Incident / Alerting | P2 | 3 | ✅ | specs/G7-alerting.md |
 | H1 | Snowflake Connector | P1 | 2 | ✅ | specs/H1-snowflake.md |
 | H2 | BigQuery Connector | P1 | 2 | ✅ | specs/H2-bigquery.md |
 | H3 | Tableau Connector | P1 | 2 | ✅ | specs/H3-tableau.md |

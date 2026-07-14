@@ -35,15 +35,20 @@ Usage
     ws.upload_dataset(sid, "sales", df)
 
     resp = ws.chat(sid, "en çok satan ürünü göster")
-    print(resp.text)
-    print(resp.artifact_type)   # "table" | "chart" | "markdown" | None
-    print(resp.agent_used)      # "pandas_data_analyst"
+    logger.info(resp.text)
+    logger.info(resp.artifact_type)   # "table" | "chart" | "markdown" | None
+    logger.info(resp.agent_used)      # "pandas_data_analyst"
 
     history = ws.get_history(sid)
 """
 
 from __future__ import annotations
 
+
+
+import logging
+
+logger = logging.getLogger(__name__)
 import asyncio
 import time
 from dataclasses import dataclass

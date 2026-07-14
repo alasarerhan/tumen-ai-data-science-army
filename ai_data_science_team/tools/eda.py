@@ -1,5 +1,10 @@
 from typing_extensions import Annotated, Dict, Tuple, Union
 
+
+
+import logging
+
+logger = logging.getLogger(__name__)
 import os
 import tempfile
 import warnings
@@ -34,7 +39,7 @@ def explain_data(
     Returns:
         str: Detailed DataFrame summary.
     """
-    print("    * Tool: explain_data")
+    logger.info("    * Tool: explain_data")
     import pandas as pd
 
     result = get_dataframe_summary(
@@ -72,7 +77,7 @@ def describe_dataset(
         - content: A textual summary indicating that summary statistics have been computed.
         - artifact: A dictionary (derived from DataFrame.describe()) containing detailed statistical measures.
     """
-    print("    * Tool: describe_dataset")
+    logger.info("    * Tool: describe_dataset")
     import pandas as pd
 
     df = pd.DataFrame(data_raw)
@@ -107,7 +112,7 @@ def visualize_missing(
         artifact: A dict with keys 'matrix_plot', 'bar_plot', and 'heatmap_plot' each containing the
                   corresponding base64 encoded PNG image.
     """
-    print("    * Tool: visualize_missing")
+    logger.info("    * Tool: visualize_missing")
 
     try:
         import missingno as msno  # Ensure missingno is installed
@@ -190,7 +195,7 @@ def generate_correlation_funnel(
     name_infreq : str
         The name to use for infrequent levels. Default is '-OTHER'.
     """
-    print("    * Tool: generate_correlation_funnel")
+    logger.info("    * Tool: generate_correlation_funnel")
     try:
         import pytimetk as tk  # noqa: F401
     except ImportError:
@@ -316,7 +321,7 @@ def generate_sweetviz_report(
         content: A summary message describing the generated report.
         artifact: A dictionary with the report file path and optionally the report's HTML content.
     """
-    print("    * Tool: generate_sweetviz_report")
+    logger.info("    * Tool: generate_sweetviz_report")
 
     # Import sweetviz
     try:
@@ -336,7 +341,7 @@ def generate_sweetviz_report(
         base_reports_dir = os.path.abspath(os.path.join(os.getcwd(), "pipeline_reports"))
         os.makedirs(base_reports_dir, exist_ok=True)
         report_directory = tempfile.mkdtemp(prefix="sweetviz_", dir=base_reports_dir)
-        print(f"    * Using pipeline reports directory: {report_directory}")
+        logger.info(f"    * Using pipeline reports directory: {report_directory}")
     else:
         # Ensure user-specified directory exists.
         if not os.path.exists(report_directory):
@@ -413,7 +418,7 @@ def generate_dtale_report(
         content: A summary message describing the dtale report.
         artifact: A dictionary containing the URL of the dtale report.
     """
-    print("    * Tool: generate_dtale_report")
+    logger.info("    * Tool: generate_dtale_report")
 
     try:
         import dtale

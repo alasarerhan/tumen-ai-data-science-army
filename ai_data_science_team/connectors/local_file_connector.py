@@ -11,10 +11,15 @@ Example::
     conn.connect()
     sources = conn.list_sources()          # ["sales.csv", "inventory.parquet", ...]
     df = conn.read("sales.csv", max_rows=500)
-    print(conn.health_check())
+    logger.info(conn.health_check())
 """
 from __future__ import annotations
 
+
+
+import logging
+
+logger = logging.getLogger(__name__)
 import os
 from pathlib import Path
 from typing import Any, Dict, List, Optional

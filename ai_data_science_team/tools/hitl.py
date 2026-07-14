@@ -38,11 +38,16 @@ Usage::
         risk_level="medium",
         agent_name="FeatureEngineeringAgent",
     )
-    print(content)
-    print(artifact)
+    logger.info(content)
+    logger.info(artifact)
 """
 from __future__ import annotations
 
+
+
+import logging
+
+logger = logging.getLogger(__name__)
 import datetime
 import json
 import threading

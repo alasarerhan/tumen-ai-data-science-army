@@ -1,5 +1,10 @@
 from __future__ import annotations
 
+
+
+import logging
+
+logger = logging.getLogger(__name__)
 from typing import Sequence, Optional, Any
 
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
@@ -136,7 +141,7 @@ def make_supervisor_ds_team(
         return None
 
     def supervisor_node(state: SupervisorDSState):
-        print("---SUPERVISOR---")
+        logger.info("---SUPERVISOR---")
         clean_msgs = _clean_messages(state.get("messages", []))
         # Hydrate cached datasets from artifacts for stateless reuse across calls.
         hydrated: dict[str, Any] = {}
@@ -695,7 +700,7 @@ def make_supervisor_ds_team(
                     steps.append("mlflow_tools")
 
             if not steps:
-                print("  recognized intent but no actionable steps -> fallback router")
+                logger.info("  recognized intent but no actionable steps -> fallback router")
             else:
                 for step in steps:
                     if handled_steps.get(step):
@@ -707,7 +712,7 @@ def make_supervisor_ds_team(
                     # Prevent infinite loops: don't attempt the same step twice within one user request
                     # unless it was actually completed.
                     if attempted_steps.get(step) and not handled_steps.get(step):
-                        print(f"  step '{step}' already attempted -> FINISH")
+                        logger.info(f"  step '{step}' already attempted -> FINISH")
                         return {
                             **(
                                 {"messages": planner_messages}
@@ -741,7 +746,7 @@ def make_supervisor_ds_team(
                         )
                         and not data_ready
                     ):
-                        print(
+                        logger.info(
                             f"  step '{step}' requires data but none is ready -> Data_Loader_Tools_Agent"
                         )
                         attempted_steps["load"] = True
@@ -764,7 +769,7 @@ def make_supervisor_ds_team(
                             "target_variable": planned_target,
                         }
 
-                    print(f"  next_step='{step}' -> {worker}")
+                    logger.info(f"  next_step='{step}' -> {worker}")
                     attempted_steps[step] = True
                     return {
                         **({"messages": planner_messages} if planner_messages else {}),
@@ -781,7 +786,7 @@ def make_supervisor_ds_team(
                         "target_variable": planned_target,
                     }
 
-                print("  all requested steps handled -> FINISH")
+                logger.info("  all requested steps handled -> FINISH")
                 return {
                     **({"messages": planner_messages} if planner_messages else {}),
                     "next": "FINISH",
@@ -801,7 +806,7 @@ def make_supervisor_ds_team(
             {"messages": clean_msgs, "last_worker": state.get("last_worker")}
         )
         next_worker = result.get("next")
-        print(
+        logger.info(
             f"  data_ready={data_ready}, last_worker={last_worker}, router_next={next_worker}"
         )
 
@@ -889,13 +894,13 @@ def make_supervisor_ds_team(
     _truncate_text = truncate_text
 
     def node_loader(state: SupervisorDSState):
-        print("---DATA LOADER---")
+        logger.info("---DATA LOADER---")
         before_msgs = list(state.get("messages", []) or [])
         last_human = _get_last_human(before_msgs)
         cfg = (state.get("artifacts") or {}).get("config") or {}
         debug = bool(cfg.get("debug")) if isinstance(cfg, dict) else False
         if debug:
-            print(f"  loader last_human={last_human!r}")
+            logger.info(f"  loader last_human={last_human!r}")
 
         # DataLoaderToolsAgent is tool-driven; the latest user request is already in messages.
         data_loader_agent.invoke_messages(messages=before_msgs)
@@ -905,13 +910,13 @@ def make_supervisor_ds_team(
         loader_artifacts = response.get("data_loader_artifacts")
         if debug:
             try:
-                print(f"  loader response_keys={sorted(list(response.keys()))}")
+                logger.info(f"  loader response_keys={sorted(list(response.keys()))}")
                 if isinstance(loader_artifacts, dict):
-                    print(
+                    logger.info(
                         f"  loader artifacts_keys={list(loader_artifacts.keys())[:25]}"
                     )
                 else:
-                    print(f"  loader artifacts_type={type(loader_artifacts)}")
+                    logger.info(f"  loader artifacts_type={type(loader_artifacts)}")
             except Exception:
                 pass
 
@@ -930,7 +935,7 @@ def make_supervisor_ds_team(
         artifacts_map = normalize_loader_artifacts(loader_artifacts)
         if debug:
             try:
-                print(f"  loader artifacts_map_keys={list(artifacts_map.keys())[:25]}")
+                logger.info(f"  loader artifacts_map_keys={list(artifacts_map.keys())[:25]}")
             except Exception:
                 pass
 
@@ -945,9 +950,9 @@ def make_supervisor_ds_team(
 
         if debug:
             try:
-                print(f"  loader load_file_ok_items={len(load_file_ok_items)}")
+                logger.info(f"  loader load_file_ok_items={len(load_file_ok_items)}")
                 for name, data in load_file_ok_items[:3]:
-                    print(
+                    logger.info(
                         f"    - ok {name}: data_type={type(data)} shape={_shape(data)}"
                     )
             except Exception:
@@ -1005,11 +1010,11 @@ def make_supervisor_ds_team(
                         fallback_loaded_dataset = True
                         dir_listing = None
                         if debug:
-                            print(
+                            logger.info(
                                 f"  loader deterministic_fallback_loaded={len(ok_items)} last={loaded_dataset_label!r}"
                             )
                     if errs and debug:
-                        print(f"  loader deterministic_fallback_errors={errs[:3]}")
+                        logger.info(f"  loader deterministic_fallback_errors={errs[:3]}")
 
                     if errs:
                         marker = {
@@ -1162,7 +1167,7 @@ def make_supervisor_ds_team(
                 else:
                     loader_artifacts = {"load_file_fallback": marker}
 
-        print(
+        logger.info(
             f"  loader data_raw shape={_shape(data_raw)} active_data_key={active_data_key}"
         )
 
@@ -1599,7 +1604,7 @@ def make_supervisor_ds_team(
         }
 
     def node_merge(state: SupervisorDSState):
-        print("---DATA MERGE---")
+        logger.info("---DATA MERGE---")
         before_msgs = list(state.get("messages", []) or [])
         last_human = _get_last_human(before_msgs)
         datasets, active_dataset_id = _ensure_dataset_registry(state)
@@ -1738,7 +1743,7 @@ def make_supervisor_ds_team(
         }
 
     def node_wrangling(state: SupervisorDSState):
-        print("---DATA WRANGLING---")
+        logger.info("---DATA WRANGLING---")
         before_msgs = list(state.get("messages", []) or [])
         last_human = _get_last_human(before_msgs)
         datasets, active_dataset_id = _ensure_dataset_registry(state)
@@ -1855,7 +1860,7 @@ def make_supervisor_ds_team(
         }
 
     def node_cleaning(state: SupervisorDSState):
-        print("---DATA CLEANING---")
+        logger.info("---DATA CLEANING---")
         before_msgs = list(state.get("messages", []) or [])
         last_human = _get_last_human(before_msgs)
         datasets, active_dataset_id = _ensure_dataset_registry(state)
@@ -1971,7 +1976,7 @@ def make_supervisor_ds_team(
         }
 
     def node_sql(state: SupervisorDSState):
-        print("---SQL DATABASE---")
+        logger.info("---SQL DATABASE---")
         before_msgs = list(state.get("messages", []) or [])
         last_human = _get_last_human(before_msgs)
         datasets, active_dataset_id = _ensure_dataset_registry(state)
@@ -2071,7 +2076,7 @@ def make_supervisor_ds_team(
         }
 
     def node_eda(state: SupervisorDSState):
-        print("---EDA TOOLS---")
+        logger.info("---EDA TOOLS---")
         before_msgs = list(state.get("messages", []) or [])
         last_human = _get_last_human(before_msgs).lower()
         feature_df = _ensure_df(state.get("feature_data"))
@@ -2115,7 +2120,7 @@ def make_supervisor_ds_team(
         response = eda_tools_agent.response or {}
         merged = _merge_messages(before_msgs, response)
         merged["messages"] = _tag_messages(merged.get("messages"), "eda_tools_agent")
-        print(
+        logger.info(
             f"  eda artifacts keys={response.get('eda_artifacts') and list(response.get('eda_artifacts').keys()) if isinstance(response.get('eda_artifacts'), dict) else None}"
         )
         summary_text = _format_result_with_llm(
@@ -2142,7 +2147,7 @@ def make_supervisor_ds_team(
         }
 
     def node_viz(state: SupervisorDSState):
-        print("---DATA VISUALIZATION---")
+        logger.info("---DATA VISUALIZATION---")
         before_msgs = list(state.get("messages", []) or [])
         last_human = _get_last_human(before_msgs)
         active_df = _ensure_df(
@@ -2250,7 +2255,7 @@ def make_supervisor_ds_team(
         }
 
     def node_fe(state: SupervisorDSState):
-        print("---FEATURE ENGINEERING---")
+        logger.info("---FEATURE ENGINEERING---")
         before_msgs = list(state.get("messages", []) or [])
         last_human = _get_last_human(before_msgs)
         datasets, active_dataset_id = _ensure_dataset_registry(state)
@@ -2370,7 +2375,7 @@ def make_supervisor_ds_team(
         }
 
     def node_h2o(state: SupervisorDSState):
-        print("---H2O ML---")
+        logger.info("---H2O ML---")
         before_msgs = list(state.get("messages", []) or [])
         last_human = _get_last_human(before_msgs)
         # Respect the supervisor's active dataset selection (dataset registry / active_dataset_id),
@@ -2844,7 +2849,7 @@ def make_supervisor_ds_team(
         }
 
     def node_mlflow(state: SupervisorDSState):
-        print("---MLFLOW TOOLS---")
+        logger.info("---MLFLOW TOOLS---")
         before_msgs = list(state.get("messages", []) or [])
         mlflow_tools_agent.invoke_messages(
             messages=before_msgs,
@@ -2874,7 +2879,7 @@ def make_supervisor_ds_team(
         }
 
     def node_eval(state: SupervisorDSState):
-        print("---MODEL EVALUATION---")
+        logger.info("---MODEL EVALUATION---")
         before_msgs = list(state.get("messages", []) or [])
         feature_df = _ensure_df(state.get("feature_data"))
         active_df = (
@@ -2932,7 +2937,7 @@ def make_supervisor_ds_team(
         }
 
     def node_mlflow_log(state: SupervisorDSState):
-        print("---MLFLOW LOGGING---")
+        logger.info("---MLFLOW LOGGING---")
         before_msgs = list(state.get("messages", []) or [])
 
         # Pull config from the supervisor artifacts (optional).

@@ -1,3 +1,8 @@
+
+
+import logging
+
+logger = logging.getLogger(__name__)
 # BUSINESS SCIENCE UNIVERSITY
 # AI DATA SCIENCE TEAM
 # ***
@@ -636,7 +641,7 @@ def make_data_wrangling_agent(
 
     if human_in_the_loop:
         if checkpointer is None:
-            print(
+            logger.info(
                 "Human in the loop is enabled. A checkpointer is required. Setting to MemorySaver()."
             )
             checkpointer = MemorySaver()
@@ -644,7 +649,7 @@ def make_data_wrangling_agent(
     # Human in th loop requires recommended steps
     if bypass_recommended_steps and human_in_the_loop:
         bypass_recommended_steps = False
-        print("Bypass recommended steps set to False to enable human in the loop.")
+        logger.info("Bypass recommended steps set to False to enable human in the loop.")
 
     # Setup Log Directory
     if log:
@@ -671,8 +676,8 @@ def make_data_wrangling_agent(
         retry_count: int
 
     def recommend_wrangling_steps(state: GraphState):
-        print(format_agent_name(AGENT_NAME))
-        print("    * RECOMMEND WRANGLING STEPS")
+        logger.info(format_agent_name(AGENT_NAME))
+        logger.info("    * RECOMMEND WRANGLING STEPS")
 
         data_raw = state.get("data_raw")
 
@@ -733,8 +738,8 @@ def make_data_wrangling_agent(
         }
 
     def create_data_wrangler_code(state: GraphState):
-        print(format_agent_name(AGENT_NAME))
-        print("    * CREATE DATA WRANGLER CODE")
+        logger.info(format_agent_name(AGENT_NAME))
+        logger.info("    * CREATE DATA WRANGLER CODE")
 
         data_raw = state.get("data_raw")
 
@@ -881,7 +886,7 @@ def make_data_wrangling_agent(
             )
 
     def execute_data_wrangler_code(state: GraphState):
-        print("    * EXECUTE DATA WRANGLER CODE (SANDBOXED)")
+        logger.info("    * EXECUTE DATA WRANGLER CODE (SANDBOXED)")
 
         result, error = run_code_sandboxed_subprocess(
             code_snippet=state.get("data_wrangler_function"),
@@ -953,7 +958,7 @@ def make_data_wrangling_agent(
                 overwrite=False,
             )
             if error_log_path:
-                print(f"      Error logged to: {error_log_path}")
+                logger.info(f"      Error logged to: {error_log_path}")
 
         return {
             "data_wrangled": df_out.to_dict() if error_prefixed is None else None,

@@ -49,11 +49,16 @@ Example usage::
             "AutoForecastAgent": {"best_model": "AutoARIMA", "rmse": 142.3},
         },
     )
-    print(synthesizer.get_ai_message())
-    print(synthesizer.get_artifacts())
+    logger.info(synthesizer.get_ai_message())
+    logger.info(synthesizer.get_artifacts())
 """
 from __future__ import annotations
 
+
+
+import logging
+
+logger = logging.getLogger(__name__)
 from typing import Any, Dict, List, Optional, Sequence
 
 from langchain_core.messages import AIMessage, BaseMessage
@@ -251,8 +256,8 @@ def _build_strategic_graph(
     # ---- nodes ------------------------------------------------------------
 
     def prepare_messages(state: GraphState):
-        print(format_agent_name(agent_name))
-        print("    * PREPARE MESSAGES")
+        logger.info(format_agent_name(agent_name))
+        logger.info("    * PREPARE MESSAGES")
         if state.get("messages"):
             return {}
         instructions = state.get("user_instructions", "Perform strategic analysis.")
@@ -265,7 +270,7 @@ def _build_strategic_graph(
         return {"messages": [("user", f"{instructions}{ctx}")]}
 
     def run_react_agent(state: GraphState):
-        print(f"    * RUN REACT TOOL-CALLING AGENT [{agent_name.upper()}]")
+        logger.info(f"    * RUN REACT TOOL-CALLING AGENT [{agent_name.upper()}]")
         response = react_agent_graph.invoke(state, **invoke_react_agent_kwargs)  # type: ignore[arg-type]
         tool_names = get_tool_call_names(response.get("messages", []))
         return {
@@ -274,7 +279,7 @@ def _build_strategic_graph(
         }
 
     def post_process(state: GraphState):
-        print("    * POST PROCESS")
+        logger.info("    * POST PROCESS")
         artifacts: Dict[str, Any] = {}
         for msg in state.get("messages", []):
             if hasattr(msg, "artifact") and isinstance(msg.artifact, dict):

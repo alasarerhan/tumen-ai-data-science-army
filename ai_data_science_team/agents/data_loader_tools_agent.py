@@ -1,5 +1,10 @@
 from typing_extensions import Any, Optional, Annotated, Sequence, List, Dict, TypedDict
 
+
+
+import logging
+
+logger = logging.getLogger(__name__)
 import pandas as pd
 import os
 
@@ -321,14 +326,14 @@ def make_data_loader_tools_agent(
     )
 
     def prepare_messages(state: GraphState):
-        print(format_agent_name(AGENT_NAME))
-        print("    * PREPARE MESSAGES")
+        logger.info(format_agent_name(AGENT_NAME))
+        logger.info("    * PREPARE MESSAGES")
         if state.get("messages"):
             return {}
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        print("    * RUN REACT TOOL-CALLING AGENT")
+        logger.info("    * RUN REACT TOOL-CALLING AGENT")
         system_hint = (
             "You are a data loader + file system tools agent.\n"
             "- If the user asks to LIST files (e.g., 'what files are in ./data', 'list only CSVs'), "
@@ -347,7 +352,7 @@ def make_data_loader_tools_agent(
         return react_agent.invoke(input_payload, invoke_react_agent_kwargs)  # type: ignore[arg-type]
 
     def post_process(state: GraphState):
-        print("    * POST-PROCESS RESULTS")
+        logger.info("    * POST-PROCESS RESULTS")
         internal_messages = state.get("messages", [])
 
         if not internal_messages:
@@ -408,13 +413,13 @@ def make_data_loader_tools_agent(
                                     path_hint = f" | {v}"
                                     break
                         break
-                print(f"    * Tool: {name}{path_hint}")
+                logger.info(f"    * Tool: {name}{path_hint}")
             try:
                 if isinstance(artifacts, dict) and artifacts:
                     keys = list(artifacts.keys())
-                    print(f"    * Artifacts captured: {keys}")
+                    logger.info(f"    * Artifacts captured: {keys}")
                 else:
-                    print("    * Artifacts captured: none")
+                    logger.info("    * Artifacts captured: none")
             except Exception:
                 pass
 

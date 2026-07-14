@@ -145,7 +145,7 @@ def load_model(
     Returns:
         Tuple[str, Dict]: summary text + model metadata artifact.
     """
-    print("    * Tool: load_model")
+    logger.info("    * Tool: load_model")
 
     import os
 
@@ -275,7 +275,7 @@ def run_inference(
     Returns:
         Tuple[str, Dict]: inference summary + predictions artifact.
     """
-    print("    * Tool: run_inference")
+    logger.info("    * Tool: run_inference")
 
 
     uri = (model_uri or "").strip()
@@ -398,7 +398,7 @@ def health_check(
     Returns:
         Tuple[str, Dict]: health summary text + status artifact.
     """
-    print("    * Tool: health_check")
+    logger.info("    * Tool: health_check")
     import numpy as np
 
     uri = (model_uri or "").strip()
@@ -482,7 +482,7 @@ def get_serving_params(
     Returns:
         str: Human-readable configuration summary.
     """
-    print("    * Tool: get_serving_params")
+    logger.info("    * Tool: get_serving_params")
     loaded = model_uri in _MODEL_REGISTRY
     return (
         f"Model Serving config → uri='{model_uri}', task_type='{task_type}', "
@@ -557,17 +557,17 @@ def make_model_serving_agent(
     )
 
     def prepare_messages(state: GraphState):
-        print(format_agent_name(AGENT_NAME))
-        print("    * PREPARE MESSAGES")
+        logger.info(format_agent_name(AGENT_NAME))
+        logger.info("    * PREPARE MESSAGES")
         if state.get("messages"):
             return {}
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        print("    * RUN REACT TOOL-CALLING AGENT FOR MODEL SERVING")
+        logger.info("    * RUN REACT TOOL-CALLING AGENT FOR MODEL SERVING")
         uri = state.get("model_uri", model_uri)
         tt = state.get("task_type", task_type)
-        print(f"    * model_uri={uri}, task_type={tt}")
+        logger.info(f"    * model_uri={uri}, task_type={tt}")
 
         system_hint = (
             "You are a Model Serving agent. "
@@ -590,7 +590,7 @@ def make_model_serving_agent(
         return react_agent.invoke(input_payload, invoke_react_agent_kwargs)  # type: ignore[arg-type]
 
     def post_process(state: GraphState):
-        print("    * POST-PROCESSING MODEL SERVING RESULTS")
+        logger.info("    * POST-PROCESSING MODEL SERVING RESULTS")
 
         internal_messages = state.get("messages", [])
         if not internal_messages:
@@ -625,7 +625,7 @@ def make_model_serving_agent(
         tool_calls = get_tool_call_names(internal_messages)
         if log_tool_calls and tool_calls:
             for tc in tool_calls:
-                print(f"    * Tool: {tc}")
+                logger.info(f"    * Tool: {tc}")
 
         return {
             "messages": [last_ai_message],

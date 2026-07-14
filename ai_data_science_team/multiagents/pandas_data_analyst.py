@@ -6,6 +6,11 @@ from langgraph.graph import START, END, StateGraph
 from langgraph.graph.state import CompiledStateGraph
 from langgraph.graph.message import add_messages
 
+
+
+import logging
+
+logger = logging.getLogger(__name__)
 from typing_extensions import TypedDict, Annotated, Sequence, Union
 
 import pandas as pd
@@ -336,9 +341,9 @@ def make_pandas_data_analyst(
         retry_count: int
 
     def prepare_messages(state: PrimaryState):
-        print("---PANDAS DATA ANALYST---")
-        print("*************************")
-        print("---PREPARE MESSAGES---")
+        logger.info("---PANDAS DATA ANALYST---")
+        logger.info("*************************")
+        logger.info("---PREPARE MESSAGES---")
         msgs = state.get("messages", [])
         ui = state.get("user_instructions")
         if not msgs:
@@ -374,7 +379,7 @@ def make_pandas_data_analyst(
         return {"messages": normalized, "user_instructions": ui}
 
     def preprocess_routing(state: PrimaryState):
-        print("---PREPROCESS ROUTER---")
+        logger.info("---PREPROCESS ROUTER---")
         question = state.get("user_instructions")
 
         try:
@@ -399,7 +404,7 @@ def make_pandas_data_analyst(
         }
 
     def router_chart_or_table(state: PrimaryState):
-        print("---ROUTER: CHART OR TABLE---")
+        logger.info("---ROUTER: CHART OR TABLE---")
         return (
             "chart"
             if state.get("routing_preprocessor_decision") == "chart"
@@ -449,7 +454,7 @@ def make_pandas_data_analyst(
         }
 
     def finalize_output(state: PrimaryState):
-        print("---FINALIZE OUTPUT---")
+        logger.info("---FINALIZE OUTPUT---")
         route = state.get("routing_preprocessor_decision", "table")
         data_wrangled = state.get("data_wrangled")
         plot = state.get("plotly_graph")

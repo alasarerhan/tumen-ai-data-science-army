@@ -27,6 +27,11 @@ Public surface
 
 from __future__ import annotations
 
+
+
+import logging
+
+logger = logging.getLogger(__name__)
 from typing import Any, Dict, List, Optional, Sequence
 
 import numpy as np
@@ -316,13 +321,13 @@ def train_mlp_classifier(
         else:
             bad += 1
         if verbose:
-            print(
+            logger.info(
                 f"epoch {epoch+1}/{epochs} train_loss={train_loss:.4f} "
                 f"val_loss={v_loss:.4f} val_metric={v_metric:.4f}"
             )
         if bad >= early_stopping_patience:
             if verbose:
-                print(f"early stop at epoch {epoch+1}")
+                logger.info(f"early stop at epoch {epoch+1}")
             break
 
     if best_state is not None:
@@ -434,7 +439,7 @@ def train_lstm_forecaster(
         else:
             bad += 1
         if verbose:
-            print(f"epoch {epoch+1}/{epochs} val_mse={v_loss:.4f}")
+            logger.info(f"epoch {epoch+1}/{epochs} val_mse={v_loss:.4f}")
         if bad >= early_stopping_patience:
             break
     if best_state is not None:

@@ -21,6 +21,11 @@ Quality Score (0–100) components
 
 from __future__ import annotations
 
+
+
+import logging
+
+logger = logging.getLogger(__name__)
 from typing_extensions import (
     Annotated,
     Any,
@@ -76,7 +81,7 @@ def profile_data_quality(
     Returns:
         Tuple[str, Dict]: text summary + artifact dict with quality metrics.
     """
-    print("    * Tool: profile_data_quality")
+    logger.info("    * Tool: profile_data_quality")
 
     import numpy as np
 
@@ -195,7 +200,7 @@ def validate_schema(
     Returns:
         Tuple[str, Dict]: text summary + artifact with violations list.
     """
-    print("    * Tool: validate_schema")
+    logger.info("    * Tool: validate_schema")
 
     df = pd.DataFrame(data_raw)
     schema = expected_schema or {}
@@ -269,7 +274,7 @@ def get_data_quality_params(
     Returns:
         str: Human-readable configuration summary.
     """
-    print("    * Tool: get_data_quality_params")
+    logger.info("    * Tool: get_data_quality_params")
     return (
         f"Data quality agent configured with "
         f"outlier_method='{outlier_method}', outlier_threshold={outlier_threshold}."
@@ -339,15 +344,15 @@ def make_data_quality_agent(
     )
 
     def prepare_messages(state: GraphState):
-        print(format_agent_name(AGENT_NAME))
-        print("    * PREPARE MESSAGES")
+        logger.info(format_agent_name(AGENT_NAME))
+        logger.info("    * PREPARE MESSAGES")
         if state.get("messages"):
             return {}
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        print("    * RUN REACT TOOL-CALLING AGENT FOR DATA QUALITY")
-        print(f"    * outlier_method={state.get('outlier_method')}, threshold={state.get('outlier_threshold')}")
+        logger.info("    * RUN REACT TOOL-CALLING AGENT FOR DATA QUALITY")
+        logger.info(f"    * outlier_method={state.get('outlier_method')}, threshold={state.get('outlier_threshold')}")
 
         system_hint = (
             "You are a Data Quality agent. "
@@ -370,7 +375,7 @@ def make_data_quality_agent(
         return react_agent.invoke(input_payload, invoke_react_agent_kwargs)  # type: ignore[arg-type]
 
     def post_process(state: GraphState):
-        print("    * POST-PROCESSING DATA QUALITY RESULTS")
+        logger.info("    * POST-PROCESSING DATA QUALITY RESULTS")
 
         internal_messages = state.get("messages", [])
         if not internal_messages:
@@ -411,7 +416,7 @@ def make_data_quality_agent(
         tool_calls = get_tool_call_names(internal_messages)
         if log_tool_calls and tool_calls:
             for tc in tool_calls:
-                print(f"    * Tool: {tc}")
+                logger.info(f"    * Tool: {tc}")
 
         return {
             "messages": [last_ai_message],

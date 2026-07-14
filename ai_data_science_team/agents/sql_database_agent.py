@@ -530,7 +530,7 @@ def make_sql_database_agent(
 
     if human_in_the_loop:
         if checkpointer is None:
-            print(
+            logger.info(
                 "Human in the loop is enabled. A checkpointer is required. Setting to MemorySaver()."
             )
             checkpointer = MemorySaver()
@@ -538,7 +538,7 @@ def make_sql_database_agent(
     # Human in th loop requires recommended steps
     if bypass_recommended_steps and human_in_the_loop:
         bypass_recommended_steps = False
-        print("Bypass recommended steps set to False to enable human in the loop.")
+        logger.info("Bypass recommended steps set to False to enable human in the loop.")
 
     # Setup Log Directory
     if log:
@@ -568,7 +568,7 @@ def make_sql_database_agent(
         retry_count: int
 
     def recommend_sql_steps(state: GraphState):
-        print(format_agent_name(AGENT_NAME))
+        logger.info(format_agent_name(AGENT_NAME))
 
         all_sql_database_summary = _truncate_metadata(
             get_database_metadata(conn, n_samples=n_samples)
@@ -581,7 +581,7 @@ def make_sql_database_agent(
             smart_filtering=smart_schema_pruning,
         )
 
-        print("    * RECOMMEND STEPS")
+        logger.info("    * RECOMMEND STEPS")
 
         # Prompt to get recommended steps from the LLM
         recommend_steps_prompt = PromptTemplate(
@@ -651,7 +651,7 @@ def make_sql_database_agent(
 
     def create_sql_query_code(state: GraphState):
         if bypass_recommended_steps:
-            print(format_agent_name(AGENT_NAME))
+            logger.info(format_agent_name(AGENT_NAME))
             all_sql_database_summary = _truncate_metadata(
                 get_database_metadata(conn, n_samples=n_samples)
             )
@@ -665,7 +665,7 @@ def make_sql_database_agent(
         else:
             all_sql_database_summary = state.get("all_sql_database_summary")
             steps_for_prompt = state.get("recommended_steps") or DEFAULT_SQL_STEPS
-        print("    * CREATE SQL QUERY CODE")
+        logger.info("    * CREATE SQL QUERY CODE")
 
         # Prompt to get the SQL code from the LLM
         sql_query_code_prompt = PromptTemplate(
@@ -728,7 +728,7 @@ def make_sql_database_agent(
                 "recommended_steps": steps_for_prompt,
             }
 
-        print("    * CREATE PYTHON FUNCTION TO RUN SQL CODE")
+        logger.info("    * CREATE PYTHON FUNCTION TO RUN SQL CODE")
 
         response = f"""
 def {function_name}(connection):
@@ -814,7 +814,7 @@ def {function_name}(connection):
                     overwrite=False,
                 )
                 if error_log_path:
-                    print(f"      Error logged to: {error_log_path}")
+                    logger.info(f"      Error logged to: {error_log_path}")
             return {
                 "data_sql": None,
                 "sql_database_error": error_prefixed,
@@ -848,7 +848,7 @@ def {function_name}(connection):
                 overwrite=False,
             )
             if error_log_path:
-                print(f"      Error logged to: {error_log_path}")
+                logger.info(f"      Error logged to: {error_log_path}")
 
         result["sql_database_error_log_path"] = error_log_path
         return result
@@ -936,7 +936,7 @@ def smart_schema_filter(
     """
     # Smart schema filtering
     if smart_filtering:
-        print("    * SMART FILTER SCHEMA")
+        logger.info("    * SMART FILTER SCHEMA")
 
         filter_schema_prompt = PromptTemplate(
             template="""

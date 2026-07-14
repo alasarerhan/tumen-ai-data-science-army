@@ -56,8 +56,8 @@ Usage
         user_instructions="Load sales.csv and generate an EDA report with key insights."
     )
 
-    print(orch.get_ai_message())
-    print(orch.get_run_result())
+    logger.info(orch.get_ai_message())
+    logger.info(orch.get_run_result())
 """
 from __future__ import annotations
 
@@ -140,8 +140,8 @@ def _build_orchestrator_graph(
     # ------------------------------------------------------------------ nodes
 
     def prepare(state: OrchestratorState) -> Dict[str, Any]:
-        print(format_agent_name("OrchestratorAgent"))
-        print("    * PREPARE")
+        logger.info(format_agent_name("OrchestratorAgent"))
+        logger.info("    * PREPARE")
         if state.get("messages"):
             return {}
         instructions = state.get("user_instructions", "")
@@ -151,7 +151,7 @@ def _build_orchestrator_graph(
         }
 
     def resolve(state: OrchestratorState) -> Dict[str, Any]:
-        print("    * RESOLVE SCENARIO + WORKFLOW SPEC")
+        logger.info("    * RESOLVE SCENARIO + WORKFLOW SPEC")
         log: List[str] = list(state.get("orchestrator_log") or [])
 
         # Use injected spec or fall back to what's in state
@@ -195,7 +195,7 @@ def _build_orchestrator_graph(
         }
 
     def execute(state: OrchestratorState) -> Dict[str, Any]:
-        print("    * EXECUTE WORKFLOW")
+        logger.info("    * EXECUTE WORKFLOW")
         log: List[str] = list(state.get("orchestrator_log") or [])
         spec = state.get("workflow_spec") or {}
         current_scenario = state.get("scenario", "supervised")
@@ -232,7 +232,7 @@ def _build_orchestrator_graph(
         }
 
     def summarize(state: OrchestratorState) -> Dict[str, Any]:
-        print("    * SUMMARIZE RESULTS")
+        logger.info("    * SUMMARIZE RESULTS")
         run_result = state.get("run_result") or {}
         spec = state.get("workflow_spec") or {}
         current_scenario = state.get("scenario", "supervised")
@@ -356,7 +356,7 @@ class OrchestratorAgent(BaseAgent):
     >>> llm = ChatOpenAI(model="gpt-4o-mini")
     >>> orch = OrchestratorAgent(model=llm)
     >>> orch.invoke_agent("Analyse sales.csv and generate a monthly trend report.")
-    >>> print(orch.get_ai_message())
+    >>> logger.info(orch.get_ai_message())
     """
 
     def __init__(

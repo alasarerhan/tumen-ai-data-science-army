@@ -21,11 +21,16 @@ Kullanım örneği::
         date_column="date",
         value_column="revenue",
     )
-    print(agent.get_ai_message())
-    print(agent.get_artifacts())
+    logger.info(agent.get_ai_message())
+    logger.info(agent.get_artifacts())
 """
 from __future__ import annotations
 
+
+
+import logging
+
+logger = logging.getLogger(__name__)
 from typing import Any, Dict, Optional, Sequence
 
 import pandas as pd
@@ -120,14 +125,14 @@ def _build_ts_graph(
     # -- nodes ---------------------------------------------------------------
 
     def prepare_messages(state: GraphState):
-        print(format_agent_name(agent_name))
-        print("    * PREPARE MESSAGES")
+        logger.info(format_agent_name(agent_name))
+        logger.info("    * PREPARE MESSAGES")
         if state.get("messages"):
             return {}
         return {"messages": [("user", state.get("user_instructions", "Analyze the time series."))]}
 
     def run_react_agent(state: GraphState):
-        print(f"    * RUN REACT TOOL-CALLING AGENT [{agent_name.upper()}]")
+        logger.info(f"    * RUN REACT TOOL-CALLING AGENT [{agent_name.upper()}]")
 
         data_info = ""
         data_raw = state.get("data_raw")
@@ -161,7 +166,7 @@ def _build_ts_graph(
         )
 
     def post_process(state: GraphState):
-        print("    * POST-PROCESSING TIME-SERIES RESULTS")
+        logger.info("    * POST-PROCESSING TIME-SERIES RESULTS")
 
         internal_messages = state.get("messages", [])
         if not internal_messages:
@@ -219,7 +224,7 @@ def _build_ts_graph(
         tool_calls = get_tool_call_names(internal_messages)
         if log_tool_calls and tool_calls:
             for t in tool_calls:
-                print(f"    * Tool called: {t}")
+                logger.info(f"    * Tool called: {t}")
 
         return {
             "messages": [last_ai],
@@ -721,7 +726,7 @@ class AutoForecastAgent(_TimeSeriesAgentMixin, BaseAgent):
             date_column="date",
             value_column="revenue",
         )
-        print(agent.get_ai_message())
+        logger.info(agent.get_ai_message())
         artifacts = agent.get_artifacts()
         # artifacts["auto_forecast"] -> leaderboard + best forecast
     """

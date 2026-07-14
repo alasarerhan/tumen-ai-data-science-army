@@ -1,5 +1,10 @@
 from langchain_core.messages import BaseMessage, AIMessage, HumanMessage, SystemMessage
 
+
+
+import logging
+
+logger = logging.getLogger(__name__)
 from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import JsonOutputParser
 
@@ -488,9 +493,9 @@ def make_sql_data_analyst(
         retry_count: int
 
     def prepare_messages(state: PrimaryState):
-        print("---SQL DATA ANALYST---")
-        print("*************************")
-        print("---PREPARE MESSAGES---")
+        logger.info("---SQL DATA ANALYST---")
+        logger.info("*************************")
+        logger.info("---PREPARE MESSAGES---")
         msgs = state.get("messages", [])
         ui = state.get("user_instructions")
         if not msgs:
@@ -528,7 +533,7 @@ def make_sql_data_analyst(
         return {"messages": normalized, "user_instructions": ui}
 
     def preprocess_routing(state: PrimaryState):
-        print("---PREPROCESS ROUTER---")
+        logger.info("---PREPROCESS ROUTER---")
         question = state.get("user_instructions")
         try:
             response = routing_preprocessor.invoke({"user_instructions": question})
@@ -552,7 +557,7 @@ def make_sql_data_analyst(
         }
 
     def router_chart_or_table(state: PrimaryState):
-        print("---ROUTER: CHART OR TABLE---")
+        logger.info("---ROUTER: CHART OR TABLE---")
         return (
             "chart"
             if state.get("routing_preprocessor_decision") == "chart"
@@ -601,7 +606,7 @@ def make_sql_data_analyst(
         }
 
     def finalize_output(state: PrimaryState):
-        print("---FINALIZE OUTPUT---")
+        logger.info("---FINALIZE OUTPUT---")
         route = state.get("routing_preprocessor_decision", "table")
         data_sql = state.get("data_sql")
         plot = state.get("plotly_graph")

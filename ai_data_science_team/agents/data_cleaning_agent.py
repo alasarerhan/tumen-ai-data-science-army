@@ -1,3 +1,8 @@
+
+
+import logging
+
+logger = logging.getLogger(__name__)
 # BUSINESS SCIENCE UNIVERSITY
 # AI DATA SCIENCE TEAM
 # ***
@@ -486,7 +491,7 @@ def make_data_cleaning_agent(
 
     if human_in_the_loop:
         if checkpointer is None:
-            print(
+            logger.info(
                 "Human in the loop is enabled. A checkpointer is required. Setting to MemorySaver()."
             )
             checkpointer = MemorySaver()
@@ -494,7 +499,7 @@ def make_data_cleaning_agent(
     # Human in th loop requires recommended steps
     if bypass_recommended_steps and human_in_the_loop:
         bypass_recommended_steps = False
-        print("Bypass recommended steps set to False to enable human in the loop.")
+        logger.info("Bypass recommended steps set to False to enable human in the loop.")
 
     # Setup Log Directory
     if log:
@@ -526,8 +531,8 @@ def make_data_cleaning_agent(
         Recommend a series of data cleaning steps based on the input data.
         These recommended steps will be appended to the user_instructions.
         """
-        print(format_agent_name(AGENT_NAME))
-        print("    * RECOMMEND CLEANING STEPS")
+        logger.info(format_agent_name(AGENT_NAME))
+        logger.info("    * RECOMMEND CLEANING STEPS")
 
         # Prompt to get recommended steps from the LLM
         recommend_steps_prompt = PromptTemplate(
@@ -601,10 +606,10 @@ def make_data_cleaning_agent(
         }
 
     def create_data_cleaner_code(state: GraphState):
-        print("    * CREATE DATA CLEANER CODE")
+        logger.info("    * CREATE DATA CLEANER CODE")
 
         if bypass_recommended_steps:
-            print(format_agent_name(AGENT_NAME))
+            logger.info(format_agent_name(AGENT_NAME))
 
             data_raw = state.get("data_raw")
             df = pd.DataFrame.from_dict(data_raw)
@@ -716,7 +721,7 @@ def make_data_cleaning_agent(
             )
 
     def execute_data_cleaner_code(state: GraphState):
-        print("    * EXECUTE DATA CLEANER CODE (SANDBOXED)")
+        logger.info("    * EXECUTE DATA CLEANER CODE (SANDBOXED)")
 
         result, error = run_code_sandboxed_subprocess(
             code_snippet=state.get("data_cleaner_function"),
@@ -778,7 +783,7 @@ def make_data_cleaning_agent(
                 overwrite=False,
             )
             if error_log_path:
-                print(f"      Error logged to: {error_log_path}")
+                logger.info(f"      Error logged to: {error_log_path}")
 
         return {
             "data_cleaned": df_out.to_dict() if error_prefixed is None else None,

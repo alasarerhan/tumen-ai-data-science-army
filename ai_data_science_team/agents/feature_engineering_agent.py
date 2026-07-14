@@ -1,3 +1,8 @@
+
+
+import logging
+
+logger = logging.getLogger(__name__)
 # BUSINESS SCIENCE UNIVERSITY
 # AI DATA SCIENCE TEAM
 # ***
@@ -557,7 +562,7 @@ def make_feature_engineering_agent(
 
     if human_in_the_loop:
         if checkpointer is None:
-            print(
+            logger.info(
                 "Human in the loop is enabled. A checkpointer is required. Setting to MemorySaver()."
             )
             checkpointer = MemorySaver()
@@ -565,7 +570,7 @@ def make_feature_engineering_agent(
     # Human in th loop requires recommended steps
     if bypass_recommended_steps and human_in_the_loop:
         bypass_recommended_steps = False
-        print("Bypass recommended steps set to False to enable human in the loop.")
+        logger.info("Bypass recommended steps set to False to enable human in the loop.")
 
     # Setup Log Directory
     if log:
@@ -641,8 +646,8 @@ def make_feature_engineering_agent(
         Recommend a series of feature engineering steps based on the input data.
         These recommended steps will be appended to the user_instructions.
         """
-        print(format_agent_name(AGENT_NAME))
-        print("    * RECOMMEND FEATURE ENGINEERING STEPS")
+        logger.info(format_agent_name(AGENT_NAME))
+        logger.info("    * RECOMMEND FEATURE ENGINEERING STEPS")
 
         # Prompt to get recommended steps from the LLM
         recommend_steps_prompt = PromptTemplate(
@@ -759,7 +764,7 @@ def make_feature_engineering_agent(
 
     def create_feature_engineering_code(state: GraphState):
         if bypass_recommended_steps:
-            print(format_agent_name(AGENT_NAME))
+            logger.info(format_agent_name(AGENT_NAME))
 
             data_raw = state.get("data_raw")
             df = pd.DataFrame.from_dict(data_raw)
@@ -773,7 +778,7 @@ def make_feature_engineering_agent(
             if not steps_for_prompt:
                 steps_for_prompt = DEFAULT_FEATURE_STEPS
 
-        print("    * CREATE FEATURE ENGINEERING CODE")
+        logger.info("    * CREATE FEATURE ENGINEERING CODE")
 
         feature_engineering_prompt = PromptTemplate(
             template="""
@@ -865,7 +870,7 @@ def make_feature_engineering_agent(
         }
 
     def execute_feature_engineering_code(state):
-        print("    * EXECUTE FEATURE ENGINEERING CODE (SANDBOXED)")
+        logger.info("    * EXECUTE FEATURE ENGINEERING CODE (SANDBOXED)")
 
         result, error = run_code_sandboxed_subprocess(
             code_snippet=state.get("feature_engineer_function"),
@@ -908,7 +913,7 @@ def make_feature_engineering_agent(
                 overwrite=False,
             )
             if error_log_path:
-                print(f"      Error logged to: {error_log_path}")
+                logger.info(f"      Error logged to: {error_log_path}")
 
         result_payload = df_out.to_dict() if error_prefixed is None else None
 

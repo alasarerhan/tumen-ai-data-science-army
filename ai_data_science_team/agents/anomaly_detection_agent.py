@@ -16,6 +16,11 @@ Supported methods
 
 from __future__ import annotations
 
+
+
+import logging
+
+logger = logging.getLogger(__name__)
 from typing_extensions import (
     Annotated,
     Any,
@@ -65,7 +70,7 @@ def detect_anomalies(
     Returns:
         Tuple[str, Dict]: text summary + artifact dict with anomaly details.
     """
-    print("    * Tool: detect_anomalies")
+    logger.info("    * Tool: detect_anomalies")
 
     import numpy as np
     from sklearn.ensemble import IsolationForest
@@ -184,7 +189,7 @@ def get_anomaly_params(
     Returns:
         str: Human-readable summary of the current parameters.
     """
-    print("    * Tool: get_anomaly_params")
+    logger.info("    * Tool: get_anomaly_params")
     return f"Anomaly detection will use method='{method}' with contamination={contamination}."
 
 
@@ -247,17 +252,17 @@ def make_anomaly_detection_agent(
     )
 
     def prepare_messages(state: GraphState):
-        print(format_agent_name(AGENT_NAME))
-        print("    * PREPARE MESSAGES")
+        logger.info(format_agent_name(AGENT_NAME))
+        logger.info("    * PREPARE MESSAGES")
         if state.get("messages"):
             return {}
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        print("    * RUN REACT TOOL-CALLING AGENT FOR ANOMALY DETECTION")
+        logger.info("    * RUN REACT TOOL-CALLING AGENT FOR ANOMALY DETECTION")
         m = state.get("method", method)
         c = state.get("contamination", contamination)
-        print(f"    * method={m}, contamination={c}")
+        logger.info(f"    * method={m}, contamination={c}")
 
         system_hint = (
             "You are an Anomaly Detection agent. "
@@ -279,7 +284,7 @@ def make_anomaly_detection_agent(
         return react_agent.invoke(input_payload, invoke_react_agent_kwargs)
 
     def post_process(state: GraphState):
-        print("    * POST-PROCESSING ANOMALY DETECTION RESULTS")
+        logger.info("    * POST-PROCESSING ANOMALY DETECTION RESULTS")
 
         internal_messages = state.get("messages", [])
         if not internal_messages:
@@ -314,7 +319,7 @@ def make_anomaly_detection_agent(
         tool_calls = get_tool_call_names(internal_messages)
         if log_tool_calls and tool_calls:
             for tc in tool_calls:
-                print(f"    * Tool: {tc}")
+                logger.info(f"    * Tool: {tc}")
 
         return {
             "messages": [last_ai_message],

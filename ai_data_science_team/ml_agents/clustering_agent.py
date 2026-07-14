@@ -25,11 +25,16 @@ Example usage::
         data=[[1.0, 2.0], [1.1, 2.1], [8.0, 8.5], [8.2, 8.3], [5.0, 5.0]],
         feature_names=["recency", "monetary"],
     )
-    print(agent.get_ai_message())
-    print(agent.get_artifacts())
+    logger.info(agent.get_ai_message())
+    logger.info(agent.get_artifacts())
 """
 from __future__ import annotations
 
+
+
+import logging
+
+logger = logging.getLogger(__name__)
 from typing import Any, Dict, List, Optional, Sequence
 
 from langchain_core.messages import AIMessage, BaseMessage
@@ -256,8 +261,8 @@ def _build_clustering_graph(
     # ---- nodes ------------------------------------------------------------
 
     def prepare_messages(state: GraphState):
-        print(format_agent_name("ClusteringAgent"))
-        print("    * PREPARE MESSAGES")
+        logger.info(format_agent_name("ClusteringAgent"))
+        logger.info("    * PREPARE MESSAGES")
         if state.get("messages"):
             return {}
         data = state.get("data", [])
@@ -274,7 +279,7 @@ def _build_clustering_graph(
         return {"messages": [("user", f"{instructions}\n\n{context}")]}
 
     def run_react_agent(state: GraphState):
-        print("    * RUN REACT TOOL-CALLING AGENT [CLUSTERING]")
+        logger.info("    * RUN REACT TOOL-CALLING AGENT [CLUSTERING]")
         response = react_agent_graph.invoke(state, **invoke_react_agent_kwargs)  # type: ignore[arg-type]
         tool_names = get_tool_call_names(response.get("messages", []))
         return {
@@ -283,7 +288,7 @@ def _build_clustering_graph(
         }
 
     def post_process(state: GraphState):
-        print("    * POST PROCESS")
+        logger.info("    * POST PROCESS")
         # Collect artefacts from all tool result messages that carry JSON
 
         artifacts: Dict[str, Any] = {}

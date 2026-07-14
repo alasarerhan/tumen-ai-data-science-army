@@ -1,3 +1,8 @@
+
+
+import logging
+
+logger = logging.getLogger(__name__)
 # BUSINESS SCIENCE UNIVERSITY
 # AI DATA SCIENCE TEAM
 # ***
@@ -892,7 +897,7 @@ Use an appropriate chart type based on column types (categorical vs numeric). De
 
     if human_in_the_loop:
         if checkpointer is None:
-            print(
+            logger.info(
                 "Human in the loop is enabled. A checkpointer is required. Setting to MemorySaver()."
             )
             checkpointer = MemorySaver()
@@ -900,7 +905,7 @@ Use an appropriate chart type based on column types (categorical vs numeric). De
     # Human in th loop requires recommended steps
     if bypass_recommended_steps and human_in_the_loop:
         bypass_recommended_steps = False
-        print("Bypass recommended steps set to False to enable human in the loop.")
+        logger.info("Bypass recommended steps set to False to enable human in the loop.")
 
     # Setup Log Directory
     if log:
@@ -930,8 +935,8 @@ Use an appropriate chart type based on column types (categorical vs numeric). De
         retry_count: int
 
     def chart_instructor(state: GraphState):
-        print(format_agent_name(AGENT_NAME))
-        print("    * CREATE CHART GENERATOR INSTRUCTIONS")
+        logger.info(format_agent_name(AGENT_NAME))
+        logger.info("    * CREATE CHART GENERATOR INSTRUCTIONS")
 
         recommend_steps_prompt = PromptTemplate(
             template="""
@@ -1011,10 +1016,10 @@ Use an appropriate chart type based on column types (categorical vs numeric). De
         }
 
     def chart_generator(state: GraphState):
-        print("    * CREATE DATA VISUALIZATION CODE")
+        logger.info("    * CREATE DATA VISUALIZATION CODE")
 
         if bypass_recommended_steps:
-            print(format_agent_name(AGENT_NAME))
+            logger.info(format_agent_name(AGENT_NAME))
 
             data_raw = state.get("data_raw")
             df = pd.DataFrame.from_dict(data_raw)
@@ -1148,7 +1153,7 @@ Use an appropriate chart type based on column types (categorical vs numeric). De
             )
 
     def execute_data_visualization_code(state):
-        print("    * EXECUTE DATA VISUALIZATION CODE (SANDBOXED)")
+        logger.info("    * EXECUTE DATA VISUALIZATION CODE (SANDBOXED)")
 
         data_raw = state.get("data_raw") or {}
         df = pd.DataFrame.from_dict(data_raw) if isinstance(data_raw, dict) else pd.DataFrame()
@@ -1303,7 +1308,7 @@ Use an appropriate chart type based on column types (categorical vs numeric). De
                 overwrite=False,
             )
             if error_log_path:
-                print(f"      Error logged to: {error_log_path}")
+                logger.info(f"      Error logged to: {error_log_path}")
 
         output = {
             "plotly_graph": result if error_prefixed is None else None,

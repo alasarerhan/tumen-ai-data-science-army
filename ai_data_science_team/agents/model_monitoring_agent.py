@@ -21,6 +21,11 @@ Drift severity thresholds (PSI)
 
 from __future__ import annotations
 
+
+
+import logging
+
+logger = logging.getLogger(__name__)
 from typing_extensions import (
     Annotated,
     Any,
@@ -151,7 +156,7 @@ def detect_drift(
     Returns:
         Tuple[str, Dict]: text summary + artifact with per-feature drift metrics.
     """
-    print("    * Tool: detect_drift")
+    logger.info("    * Tool: detect_drift")
 
     import numpy as np
 
@@ -261,7 +266,7 @@ def compute_performance(
     Returns:
         Tuple[str, Dict]: text summary + artifact with metrics + degradation.
     """
-    print("    * Tool: compute_performance")
+    logger.info("    * Tool: compute_performance")
 
     import numpy as np
     from sklearn import metrics as skm  # noqa
@@ -392,7 +397,7 @@ def get_monitoring_params(
     Returns:
         str: Human-readable configuration summary.
     """
-    print("    * Tool: get_monitoring_params")
+    logger.info("    * Tool: get_monitoring_params")
     return (
         f"Model monitoring agent configured with "
         f"drift_method='{drift_method}', psi_bins={psi_bins}, task_type='{task_type}'."
@@ -469,15 +474,15 @@ def make_model_monitoring_agent(
     )
 
     def prepare_messages(state: GraphState):
-        print(format_agent_name(AGENT_NAME))
-        print("    * PREPARE MESSAGES")
+        logger.info(format_agent_name(AGENT_NAME))
+        logger.info("    * PREPARE MESSAGES")
         if state.get("messages"):
             return {}
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        print("    * RUN REACT TOOL-CALLING AGENT FOR MODEL MONITORING")
-        print(f"    * drift_method={state.get('drift_method')}, task_type={state.get('task_type')}")
+        logger.info("    * RUN REACT TOOL-CALLING AGENT FOR MODEL MONITORING")
+        logger.info(f"    * drift_method={state.get('drift_method')}, task_type={state.get('task_type')}")
 
         system_hint = (
             "You are a Model Monitoring agent. "
@@ -504,7 +509,7 @@ def make_model_monitoring_agent(
         return react_agent.invoke(input_payload, invoke_react_agent_kwargs)  # type: ignore[arg-type]
 
     def post_process(state: GraphState):
-        print("    * POST-PROCESSING MODEL MONITORING RESULTS")
+        logger.info("    * POST-PROCESSING MODEL MONITORING RESULTS")
 
         internal_messages = state.get("messages", [])
         if not internal_messages:
@@ -544,7 +549,7 @@ def make_model_monitoring_agent(
         tool_calls = get_tool_call_names(internal_messages)
         if log_tool_calls and tool_calls:
             for tc in tool_calls:
-                print(f"    * Tool: {tc}")
+                logger.info(f"    * Tool: {tc}")
 
         return {
             "messages": [last_ai_message],

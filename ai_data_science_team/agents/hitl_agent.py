@@ -52,16 +52,21 @@ Example usage
     # Inspect what the LLM produced
     state = agent.get_state(config)
     approval_prompt = state.tasks[-1].interrupts[-1].value
-    print(approval_prompt)
+    logger.info(approval_prompt)
 
     # Resume with approval
     agent.invoke(Command(resume="yes"), config=config)
 
-    print(agent.get_ai_message())
-    print(agent.get_artifacts())
+    logger.info(agent.get_ai_message())
+    logger.info(agent.get_artifacts())
 """
 from __future__ import annotations
 
+
+
+import logging
+
+logger = logging.getLogger(__name__)
 import json
 from typing import Any, Dict, List, Optional, Sequence
 
@@ -176,8 +181,8 @@ def _build_hitl_graph(
     # ------------------------------------------------------------------ nodes
 
     def prepare_messages(state: GraphState):
-        print(format_agent_name("ApprovalGateAgent"))
-        print("    * PREPARE MESSAGES")
+        logger.info(format_agent_name("ApprovalGateAgent"))
+        logger.info("    * PREPARE MESSAGES")
         if state.get("messages"):
             return {}
         instructions = state.get(
@@ -194,7 +199,7 @@ def _build_hitl_graph(
         return {"messages": [("user", f"{instructions}{ctx}")]}
 
     def run_react_agent(state: GraphState):
-        print("    * RUN REACT TOOL-CALLING AGENT [APPROVALGATE]")
+        logger.info("    * RUN REACT TOOL-CALLING AGENT [APPROVALGATE]")
         response = react_agent_graph.invoke(state, **invoke_react_agent_kwargs)  # type: ignore[arg-type]
         tool_names = get_tool_call_names(response.get("messages", []))
         return {
@@ -208,7 +213,7 @@ def _build_hitl_graph(
         Returns ``Command(goto="post_process")`` on approval
         or ``Command(goto="run_react_agent", update={...})`` on modification.
         """
-        print("    * HUMAN REVIEW")
+        logger.info("    * HUMAN REVIEW")
 
         # Collect a brief summary of what was produced so far
         last_ai_content = ""
@@ -249,7 +254,7 @@ def _build_hitl_graph(
         )
 
     def post_process(state: GraphState):
-        print("    * POST PROCESS")
+        logger.info("    * POST PROCESS")
         artifacts: Dict[str, Any] = {}
         for msg in state.get("messages", []):
             if hasattr(msg, "artifact") and isinstance(msg.artifact, dict):
@@ -336,7 +341,7 @@ class ApprovalGateAgent(BaseAgent):
         system_prompt: Optional[str] = None,
     ):
         if human_in_the_loop and checkpointer is None:
-            print(
+            logger.info(
                 "ApprovalGateAgent: human_in_the_loop=True requires a checkpointer."
                 " Setting checkpointer=MemorySaver()."
             )

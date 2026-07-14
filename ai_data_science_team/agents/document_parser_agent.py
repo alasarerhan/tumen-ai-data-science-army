@@ -34,6 +34,11 @@ Set via ``scrape_mode`` state key (default 'http').
 
 from __future__ import annotations
 
+
+
+import logging
+
+logger = logging.getLogger(__name__)
 from typing_extensions import (
     Annotated,
     Any,
@@ -90,7 +95,7 @@ def parse_document(
     Returns:
         Tuple[str, Dict]: text summary + structured artifact.
     """
-    print("    * Tool: parse_document")
+    logger.info("    * Tool: parse_document")
 
     import os
 
@@ -360,7 +365,7 @@ def extract_tables(
     Returns:
         Tuple[str, Dict]: summary + artifact with table records.
     """
-    print("    * Tool: extract_tables")
+    logger.info("    * Tool: extract_tables")
 
     if not parse_results:
         return "No parse_results in state – call parse_document first.", {}
@@ -425,7 +430,7 @@ def get_parser_params(
     Returns:
         str: Human-readable configuration summary.
     """
-    print("    * Tool: get_parser_params")
+    logger.info("    * Tool: get_parser_params")
     page_info = f"max_pages={max_pages}" if max_pages and max_pages > 0 else "all pages"
     return (
         f"Document Parser config → type='{document_type}', "
@@ -501,17 +506,17 @@ def make_document_parser_agent(
     )
 
     def prepare_messages(state: GraphState):
-        print(format_agent_name(AGENT_NAME))
-        print("    * PREPARE MESSAGES")
+        logger.info(format_agent_name(AGENT_NAME))
+        logger.info("    * PREPARE MESSAGES")
         if state.get("messages"):
             return {}
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        print("    * RUN REACT TOOL-CALLING AGENT FOR DOCUMENT PARSER")
+        logger.info("    * RUN REACT TOOL-CALLING AGENT FOR DOCUMENT PARSER")
         dt = state.get("document_type", document_type)
         mode = state.get("extraction_mode", extraction_mode)
-        print(f"    * type={dt}, mode={mode}")
+        logger.info(f"    * type={dt}, mode={mode}")
 
         system_hint = (
             "You are a Document Parser agent. "
@@ -536,7 +541,7 @@ def make_document_parser_agent(
         return react_agent.invoke(input_payload, invoke_react_agent_kwargs)  # type: ignore[arg-type]
 
     def post_process(state: GraphState):
-        print("    * POST-PROCESSING DOCUMENT PARSE RESULTS")
+        logger.info("    * POST-PROCESSING DOCUMENT PARSE RESULTS")
 
         internal_messages = state.get("messages", [])
         if not internal_messages:
@@ -571,7 +576,7 @@ def make_document_parser_agent(
         tool_calls = get_tool_call_names(internal_messages)
         if log_tool_calls and tool_calls:
             for tc in tool_calls:
-                print(f"    * Tool: {tc}")
+                logger.info(f"    * Tool: {tc}")
 
         return {
             "messages": [last_ai_message],

@@ -36,6 +36,11 @@ Node type
 
 from __future__ import annotations
 
+
+
+import logging
+
+logger = logging.getLogger(__name__)
 from typing import (
     Annotated,
     Any,
@@ -117,7 +122,7 @@ def pa_solve_power(
         ratio : Treatment-to-control sample size ratio (default 1.0).
         alternative : 'two-sided', 'larger', or 'smaller'.
     """
-    print("    * Tool: pa_solve_power")
+    logger.info("    * Tool: pa_solve_power")
 
     result = solve_power(
         solve_for=solve_for,
@@ -171,7 +176,7 @@ def pa_required_sample_size(
         power  : Desired power (default 0.80).
         ratio  : Treatment-to-control allocation ratio (default 1.0).
     """
-    print("    * Tool: pa_required_sample_size")
+    logger.info("    * Tool: pa_required_sample_size")
 
     result = required_sample_size(
         metric_type=metric_type,
@@ -223,7 +228,7 @@ def pa_minimum_detectable_effect(
         ratio  : Treatment-to-control allocation ratio (default 1.0).
         alternative : 'two-sided', 'larger', 'smaller'.
     """
-    print("    * Tool: pa_minimum_detectable_effect")
+    logger.info("    * Tool: pa_minimum_detectable_effect")
 
     result = minimum_detectable_effect(
         nobs1=nobs1,
@@ -268,7 +273,7 @@ def pa_estimate_runtime(
         traffic_allocation : Fraction of total traffic routed in (default 1.0).
         ramp_up_days       : Days where traffic ramps 0→full (default 0).
     """
-    print("    * Tool: pa_estimate_runtime")
+    logger.info("    * Tool: pa_estimate_runtime")
 
     result = estimate_runtime_days(
         required_n_per_arm=required_n_per_arm,
@@ -311,7 +316,7 @@ def pa_suggest_stratification(
         candidate_columns : Optional list to limit assessment.
         max_cardinality  : Maximum allowed cardinality (default 20).
     """
-    print("    * Tool: pa_suggest_stratification")
+    logger.info("    * Tool: pa_suggest_stratification")
 
     df = pd.DataFrame(data_raw)
     result = suggest_stratification(
@@ -373,7 +378,7 @@ def pa_design_experiment(
             from state) used to score stratification candidates.
         stratification_group_column : Optional assignment column.
     """
-    print("    * Tool: pa_design_experiment")
+    logger.info("    * Tool: pa_design_experiment")
 
     historical_df = (
         pd.DataFrame(historical_data_raw)
@@ -475,15 +480,15 @@ def make_power_analysis_agent(
     )
 
     def prepare_messages(state: GraphState):
-        print(format_agent_name(AGENT_NAME))
-        print("    * PREPARE MESSAGES")
+        logger.info(format_agent_name(AGENT_NAME))
+        logger.info("    * PREPARE MESSAGES")
         if state.get("messages"):
             return {}
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        print("    * RUN REACT TOOL-CALLING AGENT FOR POWER ANALYSIS")
-        print(
+        logger.info("    * RUN REACT TOOL-CALLING AGENT FOR POWER ANALYSIS")
+        logger.info(
             f"    * alpha={state.get('alpha')}, "
             f"power={state.get('power')}, ratio={state.get('ratio')}"
         )
@@ -523,7 +528,7 @@ def make_power_analysis_agent(
         return react_agent.invoke(input_payload, invoke_react_agent_kwargs)  # type: ignore[arg-type]
 
     def post_process(state: GraphState):
-        print("    * POST-PROCESSING POWER-ANALYSIS RESULTS")
+        logger.info("    * POST-PROCESSING POWER-ANALYSIS RESULTS")
 
         internal_messages = state.get("messages", []) or []
         if not internal_messages:
@@ -608,7 +613,7 @@ def make_power_analysis_agent(
         tool_calls = get_tool_call_names(internal_messages)
         if log_tool_calls and tool_calls:
             for tc in tool_calls:
-                print(f"    * Tool: {tc}")
+                logger.info(f"    * Tool: {tc}")
 
         return {
             "messages": [last_ai_message],

@@ -1,4 +1,9 @@
 
+
+
+import logging
+
+logger = logging.getLogger(__name__)
 import os
 
 def log_ai_function(response: str, file_name: str, log: bool = True, log_path: str = './logs/', overwrite: bool = True):
@@ -53,7 +58,7 @@ def log_ai_function(response: str, file_name: str, log: bool = True, log_path: s
         with open(file_path, 'w', encoding='utf-8') as file:
             file.write(response)
 
-        print(f"      File saved to: {file_path}")
+        logger.info(f"      File saved to: {file_path}")
         
         return (file_path, file_name)
     
@@ -92,5 +97,5 @@ def log_ai_error(error_message: str, file_name: str = "errors.log", log: bool = 
     with open(file_path, mode, encoding="utf-8") as f:
         f.write(error_message + "\n")
 
-    print(f"      Error logged to: {file_path}")
+    logger.info(f"      Error logged to: {file_path}")
     return file_path

@@ -8,9 +8,9 @@ Example::
 
     conn = SQLConnector("sqlite:///mydb.sqlite")
     conn.connect()
-    print(conn.list_sources())    # ["main.users", "main.orders", ...]
+    logger.info(conn.list_sources())    # ["main.users", "main.orders", ...]
     df = conn.read("main.orders", max_rows=100)
-    print(conn.health_check())
+    logger.info(conn.health_check())
 """
 from __future__ import annotations
 

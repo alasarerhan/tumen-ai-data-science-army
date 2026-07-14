@@ -87,7 +87,7 @@ def mlflow_set_tags(
     Set one or more tags on an MLflow run. If run_id is not provided, uses the active run
     or starts a new run under experiment_name.
     """
-    print("    * Tool: mlflow_set_tags")
+    logger.info("    * Tool: mlflow_set_tags")
     import mlflow
 
     with _resolve_active_run(
@@ -113,7 +113,7 @@ def mlflow_log_params(
     Log a batch of parameters to an MLflow run. If run_id is not provided, uses the active run
     or starts a new run under experiment_name.
     """
-    print("    * Tool: mlflow_log_params")
+    logger.info("    * Tool: mlflow_log_params")
     import mlflow
 
     with _resolve_active_run(
@@ -140,7 +140,7 @@ def mlflow_log_metrics(
     Log a batch of metrics to an MLflow run. If run_id is not provided, uses the active run
     or starts a new run under experiment_name.
     """
-    print("    * Tool: mlflow_log_metrics")
+    logger.info("    * Tool: mlflow_log_metrics")
     import mlflow
 
     # Ensure metrics are numeric where possible
@@ -181,7 +181,7 @@ def mlflow_log_table(
     artifact_file : str
         Destination artifact path, e.g. "tables/preview.json".
     """
-    print("    * Tool: mlflow_log_table")
+    logger.info("    * Tool: mlflow_log_table")
     import mlflow
     import pandas as pd
 
@@ -217,7 +217,7 @@ def mlflow_log_dict(
     """
     Log a JSON-serializable dict to MLflow (using mlflow.log_dict).
     """
-    print("    * Tool: mlflow_log_dict")
+    logger.info("    * Tool: mlflow_log_dict")
     import mlflow
 
     with _resolve_active_run(
@@ -250,7 +250,7 @@ def mlflow_log_figure(
     artifact_file : str
         Destination artifact file path, e.g. "plots/viz.html" or "plots/viz.json".
     """
-    print("    * Tool: mlflow_log_figure")
+    logger.info("    * Tool: mlflow_log_figure")
     import mlflow
     import json
     import plotly.io as pio
@@ -288,7 +288,7 @@ def mlflow_log_artifact(
     """
     Log a local file or directory to MLflow (using mlflow.log_artifact(s)).
     """
-    print("    * Tool: mlflow_log_artifact")
+    logger.info("    * Tool: mlflow_log_artifact")
     import mlflow
     import os
 
@@ -338,7 +338,7 @@ def mlflow_search_experiments(
         - Content string (human readable).
         - Artifact dict with `experiments` as a list of records.
     """
-    print("    * Tool: mlflow_search_experiments")
+    logger.info("    * Tool: mlflow_search_experiments")
     from mlflow.tracking import MlflowClient
 
     client = MlflowClient(tracking_uri=tracking_uri, registry_uri=registry_uri)
@@ -415,7 +415,7 @@ def mlflow_search_runs(
         - Content string (human readable).
         - Artifact dict with `runs` as a list of records.
     """
-    print("    * Tool: mlflow_search_runs")
+    logger.info("    * Tool: mlflow_search_runs")
     from mlflow.tracking import MlflowClient
 
     client = MlflowClient(tracking_uri=tracking_uri, registry_uri=registry_uri)
@@ -540,7 +540,7 @@ def mlflow_create_experiment(experiment_name: str) -> str:
     str
         The experiment ID or an error message if creation failed.
     """
-    print("    * Tool: mlflow_create_experiment")
+    logger.info("    * Tool: mlflow_create_experiment")
     from mlflow.tracking import MlflowClient
 
     client = MlflowClient()
@@ -571,7 +571,7 @@ def mlflow_predict_from_run_id(
     tuple
         (user_facing_message, artifact_dict)
     """
-    print("    * Tool: mlflow_predict_from_run_id")
+    logger.info("    * Tool: mlflow_predict_from_run_id")
     import mlflow
     import mlflow.pyfunc
     import pandas as pd
@@ -644,7 +644,7 @@ def mlflow_launch_ui(
     str
         Confirmation message.
     """
-    print("    * Tool: mlflow_launch_ui")
+    logger.info("    * Tool: mlflow_launch_ui")
     import subprocess
 
     # Try binding to the user-specified port first
@@ -691,7 +691,7 @@ def mlflow_stop_ui(port: int = 5000) -> str:
     port : int, optional
         The port on which the UI is running.
     """
-    print("    * Tool: mlflow_stop_ui")
+    logger.info("    * Tool: mlflow_stop_ui")
     import psutil
 
     # Attempt to find processes listening on port; on macOS this may require elevated perms.
@@ -746,7 +746,7 @@ def mlflow_list_artifacts(
     tuple
         (summary_message, artifact_listing)
     """
-    print("    * Tool: mlflow_list_artifacts")
+    logger.info("    * Tool: mlflow_list_artifacts")
     from mlflow.tracking import MlflowClient
 
     client = MlflowClient(tracking_uri=tracking_uri)
@@ -793,7 +793,7 @@ def mlflow_download_artifacts(
     tuple
         (summary_message, artifact_dict)
     """
-    print("    * Tool: mlflow_download_artifacts")
+    logger.info("    * Tool: mlflow_download_artifacts")
     from mlflow.tracking import MlflowClient
     import os
 
@@ -835,7 +835,7 @@ def mlflow_list_registered_models(
     tuple
         (summary_message, model_list)
     """
-    print("    * Tool: mlflow_list_registered_models")
+    logger.info("    * Tool: mlflow_list_registered_models")
     from mlflow.tracking import MlflowClient
 
     client = MlflowClient(tracking_uri=tracking_uri, registry_uri=registry_uri)
@@ -888,7 +888,7 @@ def mlflow_search_registered_models(
     tuple
         (summary_message, model_dict_list)
     """
-    print("    * Tool: mlflow_search_registered_models")
+    logger.info("    * Tool: mlflow_search_registered_models")
     from mlflow.tracking import MlflowClient
 
     client = MlflowClient(tracking_uri=tracking_uri, registry_uri=registry_uri)
@@ -945,7 +945,7 @@ def mlflow_get_model_version_details(
     tuple
         (summary_message, version_data_dict)
     """
-    print("    * Tool: mlflow_get_model_version_details")
+    logger.info("    * Tool: mlflow_get_model_version_details")
     from mlflow.tracking import MlflowClient
 
     client = MlflowClient(tracking_uri=tracking_uri, registry_uri=registry_uri)
@@ -973,7 +973,7 @@ def mlflow_get_run_details(
     """
     Retrieve run info, params, metrics, tags, and a shallow artifact listing.
     """
-    print("    * Tool: mlflow_get_run_details")
+    logger.info("    * Tool: mlflow_get_run_details")
     from mlflow.tracking import MlflowClient
     import pandas as pd
 
@@ -1018,7 +1018,7 @@ def mlflow_transition_model_version_stage(
     """
     Transition a registered model version to a new stage (e.g., Staging, Production, Archived).
     """
-    print("    * Tool: mlflow_transition_model_version_stage")
+    logger.info("    * Tool: mlflow_transition_model_version_stage")
     from mlflow.tracking import MlflowClient
 
     client = MlflowClient(tracking_uri=tracking_uri, registry_uri=registry_uri)
@@ -1039,7 +1039,7 @@ def mlflow_tracking_info() -> tuple:
     """
     Return current tracking URI, registry URI, and active run info (if any).
     """
-    print("    * Tool: mlflow_tracking_info")
+    logger.info("    * Tool: mlflow_tracking_info")
     import mlflow
 
     tracking_uri = mlflow.get_tracking_uri()
@@ -1067,7 +1067,7 @@ def mlflow_ui_status(port: int = 5000) -> tuple:
     """
     Check if a process appears to be serving MLflow UI on the given port.
     """
-    print("    * Tool: mlflow_ui_status")
+    logger.info("    * Tool: mlflow_ui_status")
     ui_procs = []
     try:
         for proc in psutil.process_iter(["pid", "name", "cmdline"]):

@@ -21,9 +21,9 @@ Usage
 
     router = IntentRouter()
     decision = router.route("Bu verideki anomalileri bul")
-    print(decision.agent_name)    # "anomaly_detection_agent"
-    print(decision.method)        # "keyword"
-    print(decision.confidence)    # 0.5
+    logger.info(decision.agent_name)    # "anomaly_detection_agent"
+    logger.info(decision.method)        # "keyword"
+    logger.info(decision.confidence)    # 0.5
 
     # With LLM fallback (triggers when no keyword hits)
     router_with_llm = IntentRouter(llm_threshold=0.1, llm=some_langchain_llm)
@@ -32,6 +32,11 @@ Usage
 
 from __future__ import annotations
 
+
+
+import logging
+
+logger = logging.getLogger(__name__)
 import re
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Tuple

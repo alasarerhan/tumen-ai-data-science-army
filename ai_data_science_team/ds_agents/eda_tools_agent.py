@@ -1,6 +1,11 @@
 from typing_extensions import Any, Optional, Annotated, Sequence, Dict, TypedDict
 import pandas as pd
 
+
+
+import logging
+
+logger = logging.getLogger(__name__)
 from IPython.display import Markdown
 
 from langchain_core.messages import BaseMessage, AIMessage
@@ -265,7 +270,7 @@ class EDAToolsAgent(BaseAgent):
         if last_ai is None and msgs:
             last_ai = msgs[-1]
         if last_ai is None:
-            print("No AI message found in response.")
+            logger.info("No AI message found in response.")
             return None
         content = getattr(last_ai, "content", "")
         if markdown:
@@ -323,17 +328,17 @@ def make_eda_tools_agent(
     )
 
     def prepare_messages(state: GraphState):
-        print(format_agent_name(AGENT_NAME))
-        print("    * PREPARE MESSAGES")
+        logger.info(format_agent_name(AGENT_NAME))
+        logger.info("    * PREPARE MESSAGES")
         if state.get("messages"):
             return {}
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        print("    * RUN REACT TOOL-CALLING AGENT FOR EDA")
+        logger.info("    * RUN REACT TOOL-CALLING AGENT FOR EDA")
         data_raw = state.get("data_raw")
         if data_raw is None:
-            print("    * No data_raw provided to EDA agent")
+            logger.info("    * No data_raw provided to EDA agent")
         else:
             try:
                 n_rows: int | str = (
@@ -343,7 +348,7 @@ def make_eda_tools_agent(
                 )
             except Exception:
                 n_rows = "?"
-            print(f"    * data_raw rows: {n_rows}")
+            logger.info(f"    * data_raw rows: {n_rows}")
 
         system_hint = (
             "You are an EDA agent. You have access to the dataset in state as data_raw. "
@@ -362,7 +367,7 @@ def make_eda_tools_agent(
         return react_agent.invoke(input_payload, invoke_react_agent_kwargs)  # type: ignore[arg-type]
 
     def post_process(state: GraphState):
-        print("    * POST-PROCESSING EDA RESULTS")
+        logger.info("    * POST-PROCESSING EDA RESULTS")
 
         internal_messages = state.get("messages", [])
         if not internal_messages:
@@ -449,7 +454,7 @@ def make_eda_tools_agent(
         tool_calls = get_tool_call_names(internal_messages)
         if log_tool_calls and tool_calls:
             for name in tool_calls:
-                print(f"    * Tool: {name}")
+                logger.info(f"    * Tool: {name}")
 
         return {
             "messages": [last_ai_message],

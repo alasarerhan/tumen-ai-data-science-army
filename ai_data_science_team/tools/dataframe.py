@@ -3,6 +3,11 @@ import pandas as pd
 from typing_extensions import Union, List, Dict
 
 
+
+
+import logging
+
+logger = logging.getLogger(__name__)
 def get_dataframe_summary(
     dataframes: Union[pd.DataFrame, List[pd.DataFrame], Dict[str, pd.DataFrame]],
     n_sample: int = 30,
@@ -34,7 +39,7 @@ def get_dataframe_summary(
         "iris_target": data.target,
     }
     summaries = get_dataframe_summary(dataframes)
-    print(summaries[0])
+    logger.info(summaries[0])
     ```
 
     Returns

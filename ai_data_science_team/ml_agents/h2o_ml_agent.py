@@ -1,3 +1,8 @@
+
+
+import logging
+
+logger = logging.getLogger(__name__)
 # BUSINESS SCIENCE UNIVERSITY
 # AI DATA SCIENCE TEAM
 # ***
@@ -478,7 +483,7 @@ def make_h2o_ml_agent(
 
     if human_in_the_loop:
         if checkpointer is None:
-            print(
+            logger.info(
                 "Human in the loop is enabled. A checkpointer is required. Setting to MemorySaver()."
             )
             checkpointer = MemorySaver()
@@ -506,8 +511,8 @@ def make_h2o_ml_agent(
 
     # 1) Recommend ML steps (optional)
     def recommend_ml_steps(state: GraphState):
-        print(format_agent_name(AGENT_NAME))
-        print("    * RECOMMEND MACHINE LEARNING STEPS")
+        logger.info(format_agent_name(AGENT_NAME))
+        logger.info("    * RECOMMEND MACHINE LEARNING STEPS")
 
         recommend_steps_prompt = PromptTemplate(
             template="""
@@ -573,7 +578,7 @@ def make_h2o_ml_agent(
     # 2) Create code
     def create_h2o_code(state: GraphState):
         if bypass_recommended_steps:
-            print(format_agent_name(AGENT_NAME))
+            logger.info(format_agent_name(AGENT_NAME))
 
             data_raw = state.get("data_raw")
             df = pd.DataFrame.from_dict(data_raw)
@@ -588,7 +593,7 @@ def make_h2o_ml_agent(
 
         steps_for_prompt = state.get("recommended_steps") or DEFAULT_ML_STEPS
 
-        print("    * CREATE H2O AUTOML CODE")
+        logger.info("    * CREATE H2O AUTOML CODE")
 
         code_prompt = PromptTemplate(
             template="""

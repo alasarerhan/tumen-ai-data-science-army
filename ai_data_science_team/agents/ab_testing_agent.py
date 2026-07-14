@@ -31,6 +31,11 @@ Node type
 
 from __future__ import annotations
 
+
+
+import logging
+
+logger = logging.getLogger(__name__)
 from typing_extensions import (
     Annotated,
     Any,
@@ -98,7 +103,7 @@ def ab_check_srm(
                           If None, equal split is assumed.
         alpha           : Significance level for SRM (default 0.001).
     """
-    print("    * Tool: ab_check_srm")
+    logger.info("    * Tool: ab_check_srm")
 
     df = pd.DataFrame(data_raw)
     result = check_sample_ratio_mismatch(
@@ -139,7 +144,7 @@ def ab_analyze_continuous(
         control_name  : Label of the control variant (default 'control').
         alpha         : Significance level (default 0.05).
     """
-    print("    * Tool: ab_analyze_continuous")
+    logger.info("    * Tool: ab_analyze_continuous")
 
     df = pd.DataFrame(data_raw)
     result = analyze_continuous_metric(
@@ -183,7 +188,7 @@ def ab_analyze_proportion(
         control_name  : Label of the control variant (default 'control').
         alpha         : Significance level (default 0.05).
     """
-    print("    * Tool: ab_analyze_proportion")
+    logger.info("    * Tool: ab_analyze_proportion")
 
     df = pd.DataFrame(data_raw)
     result = analyze_proportion_metric(
@@ -215,7 +220,7 @@ def ab_apply_cuped(
         Applies CUPED variance reduction using a pre-experiment covariate.
         Returns theta, raw vs adjusted means and the % variance reduction.
     """
-    print("    * Tool: ab_apply_cuped")
+    logger.info("    * Tool: ab_apply_cuped")
 
     df = pd.DataFrame(data_raw)
     result = apply_cuped(
@@ -249,7 +254,7 @@ def ab_correct_multiple(
         method   : 'bonferroni', 'bh', or 'none'.
         alpha    : Family-wise / FDR level (default 0.05).
     """
-    print("    * Tool: ab_correct_multiple")
+    logger.info("    * Tool: ab_correct_multiple")
 
     result = apply_multiple_comparison_correction(
         p_values=p_values, method=method, alpha=alpha
@@ -277,7 +282,7 @@ def ab_detect_peeking(
         sequential_p_values : P-values ordered chronologically.
         alpha               : Target Type-I error (default 0.05).
     """
-    print("    * Tool: ab_detect_peeking")
+    logger.info("    * Tool: ab_detect_peeking")
 
     result = detect_sequential_peeking(sequential_p_values, alpha=alpha)
     return result["peeking_warning"], result
@@ -302,7 +307,7 @@ def ab_recommend_decision(
         power                  : Achieved statistical power, if known.
         required_sample_ratio  : Observed/required sample ratio.
     """
-    print("    * Tool: ab_recommend_decision")
+    logger.info("    * Tool: ab_recommend_decision")
 
     result = recommend_decision(
         metric_result=metric_result,
@@ -377,15 +382,15 @@ def make_ab_testing_agent(
     )
 
     def prepare_messages(state: GraphState):
-        print(format_agent_name(AGENT_NAME))
-        print("    * PREPARE MESSAGES")
+        logger.info(format_agent_name(AGENT_NAME))
+        logger.info("    * PREPARE MESSAGES")
         if state.get("messages"):
             return {}
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        print("    * RUN REACT TOOL-CALLING AGENT FOR A/B TESTING")
-        print(
+        logger.info("    * RUN REACT TOOL-CALLING AGENT FOR A/B TESTING")
+        logger.info(
             f"    * group_column={state.get('group_column')}, "
             f"alpha={state.get('alpha')}"
         )
@@ -419,7 +424,7 @@ def make_ab_testing_agent(
         return react_agent.invoke(input_payload, invoke_react_agent_kwargs)  # type: ignore[arg-type]
 
     def post_process(state: GraphState):
-        print("    * POST-PROCESSING A/B TESTING RESULTS")
+        logger.info("    * POST-PROCESSING A/B TESTING RESULTS")
 
         internal_messages = state.get("messages", []) or []
         if not internal_messages:
@@ -476,7 +481,7 @@ def make_ab_testing_agent(
         tool_calls = get_tool_call_names(internal_messages)
         if log_tool_calls and tool_calls:
             for tc in tool_calls:
-                print(f"    * Tool: {tc}")
+                logger.info(f"    * Tool: {tc}")
 
         return {
             "messages": [last_ai_message],

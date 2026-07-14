@@ -1,5 +1,10 @@
 from typing_extensions import Any, Optional, Annotated, Sequence, Dict, TypedDict
 
+
+
+import logging
+
+logger = logging.getLogger(__name__)
 import pandas as pd
 
 from IPython.display import Markdown
@@ -406,8 +411,8 @@ def make_mlflow_tools_agent(
         react_agent = react_agent.with_config(invoke_react_agent_kwargs)  # type: ignore[arg-type]
 
     def prepare_messages(state: GraphState):
-        print(format_agent_name(AGENT_NAME))
-        print("    * PREPARE MESSAGES")
+        logger.info(format_agent_name(AGENT_NAME))
+        logger.info("    * PREPARE MESSAGES")
         if state.get("messages"):
             return {}
         system_hint = (
@@ -418,7 +423,7 @@ def make_mlflow_tools_agent(
         return {"messages": [("system", system_hint)] + base_messages}
 
     def post_process(state: GraphState):
-        print("    * POST-PROCESS RESULTS")
+        logger.info("    * POST-PROCESS RESULTS")
         internal_messages = state.get("messages", [])
 
         def _escape_md_cell(value: Any) -> str:
@@ -479,7 +484,7 @@ def make_mlflow_tools_agent(
         tool_calls = get_tool_call_names(internal_messages)
         if log_tool_calls and tool_calls:
             for name in tool_calls:
-                print(f"    * Tool: {name}")
+                logger.info(f"    * Tool: {name}")
 
         def _format_artifacts_table(art: Any) -> str | None:
             if not isinstance(art, dict):

@@ -60,7 +60,7 @@ def load_directory(
     Tuple[str, Dict]
         A tuple containing a message and a dictionary of data frames.
     """
-    print(f"    * Tool: load_directory | {directory_path}")
+    logger.info(f"    * Tool: load_directory | {directory_path}")
 
     import os
     import pandas as pd
@@ -144,7 +144,7 @@ def load_file(file_path: str) -> Tuple[str, Dict]:
     Tuple[str, Dict]
         A tuple containing a message and a dictionary of the data frame.
     """
-    print(f"    * Tool: load_file | {file_path}")
+    logger.info(f"    * Tool: load_file | {file_path}")
     resolved_path, _matches = resolve_existing_file_path(file_path)
     resolved_path_str = str(resolved_path) if resolved_path is not None else str(file_path)
     df_or_error = auto_load_file(file_path, max_rows=DEFAULT_MAX_ROWS)
@@ -188,7 +188,7 @@ def list_directory_contents(
               the keys {"filename": <name>, "type": <'file' or 'directory'>}.
               This structure can be easily converted to a pandas DataFrame.
     """
-    print(f"    * Tool: list_directory_contents | {directory_path}")
+    logger.info(f"    * Tool: list_directory_contents | {directory_path}")
     import os
 
     if directory_path is None:
@@ -257,7 +257,7 @@ def list_directory_recursive(
     Example:
         content, artifact = list_directory_recursive("/path/to/folder", show_hidden=False)
     """
-    print(f"    * Tool: list_directory_recursive | {directory_path}")
+    logger.info(f"    * Tool: list_directory_recursive | {directory_path}")
 
     # We'll store two things as we recurse:
     # 1) lines for building the "tree" string
@@ -377,7 +377,7 @@ def get_file_info(file_path: str) -> Tuple[str, List[Dict]]:
     Example:
         content, artifact = get_file_info("/path/to/mydata.csv")
     """
-    print(f"    * Tool: get_file_info | {file_path}")
+    logger.info(f"    * Tool: get_file_info | {file_path}")
 
     # Ensure the file exists
     import os
@@ -437,7 +437,7 @@ def search_files_by_pattern(
     Example:
         content, artifact = search_files_by_pattern("/path/to/folder", "*.csv", recursive=True)
     """
-    print(f"    * Tool: search_files_by_pattern | {directory_path}")
+    logger.info(f"    * Tool: search_files_by_pattern | {directory_path}")
 
     import os
     import fnmatch

@@ -40,8 +40,8 @@ Usage
         session_id="session-42",
         scenario="supervised",
     )
-    print(run_result.status)          # "completed" | "degraded" | "cancelled"
-    print(run_result.success_count)   # steps that succeeded
+    logger.info(run_result.status)          # "completed" | "degraded" | "cancelled"
+    logger.info(run_result.success_count)   # steps that succeeded
 """
 
 from __future__ import annotations

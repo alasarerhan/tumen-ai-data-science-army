@@ -25,6 +25,11 @@ Supported response formats
 
 from __future__ import annotations
 
+
+
+import logging
+
+logger = logging.getLogger(__name__)
 from typing_extensions import (
     Annotated,
     Any,
@@ -93,7 +98,7 @@ def call_api(
     Returns:
         Tuple[str, Dict]: text summary + artifact dict with response details.
     """
-    print("    * Tool: call_api")
+    logger.info("    * Tool: call_api")
 
     import time
     import requests as req
@@ -222,7 +227,7 @@ def parse_response(
     Returns:
         Tuple[str, Dict]: summary + parsed artifact.
     """
-    print("    * Tool: parse_response")
+    logger.info("    * Tool: parse_response")
 
     if not api_results:
         return "No API results found in state – call call_api first.", {}
@@ -302,7 +307,7 @@ def get_api_params(
     Returns:
         str: Human-readable configuration summary.
     """
-    print("    * Tool: get_api_params")
+    logger.info("    * Tool: get_api_params")
     return (
         f"API Connector config → URL='{url}', method={http_method}, "
         f"auth={auth_scheme}, response_format={response_format}, timeout={timeout}s."
@@ -406,17 +411,17 @@ def make_api_connector_agent(
     )
 
     def prepare_messages(state: GraphState):
-        print(format_agent_name(AGENT_NAME))
-        print("    * PREPARE MESSAGES")
+        logger.info(format_agent_name(AGENT_NAME))
+        logger.info("    * PREPARE MESSAGES")
         if state.get("messages"):
             return {}
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        print("    * RUN REACT TOOL-CALLING AGENT FOR API CONNECTOR")
+        logger.info("    * RUN REACT TOOL-CALLING AGENT FOR API CONNECTOR")
         u = state.get("url", url)
         m = state.get("http_method", http_method)
-        print(f"    * {m} {u}")
+        logger.info(f"    * {m} {u}")
 
         system_hint = (
             "You are an API Connector agent. "
@@ -446,7 +451,7 @@ def make_api_connector_agent(
         return react_agent.invoke(input_payload, invoke_react_agent_kwargs)  # type: ignore[arg-type]
 
     def post_process(state: GraphState):
-        print("    * POST-PROCESSING API RESPONSE")
+        logger.info("    * POST-PROCESSING API RESPONSE")
 
         internal_messages = state.get("messages", [])
         if not internal_messages:
@@ -487,7 +492,7 @@ def make_api_connector_agent(
         tool_calls = get_tool_call_names(internal_messages)
         if log_tool_calls and tool_calls:
             for tc in tool_calls:
-                print(f"    * Tool: {tc}")
+                logger.info(f"    * Tool: {tc}")
 
         return {
             "messages": [last_ai_message],

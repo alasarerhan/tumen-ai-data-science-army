@@ -81,7 +81,7 @@ def run_kmeans(
         try:
             sil = round(float(silhouette_score(X, labels)), 4)
         except Exception as exc:
-            logger.warning("silhouette_score failed for k=%d: %s", k, exc)
+            logger.warning("silhouette_score failed for k=%d: %s", k_eff, exc)
 
     sizes = {int(k): int(v) for k, v in zip(*np.unique(labels, return_counts=True))}
     share = {str(k): round(v / n_samples, 4) for k, v in sizes.items()}

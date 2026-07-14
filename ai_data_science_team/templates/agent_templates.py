@@ -13,7 +13,7 @@ import pandas as pd
 import sqlalchemy as sql
 import json
 
-from typing_extensions import Any, Callable, Dict, Type, Optional, Union, List, Sequence
+from typing_extensions import Any, Callable, Dict, Type, Optional, Union, List, Sequence, Annotated
 
 from ai_data_science_team.parsers.parsers import PythonOutputParser
 from ai_data_science_team.utils.regex import (

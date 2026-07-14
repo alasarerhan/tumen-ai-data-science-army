@@ -17,6 +17,7 @@ from langgraph.graph.message import add_messages
 
 from ai_data_science_team.multiagents.supervisor import (
     SupervisorDSState,
+    DATASET_REGISTRY_MAX,
     _clean_messages,
     _get_last_human_text,
     append_agent_feedback,

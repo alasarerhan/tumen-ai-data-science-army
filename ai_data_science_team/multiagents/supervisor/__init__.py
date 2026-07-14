@@ -23,6 +23,7 @@ from .formatters import (
     format_result_with_llm,
 )
 from .datasets import (
+    DATASET_REGISTRY_MAX,
     ensure_dataset_registry,
     ensure_df,
     get_active_data,

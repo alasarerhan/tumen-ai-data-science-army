@@ -51,12 +51,7 @@ NODE_TYPE = "model.train.deep"
 # ---------------------------------------------------------------------------
 
 @tool(response_format="content_and_artifact")
-def e3_detect_device_wrapped(prefer: Optional[str]) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": str,
-    "content": str,
-}]:
+def e3_detect_device_wrapped(prefer: Optional[str]) -> Tuple[str, dict]:
     """Tool wrapper for ``detect_device``.
 
     Return one of ``"cuda"``, ``"mps"``, ``"cpu"`` based on availability.
@@ -69,11 +64,14 @@ def e3_detect_device_wrapped(prefer: Optional[str]) -> Tuple[str, {
         result = detect_device(**kwargs)
     except Exception as exc:
         return f"Tool e3_detect_device failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "e3_detect_device": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"e3_detect_device: ok"
     return content, {
-        "name": name,
+        "e3_detect_device": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -81,12 +79,7 @@ def e3_detect_device_wrapped(prefer: Optional[str]) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def e3_build_mlp_classifier_wrapped(n_features: int, n_classes: int, hidden: Sequence[int], dropout: float) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Any,
-    "content": str,
-}]:
+def e3_build_mlp_classifier_wrapped(n_features: int, n_classes: int, hidden: Sequence[int], dropout: float) -> Tuple[str, dict]:
     """Tool wrapper for ``build_mlp_classifier``.
 
     See underlying tool module.
@@ -99,11 +92,14 @@ def e3_build_mlp_classifier_wrapped(n_features: int, n_classes: int, hidden: Seq
         result = build_mlp_classifier(**kwargs)
     except Exception as exc:
         return f"Tool e3_build_mlp_classifier failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "e3_build_mlp_classifier": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"e3_build_mlp_classifier: ok"
     return content, {
-        "name": name,
+        "e3_build_mlp_classifier": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -111,12 +107,7 @@ def e3_build_mlp_classifier_wrapped(n_features: int, n_classes: int, hidden: Seq
 
 
 @tool(response_format="content_and_artifact")
-def e3_build_mlp_regressor_wrapped(n_features: int, hidden: Sequence[int], dropout: float) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Any,
-    "content": str,
-}]:
+def e3_build_mlp_regressor_wrapped(n_features: int, hidden: Sequence[int], dropout: float) -> Tuple[str, dict]:
     """Tool wrapper for ``build_mlp_regressor``.
 
     See underlying tool module.
@@ -129,11 +120,14 @@ def e3_build_mlp_regressor_wrapped(n_features: int, hidden: Sequence[int], dropo
         result = build_mlp_regressor(**kwargs)
     except Exception as exc:
         return f"Tool e3_build_mlp_regressor failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "e3_build_mlp_regressor": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"e3_build_mlp_regressor: ok"
     return content, {
-        "name": name,
+        "e3_build_mlp_regressor": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -141,12 +135,7 @@ def e3_build_mlp_regressor_wrapped(n_features: int, hidden: Sequence[int], dropo
 
 
 @tool(response_format="content_and_artifact")
-def e3_build_lstm_forecaster_wrapped(n_features: int, hidden: int, layers: int, horizon: int) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Any,
-    "content": str,
-}]:
+def e3_build_lstm_forecaster_wrapped(n_features: int, hidden: int, layers: int, horizon: int) -> Tuple[str, dict]:
     """Tool wrapper for ``build_lstm_forecaster``.
 
     See underlying tool module.
@@ -159,11 +148,14 @@ def e3_build_lstm_forecaster_wrapped(n_features: int, hidden: int, layers: int, 
         result = build_lstm_forecaster(**kwargs)
     except Exception as exc:
         return f"Tool e3_build_lstm_forecaster failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "e3_build_lstm_forecaster": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"e3_build_lstm_forecaster: ok"
     return content, {
-        "name": name,
+        "e3_build_lstm_forecaster": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -171,12 +163,7 @@ def e3_build_lstm_forecaster_wrapped(n_features: int, hidden: int, layers: int, 
 
 
 @tool(response_format="content_and_artifact")
-def e3_build_lstm_classifier_wrapped(n_features: int, n_classes: int, hidden: int, layers: int) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Any,
-    "content": str,
-}]:
+def e3_build_lstm_classifier_wrapped(n_features: int, n_classes: int, hidden: int, layers: int) -> Tuple[str, dict]:
     """Tool wrapper for ``build_lstm_classifier``.
 
     See underlying tool module.
@@ -189,11 +176,14 @@ def e3_build_lstm_classifier_wrapped(n_features: int, n_classes: int, hidden: in
         result = build_lstm_classifier(**kwargs)
     except Exception as exc:
         return f"Tool e3_build_lstm_classifier failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "e3_build_lstm_classifier": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"e3_build_lstm_classifier: ok"
     return content, {
-        "name": name,
+        "e3_build_lstm_classifier": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -201,12 +191,7 @@ def e3_build_lstm_classifier_wrapped(n_features: int, n_classes: int, hidden: in
 
 
 @tool(response_format="content_and_artifact")
-def e3_train_mlp_classifier_wrapped(X: np.ndarray, y: np.ndarray) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Dict[str, Any],
-    "content": str,
-}]:
+def e3_train_mlp_classifier_wrapped(X: np.ndarray, y: np.ndarray) -> Tuple[str, dict]:
     """Tool wrapper for ``train_mlp_classifier``.
 
     Train an MLP classifier (or regressor) with early stopping.
@@ -219,11 +204,14 @@ def e3_train_mlp_classifier_wrapped(X: np.ndarray, y: np.ndarray) -> Tuple[str, 
         result = train_mlp_classifier(**kwargs)
     except Exception as exc:
         return f"Tool e3_train_mlp_classifier failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "e3_train_mlp_classifier": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"e3_train_mlp_classifier: ok"
     return content, {
-        "name": name,
+        "e3_train_mlp_classifier": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -231,12 +219,7 @@ def e3_train_mlp_classifier_wrapped(X: np.ndarray, y: np.ndarray) -> Tuple[str, 
 
 
 @tool(response_format="content_and_artifact")
-def e3_train_lstm_forecaster_wrapped(X: np.ndarray, y: np.ndarray) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Dict[str, Any],
-    "content": str,
-}]:
+def e3_train_lstm_forecaster_wrapped(X: np.ndarray, y: np.ndarray) -> Tuple[str, dict]:
     """Tool wrapper for ``train_lstm_forecaster``.
 
     Train an LSTM forecaster on (X, y) where X is (B, T, F).
@@ -249,11 +232,14 @@ def e3_train_lstm_forecaster_wrapped(X: np.ndarray, y: np.ndarray) -> Tuple[str,
         result = train_lstm_forecaster(**kwargs)
     except Exception as exc:
         return f"Tool e3_train_lstm_forecaster failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "e3_train_lstm_forecaster": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"e3_train_lstm_forecaster: ok"
     return content, {
-        "name": name,
+        "e3_train_lstm_forecaster": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -313,7 +299,7 @@ def make_e3_deep_learning_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR {spec_id}")
+        logger.info(f"    * RUN REACT AGENT FOR E3")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the E3 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}

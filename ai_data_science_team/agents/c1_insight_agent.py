@@ -60,12 +60,7 @@ NODE_TYPE = "insight.mine"
 # ---------------------------------------------------------------------------
 
 @tool(response_format="content_and_artifact")
-def c1_find_anomalies_wrapped(df: pd.DataFrame) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": List[Insight],
-    "content": str,
-}]:
+def c1_find_anomalies_wrapped(df: pd.DataFrame) -> Tuple[str, dict]:
     """Tool wrapper for ``find_anomalies``.
 
     Return insights for columns whose values are extreme z-scores.
@@ -78,11 +73,14 @@ def c1_find_anomalies_wrapped(df: pd.DataFrame) -> Tuple[str, {
         result = find_anomalies(**kwargs)
     except Exception as exc:
         return f"Tool c1_find_anomalies failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "c1_find_anomalies": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"c1_find_anomalies: ok"
     return content, {
-        "name": name,
+        "c1_find_anomalies": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -90,12 +88,7 @@ def c1_find_anomalies_wrapped(df: pd.DataFrame) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def c1_find_strong_correlations_wrapped(df: pd.DataFrame) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": List[Insight],
-    "content": str,
-}]:
+def c1_find_strong_correlations_wrapped(df: pd.DataFrame) -> Tuple[str, dict]:
     """Tool wrapper for ``find_strong_correlations``.
 
     Return insights for column pairs with |corr| ≥ threshold.
@@ -108,11 +101,14 @@ def c1_find_strong_correlations_wrapped(df: pd.DataFrame) -> Tuple[str, {
         result = find_strong_correlations(**kwargs)
     except Exception as exc:
         return f"Tool c1_find_strong_correlations failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "c1_find_strong_correlations": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"c1_find_strong_correlations: ok"
     return content, {
-        "name": name,
+        "c1_find_strong_correlations": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -120,12 +116,7 @@ def c1_find_strong_correlations_wrapped(df: pd.DataFrame) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def c1_find_skewness_wrapped(df: pd.DataFrame) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": List[Insight],
-    "content": str,
-}]:
+def c1_find_skewness_wrapped(df: pd.DataFrame) -> Tuple[str, dict]:
     """Tool wrapper for ``find_skewness``.
 
     Return insights for numeric columns with heavy skew.
@@ -138,11 +129,14 @@ def c1_find_skewness_wrapped(df: pd.DataFrame) -> Tuple[str, {
         result = find_skewness(**kwargs)
     except Exception as exc:
         return f"Tool c1_find_skewness failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "c1_find_skewness": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"c1_find_skewness: ok"
     return content, {
-        "name": name,
+        "c1_find_skewness": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -150,12 +144,7 @@ def c1_find_skewness_wrapped(df: pd.DataFrame) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def c1_find_missing_patterns_wrapped(df: pd.DataFrame) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": List[Insight],
-    "content": str,
-}]:
+def c1_find_missing_patterns_wrapped(df: pd.DataFrame) -> Tuple[str, dict]:
     """Tool wrapper for ``find_missing_patterns``.
 
     Return insights for columns with high null rate and
@@ -168,11 +157,14 @@ def c1_find_missing_patterns_wrapped(df: pd.DataFrame) -> Tuple[str, {
         result = find_missing_patterns(**kwargs)
     except Exception as exc:
         return f"Tool c1_find_missing_patterns failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "c1_find_missing_patterns": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"c1_find_missing_patterns: ok"
     return content, {
-        "name": name,
+        "c1_find_missing_patterns": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -180,12 +172,7 @@ def c1_find_missing_patterns_wrapped(df: pd.DataFrame) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def c1_find_class_imbalance_wrapped(df: pd.DataFrame) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": List[Insight],
-    "content": str,
-}]:
+def c1_find_class_imbalance_wrapped(df: pd.DataFrame) -> Tuple[str, dict]:
     """Tool wrapper for ``find_class_imbalance``.
 
     Flag low-cardinality columns with skewed class distribution.
@@ -198,11 +185,14 @@ def c1_find_class_imbalance_wrapped(df: pd.DataFrame) -> Tuple[str, {
         result = find_class_imbalance(**kwargs)
     except Exception as exc:
         return f"Tool c1_find_class_imbalance failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "c1_find_class_imbalance": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"c1_find_class_imbalance: ok"
     return content, {
-        "name": name,
+        "c1_find_class_imbalance": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -210,12 +200,7 @@ def c1_find_class_imbalance_wrapped(df: pd.DataFrame) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def c1_find_constants_and_outliers_wrapped(df: pd.DataFrame) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": List[Insight],
-    "content": str,
-}]:
+def c1_find_constants_and_outliers_wrapped(df: pd.DataFrame) -> Tuple[str, dict]:
     """Tool wrapper for ``find_constants_and_outliers``.
 
     Single-value columns (zero variance) — useless for ML.
@@ -228,11 +213,14 @@ def c1_find_constants_and_outliers_wrapped(df: pd.DataFrame) -> Tuple[str, {
         result = find_constants_and_outliers(**kwargs)
     except Exception as exc:
         return f"Tool c1_find_constants_and_outliers failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "c1_find_constants_and_outliers": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"c1_find_constants_and_outliers: ok"
     return content, {
-        "name": name,
+        "c1_find_constants_and_outliers": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -240,12 +228,7 @@ def c1_find_constants_and_outliers_wrapped(df: pd.DataFrame) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def c1_mine_insights_wrapped(df: pd.DataFrame) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": List[Dict[str, Any]],
-    "content": str,
-}]:
+def c1_mine_insights_wrapped(df: pd.DataFrame) -> Tuple[str, dict]:
     """Tool wrapper for ``mine_insights``.
 
     Run the full insight pipeline and return the top insights.
@@ -258,11 +241,14 @@ def c1_mine_insights_wrapped(df: pd.DataFrame) -> Tuple[str, {
         result = mine_insights(**kwargs)
     except Exception as exc:
         return f"Tool c1_mine_insights failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "c1_mine_insights": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"c1_mine_insights: ok"
     return content, {
-        "name": name,
+        "c1_mine_insights": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -322,7 +308,7 @@ def make_c1_insight_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR {spec_id}")
+        logger.info(f"    * RUN REACT AGENT FOR C1")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the C1 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}

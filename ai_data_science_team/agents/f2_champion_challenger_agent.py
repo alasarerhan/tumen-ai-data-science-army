@@ -48,12 +48,7 @@ NODE_TYPE = "model.champion_challenger"
 # ---------------------------------------------------------------------------
 
 @tool(response_format="content_and_artifact")
-def f2_mcnemar_test_wrapped(y_true: Sequence[Any], y_pred_a: Sequence[Any], y_pred_b: Sequence[Any], exact: bool, correction: bool) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Dict[str, Any],
-    "content": str,
-}]:
+def f2_mcnemar_test_wrapped(y_true: Sequence[Any], y_pred_a: Sequence[Any], y_pred_b: Sequence[Any], exact: bool, correction: bool) -> Tuple[str, dict]:
     """Tool wrapper for ``mcnemar_test``.
 
     McNemar test for paired binary classifiers.
@@ -66,11 +61,14 @@ def f2_mcnemar_test_wrapped(y_true: Sequence[Any], y_pred_a: Sequence[Any], y_pr
         result = mcnemar_test(**kwargs)
     except Exception as exc:
         return f"Tool f2_mcnemar_test failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "f2_mcnemar_test": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"f2_mcnemar_test: ok"
     return content, {
-        "name": name,
+        "f2_mcnemar_test": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -78,12 +76,7 @@ def f2_mcnemar_test_wrapped(y_true: Sequence[Any], y_pred_a: Sequence[Any], y_pr
 
 
 @tool(response_format="content_and_artifact")
-def f2_wilcoxon_signed_rank_wrapped(residuals_a: Sequence[float], residuals_b: Sequence[float], alternative: str) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Dict[str, Any],
-    "content": str,
-}]:
+def f2_wilcoxon_signed_rank_wrapped(residuals_a: Sequence[float], residuals_b: Sequence[float], alternative: str) -> Tuple[str, dict]:
     """Tool wrapper for ``wilcoxon_signed_rank``.
 
     Paired Wilcoxon signed-rank test on residual pairs.
@@ -96,11 +89,14 @@ def f2_wilcoxon_signed_rank_wrapped(residuals_a: Sequence[float], residuals_b: S
         result = wilcoxon_signed_rank(**kwargs)
     except Exception as exc:
         return f"Tool f2_wilcoxon_signed_rank failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "f2_wilcoxon_signed_rank": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"f2_wilcoxon_signed_rank: ok"
     return content, {
-        "name": name,
+        "f2_wilcoxon_signed_rank": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -108,12 +104,7 @@ def f2_wilcoxon_signed_rank_wrapped(residuals_a: Sequence[float], residuals_b: S
 
 
 @tool(response_format="content_and_artifact")
-def f2_auc_with_delong_ci_wrapped(y_true: Sequence[Any], scores: Sequence[float], alpha: float) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Dict[str, Any],
-    "content": str,
-}]:
+def f2_auc_with_delong_ci_wrapped(y_true: Sequence[Any], scores: Sequence[float], alpha: float) -> Tuple[str, dict]:
     """Tool wrapper for ``auc_with_delong_ci``.
 
     AUC with DeLong 95% confidence interval.
@@ -126,11 +117,14 @@ def f2_auc_with_delong_ci_wrapped(y_true: Sequence[Any], scores: Sequence[float]
         result = auc_with_delong_ci(**kwargs)
     except Exception as exc:
         return f"Tool f2_auc_with_delong_ci failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "f2_auc_with_delong_ci": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"f2_auc_with_delong_ci: ok"
     return content, {
-        "name": name,
+        "f2_auc_with_delong_ci": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -138,12 +132,7 @@ def f2_auc_with_delong_ci_wrapped(y_true: Sequence[Any], scores: Sequence[float]
 
 
 @tool(response_format="content_and_artifact")
-def f2_delong_pvalue_wrapped(y_true: Sequence[Any], scores_a: Sequence[float], scores_b: Sequence[float]) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Dict[str, Any],
-    "content": str,
-}]:
+def f2_delong_pvalue_wrapped(y_true: Sequence[Any], scores_a: Sequence[float], scores_b: Sequence[float]) -> Tuple[str, dict]:
     """Tool wrapper for ``delong_pvalue``.
 
     Two-sided DeLong test comparing AUCs of two classifiers.
@@ -156,11 +145,14 @@ def f2_delong_pvalue_wrapped(y_true: Sequence[Any], scores_a: Sequence[float], s
         result = delong_pvalue(**kwargs)
     except Exception as exc:
         return f"Tool f2_delong_pvalue failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "f2_delong_pvalue": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"f2_delong_pvalue: ok"
     return content, {
-        "name": name,
+        "f2_delong_pvalue": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -168,12 +160,7 @@ def f2_delong_pvalue_wrapped(y_true: Sequence[Any], scores_a: Sequence[float], s
 
 
 @tool(response_format="content_and_artifact")
-def f2_compare_models_wrapped(y_true: Sequence[Any], y_proba_a: Sequence[float], y_proba_b: Sequence[float]) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Dict[str, Any],
-    "content": str,
-}]:
+def f2_compare_models_wrapped(y_true: Sequence[Any], y_proba_a: Sequence[float], y_proba_b: Sequence[float]) -> Tuple[str, dict]:
     """Tool wrapper for ``compare_models``.
 
     End-to-end champion vs challenger comparison.
@@ -186,11 +173,14 @@ def f2_compare_models_wrapped(y_true: Sequence[Any], y_proba_a: Sequence[float],
         result = compare_models(**kwargs)
     except Exception as exc:
         return f"Tool f2_compare_models failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "f2_compare_models": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"f2_compare_models: ok"
     return content, {
-        "name": name,
+        "f2_compare_models": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -248,7 +238,7 @@ def make_f2_champion_challenger_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR {spec_id}")
+        logger.info(f"    * RUN REACT AGENT FOR F2")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the F2 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}

@@ -45,12 +45,7 @@ NODE_TYPE = "model.llm_judge"
 # ---------------------------------------------------------------------------
 
 @tool(response_format="content_and_artifact")
-def f6_judge_output_wrapped(text: str, code: str) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": JudgeScore,
-    "content": str,
-}]:
+def f6_judge_output_wrapped(text: str, code: str) -> Tuple[str, dict]:
     """Tool wrapper for ``judge_output``.
 
     Score an agent's output.
@@ -63,11 +58,14 @@ def f6_judge_output_wrapped(text: str, code: str) -> Tuple[str, {
         result = judge_output(**kwargs)
     except Exception as exc:
         return f"Tool f6_judge_output failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "f6_judge_output": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"f6_judge_output: ok"
     return content, {
-        "name": name,
+        "f6_judge_output": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -75,12 +73,7 @@ def f6_judge_output_wrapped(text: str, code: str) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def f6_judge_batch_wrapped(items: Sequence[Mapping[str, str]]) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": List[JudgeScore],
-    "content": str,
-}]:
+def f6_judge_batch_wrapped(items: Sequence[Mapping[str, str]]) -> Tuple[str, dict]:
     """Tool wrapper for ``judge_batch``.
 
     Score a batch of {text, code} dicts.
@@ -93,11 +86,14 @@ def f6_judge_batch_wrapped(items: Sequence[Mapping[str, str]]) -> Tuple[str, {
         result = judge_batch(**kwargs)
     except Exception as exc:
         return f"Tool f6_judge_batch failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "f6_judge_batch": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"f6_judge_batch: ok"
     return content, {
-        "name": name,
+        "f6_judge_batch": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -152,7 +148,7 @@ def make_f6_llm_judge_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR {spec_id}")
+        logger.info(f"    * RUN REACT AGENT FOR F6")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the F6 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}

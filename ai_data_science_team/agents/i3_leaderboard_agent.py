@@ -49,12 +49,7 @@ NODE_TYPE = "experiment.leaderboard"
 # ---------------------------------------------------------------------------
 
 @tool(response_format="content_and_artifact")
-def i3_record_run_wrapped(store: ExperimentStore) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": ExperimentRecord,
-    "content": str,
-}]:
+def i3_record_run_wrapped(store: ExperimentStore) -> Tuple[str, dict]:
     """Tool wrapper for ``record_run``.
 
     See underlying tool module.
@@ -67,11 +62,14 @@ def i3_record_run_wrapped(store: ExperimentStore) -> Tuple[str, {
         result = record_run(**kwargs)
     except Exception as exc:
         return f"Tool i3_record_run failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "i3_record_run": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"i3_record_run: ok"
     return content, {
-        "name": name,
+        "i3_record_run": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -79,12 +77,7 @@ def i3_record_run_wrapped(store: ExperimentStore) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def i3_leaderboard_wrapped(store: ExperimentStore, experiment_id: str, primary_metric: str) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": List[LeaderboardEntry],
-    "content": str,
-}]:
+def i3_leaderboard_wrapped(store: ExperimentStore, experiment_id: str, primary_metric: str) -> Tuple[str, dict]:
     """Tool wrapper for ``leaderboard``.
 
     See underlying tool module.
@@ -97,11 +90,14 @@ def i3_leaderboard_wrapped(store: ExperimentStore, experiment_id: str, primary_m
         result = leaderboard(**kwargs)
     except Exception as exc:
         return f"Tool i3_leaderboard failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "i3_leaderboard": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"i3_leaderboard: ok"
     return content, {
-        "name": name,
+        "i3_leaderboard": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -109,12 +105,7 @@ def i3_leaderboard_wrapped(store: ExperimentStore, experiment_id: str, primary_m
 
 
 @tool(response_format="content_and_artifact")
-def i3_summarise_metrics_wrapped(store: ExperimentStore, experiment_id: str, metric: str) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Dict[str, float],
-    "content": str,
-}]:
+def i3_summarise_metrics_wrapped(store: ExperimentStore, experiment_id: str, metric: str) -> Tuple[str, dict]:
     """Tool wrapper for ``summarise_metrics``.
 
     See underlying tool module.
@@ -127,11 +118,14 @@ def i3_summarise_metrics_wrapped(store: ExperimentStore, experiment_id: str, met
         result = summarise_metrics(**kwargs)
     except Exception as exc:
         return f"Tool i3_summarise_metrics failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "i3_summarise_metrics": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"i3_summarise_metrics: ok"
     return content, {
-        "name": name,
+        "i3_summarise_metrics": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -139,12 +133,7 @@ def i3_summarise_metrics_wrapped(store: ExperimentStore, experiment_id: str, met
 
 
 @tool(response_format="content_and_artifact")
-def i3_parallel_coordinates_payload_wrapped(store: ExperimentStore, experiment_id: str, metric_columns: Sequence[str]) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Dict[str, Any],
-    "content": str,
-}]:
+def i3_parallel_coordinates_payload_wrapped(store: ExperimentStore, experiment_id: str, metric_columns: Sequence[str]) -> Tuple[str, dict]:
     """Tool wrapper for ``parallel_coordinates_payload``.
 
     Build a payload for parallel-coords visualisation.
@@ -157,11 +146,14 @@ def i3_parallel_coordinates_payload_wrapped(store: ExperimentStore, experiment_i
         result = parallel_coordinates_payload(**kwargs)
     except Exception as exc:
         return f"Tool i3_parallel_coordinates_payload failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "i3_parallel_coordinates_payload": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"i3_parallel_coordinates_payload: ok"
     return content, {
-        "name": name,
+        "i3_parallel_coordinates_payload": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -218,7 +210,7 @@ def make_i3_leaderboard_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR {spec_id}")
+        logger.info(f"    * RUN REACT AGENT FOR I3")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the I3 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}

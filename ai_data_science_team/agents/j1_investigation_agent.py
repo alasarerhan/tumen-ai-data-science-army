@@ -52,12 +52,7 @@ NODE_TYPE = "kpi.investigate"
 # ---------------------------------------------------------------------------
 
 @tool(response_format="content_and_artifact")
-def j1_detect_change_wrapped() -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": DetectionResult,
-    "content": str,
-}]:
+def j1_detect_change_wrapped() -> Tuple[str, dict]:
     """Tool wrapper for ``detect_change``.
 
     See underlying tool module.
@@ -70,11 +65,14 @@ def j1_detect_change_wrapped() -> Tuple[str, {
         result = detect_change(**kwargs)
     except Exception as exc:
         return f"Tool j1_detect_change failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "j1_detect_change": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"j1_detect_change: ok"
     return content, {
-        "name": name,
+        "j1_detect_change": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -82,12 +80,7 @@ def j1_detect_change_wrapped() -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def j1_isolate_dimension_wrapped() -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": IsolationResult,
-    "content": str,
-}]:
+def j1_isolate_dimension_wrapped() -> Tuple[str, dict]:
     """Tool wrapper for ``isolate_dimension``.
 
     baseline_by_dim: {dimension: {value: kpi_value}}
@@ -100,11 +93,14 @@ def j1_isolate_dimension_wrapped() -> Tuple[str, {
         result = isolate_dimension(**kwargs)
     except Exception as exc:
         return f"Tool j1_isolate_dimension failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "j1_isolate_dimension": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"j1_isolate_dimension: ok"
     return content, {
-        "name": name,
+        "j1_isolate_dimension": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -112,12 +108,7 @@ def j1_isolate_dimension_wrapped() -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def j1_quantify_contributors_wrapped() -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": QuantificationResult,
-    "content": str,
-}]:
+def j1_quantify_contributors_wrapped() -> Tuple[str, dict]:
     """Tool wrapper for ``quantify_contributors``.
 
     contributions: [{'name': 'X', 'baseline': 100, 'current': 80},
@@ -130,11 +121,14 @@ def j1_quantify_contributors_wrapped() -> Tuple[str, {
         result = quantify_contributors(**kwargs)
     except Exception as exc:
         return f"Tool j1_quantify_contributors failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "j1_quantify_contributors": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"j1_quantify_contributors: ok"
     return content, {
-        "name": name,
+        "j1_quantify_contributors": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -142,12 +136,7 @@ def j1_quantify_contributors_wrapped() -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def j1_narrate_wrapped() -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Narrative,
-    "content": str,
-}]:
+def j1_narrate_wrapped() -> Tuple[str, dict]:
     """Tool wrapper for ``narrate``.
 
     See underlying tool module.
@@ -160,11 +149,14 @@ def j1_narrate_wrapped() -> Tuple[str, {
         result = narrate(**kwargs)
     except Exception as exc:
         return f"Tool j1_narrate failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "j1_narrate": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"j1_narrate: ok"
     return content, {
-        "name": name,
+        "j1_narrate": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -172,12 +164,7 @@ def j1_narrate_wrapped() -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def j1_investigate_wrapped() -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Investigation,
-    "content": str,
-}]:
+def j1_investigate_wrapped() -> Tuple[str, dict]:
     """Tool wrapper for ``investigate``.
 
     See underlying tool module.
@@ -190,11 +177,14 @@ def j1_investigate_wrapped() -> Tuple[str, {
         result = investigate(**kwargs)
     except Exception as exc:
         return f"Tool j1_investigate failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "j1_investigate": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"j1_investigate: ok"
     return content, {
-        "name": name,
+        "j1_investigate": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -252,7 +242,7 @@ def make_j1_investigation_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR {spec_id}")
+        logger.info(f"    * RUN REACT AGENT FOR J1")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the J1 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}

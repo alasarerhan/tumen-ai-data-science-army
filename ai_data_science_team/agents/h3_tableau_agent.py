@@ -44,12 +44,7 @@ NODE_TYPE = "source.tableau"
 # ---------------------------------------------------------------------------
 
 @tool(response_format="content_and_artifact")
-def h3_build_tableau_connector_wrapped(config: ConnectorConfig) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": TableauConnector,
-    "content": str,
-}]:
+def h3_build_tableau_connector_wrapped(config: ConnectorConfig) -> Tuple[str, dict]:
     """Tool wrapper for ``build_tableau_connector``.
 
     See underlying tool module.
@@ -62,11 +57,14 @@ def h3_build_tableau_connector_wrapped(config: ConnectorConfig) -> Tuple[str, {
         result = build_tableau_connector(**kwargs)
     except Exception as exc:
         return f"Tool h3_build_tableau_connector failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "h3_build_tableau_connector": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"h3_build_tableau_connector: ok"
     return content, {
-        "name": name,
+        "h3_build_tableau_connector": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -120,7 +118,7 @@ def make_h3_tableau_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR {spec_id}")
+        logger.info(f"    * RUN REACT AGENT FOR H3")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the H3 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}

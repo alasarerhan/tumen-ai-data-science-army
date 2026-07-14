@@ -52,12 +52,7 @@ NODE_TYPE = "deploy.shadow"
 # ---------------------------------------------------------------------------
 
 @tool(response_format="content_and_artifact")
-def j11_start_deployment_wrapped(store: DeploymentStore) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Deployment,
-    "content": str,
-}]:
+def j11_start_deployment_wrapped(store: DeploymentStore) -> Tuple[str, dict]:
     """Tool wrapper for ``start_deployment``.
 
     See underlying tool module.
@@ -70,11 +65,14 @@ def j11_start_deployment_wrapped(store: DeploymentStore) -> Tuple[str, {
         result = start_deployment(**kwargs)
     except Exception as exc:
         return f"Tool j11_start_deployment failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "j11_start_deployment": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"j11_start_deployment: ok"
     return content, {
-        "name": name,
+        "j11_start_deployment": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -82,12 +80,7 @@ def j11_start_deployment_wrapped(store: DeploymentStore) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def j11_record_live_sample_wrapped(store: DeploymentStore, deployment_id: str) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": None,
-    "content": str,
-}]:
+def j11_record_live_sample_wrapped(store: DeploymentStore, deployment_id: str) -> Tuple[str, dict]:
     """Tool wrapper for ``record_live_sample``.
 
     See underlying tool module.
@@ -100,11 +93,14 @@ def j11_record_live_sample_wrapped(store: DeploymentStore, deployment_id: str) -
         result = record_live_sample(**kwargs)
     except Exception as exc:
         return f"Tool j11_record_live_sample failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "j11_record_live_sample": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"j11_record_live_sample: ok"
     return content, {
-        "name": name,
+        "j11_record_live_sample": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -112,12 +108,7 @@ def j11_record_live_sample_wrapped(store: DeploymentStore, deployment_id: str) -
 
 
 @tool(response_format="content_and_artifact")
-def j11_evaluate_rollback_wrapped(store: DeploymentStore, deployment_id: str) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Dict[str, Any],
-    "content": str,
-}]:
+def j11_evaluate_rollback_wrapped(store: DeploymentStore, deployment_id: str) -> Tuple[str, dict]:
     """Tool wrapper for ``evaluate_rollback``.
 
     Evaluate auto-rollback thresholds for a deployment. Returns
@@ -130,11 +121,14 @@ def j11_evaluate_rollback_wrapped(store: DeploymentStore, deployment_id: str) ->
         result = evaluate_rollback(**kwargs)
     except Exception as exc:
         return f"Tool j11_evaluate_rollback failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "j11_evaluate_rollback": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"j11_evaluate_rollback: ok"
     return content, {
-        "name": name,
+        "j11_evaluate_rollback": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -142,12 +136,7 @@ def j11_evaluate_rollback_wrapped(store: DeploymentStore, deployment_id: str) ->
 
 
 @tool(response_format="content_and_artifact")
-def j11_mark_status_wrapped(store: DeploymentStore, deployment_id: str, status: str) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": None,
-    "content": str,
-}]:
+def j11_mark_status_wrapped(store: DeploymentStore, deployment_id: str, status: str) -> Tuple[str, dict]:
     """Tool wrapper for ``mark_status``.
 
     See underlying tool module.
@@ -160,11 +149,14 @@ def j11_mark_status_wrapped(store: DeploymentStore, deployment_id: str, status: 
         result = mark_status(**kwargs)
     except Exception as exc:
         return f"Tool j11_mark_status failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "j11_mark_status": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"j11_mark_status: ok"
     return content, {
-        "name": name,
+        "j11_mark_status": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -172,12 +164,7 @@ def j11_mark_status_wrapped(store: DeploymentStore, deployment_id: str, status: 
 
 
 @tool(response_format="content_and_artifact")
-def j11_summarise_deployment_wrapped(store: DeploymentStore, deployment_id: str) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Dict[str, Any],
-    "content": str,
-}]:
+def j11_summarise_deployment_wrapped(store: DeploymentStore, deployment_id: str) -> Tuple[str, dict]:
     """Tool wrapper for ``summarise_deployment``.
 
     See underlying tool module.
@@ -190,11 +177,14 @@ def j11_summarise_deployment_wrapped(store: DeploymentStore, deployment_id: str)
         result = summarise_deployment(**kwargs)
     except Exception as exc:
         return f"Tool j11_summarise_deployment failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "j11_summarise_deployment": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"j11_summarise_deployment: ok"
     return content, {
-        "name": name,
+        "j11_summarise_deployment": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -202,12 +192,7 @@ def j11_summarise_deployment_wrapped(store: DeploymentStore, deployment_id: str)
 
 
 @tool(response_format="content_and_artifact")
-def j11_list_deployments_wrapped(store: DeploymentStore) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": List[Deployment],
-    "content": str,
-}]:
+def j11_list_deployments_wrapped(store: DeploymentStore) -> Tuple[str, dict]:
     """Tool wrapper for ``list_deployments``.
 
     See underlying tool module.
@@ -220,11 +205,14 @@ def j11_list_deployments_wrapped(store: DeploymentStore) -> Tuple[str, {
         result = list_deployments(**kwargs)
     except Exception as exc:
         return f"Tool j11_list_deployments failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "j11_list_deployments": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"j11_list_deployments: ok"
     return content, {
-        "name": name,
+        "j11_list_deployments": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -283,7 +271,7 @@ def make_j11_shadow_canary_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR {spec_id}")
+        logger.info(f"    * RUN REACT AGENT FOR J11")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the J11 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}

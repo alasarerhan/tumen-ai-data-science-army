@@ -50,12 +50,7 @@ NODE_TYPE = "evaluation.store"
 # ---------------------------------------------------------------------------
 
 @tool(response_format="content_and_artifact")
-def j4_record_evaluation_wrapped(store: EvalStore) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": EvalRecord,
-    "content": str,
-}]:
+def j4_record_evaluation_wrapped(store: EvalStore) -> Tuple[str, dict]:
     """Tool wrapper for ``record_evaluation``.
 
     See underlying tool module.
@@ -68,11 +63,14 @@ def j4_record_evaluation_wrapped(store: EvalStore) -> Tuple[str, {
         result = record_evaluation(**kwargs)
     except Exception as exc:
         return f"Tool j4_record_evaluation failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "j4_record_evaluation": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"j4_record_evaluation: ok"
     return content, {
-        "name": name,
+        "j4_record_evaluation": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -80,12 +78,7 @@ def j4_record_evaluation_wrapped(store: EvalStore) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def j4_query_evaluations_wrapped(store: EvalStore) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": List[EvalRecord],
-    "content": str,
-}]:
+def j4_query_evaluations_wrapped(store: EvalStore) -> Tuple[str, dict]:
     """Tool wrapper for ``query_evaluations``.
 
     See underlying tool module.
@@ -98,11 +91,14 @@ def j4_query_evaluations_wrapped(store: EvalStore) -> Tuple[str, {
         result = query_evaluations(**kwargs)
     except Exception as exc:
         return f"Tool j4_query_evaluations failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "j4_query_evaluations": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"j4_query_evaluations: ok"
     return content, {
-        "name": name,
+        "j4_query_evaluations": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -110,12 +106,7 @@ def j4_query_evaluations_wrapped(store: EvalStore) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def j4_compare_models_wrapped(store: EvalStore, model_ids: Sequence[str], dataset_id: str, metrics: Sequence[str]) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Dict[str, Dict[str, float]],
-    "content": str,
-}]:
+def j4_compare_models_wrapped(store: EvalStore, model_ids: Sequence[str], dataset_id: str, metrics: Sequence[str]) -> Tuple[str, dict]:
     """Tool wrapper for ``compare_models``.
 
     Build a {model_id: {metric: value}} comparison dict on a
@@ -128,11 +119,14 @@ def j4_compare_models_wrapped(store: EvalStore, model_ids: Sequence[str], datase
         result = compare_models(**kwargs)
     except Exception as exc:
         return f"Tool j4_compare_models failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "j4_compare_models": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"j4_compare_models: ok"
     return content, {
-        "name": name,
+        "j4_compare_models": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -140,12 +134,7 @@ def j4_compare_models_wrapped(store: EvalStore, model_ids: Sequence[str], datase
 
 
 @tool(response_format="content_and_artifact")
-def j4_summarise_over_datasets_wrapped(store: EvalStore, model_id: str, metric: str) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Dict[str, float],
-    "content": str,
-}]:
+def j4_summarise_over_datasets_wrapped(store: EvalStore, model_id: str, metric: str) -> Tuple[str, dict]:
     """Tool wrapper for ``summarise_over_datasets``.
 
     See underlying tool module.
@@ -158,11 +147,14 @@ def j4_summarise_over_datasets_wrapped(store: EvalStore, model_id: str, metric: 
         result = summarise_over_datasets(**kwargs)
     except Exception as exc:
         return f"Tool j4_summarise_over_datasets failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "j4_summarise_over_datasets": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"j4_summarise_over_datasets: ok"
     return content, {
-        "name": name,
+        "j4_summarise_over_datasets": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -170,12 +162,7 @@ def j4_summarise_over_datasets_wrapped(store: EvalStore, model_id: str, metric: 
 
 
 @tool(response_format="content_and_artifact")
-def j4_slice_by_feature_wrapped(store: EvalStore) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Dict[str, Dict[str, float]],
-    "content": str,
-}]:
+def j4_slice_by_feature_wrapped(store: EvalStore) -> Tuple[str, dict]:
     """Tool wrapper for ``slice_by_feature``.
 
     Return aggregated metric values for each slice, optionally
@@ -188,11 +175,14 @@ def j4_slice_by_feature_wrapped(store: EvalStore) -> Tuple[str, {
         result = slice_by_feature(**kwargs)
     except Exception as exc:
         return f"Tool j4_slice_by_feature failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "j4_slice_by_feature": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"j4_slice_by_feature: ok"
     return content, {
-        "name": name,
+        "j4_slice_by_feature": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -250,7 +240,7 @@ def make_j4_eval_store_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR {spec_id}")
+        logger.info(f"    * RUN REACT AGENT FOR J4")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the J4 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}

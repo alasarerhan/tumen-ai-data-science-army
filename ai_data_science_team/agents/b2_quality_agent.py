@@ -48,12 +48,7 @@ NODE_TYPE = "data.validate"
 # ---------------------------------------------------------------------------
 
 @tool(response_format="content_and_artifact")
-def b2_expectation_suite_from_template_wrapped(template_name: str, dataset: pd.DataFrame, overrides: Optional[Mapping[str, Any]]) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": List[Dict[str, Any]],
-    "content": str,
-}]:
+def b2_expectation_suite_from_template_wrapped(template_name: str, dataset: pd.DataFrame, overrides: Optional[Mapping[str, Any]]) -> Tuple[str, dict]:
     """Tool wrapper for ``expectation_suite_from_template``.
 
     Generate a starter expectation suite for ``dataset``.
@@ -66,11 +61,14 @@ def b2_expectation_suite_from_template_wrapped(template_name: str, dataset: pd.D
         result = expectation_suite_from_template(**kwargs)
     except Exception as exc:
         return f"Tool b2_expectation_suite_from_template failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "b2_expectation_suite_from_template": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"b2_expectation_suite_from_template: ok"
     return content, {
-        "name": name,
+        "b2_expectation_suite_from_template": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -78,12 +76,7 @@ def b2_expectation_suite_from_template_wrapped(template_name: str, dataset: pd.D
 
 
 @tool(response_format="content_and_artifact")
-def b2_validate_against_suite_wrapped(df: pd.DataFrame, suite: Sequence[Mapping[str, Any]]) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Dict[str, Any],
-    "content": str,
-}]:
+def b2_validate_against_suite_wrapped(df: pd.DataFrame, suite: Sequence[Mapping[str, Any]]) -> Tuple[str, dict]:
     """Tool wrapper for ``validate_against_suite``.
 
     Validate ``df`` against ``suite`` and return a per-rule result.
@@ -96,11 +89,14 @@ def b2_validate_against_suite_wrapped(df: pd.DataFrame, suite: Sequence[Mapping[
         result = validate_against_suite(**kwargs)
     except Exception as exc:
         return f"Tool b2_validate_against_suite failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "b2_validate_against_suite": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"b2_validate_against_suite: ok"
     return content, {
-        "name": name,
+        "b2_validate_against_suite": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -108,12 +104,7 @@ def b2_validate_against_suite_wrapped(df: pd.DataFrame, suite: Sequence[Mapping[
 
 
 @tool(response_format="content_and_artifact")
-def b2_summarise_suite_run_wrapped(result: Mapping[str, Any]) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Dict[str, Any],
-    "content": str,
-}]:
+def b2_summarise_suite_run_wrapped(result: Mapping[str, Any]) -> Tuple[str, dict]:
     """Tool wrapper for ``summarise_suite_run``.
 
     Aggregate :func:`validate_against_suite` output to a status string.
@@ -126,11 +117,14 @@ def b2_summarise_suite_run_wrapped(result: Mapping[str, Any]) -> Tuple[str, {
         result = summarise_suite_run(**kwargs)
     except Exception as exc:
         return f"Tool b2_summarise_suite_run failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "b2_summarise_suite_run": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"b2_summarise_suite_run: ok"
     return content, {
-        "name": name,
+        "b2_summarise_suite_run": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -186,7 +180,7 @@ def make_b2_quality_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR {spec_id}")
+        logger.info(f"    * RUN REACT AGENT FOR B2")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the B2 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}

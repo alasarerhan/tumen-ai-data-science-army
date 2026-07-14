@@ -51,12 +51,7 @@ NODE_TYPE = "deploy.batch_score"
 # ---------------------------------------------------------------------------
 
 @tool(response_format="content_and_artifact")
-def g4_align_features_wrapped(df: pd.DataFrame, expected_features: Sequence[str]) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": FeatureAlignment,
-    "content": str,
-}]:
+def g4_align_features_wrapped(df: pd.DataFrame, expected_features: Sequence[str]) -> Tuple[str, dict]:
     """Tool wrapper for ``align_features``.
 
     Align ``df`` columns to ``expected_features``.
@@ -69,11 +64,14 @@ def g4_align_features_wrapped(df: pd.DataFrame, expected_features: Sequence[str]
         result = align_features(**kwargs)
     except Exception as exc:
         return f"Tool g4_align_features failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "g4_align_features": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"g4_align_features: ok"
     return content, {
-        "name": name,
+        "g4_align_features": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -81,12 +79,7 @@ def g4_align_features_wrapped(df: pd.DataFrame, expected_features: Sequence[str]
 
 
 @tool(response_format="content_and_artifact")
-def g4_resolve_model_wrapped(model: Any) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Any,
-    "content": str,
-}]:
+def g4_resolve_model_wrapped(model: Any) -> Tuple[str, dict]:
     """Tool wrapper for ``resolve_model``.
 
     Pass through an already-loaded model.
@@ -99,11 +92,14 @@ def g4_resolve_model_wrapped(model: Any) -> Tuple[str, {
         result = resolve_model(**kwargs)
     except Exception as exc:
         return f"Tool g4_resolve_model failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "g4_resolve_model": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"g4_resolve_model: ok"
     return content, {
-        "name": name,
+        "g4_resolve_model": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -111,12 +107,7 @@ def g4_resolve_model_wrapped(model: Any) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def g4_predict_dataframe_wrapped(df: pd.DataFrame, model: Any) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Tuple[pd.DataFrame, FeatureAlignment],
-    "content": str,
-}]:
+def g4_predict_dataframe_wrapped(df: pd.DataFrame, model: Any) -> Tuple[str, dict]:
     """Tool wrapper for ``predict_dataframe``.
 
     Score ``df`` with ``model``.
@@ -129,11 +120,14 @@ def g4_predict_dataframe_wrapped(df: pd.DataFrame, model: Any) -> Tuple[str, {
         result = predict_dataframe(**kwargs)
     except Exception as exc:
         return f"Tool g4_predict_dataframe failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "g4_predict_dataframe": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"g4_predict_dataframe: ok"
     return content, {
-        "name": name,
+        "g4_predict_dataframe": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -141,12 +135,7 @@ def g4_predict_dataframe_wrapped(df: pd.DataFrame, model: Any) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def g4_chunked_predict_wrapped(df: pd.DataFrame, model: Any) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Tuple[pd.DataFrame, FeatureAlignment, Dict[str, Any]],
-    "content": str,
-}]:
+def g4_chunked_predict_wrapped(df: pd.DataFrame, model: Any) -> Tuple[str, dict]:
     """Tool wrapper for ``chunked_predict``.
 
     Apply :func:`predict_dataframe` to ``df`` in chunks.
@@ -159,11 +148,14 @@ def g4_chunked_predict_wrapped(df: pd.DataFrame, model: Any) -> Tuple[str, {
         result = chunked_predict(**kwargs)
     except Exception as exc:
         return f"Tool g4_chunked_predict failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "g4_chunked_predict": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"g4_chunked_predict: ok"
     return content, {
-        "name": name,
+        "g4_chunked_predict": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -171,12 +163,7 @@ def g4_chunked_predict_wrapped(df: pd.DataFrame, model: Any) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def g4_scoring_report_wrapped(n_rows: int, duration_s: float, model_uri: str) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": ScoringReport,
-    "content": str,
-}]:
+def g4_scoring_report_wrapped(n_rows: int, duration_s: float, model_uri: str) -> Tuple[str, dict]:
     """Tool wrapper for ``scoring_report``.
 
     Wrap scoring stats into the spec's ``scoring_report`` shape.
@@ -189,11 +176,14 @@ def g4_scoring_report_wrapped(n_rows: int, duration_s: float, model_uri: str) ->
         result = scoring_report(**kwargs)
     except Exception as exc:
         return f"Tool g4_scoring_report failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "g4_scoring_report": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"g4_scoring_report: ok"
     return content, {
-        "name": name,
+        "g4_scoring_report": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -251,7 +241,7 @@ def make_g4_batch_scoring_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR {spec_id}")
+        logger.info(f"    * RUN REACT AGENT FOR G4")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the G4 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}

@@ -61,12 +61,7 @@ NODE_TYPE = "catalog.search"
 # ---------------------------------------------------------------------------
 
 @tool(response_format="content_and_artifact")
-def i2_add_source_wrapped(catalog: Catalog) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": SourceEntry,
-    "content": str,
-}]:
+def i2_add_source_wrapped(catalog: Catalog) -> Tuple[str, dict]:
     """Tool wrapper for ``add_source``.
 
     Register a new source and return the entry.
@@ -79,11 +74,14 @@ def i2_add_source_wrapped(catalog: Catalog) -> Tuple[str, {
         result = add_source(**kwargs)
     except Exception as exc:
         return f"Tool i2_add_source failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "i2_add_source": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"i2_add_source: ok"
     return content, {
-        "name": name,
+        "i2_add_source": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -91,12 +89,7 @@ def i2_add_source_wrapped(catalog: Catalog) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def i2_add_table_wrapped(catalog: Catalog, source_name: str, table_name: str, columns: Sequence[Mapping[str, Any]], description: Optional[str]) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Optional[TableEntry],
-    "content": str,
-}]:
+def i2_add_table_wrapped(catalog: Catalog, source_name: str, table_name: str, columns: Sequence[Mapping[str, Any]], description: Optional[str]) -> Tuple[str, dict]:
     """Tool wrapper for ``add_table``.
 
     Append a new table to an existing source.
@@ -109,11 +102,14 @@ def i2_add_table_wrapped(catalog: Catalog, source_name: str, table_name: str, co
         result = add_table(**kwargs)
     except Exception as exc:
         return f"Tool i2_add_table failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "i2_add_table": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"i2_add_table: ok"
     return content, {
-        "name": name,
+        "i2_add_table": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -121,12 +117,7 @@ def i2_add_table_wrapped(catalog: Catalog, source_name: str, table_name: str, co
 
 
 @tool(response_format="content_and_artifact")
-def i2_attach_profile_wrapped(catalog: Catalog, source_name: str, profile: Mapping[str, Any]) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": None,
-    "content": str,
-}]:
+def i2_attach_profile_wrapped(catalog: Catalog, source_name: str, profile: Mapping[str, Any]) -> Tuple[str, dict]:
     """Tool wrapper for ``attach_profile``.
 
     Fold a ``profile_dataframe`` (B1) result onto ``source_name``.
@@ -139,11 +130,14 @@ def i2_attach_profile_wrapped(catalog: Catalog, source_name: str, profile: Mappi
         result = attach_profile(**kwargs)
     except Exception as exc:
         return f"Tool i2_attach_profile failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "i2_attach_profile": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"i2_attach_profile: ok"
     return content, {
-        "name": name,
+        "i2_attach_profile": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -151,12 +145,7 @@ def i2_attach_profile_wrapped(catalog: Catalog, source_name: str, profile: Mappi
 
 
 @tool(response_format="content_and_artifact")
-def i2_add_pii_badges_wrapped(catalog: Catalog, source_name: str, pii_scan: Mapping[str, Any]) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": None,
-    "content": str,
-}]:
+def i2_add_pii_badges_wrapped(catalog: Catalog, source_name: str, pii_scan: Mapping[str, Any]) -> Tuple[str, dict]:
     """Tool wrapper for ``add_pii_badges``.
 
     Fold a ``scan_pii`` (B5) result onto ``source_name``.
@@ -169,11 +158,14 @@ def i2_add_pii_badges_wrapped(catalog: Catalog, source_name: str, pii_scan: Mapp
         result = add_pii_badges(**kwargs)
     except Exception as exc:
         return f"Tool i2_add_pii_badges failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "i2_add_pii_badges": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"i2_add_pii_badges: ok"
     return content, {
-        "name": name,
+        "i2_add_pii_badges": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -181,12 +173,7 @@ def i2_add_pii_badges_wrapped(catalog: Catalog, source_name: str, pii_scan: Mapp
 
 
 @tool(response_format="content_and_artifact")
-def i2_catalog_tree_wrapped(catalog: Catalog) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Dict[str, Any],
-    "content": str,
-}]:
+def i2_catalog_tree_wrapped(catalog: Catalog) -> Tuple[str, dict]:
     """Tool wrapper for ``catalog_tree``.
 
     Return the source → table → column tree for the I2 UI.
@@ -199,11 +186,14 @@ def i2_catalog_tree_wrapped(catalog: Catalog) -> Tuple[str, {
         result = catalog_tree(**kwargs)
     except Exception as exc:
         return f"Tool i2_catalog_tree failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "i2_catalog_tree": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"i2_catalog_tree: ok"
     return content, {
-        "name": name,
+        "i2_catalog_tree": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -211,12 +201,7 @@ def i2_catalog_tree_wrapped(catalog: Catalog) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def i2_add_term_wrapped(catalog: Catalog, term: str) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": None,
-    "content": str,
-}]:
+def i2_add_term_wrapped(catalog: Catalog, term: str) -> Tuple[str, dict]:
     """Tool wrapper for ``add_term``.
 
     Register a business term; optionally add synonyms.
@@ -229,11 +214,14 @@ def i2_add_term_wrapped(catalog: Catalog, term: str) -> Tuple[str, {
         result = add_term(**kwargs)
     except Exception as exc:
         return f"Tool i2_add_term failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "i2_add_term": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"i2_add_term: ok"
     return content, {
-        "name": name,
+        "i2_add_term": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -241,12 +229,7 @@ def i2_add_term_wrapped(catalog: Catalog, term: str) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def i2_bind_term_column_wrapped(catalog: Catalog, term: str) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": bool,
-    "content": str,
-}]:
+def i2_bind_term_column_wrapped(catalog: Catalog, term: str) -> Tuple[str, dict]:
     """Tool wrapper for ``bind_term_column``.
 
     Link a term to a specific source.table.column.
@@ -259,11 +242,14 @@ def i2_bind_term_column_wrapped(catalog: Catalog, term: str) -> Tuple[str, {
         result = bind_term_column(**kwargs)
     except Exception as exc:
         return f"Tool i2_bind_term_column failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "i2_bind_term_column": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"i2_bind_term_column: ok"
     return content, {
-        "name": name,
+        "i2_bind_term_column": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -271,12 +257,7 @@ def i2_bind_term_column_wrapped(catalog: Catalog, term: str) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def i2_search_wrapped(catalog: Catalog, query: str) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": List[SearchHit],
-    "content": str,
-}]:
+def i2_search_wrapped(catalog: Catalog, query: str) -> Tuple[str, dict]:
     """Tool wrapper for ``search``.
 
     Search columns by query (term/description).
@@ -289,11 +270,14 @@ def i2_search_wrapped(catalog: Catalog, query: str) -> Tuple[str, {
         result = search(**kwargs)
     except Exception as exc:
         return f"Tool i2_search failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "i2_search": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"i2_search: ok"
     return content, {
-        "name": name,
+        "i2_search": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -301,12 +285,7 @@ def i2_search_wrapped(catalog: Catalog, query: str) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def i2_resolve_data_wrapped(catalog: Catalog, term: str) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": List[Dict[str, Any]],
-    "content": str,
-}]:
+def i2_resolve_data_wrapped(catalog: Catalog, term: str) -> Tuple[str, dict]:
     """Tool wrapper for ``resolve_data``.
 
     I1 planner entrypoint: NL term → top source.column candidates.
@@ -319,11 +298,14 @@ def i2_resolve_data_wrapped(catalog: Catalog, term: str) -> Tuple[str, {
         result = resolve_data(**kwargs)
     except Exception as exc:
         return f"Tool i2_resolve_data failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "i2_resolve_data": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"i2_resolve_data: ok"
     return content, {
-        "name": name,
+        "i2_resolve_data": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -331,12 +313,7 @@ def i2_resolve_data_wrapped(catalog: Catalog, term: str) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def i2_record_lineage_wrapped(catalog: Catalog) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": None,
-    "content": str,
-}]:
+def i2_record_lineage_wrapped(catalog: Catalog) -> Tuple[str, dict]:
     """Tool wrapper for ``record_lineage``.
 
     Append a record indicating that ``pipeline_id`` consumes
@@ -349,11 +326,14 @@ def i2_record_lineage_wrapped(catalog: Catalog) -> Tuple[str, {
         result = record_lineage(**kwargs)
     except Exception as exc:
         return f"Tool i2_record_lineage failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "i2_record_lineage": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"i2_record_lineage: ok"
     return content, {
-        "name": name,
+        "i2_record_lineage": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -361,12 +341,7 @@ def i2_record_lineage_wrapped(catalog: Catalog) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def i2_lineage_for_wrapped(catalog: Catalog, source_name: str, table: Optional[str]) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": List[Dict[str, str]],
-    "content": str,
-}]:
+def i2_lineage_for_wrapped(catalog: Catalog, source_name: str, table: Optional[str]) -> Tuple[str, dict]:
     """Tool wrapper for ``lineage_for``.
 
     Return all lineage records that consume the given source (and table).
@@ -379,11 +354,14 @@ def i2_lineage_for_wrapped(catalog: Catalog, source_name: str, table: Optional[s
         result = lineage_for(**kwargs)
     except Exception as exc:
         return f"Tool i2_lineage_for failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "i2_lineage_for": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"i2_lineage_for: ok"
     return content, {
-        "name": name,
+        "i2_lineage_for": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -391,12 +369,7 @@ def i2_lineage_for_wrapped(catalog: Catalog, source_name: str, table: Optional[s
 
 
 @tool(response_format="content_and_artifact")
-def i2_make_catalog_wrapped() -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Catalog,
-    "content": str,
-}]:
+def i2_make_catalog_wrapped() -> Tuple[str, dict]:
     """Tool wrapper for ``make_catalog``.
 
     See underlying tool module.
@@ -409,11 +382,14 @@ def i2_make_catalog_wrapped() -> Tuple[str, {
         result = make_catalog(**kwargs)
     except Exception as exc:
         return f"Tool i2_make_catalog failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "i2_make_catalog": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"i2_make_catalog: ok"
     return content, {
-        "name": name,
+        "i2_make_catalog": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -478,7 +454,7 @@ def make_i2_catalog_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR {spec_id}")
+        logger.info(f"    * RUN REACT AGENT FOR I2")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the I2 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}

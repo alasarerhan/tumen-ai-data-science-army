@@ -44,12 +44,7 @@ NODE_TYPE = "source.object_storage"
 # ---------------------------------------------------------------------------
 
 @tool(response_format="content_and_artifact")
-def h6_build_object_storage_connector_wrapped(config: ConnectorConfig) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": ObjectStorageConnector,
-    "content": str,
-}]:
+def h6_build_object_storage_connector_wrapped(config: ConnectorConfig) -> Tuple[str, dict]:
     """Tool wrapper for ``build_object_storage_connector``.
 
     See underlying tool module.
@@ -62,11 +57,14 @@ def h6_build_object_storage_connector_wrapped(config: ConnectorConfig) -> Tuple[
         result = build_object_storage_connector(**kwargs)
     except Exception as exc:
         return f"Tool h6_build_object_storage_connector failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "h6_build_object_storage_connector": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"h6_build_object_storage_connector: ok"
     return content, {
-        "name": name,
+        "h6_build_object_storage_connector": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -120,7 +118,7 @@ def make_h6_object_storage_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR {spec_id}")
+        logger.info(f"    * RUN REACT AGENT FOR H6")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the H6 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}

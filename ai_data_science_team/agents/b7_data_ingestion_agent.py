@@ -51,12 +51,7 @@ NODE_TYPE = "data.ingest"
 # ---------------------------------------------------------------------------
 
 @tool(response_format="content_and_artifact")
-def b7_register_ingest_job_wrapped(name: str, source: str, target: str) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Dict[str, Any],
-    "content": str,
-}]:
+def b7_register_ingest_job_wrapped(name: str, source: str, target: str) -> Tuple[str, dict]:
     """Tool wrapper for ``register_ingest_job``.
 
     Materialise an ingest-job record for the workflow registry.
@@ -69,11 +64,14 @@ def b7_register_ingest_job_wrapped(name: str, source: str, target: str) -> Tuple
         result = register_ingest_job(**kwargs)
     except Exception as exc:
         return f"Tool b7_register_ingest_job failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "b7_register_ingest_job": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"b7_register_ingest_job: ok"
     return content, {
-        "name": name,
+        "b7_register_ingest_job": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -81,12 +79,7 @@ def b7_register_ingest_job_wrapped(name: str, source: str, target: str) -> Tuple
 
 
 @tool(response_format="content_and_artifact")
-def b7_compute_watermark_wrapped(job_id: str, previous: Any, current: Any) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": WatermarkState,
-    "content": str,
-}]:
+def b7_compute_watermark_wrapped(job_id: str, previous: Any, current: Any) -> Tuple[str, dict]:
     """Tool wrapper for ``compute_watermark``.
 
     Return a watermark-progress record.
@@ -99,11 +92,14 @@ def b7_compute_watermark_wrapped(job_id: str, previous: Any, current: Any) -> Tu
         result = compute_watermark(**kwargs)
     except Exception as exc:
         return f"Tool b7_compute_watermark failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "b7_compute_watermark": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"b7_compute_watermark: ok"
     return content, {
-        "name": name,
+        "b7_compute_watermark": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -111,12 +107,7 @@ def b7_compute_watermark_wrapped(job_id: str, previous: Any, current: Any) -> Tu
 
 
 @tool(response_format="content_and_artifact")
-def b7_incremental_diff_wrapped(baseline: pd.DataFrame, current: pd.DataFrame) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Dict[str, Any],
-    "content": str,
-}]:
+def b7_incremental_diff_wrapped(baseline: pd.DataFrame, current: pd.DataFrame) -> Tuple[str, dict]:
     """Tool wrapper for ``incremental_diff``.
 
     Diff two DataFrames for watermark-style incremental loads.
@@ -129,11 +120,14 @@ def b7_incremental_diff_wrapped(baseline: pd.DataFrame, current: pd.DataFrame) -
         result = incremental_diff(**kwargs)
     except Exception as exc:
         return f"Tool b7_incremental_diff failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "b7_incremental_diff": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"b7_incremental_diff: ok"
     return content, {
-        "name": name,
+        "b7_incremental_diff": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -141,12 +135,7 @@ def b7_incremental_diff_wrapped(baseline: pd.DataFrame, current: pd.DataFrame) -
 
 
 @tool(response_format="content_and_artifact")
-def b7_record_run_wrapped(job_id: str, run_id: str, status: str, started_at: str) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Dict[str, Any],
-    "content": str,
-}]:
+def b7_record_run_wrapped(job_id: str, run_id: str, status: str, started_at: str) -> Tuple[str, dict]:
     """Tool wrapper for ``record_run``.
 
     Build a single run-history row.
@@ -159,11 +148,14 @@ def b7_record_run_wrapped(job_id: str, run_id: str, status: str, started_at: str
         result = record_run(**kwargs)
     except Exception as exc:
         return f"Tool b7_record_run failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "b7_record_run": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"b7_record_run: ok"
     return content, {
-        "name": name,
+        "b7_record_run": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -220,7 +212,7 @@ def make_b7_data_ingestion_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR {spec_id}")
+        logger.info(f"    * RUN REACT AGENT FOR B7")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the B7 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}

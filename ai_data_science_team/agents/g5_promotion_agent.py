@@ -54,12 +54,7 @@ NODE_TYPE = "deploy.promote"
 # ---------------------------------------------------------------------------
 
 @tool(response_format="content_and_artifact")
-def g5_register_version_wrapped(model_id: str, version: str) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Tuple[Dict[str, ModelVersionRecord], ModelVersionRecord],
-    "content": str,
-}]:
+def g5_register_version_wrapped(model_id: str, version: str) -> Tuple[str, dict]:
     """Tool wrapper for ``register_version``.
 
     Add a new version to the in-memory registry.
@@ -72,11 +67,14 @@ def g5_register_version_wrapped(model_id: str, version: str) -> Tuple[str, {
         result = register_version(**kwargs)
     except Exception as exc:
         return f"Tool g5_register_version failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "g5_register_version": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"g5_register_version: ok"
     return content, {
-        "name": name,
+        "g5_register_version": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -84,12 +82,7 @@ def g5_register_version_wrapped(model_id: str, version: str) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def g5_validate_signature_wrapped(candidate: ModelVersionRecord, target: ModelVersionRecord) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Tuple[bool, List[str]],
-    "content": str,
-}]:
+def g5_validate_signature_wrapped(candidate: ModelVersionRecord, target: ModelVersionRecord) -> Tuple[str, dict]:
     """Tool wrapper for ``validate_signature``.
 
     Check that two records share the same input schema and
@@ -102,11 +95,14 @@ def g5_validate_signature_wrapped(candidate: ModelVersionRecord, target: ModelVe
         result = validate_signature(**kwargs)
     except Exception as exc:
         return f"Tool g5_validate_signature failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "g5_validate_signature": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"g5_validate_signature: ok"
     return content, {
-        "name": name,
+        "g5_validate_signature": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -114,12 +110,7 @@ def g5_validate_signature_wrapped(candidate: ModelVersionRecord, target: ModelVe
 
 
 @tool(response_format="content_and_artifact")
-def g5_evaluate_min_metrics_wrapped(metrics: Mapping[str, float], required: Mapping[str, float]) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Tuple[bool, List[str]],
-    "content": str,
-}]:
+def g5_evaluate_min_metrics_wrapped(metrics: Mapping[str, float], required: Mapping[str, float]) -> Tuple[str, dict]:
     """Tool wrapper for ``evaluate_min_metrics``.
 
     All required metric thresholds must be met (or exceeded).
@@ -132,11 +123,14 @@ def g5_evaluate_min_metrics_wrapped(metrics: Mapping[str, float], required: Mapp
         result = evaluate_min_metrics(**kwargs)
     except Exception as exc:
         return f"Tool g5_evaluate_min_metrics failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "g5_evaluate_min_metrics": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"g5_evaluate_min_metrics: ok"
     return content, {
-        "name": name,
+        "g5_evaluate_min_metrics": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -144,12 +138,7 @@ def g5_evaluate_min_metrics_wrapped(metrics: Mapping[str, float], required: Mapp
 
 
 @tool(response_format="content_and_artifact")
-def g5_request_promotion_wrapped(record: ModelVersionRecord, to_stage: str) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Dict[str, Any],
-    "content": str,
-}]:
+def g5_request_promotion_wrapped(record: ModelVersionRecord, to_stage: str) -> Tuple[str, dict]:
     """Tool wrapper for ``request_promotion``.
 
     Submit a promotion request.
@@ -162,11 +151,14 @@ def g5_request_promotion_wrapped(record: ModelVersionRecord, to_stage: str) -> T
         result = request_promotion(**kwargs)
     except Exception as exc:
         return f"Tool g5_request_promotion failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "g5_request_promotion": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"g5_request_promotion: ok"
     return content, {
-        "name": name,
+        "g5_request_promotion": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -174,12 +166,7 @@ def g5_request_promotion_wrapped(record: ModelVersionRecord, to_stage: str) -> T
 
 
 @tool(response_format="content_and_artifact")
-def g5_approve_wrapped(record: ModelVersionRecord, to_stage: str) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Dict[str, Any],
-    "content": str,
-}]:
+def g5_approve_wrapped(record: ModelVersionRecord, to_stage: str) -> Tuple[str, dict]:
     """Tool wrapper for ``approve``.
 
     Approve a pending promotion.  Updates the record's stage
@@ -192,11 +179,14 @@ def g5_approve_wrapped(record: ModelVersionRecord, to_stage: str) -> Tuple[str, 
         result = approve(**kwargs)
     except Exception as exc:
         return f"Tool g5_approve failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "g5_approve": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"g5_approve: ok"
     return content, {
-        "name": name,
+        "g5_approve": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -204,12 +194,7 @@ def g5_approve_wrapped(record: ModelVersionRecord, to_stage: str) -> Tuple[str, 
 
 
 @tool(response_format="content_and_artifact")
-def g5_demote_wrapped(record: ModelVersionRecord, to_stage: str) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Dict[str, Any],
-    "content": str,
-}]:
+def g5_demote_wrapped(record: ModelVersionRecord, to_stage: str) -> Tuple[str, dict]:
     """Tool wrapper for ``demote``.
 
     See underlying tool module.
@@ -222,11 +207,14 @@ def g5_demote_wrapped(record: ModelVersionRecord, to_stage: str) -> Tuple[str, {
         result = demote(**kwargs)
     except Exception as exc:
         return f"Tool g5_demote failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "g5_demote": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"g5_demote: ok"
     return content, {
-        "name": name,
+        "g5_demote": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -234,12 +222,7 @@ def g5_demote_wrapped(record: ModelVersionRecord, to_stage: str) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def g5_get_version_by_stage_wrapped(registry: Mapping[str, ModelVersionRecord], stage: str) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Optional[str],
-    "content": str,
-}]:
+def g5_get_version_by_stage_wrapped(registry: Mapping[str, ModelVersionRecord], stage: str) -> Tuple[str, dict]:
     """Tool wrapper for ``get_version_by_stage``.
 
     Pick the highest version (lexicographic / max) record in
@@ -252,11 +235,14 @@ def g5_get_version_by_stage_wrapped(registry: Mapping[str, ModelVersionRecord], 
         result = get_version_by_stage(**kwargs)
     except Exception as exc:
         return f"Tool g5_get_version_by_stage failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "g5_get_version_by_stage": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"g5_get_version_by_stage: ok"
     return content, {
-        "name": name,
+        "g5_get_version_by_stage": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -264,12 +250,7 @@ def g5_get_version_by_stage_wrapped(registry: Mapping[str, ModelVersionRecord], 
 
 
 @tool(response_format="content_and_artifact")
-def g5_mlflow_alias_sync_wrapped(model_id: str, version: str, alias: str, registry_uri: Optional[str]) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Dict[str, Any],
-    "content": str,
-}]:
+def g5_mlflow_alias_sync_wrapped(model_id: str, version: str, alias: str, registry_uri: Optional[str]) -> Tuple[str, dict]:
     """Tool wrapper for ``mlflow_alias_sync``.
 
     Best-effort MLflow alias update.  Returns an in-memory ack
@@ -282,11 +263,14 @@ def g5_mlflow_alias_sync_wrapped(model_id: str, version: str, alias: str, regist
         result = mlflow_alias_sync(**kwargs)
     except Exception as exc:
         return f"Tool g5_mlflow_alias_sync failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "g5_mlflow_alias_sync": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"g5_mlflow_alias_sync: ok"
     return content, {
-        "name": name,
+        "g5_mlflow_alias_sync": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -347,7 +331,7 @@ def make_g5_promotion_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR {spec_id}")
+        logger.info(f"    * RUN REACT AGENT FOR G5")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the G5 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}

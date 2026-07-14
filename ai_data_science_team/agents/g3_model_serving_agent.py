@@ -52,12 +52,7 @@ NODE_TYPE = "deploy.serve"
 # ---------------------------------------------------------------------------
 
 @tool(response_format="content_and_artifact")
-def g3_allocate_port_wrapped(used_ports: Optional[Iterable[int]]) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": int,
-    "content": str,
-}]:
+def g3_allocate_port_wrapped(used_ports: Optional[Iterable[int]]) -> Tuple[str, dict]:
     """Tool wrapper for ``allocate_port``.
 
     Return the first free port in PORT_POOL.
@@ -70,11 +65,14 @@ def g3_allocate_port_wrapped(used_ports: Optional[Iterable[int]]) -> Tuple[str, 
         result = allocate_port(**kwargs)
     except Exception as exc:
         return f"Tool g3_allocate_port failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "g3_allocate_port": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"g3_allocate_port: ok"
     return content, {
-        "name": name,
+        "g3_allocate_port": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -82,12 +80,7 @@ def g3_allocate_port_wrapped(used_ports: Optional[Iterable[int]]) -> Tuple[str, 
 
 
 @tool(response_format="content_and_artifact")
-def g3_render_dockerfile_wrapped(model_id: str, version: str) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": str,
-    "content": str,
-}]:
+def g3_render_dockerfile_wrapped(model_id: str, version: str) -> Tuple[str, dict]:
     """Tool wrapper for ``render_dockerfile``.
 
     Return a Dockerfile body for serving ``model_id`` v``version``.
@@ -100,11 +93,14 @@ def g3_render_dockerfile_wrapped(model_id: str, version: str) -> Tuple[str, {
         result = render_dockerfile(**kwargs)
     except Exception as exc:
         return f"Tool g3_render_dockerfile failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "g3_render_dockerfile": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"g3_render_dockerfile: ok"
     return content, {
-        "name": name,
+        "g3_render_dockerfile": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -112,12 +108,7 @@ def g3_render_dockerfile_wrapped(model_id: str, version: str) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def g3_render_bentofile_wrapped(model_id: str, version: str) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": str,
-    "content": str,
-}]:
+def g3_render_bentofile_wrapped(model_id: str, version: str) -> Tuple[str, dict]:
     """Tool wrapper for ``render_bentofile``.
 
     Return a bentofile.yaml body for serving ``model_id`` v``version``.
@@ -130,11 +121,14 @@ def g3_render_bentofile_wrapped(model_id: str, version: str) -> Tuple[str, {
         result = render_bentofile(**kwargs)
     except Exception as exc:
         return f"Tool g3_render_bentofile failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "g3_render_bentofile": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"g3_render_bentofile: ok"
     return content, {
-        "name": name,
+        "g3_render_bentofile": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -142,12 +136,7 @@ def g3_render_bentofile_wrapped(model_id: str, version: str) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def g3_render_fastapi_app_wrapped(model_id: str, version: str) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": str,
-    "content": str,
-}]:
+def g3_render_fastapi_app_wrapped(model_id: str, version: str) -> Tuple[str, dict]:
     """Tool wrapper for ``render_fastapi_app``.
 
     Return a FastAPI ``app/main.py`` body.
@@ -160,11 +149,14 @@ def g3_render_fastapi_app_wrapped(model_id: str, version: str) -> Tuple[str, {
         result = render_fastapi_app(**kwargs)
     except Exception as exc:
         return f"Tool g3_render_fastapi_app failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "g3_render_fastapi_app": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"g3_render_fastapi_app: ok"
     return content, {
-        "name": name,
+        "g3_render_fastapi_app": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -172,12 +164,7 @@ def g3_render_fastapi_app_wrapped(model_id: str, version: str) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def g3_record_deployment_wrapped(model_id: str, version: str, target: str) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Dict[str, Any],
-    "content": str,
-}]:
+def g3_record_deployment_wrapped(model_id: str, version: str, target: str) -> Tuple[str, dict]:
     """Tool wrapper for ``record_deployment``.
 
     Build a deployment record (used by the workflow runtime).
@@ -190,11 +177,14 @@ def g3_record_deployment_wrapped(model_id: str, version: str, target: str) -> Tu
         result = record_deployment(**kwargs)
     except Exception as exc:
         return f"Tool g3_record_deployment failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "g3_record_deployment": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"g3_record_deployment: ok"
     return content, {
-        "name": name,
+        "g3_record_deployment": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -202,12 +192,7 @@ def g3_record_deployment_wrapped(model_id: str, version: str, target: str) -> Tu
 
 
 @tool(response_format="content_and_artifact")
-def g3_record_rollback_wrapped(deployment_id: str, from_version: str, to_version: str) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Dict[str, Any],
-    "content": str,
-}]:
+def g3_record_rollback_wrapped(deployment_id: str, from_version: str, to_version: str) -> Tuple[str, dict]:
     """Tool wrapper for ``record_rollback``.
 
     Build a rollback record.
@@ -220,11 +205,14 @@ def g3_record_rollback_wrapped(deployment_id: str, from_version: str, to_version
         result = record_rollback(**kwargs)
     except Exception as exc:
         return f"Tool g3_record_rollback failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "g3_record_rollback": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"g3_record_rollback: ok"
     return content, {
-        "name": name,
+        "g3_record_rollback": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -283,7 +271,7 @@ def make_g3_model_serving_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR {spec_id}")
+        logger.info(f"    * RUN REACT AGENT FOR G3")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the G3 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}

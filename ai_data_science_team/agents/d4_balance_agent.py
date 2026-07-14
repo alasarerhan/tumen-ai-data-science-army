@@ -54,12 +54,7 @@ NODE_TYPE = "model.balance"
 # ---------------------------------------------------------------------------
 
 @tool(response_format="content_and_artifact")
-def d4_class_distribution_wrapped(y: Sequence[Any]) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": ClassDistribution,
-    "content": str,
-}]:
+def d4_class_distribution_wrapped(y: Sequence[Any]) -> Tuple[str, dict]:
     """Tool wrapper for ``class_distribution``.
 
     See underlying tool module.
@@ -72,11 +67,14 @@ def d4_class_distribution_wrapped(y: Sequence[Any]) -> Tuple[str, {
         result = class_distribution(**kwargs)
     except Exception as exc:
         return f"Tool d4_class_distribution failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "d4_class_distribution": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"d4_class_distribution: ok"
     return content, {
-        "name": name,
+        "d4_class_distribution": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -84,12 +82,7 @@ def d4_class_distribution_wrapped(y: Sequence[Any]) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def d4_is_imbalanced_wrapped(dist: ClassDistribution) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Dict[str, Any],
-    "content": str,
-}]:
+def d4_is_imbalanced_wrapped(dist: ClassDistribution) -> Tuple[str, dict]:
     """Tool wrapper for ``is_imbalanced``.
 
     Return a verdict + suggested severity.
@@ -102,11 +95,14 @@ def d4_is_imbalanced_wrapped(dist: ClassDistribution) -> Tuple[str, {
         result = is_imbalanced(**kwargs)
     except Exception as exc:
         return f"Tool d4_is_imbalanced failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "d4_is_imbalanced": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"d4_is_imbalanced: ok"
     return content, {
-        "name": name,
+        "d4_is_imbalanced": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -114,12 +110,7 @@ def d4_is_imbalanced_wrapped(dist: ClassDistribution) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def d4_select_strategy_wrapped(dist: ClassDistribution) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Dict[str, Any],
-    "content": str,
-}]:
+def d4_select_strategy_wrapped(dist: ClassDistribution) -> Tuple[str, dict]:
     """Tool wrapper for ``select_strategy``.
 
     Heuristic strategy selector.
@@ -132,11 +123,14 @@ def d4_select_strategy_wrapped(dist: ClassDistribution) -> Tuple[str, {
         result = select_strategy(**kwargs)
     except Exception as exc:
         return f"Tool d4_select_strategy failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "d4_select_strategy": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"d4_select_strategy: ok"
     return content, {
-        "name": name,
+        "d4_select_strategy": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -144,12 +138,7 @@ def d4_select_strategy_wrapped(dist: ClassDistribution) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def d4_estimate_strategy_impact_wrapped(dist: ClassDistribution, strategy: str) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Dict[str, Any],
-    "content": str,
-}]:
+def d4_estimate_strategy_impact_wrapped(dist: ClassDistribution, strategy: str) -> Tuple[str, dict]:
     """Tool wrapper for ``estimate_strategy_impact``.
 
     Project how the strategy will reshape the distribution.
@@ -162,11 +151,14 @@ def d4_estimate_strategy_impact_wrapped(dist: ClassDistribution, strategy: str) 
         result = estimate_strategy_impact(**kwargs)
     except Exception as exc:
         return f"Tool d4_estimate_strategy_impact failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "d4_estimate_strategy_impact": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"d4_estimate_strategy_impact: ok"
     return content, {
-        "name": name,
+        "d4_estimate_strategy_impact": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -174,12 +166,7 @@ def d4_estimate_strategy_impact_wrapped(dist: ClassDistribution, strategy: str) 
 
 
 @tool(response_format="content_and_artifact")
-def d4_recommend_metrics_wrapped(dist: ClassDistribution) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": PRAUCRecommendation,
-    "content": str,
-}]:
+def d4_recommend_metrics_wrapped(dist: ClassDistribution) -> Tuple[str, dict]:
     """Tool wrapper for ``recommend_metrics``.
 
     For imbalanced classification, recommend PR-AUC primary
@@ -192,11 +179,14 @@ def d4_recommend_metrics_wrapped(dist: ClassDistribution) -> Tuple[str, {
         result = recommend_metrics(**kwargs)
     except Exception as exc:
         return f"Tool d4_recommend_metrics failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "d4_recommend_metrics": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"d4_recommend_metrics: ok"
     return content, {
-        "name": name,
+        "d4_recommend_metrics": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -204,12 +194,7 @@ def d4_recommend_metrics_wrapped(dist: ClassDistribution) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def d4_undersample_indices_wrapped(y: Sequence[Any]) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": List[int],
-    "content": str,
-}]:
+def d4_undersample_indices_wrapped(y: Sequence[Any]) -> Tuple[str, dict]:
     """Tool wrapper for ``undersample_indices``.
 
     Return indices after majority-class undersampling so that
@@ -222,11 +207,14 @@ def d4_undersample_indices_wrapped(y: Sequence[Any]) -> Tuple[str, {
         result = undersample_indices(**kwargs)
     except Exception as exc:
         return f"Tool d4_undersample_indices failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "d4_undersample_indices": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"d4_undersample_indices: ok"
     return content, {
-        "name": name,
+        "d4_undersample_indices": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -234,12 +222,7 @@ def d4_undersample_indices_wrapped(y: Sequence[Any]) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def d4_class_weight_wrapped(y: Sequence[Any]) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Dict[Any, float],
-    "content": str,
-}]:
+def d4_class_weight_wrapped(y: Sequence[Any]) -> Tuple[str, dict]:
     """Tool wrapper for ``class_weight``.
 
     Inverse-frequency weights, normalised to sum to n_classes.
@@ -252,11 +235,14 @@ def d4_class_weight_wrapped(y: Sequence[Any]) -> Tuple[str, {
         result = class_weight(**kwargs)
     except Exception as exc:
         return f"Tool d4_class_weight failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "d4_class_weight": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"d4_class_weight: ok"
     return content, {
-        "name": name,
+        "d4_class_weight": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -264,12 +250,7 @@ def d4_class_weight_wrapped(y: Sequence[Any]) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def d4_apply_strategy_wrapped(y: Sequence[Any], strategy: str) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": SamplingReport,
-    "content": str,
-}]:
+def d4_apply_strategy_wrapped(y: Sequence[Any], strategy: str) -> Tuple[str, dict]:
     """Tool wrapper for ``apply_strategy``.
 
     See underlying tool module.
@@ -282,11 +263,14 @@ def d4_apply_strategy_wrapped(y: Sequence[Any], strategy: str) -> Tuple[str, {
         result = apply_strategy(**kwargs)
     except Exception as exc:
         return f"Tool d4_apply_strategy failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "d4_apply_strategy": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"d4_apply_strategy: ok"
     return content, {
-        "name": name,
+        "d4_apply_strategy": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -294,12 +278,7 @@ def d4_apply_strategy_wrapped(y: Sequence[Any], strategy: str) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def d4_balance_payload_wrapped(dist: ClassDistribution) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Dict[str, Any],
-    "content": str,
-}]:
+def d4_balance_payload_wrapped(dist: ClassDistribution) -> Tuple[str, dict]:
     """Tool wrapper for ``balance_payload``.
 
     See underlying tool module.
@@ -312,11 +291,14 @@ def d4_balance_payload_wrapped(dist: ClassDistribution) -> Tuple[str, {
         result = balance_payload(**kwargs)
     except Exception as exc:
         return f"Tool d4_balance_payload failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "d4_balance_payload": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"d4_balance_payload: ok"
     return content, {
-        "name": name,
+        "d4_balance_payload": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -378,7 +360,7 @@ def make_d4_balance_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR {spec_id}")
+        logger.info(f"    * RUN REACT AGENT FOR D4")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the D4 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}

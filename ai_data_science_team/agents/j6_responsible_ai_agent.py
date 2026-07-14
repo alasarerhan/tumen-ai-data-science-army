@@ -54,12 +54,7 @@ NODE_TYPE = "model.responsible_audit"
 # ---------------------------------------------------------------------------
 
 @tool(response_format="content_and_artifact")
-def j6_compute_fairness_wrapped() -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": FairnessReport,
-    "content": str,
-}]:
+def j6_compute_fairness_wrapped() -> Tuple[str, dict]:
     """Tool wrapper for ``compute_fairness``.
 
     See underlying tool module.
@@ -72,11 +67,14 @@ def j6_compute_fairness_wrapped() -> Tuple[str, {
         result = compute_fairness(**kwargs)
     except Exception as exc:
         return f"Tool j6_compute_fairness failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "j6_compute_fairness": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"j6_compute_fairness: ok"
     return content, {
-        "name": name,
+        "j6_compute_fairness": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -84,12 +82,7 @@ def j6_compute_fairness_wrapped() -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def j6_compute_explainability_wrapped() -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": ExplainabilityReport,
-    "content": str,
-}]:
+def j6_compute_explainability_wrapped() -> Tuple[str, dict]:
     """Tool wrapper for ``compute_explainability``.
 
     See underlying tool module.
@@ -102,11 +95,14 @@ def j6_compute_explainability_wrapped() -> Tuple[str, {
         result = compute_explainability(**kwargs)
     except Exception as exc:
         return f"Tool j6_compute_explainability failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "j6_compute_explainability": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"j6_compute_explainability: ok"
     return content, {
-        "name": name,
+        "j6_compute_explainability": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -114,12 +110,7 @@ def j6_compute_explainability_wrapped() -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def j6_discover_error_slices_wrapped() -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": List[ErrorSlice],
-    "content": str,
-}]:
+def j6_discover_error_slices_wrapped() -> Tuple[str, dict]:
     """Tool wrapper for ``discover_error_slices``.
 
     Naive slice discovery: walk each feature's value histogram
@@ -132,11 +123,14 @@ def j6_discover_error_slices_wrapped() -> Tuple[str, {
         result = discover_error_slices(**kwargs)
     except Exception as exc:
         return f"Tool j6_discover_error_slices failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "j6_discover_error_slices": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"j6_discover_error_slices: ok"
     return content, {
-        "name": name,
+        "j6_discover_error_slices": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -144,12 +138,7 @@ def j6_discover_error_slices_wrapped() -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def j6_suggest_mitigations_wrapped(fairness: Optional[FairnessReport], error_slices: Sequence[ErrorSlice]) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": List[str],
-    "content": str,
-}]:
+def j6_suggest_mitigations_wrapped(fairness: Optional[FairnessReport], error_slices: Sequence[ErrorSlice]) -> Tuple[str, dict]:
     """Tool wrapper for ``suggest_mitigations``.
 
     See underlying tool module.
@@ -162,11 +151,14 @@ def j6_suggest_mitigations_wrapped(fairness: Optional[FairnessReport], error_sli
         result = suggest_mitigations(**kwargs)
     except Exception as exc:
         return f"Tool j6_suggest_mitigations failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "j6_suggest_mitigations": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"j6_suggest_mitigations: ok"
     return content, {
-        "name": name,
+        "j6_suggest_mitigations": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -174,12 +166,7 @@ def j6_suggest_mitigations_wrapped(fairness: Optional[FairnessReport], error_sli
 
 
 @tool(response_format="content_and_artifact")
-def j6_build_dashboard_wrapped() -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": ResponsibleAIDashboard,
-    "content": str,
-}]:
+def j6_build_dashboard_wrapped() -> Tuple[str, dict]:
     """Tool wrapper for ``build_dashboard``.
 
     See underlying tool module.
@@ -192,11 +179,14 @@ def j6_build_dashboard_wrapped() -> Tuple[str, {
         result = build_dashboard(**kwargs)
     except Exception as exc:
         return f"Tool j6_build_dashboard failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "j6_build_dashboard": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"j6_build_dashboard: ok"
     return content, {
-        "name": name,
+        "j6_build_dashboard": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -204,12 +194,7 @@ def j6_build_dashboard_wrapped() -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def j6_dashboard_payload_wrapped(d: ResponsibleAIDashboard) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Dict[str, Any],
-    "content": str,
-}]:
+def j6_dashboard_payload_wrapped(d: ResponsibleAIDashboard) -> Tuple[str, dict]:
     """Tool wrapper for ``dashboard_payload``.
 
     Convert dashboard to UI-ready dict (JSON-safe).
@@ -222,11 +207,14 @@ def j6_dashboard_payload_wrapped(d: ResponsibleAIDashboard) -> Tuple[str, {
         result = dashboard_payload(**kwargs)
     except Exception as exc:
         return f"Tool j6_dashboard_payload failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "j6_dashboard_payload": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"j6_dashboard_payload: ok"
     return content, {
-        "name": name,
+        "j6_dashboard_payload": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -285,7 +273,7 @@ def make_j6_responsible_ai_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR {spec_id}")
+        logger.info(f"    * RUN REACT AGENT FOR J6")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the J6 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}

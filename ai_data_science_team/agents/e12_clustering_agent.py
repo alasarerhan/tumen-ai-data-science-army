@@ -55,12 +55,7 @@ NODE_TYPE = "model.train.cluster"
 # ---------------------------------------------------------------------------
 
 @tool(response_format="content_and_artifact")
-def e12_run_kmeans_wrapped(X: np.ndarray) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": np.ndarray,
-    "content": str,
-}]:
+def e12_run_kmeans_wrapped(X: np.ndarray) -> Tuple[str, dict]:
     """Tool wrapper for ``run_kmeans``.
 
     See underlying tool module.
@@ -73,11 +68,14 @@ def e12_run_kmeans_wrapped(X: np.ndarray) -> Tuple[str, {
         result = run_kmeans(**kwargs)
     except Exception as exc:
         return f"Tool e12_run_kmeans failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "e12_run_kmeans": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"e12_run_kmeans: ok"
     return content, {
-        "name": name,
+        "e12_run_kmeans": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -85,12 +83,7 @@ def e12_run_kmeans_wrapped(X: np.ndarray) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def e12_run_dbscan_wrapped(X: np.ndarray) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": np.ndarray,
-    "content": str,
-}]:
+def e12_run_dbscan_wrapped(X: np.ndarray) -> Tuple[str, dict]:
     """Tool wrapper for ``run_dbscan``.
 
     See underlying tool module.
@@ -103,11 +96,14 @@ def e12_run_dbscan_wrapped(X: np.ndarray) -> Tuple[str, {
         result = run_dbscan(**kwargs)
     except Exception as exc:
         return f"Tool e12_run_dbscan failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "e12_run_dbscan": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"e12_run_dbscan: ok"
     return content, {
-        "name": name,
+        "e12_run_dbscan": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -115,12 +111,7 @@ def e12_run_dbscan_wrapped(X: np.ndarray) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def e12_run_hierarchical_wrapped(X: np.ndarray) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": np.ndarray,
-    "content": str,
-}]:
+def e12_run_hierarchical_wrapped(X: np.ndarray) -> Tuple[str, dict]:
     """Tool wrapper for ``run_hierarchical``.
 
     See underlying tool module.
@@ -133,11 +124,14 @@ def e12_run_hierarchical_wrapped(X: np.ndarray) -> Tuple[str, {
         result = run_hierarchical(**kwargs)
     except Exception as exc:
         return f"Tool e12_run_hierarchical failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "e12_run_hierarchical": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"e12_run_hierarchical: ok"
     return content, {
-        "name": name,
+        "e12_run_hierarchical": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -145,12 +139,7 @@ def e12_run_hierarchical_wrapped(X: np.ndarray) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def e12_compute_silhouette_wrapped(X: np.ndarray, labels: np.ndarray) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": float,
-    "content": str,
-}]:
+def e12_compute_silhouette_wrapped(X: np.ndarray, labels: np.ndarray) -> Tuple[str, dict]:
     """Tool wrapper for ``compute_silhouette``.
 
     Return silhouette score in [-1, 1]. Returns NaN if < 2 clusters
@@ -163,11 +152,14 @@ def e12_compute_silhouette_wrapped(X: np.ndarray, labels: np.ndarray) -> Tuple[s
         result = compute_silhouette(**kwargs)
     except Exception as exc:
         return f"Tool e12_compute_silhouette failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "e12_compute_silhouette": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"e12_compute_silhouette: ok"
     return content, {
-        "name": name,
+        "e12_compute_silhouette": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -175,12 +167,7 @@ def e12_compute_silhouette_wrapped(X: np.ndarray, labels: np.ndarray) -> Tuple[s
 
 
 @tool(response_format="content_and_artifact")
-def e12_compute_calinski_harabasz_wrapped(X: np.ndarray, labels: np.ndarray) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": float,
-    "content": str,
-}]:
+def e12_compute_calinski_harabasz_wrapped(X: np.ndarray, labels: np.ndarray) -> Tuple[str, dict]:
     """Tool wrapper for ``compute_calinski_harabasz``.
 
     Return CH score. NaN if fewer than 2 clusters.
@@ -193,11 +180,14 @@ def e12_compute_calinski_harabasz_wrapped(X: np.ndarray, labels: np.ndarray) -> 
         result = compute_calinski_harabasz(**kwargs)
     except Exception as exc:
         return f"Tool e12_compute_calinski_harabasz failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "e12_compute_calinski_harabasz": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"e12_compute_calinski_harabasz: ok"
     return content, {
-        "name": name,
+        "e12_compute_calinski_harabasz": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -205,12 +195,7 @@ def e12_compute_calinski_harabasz_wrapped(X: np.ndarray, labels: np.ndarray) -> 
 
 
 @tool(response_format="content_and_artifact")
-def e12_cluster_sizes_wrapped(labels: Sequence[int]) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Dict[int, int],
-    "content": str,
-}]:
+def e12_cluster_sizes_wrapped(labels: Sequence[int]) -> Tuple[str, dict]:
     """Tool wrapper for ``cluster_sizes``.
 
     See underlying tool module.
@@ -223,11 +208,14 @@ def e12_cluster_sizes_wrapped(labels: Sequence[int]) -> Tuple[str, {
         result = cluster_sizes(**kwargs)
     except Exception as exc:
         return f"Tool e12_cluster_sizes failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "e12_cluster_sizes": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"e12_cluster_sizes: ok"
     return content, {
-        "name": name,
+        "e12_cluster_sizes": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -235,12 +223,7 @@ def e12_cluster_sizes_wrapped(labels: Sequence[int]) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def e12_profile_clusters_wrapped(X: np.ndarray, labels: Sequence[int], feature_names: Optional[Sequence[str]]) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": List[Dict[str, Any]],
-    "content": str,
-}]:
+def e12_profile_clusters_wrapped(X: np.ndarray, labels: Sequence[int], feature_names: Optional[Sequence[str]]) -> Tuple[str, dict]:
     """Tool wrapper for ``profile_clusters``.
 
     Per-cluster mean / std / min / max for each feature.
@@ -253,11 +236,14 @@ def e12_profile_clusters_wrapped(X: np.ndarray, labels: Sequence[int], feature_n
         result = profile_clusters(**kwargs)
     except Exception as exc:
         return f"Tool e12_profile_clusters failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "e12_profile_clusters": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"e12_profile_clusters: ok"
     return content, {
-        "name": name,
+        "e12_profile_clusters": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -265,12 +251,7 @@ def e12_profile_clusters_wrapped(X: np.ndarray, labels: Sequence[int], feature_n
 
 
 @tool(response_format="content_and_artifact")
-def e12_build_naming_seeds_wrapped(profiles: Sequence[Mapping[str, Any]]) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": List[Dict[str, Any]],
-    "content": str,
-}]:
+def e12_build_naming_seeds_wrapped(profiles: Sequence[Mapping[str, Any]]) -> Tuple[str, dict]:
     """Tool wrapper for ``build_naming_seeds``.
 
     Build deterministic naming seeds per cluster. Each entry
@@ -283,11 +264,14 @@ def e12_build_naming_seeds_wrapped(profiles: Sequence[Mapping[str, Any]]) -> Tup
         result = build_naming_seeds(**kwargs)
     except Exception as exc:
         return f"Tool e12_build_naming_seeds failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "e12_build_naming_seeds": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"e12_build_naming_seeds: ok"
     return content, {
-        "name": name,
+        "e12_build_naming_seeds": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -295,12 +279,7 @@ def e12_build_naming_seeds_wrapped(profiles: Sequence[Mapping[str, Any]]) -> Tup
 
 
 @tool(response_format="content_and_artifact")
-def e12_segmentation_template_wrapped(profiles: Sequence[Mapping[str, Any]], naming_seeds: Sequence[Mapping[str, Any]]) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Dict[str, Any],
-    "content": str,
-}]:
+def e12_segmentation_template_wrapped(profiles: Sequence[Mapping[str, Any]], naming_seeds: Sequence[Mapping[str, Any]]) -> Tuple[str, dict]:
     """Tool wrapper for ``segmentation_template``.
 
     Build a marketing-segment-style template: each cluster becomes
@@ -313,11 +292,14 @@ def e12_segmentation_template_wrapped(profiles: Sequence[Mapping[str, Any]], nam
         result = segmentation_template(**kwargs)
     except Exception as exc:
         return f"Tool e12_segmentation_template failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "e12_segmentation_template": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"e12_segmentation_template: ok"
     return content, {
-        "name": name,
+        "e12_segmentation_template": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -325,12 +307,7 @@ def e12_segmentation_template_wrapped(profiles: Sequence[Mapping[str, Any]], nam
 
 
 @tool(response_format="content_and_artifact")
-def e12_run_clustering_wrapped(X: Any) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": ClusteringResult,
-    "content": str,
-}]:
+def e12_run_clustering_wrapped(X: Any) -> Tuple[str, dict]:
     """Tool wrapper for ``run_clustering``.
 
     See underlying tool module.
@@ -343,11 +320,14 @@ def e12_run_clustering_wrapped(X: Any) -> Tuple[str, {
         result = run_clustering(**kwargs)
     except Exception as exc:
         return f"Tool e12_run_clustering failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "e12_run_clustering": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"e12_run_clustering: ok"
     return content, {
-        "name": name,
+        "e12_run_clustering": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -355,12 +335,7 @@ def e12_run_clustering_wrapped(X: Any) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def e12_result_payload_wrapped(r: ClusteringResult) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Dict[str, Any],
-    "content": str,
-}]:
+def e12_result_payload_wrapped(r: ClusteringResult) -> Tuple[str, dict]:
     """Tool wrapper for ``result_payload``.
 
     See underlying tool module.
@@ -373,11 +348,14 @@ def e12_result_payload_wrapped(r: ClusteringResult) -> Tuple[str, {
         result = result_payload(**kwargs)
     except Exception as exc:
         return f"Tool e12_result_payload failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "e12_result_payload": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"e12_result_payload: ok"
     return content, {
-        "name": name,
+        "e12_result_payload": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -441,7 +419,7 @@ def make_e12_clustering_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR {spec_id}")
+        logger.info(f"    * RUN REACT AGENT FOR E12")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the E12 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}

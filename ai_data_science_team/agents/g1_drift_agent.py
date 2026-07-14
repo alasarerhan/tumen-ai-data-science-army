@@ -50,12 +50,7 @@ NODE_TYPE = "monitor.drift"
 # ---------------------------------------------------------------------------
 
 @tool(response_format="content_and_artifact")
-def g1_psi_wrapped(baseline: Sequence[float] | np.ndarray, current: Sequence[float] | np.ndarray, n_bins: int, eps: float) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": float,
-    "content": str,
-}]:
+def g1_psi_wrapped(baseline: Sequence[float] | np.ndarray, current: Sequence[float] | np.ndarray, n_bins: int, eps: float) -> Tuple[str, dict]:
     """Tool wrapper for ``psi``.
 
     Population Stability Index between two numerical samples.
@@ -68,11 +63,14 @@ def g1_psi_wrapped(baseline: Sequence[float] | np.ndarray, current: Sequence[flo
         result = psi(**kwargs)
     except Exception as exc:
         return f"Tool g1_psi failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "g1_psi": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"g1_psi: ok"
     return content, {
-        "name": name,
+        "g1_psi": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -80,12 +78,7 @@ def g1_psi_wrapped(baseline: Sequence[float] | np.ndarray, current: Sequence[flo
 
 
 @tool(response_format="content_and_artifact")
-def g1_ks2_wrapped(baseline: Sequence[float] | np.ndarray, current: Sequence[float] | np.ndarray) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": float,
-    "content": str,
-}]:
+def g1_ks2_wrapped(baseline: Sequence[float] | np.ndarray, current: Sequence[float] | np.ndarray) -> Tuple[str, dict]:
     """Tool wrapper for ``ks2``.
 
     Two-sample Kolmogorov–Smirnov statistic (no p-value).
@@ -98,11 +91,14 @@ def g1_ks2_wrapped(baseline: Sequence[float] | np.ndarray, current: Sequence[flo
         result = ks2(**kwargs)
     except Exception as exc:
         return f"Tool g1_ks2 failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "g1_ks2": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"g1_ks2: ok"
     return content, {
-        "name": name,
+        "g1_ks2": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -110,12 +106,7 @@ def g1_ks2_wrapped(baseline: Sequence[float] | np.ndarray, current: Sequence[flo
 
 
 @tool(response_format="content_and_artifact")
-def g1_feature_drift_report_wrapped(baseline_df: pd.DataFrame, current_df: pd.DataFrame) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Dict[str, Any],
-    "content": str,
-}]:
+def g1_feature_drift_report_wrapped(baseline_df: pd.DataFrame, current_df: pd.DataFrame) -> Tuple[str, dict]:
     """Tool wrapper for ``feature_drift_report``.
 
     Compute per-feature drift between two DataFrames of the same schema.
@@ -128,11 +119,14 @@ def g1_feature_drift_report_wrapped(baseline_df: pd.DataFrame, current_df: pd.Da
         result = feature_drift_report(**kwargs)
     except Exception as exc:
         return f"Tool g1_feature_drift_report failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "g1_feature_drift_report": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"g1_feature_drift_report: ok"
     return content, {
-        "name": name,
+        "g1_feature_drift_report": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -140,12 +134,7 @@ def g1_feature_drift_report_wrapped(baseline_df: pd.DataFrame, current_df: pd.Da
 
 
 @tool(response_format="content_and_artifact")
-def g1_performance_drift_wrapped(baseline_metric: float, current_metric: float) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Dict[str, Any],
-    "content": str,
-}]:
+def g1_performance_drift_wrapped(baseline_metric: float, current_metric: float) -> Tuple[str, dict]:
     """Tool wrapper for ``performance_drift``.
 
     Compare two scalar metric values and report breach status.
@@ -158,11 +147,14 @@ def g1_performance_drift_wrapped(baseline_metric: float, current_metric: float) 
         result = performance_drift(**kwargs)
     except Exception as exc:
         return f"Tool g1_performance_drift failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "g1_performance_drift": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"g1_performance_drift: ok"
     return content, {
-        "name": name,
+        "g1_performance_drift": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -170,12 +162,7 @@ def g1_performance_drift_wrapped(baseline_metric: float, current_metric: float) 
 
 
 @tool(response_format="content_and_artifact")
-def g1_drift_signal_payload_wrapped(baseline_df: pd.DataFrame, current_df: pd.DataFrame) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Dict[str, Any],
-    "content": str,
-}]:
+def g1_drift_signal_payload_wrapped(baseline_df: pd.DataFrame, current_df: pd.DataFrame) -> Tuple[str, dict]:
     """Tool wrapper for ``drift_signal_payload``.
 
     Combine feature-drift and performance-drift into a single payload.
@@ -188,11 +175,14 @@ def g1_drift_signal_payload_wrapped(baseline_df: pd.DataFrame, current_df: pd.Da
         result = drift_signal_payload(**kwargs)
     except Exception as exc:
         return f"Tool g1_drift_signal_payload failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "g1_drift_signal_payload": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"g1_drift_signal_payload: ok"
     return content, {
-        "name": name,
+        "g1_drift_signal_payload": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -250,7 +240,7 @@ def make_g1_drift_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR {spec_id}")
+        logger.info(f"    * RUN REACT AGENT FOR G1")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the G1 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}

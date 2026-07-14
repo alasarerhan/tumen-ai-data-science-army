@@ -51,12 +51,7 @@ NODE_TYPE = "lineage.render"
 # ---------------------------------------------------------------------------
 
 @tool(response_format="content_and_artifact")
-def j12_add_node_wrapped(graph: LineageGraph) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": LineageNode,
-    "content": str,
-}]:
+def j12_add_node_wrapped(graph: LineageGraph) -> Tuple[str, dict]:
     """Tool wrapper for ``add_node``.
 
     See underlying tool module.
@@ -69,11 +64,14 @@ def j12_add_node_wrapped(graph: LineageGraph) -> Tuple[str, {
         result = add_node(**kwargs)
     except Exception as exc:
         return f"Tool j12_add_node failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "j12_add_node": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"j12_add_node: ok"
     return content, {
-        "name": name,
+        "j12_add_node": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -81,12 +79,7 @@ def j12_add_node_wrapped(graph: LineageGraph) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def j12_add_edge_wrapped(graph: LineageGraph, source: str, target: str, relation: str) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": LineageEdge,
-    "content": str,
-}]:
+def j12_add_edge_wrapped(graph: LineageGraph, source: str, target: str, relation: str) -> Tuple[str, dict]:
     """Tool wrapper for ``add_edge``.
 
     See underlying tool module.
@@ -99,11 +92,14 @@ def j12_add_edge_wrapped(graph: LineageGraph, source: str, target: str, relation
         result = add_edge(**kwargs)
     except Exception as exc:
         return f"Tool j12_add_edge failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "j12_add_edge": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"j12_add_edge: ok"
     return content, {
-        "name": name,
+        "j12_add_edge": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -111,12 +107,7 @@ def j12_add_edge_wrapped(graph: LineageGraph, source: str, target: str, relation
 
 
 @tool(response_format="content_and_artifact")
-def j12_ancestors_wrapped(graph: LineageGraph, node_id: str) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": List[str],
-    "content": str,
-}]:
+def j12_ancestors_wrapped(graph: LineageGraph, node_id: str) -> Tuple[str, dict]:
     """Tool wrapper for ``ancestors``.
 
     All upstream node_ids via BFS over incoming edges.
@@ -129,11 +120,14 @@ def j12_ancestors_wrapped(graph: LineageGraph, node_id: str) -> Tuple[str, {
         result = ancestors(**kwargs)
     except Exception as exc:
         return f"Tool j12_ancestors failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "j12_ancestors": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"j12_ancestors: ok"
     return content, {
-        "name": name,
+        "j12_ancestors": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -141,12 +135,7 @@ def j12_ancestors_wrapped(graph: LineageGraph, node_id: str) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def j12_descendants_wrapped(graph: LineageGraph, node_id: str) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": List[str],
-    "content": str,
-}]:
+def j12_descendants_wrapped(graph: LineageGraph, node_id: str) -> Tuple[str, dict]:
     """Tool wrapper for ``descendants``.
 
     All downstream node_ids via BFS over outgoing edges.
@@ -159,11 +148,14 @@ def j12_descendants_wrapped(graph: LineageGraph, node_id: str) -> Tuple[str, {
         result = descendants(**kwargs)
     except Exception as exc:
         return f"Tool j12_descendants failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "j12_descendants": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"j12_descendants: ok"
     return content, {
-        "name": name,
+        "j12_descendants": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -171,12 +163,7 @@ def j12_descendants_wrapped(graph: LineageGraph, node_id: str) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def j12_render_graph_wrapped(graph: LineageGraph) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Dict[str, Any],
-    "content": str,
-}]:
+def j12_render_graph_wrapped(graph: LineageGraph) -> Tuple[str, dict]:
     """Tool wrapper for ``render_graph``.
 
     Build a UI-ready dict. mode='impact' highlights all
@@ -189,11 +176,14 @@ def j12_render_graph_wrapped(graph: LineageGraph) -> Tuple[str, {
         result = render_graph(**kwargs)
     except Exception as exc:
         return f"Tool j12_render_graph failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "j12_render_graph": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"j12_render_graph: ok"
     return content, {
-        "name": name,
+        "j12_render_graph": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -201,12 +191,7 @@ def j12_render_graph_wrapped(graph: LineageGraph) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def j12_node_summary_wrapped(graph: LineageGraph, node_id: str) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Dict[str, Any],
-    "content": str,
-}]:
+def j12_node_summary_wrapped(graph: LineageGraph, node_id: str) -> Tuple[str, dict]:
     """Tool wrapper for ``node_summary``.
 
     Return a single node + ancestors + descendants summary.
@@ -219,11 +204,14 @@ def j12_node_summary_wrapped(graph: LineageGraph, node_id: str) -> Tuple[str, {
         result = node_summary(**kwargs)
     except Exception as exc:
         return f"Tool j12_node_summary failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "j12_node_summary": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"j12_node_summary: ok"
     return content, {
-        "name": name,
+        "j12_node_summary": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -282,7 +270,7 @@ def make_j12_lineage_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR {spec_id}")
+        logger.info(f"    * RUN REACT AGENT FOR J12")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the J12 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}

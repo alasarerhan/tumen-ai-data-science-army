@@ -56,12 +56,7 @@ NODE_TYPE = "incident.raise"
 # ---------------------------------------------------------------------------
 
 @tool(response_format="content_and_artifact")
-def g7_define_rule_wrapped(store: AlertStore) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": AlertRule,
-    "content": str,
-}]:
+def g7_define_rule_wrapped(store: AlertStore) -> Tuple[str, dict]:
     """Tool wrapper for ``define_rule``.
 
     See underlying tool module.
@@ -74,11 +69,14 @@ def g7_define_rule_wrapped(store: AlertStore) -> Tuple[str, {
         result = define_rule(**kwargs)
     except Exception as exc:
         return f"Tool g7_define_rule failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "g7_define_rule": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"g7_define_rule: ok"
     return content, {
-        "name": name,
+        "g7_define_rule": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -86,12 +84,7 @@ def g7_define_rule_wrapped(store: AlertStore) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def g7_evaluate_rule_wrapped(rule: AlertRule) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": bool,
-    "content": str,
-}]:
+def g7_evaluate_rule_wrapped(rule: AlertRule) -> Tuple[str, dict]:
     """Tool wrapper for ``evaluate_rule``.
 
     See underlying tool module.
@@ -104,11 +97,14 @@ def g7_evaluate_rule_wrapped(rule: AlertRule) -> Tuple[str, {
         result = evaluate_rule(**kwargs)
     except Exception as exc:
         return f"Tool g7_evaluate_rule failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "g7_evaluate_rule": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"g7_evaluate_rule: ok"
     return content, {
-        "name": name,
+        "g7_evaluate_rule": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -116,12 +112,7 @@ def g7_evaluate_rule_wrapped(rule: AlertRule) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def g7_raise_incident_wrapped(store: AlertStore) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Incident,
-    "content": str,
-}]:
+def g7_raise_incident_wrapped(store: AlertStore) -> Tuple[str, dict]:
     """Tool wrapper for ``raise_incident``.
 
     See underlying tool module.
@@ -134,11 +125,14 @@ def g7_raise_incident_wrapped(store: AlertStore) -> Tuple[str, {
         result = raise_incident(**kwargs)
     except Exception as exc:
         return f"Tool g7_raise_incident failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "g7_raise_incident": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"g7_raise_incident: ok"
     return content, {
-        "name": name,
+        "g7_raise_incident": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -146,12 +140,7 @@ def g7_raise_incident_wrapped(store: AlertStore) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def g7_acknowledge_incident_wrapped(inc: Incident) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": None,
-    "content": str,
-}]:
+def g7_acknowledge_incident_wrapped(inc: Incident) -> Tuple[str, dict]:
     """Tool wrapper for ``acknowledge_incident``.
 
     See underlying tool module.
@@ -164,11 +153,14 @@ def g7_acknowledge_incident_wrapped(inc: Incident) -> Tuple[str, {
         result = acknowledge_incident(**kwargs)
     except Exception as exc:
         return f"Tool g7_acknowledge_incident failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "g7_acknowledge_incident": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"g7_acknowledge_incident: ok"
     return content, {
-        "name": name,
+        "g7_acknowledge_incident": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -176,12 +168,7 @@ def g7_acknowledge_incident_wrapped(inc: Incident) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def g7_resolve_incident_wrapped(inc: Incident) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": None,
-    "content": str,
-}]:
+def g7_resolve_incident_wrapped(inc: Incident) -> Tuple[str, dict]:
     """Tool wrapper for ``resolve_incident``.
 
     See underlying tool module.
@@ -194,11 +181,14 @@ def g7_resolve_incident_wrapped(inc: Incident) -> Tuple[str, {
         result = resolve_incident(**kwargs)
     except Exception as exc:
         return f"Tool g7_resolve_incident failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "g7_resolve_incident": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"g7_resolve_incident: ok"
     return content, {
-        "name": name,
+        "g7_resolve_incident": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -206,12 +196,7 @@ def g7_resolve_incident_wrapped(inc: Incident) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def g7_tick_escalation_wrapped(inc: Incident) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": List[EscalationStep],
-    "content": str,
-}]:
+def g7_tick_escalation_wrapped(inc: Incident) -> Tuple[str, dict]:
     """Tool wrapper for ``tick_escalation``.
 
     Walk the escalation chain. Trigger any step whose
@@ -224,11 +209,14 @@ def g7_tick_escalation_wrapped(inc: Incident) -> Tuple[str, {
         result = tick_escalation(**kwargs)
     except Exception as exc:
         return f"Tool g7_tick_escalation failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "g7_tick_escalation": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"g7_tick_escalation: ok"
     return content, {
-        "name": name,
+        "g7_tick_escalation": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -236,12 +224,7 @@ def g7_tick_escalation_wrapped(inc: Incident) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def g7_route_to_channels_wrapped(inc: Incident) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Dict[str, Any],
-    "content": str,
-}]:
+def g7_route_to_channels_wrapped(inc: Incident) -> Tuple[str, dict]:
     """Tool wrapper for ``route_to_channels``.
 
     Build a payload per channel. If send_fn is provided, also
@@ -254,11 +237,14 @@ def g7_route_to_channels_wrapped(inc: Incident) -> Tuple[str, {
         result = route_to_channels(**kwargs)
     except Exception as exc:
         return f"Tool g7_route_to_channels failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "g7_route_to_channels": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"g7_route_to_channels: ok"
     return content, {
-        "name": name,
+        "g7_route_to_channels": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -266,12 +252,7 @@ def g7_route_to_channels_wrapped(inc: Incident) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def g7_channel_template_wrapped(channel: str, payload: Mapping[str, Any]) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": str,
-    "content": str,
-}]:
+def g7_channel_template_wrapped(channel: str, payload: Mapping[str, Any]) -> Tuple[str, dict]:
     """Tool wrapper for ``channel_template``.
 
     Render a human-readable message for a given channel.
@@ -284,11 +265,14 @@ def g7_channel_template_wrapped(channel: str, payload: Mapping[str, Any]) -> Tup
         result = channel_template(**kwargs)
     except Exception as exc:
         return f"Tool g7_channel_template failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "g7_channel_template": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"g7_channel_template: ok"
     return content, {
-        "name": name,
+        "g7_channel_template": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -296,12 +280,7 @@ def g7_channel_template_wrapped(channel: str, payload: Mapping[str, Any]) -> Tup
 
 
 @tool(response_format="content_and_artifact")
-def g7_summarise_wrapped(store: IncidentStore) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Dict[str, int],
-    "content": str,
-}]:
+def g7_summarise_wrapped(store: IncidentStore) -> Tuple[str, dict]:
     """Tool wrapper for ``summarise``.
 
     See underlying tool module.
@@ -314,11 +293,14 @@ def g7_summarise_wrapped(store: IncidentStore) -> Tuple[str, {
         result = summarise(**kwargs)
     except Exception as exc:
         return f"Tool g7_summarise failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "g7_summarise": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"g7_summarise: ok"
     return content, {
-        "name": name,
+        "g7_summarise": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -380,7 +362,7 @@ def make_g7_alerting_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR {spec_id}")
+        logger.info(f"    * RUN REACT AGENT FOR G7")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the G7 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}

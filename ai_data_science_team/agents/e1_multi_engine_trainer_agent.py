@@ -50,12 +50,7 @@ NODE_TYPE = "model.train"
 # ---------------------------------------------------------------------------
 
 @tool(response_format="content_and_artifact")
-def e1_candidates_for_task_wrapped(task_type: str, engine: str) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": str,
-    "content": str,
-}]:
+def e1_candidates_for_task_wrapped(task_type: str, engine: str) -> Tuple[str, dict]:
     """Tool wrapper for ``candidates_for_task``.
 
     Return the class name for the candidate model of ``engine``.
@@ -68,11 +63,14 @@ def e1_candidates_for_task_wrapped(task_type: str, engine: str) -> Tuple[str, {
         result = candidates_for_task(**kwargs)
     except Exception as exc:
         return f"Tool e1_candidates_for_task failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "e1_candidates_for_task": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"e1_candidates_for_task: ok"
     return content, {
-        "name": name,
+        "e1_candidates_for_task": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -80,12 +78,7 @@ def e1_candidates_for_task_wrapped(task_type: str, engine: str) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def e1_build_pipeline_wrapped(X: pd.DataFrame, task_type: str, engine: str, engine_params: Optional[Mapping[str, Any]]) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Pipeline,
-    "content": str,
-}]:
+def e1_build_pipeline_wrapped(X: pd.DataFrame, task_type: str, engine: str, engine_params: Optional[Mapping[str, Any]]) -> Tuple[str, dict]:
     """Tool wrapper for ``build_pipeline``.
 
     Build a sklearn Pipeline imputer+scaler+OHE → estimator.
@@ -98,11 +91,14 @@ def e1_build_pipeline_wrapped(X: pd.DataFrame, task_type: str, engine: str, engi
         result = build_pipeline(**kwargs)
     except Exception as exc:
         return f"Tool e1_build_pipeline failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "e1_build_pipeline": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"e1_build_pipeline: ok"
     return content, {
-        "name": name,
+        "e1_build_pipeline": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -110,12 +106,7 @@ def e1_build_pipeline_wrapped(X: pd.DataFrame, task_type: str, engine: str, engi
 
 
 @tool(response_format="content_and_artifact")
-def e1_cross_validate_candidates_wrapped(X: pd.DataFrame, y: pd.Series, task_type: str, candidates: Optional[Sequence[str]], engine_params: Optional[Mapping[str, Any]], cv: Optional[Mapping[str, Any]]) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Dict[str, Any],
-    "content": str,
-}]:
+def e1_cross_validate_candidates_wrapped(X: pd.DataFrame, y: pd.Series, task_type: str, candidates: Optional[Sequence[str]], engine_params: Optional[Mapping[str, Any]], cv: Optional[Mapping[str, Any]]) -> Tuple[str, dict]:
     """Tool wrapper for ``cross_validate_candidates``.
 
     Run cross-validation for each engine in ``candidates``.
@@ -128,11 +119,14 @@ def e1_cross_validate_candidates_wrapped(X: pd.DataFrame, y: pd.Series, task_typ
         result = cross_validate_candidates(**kwargs)
     except Exception as exc:
         return f"Tool e1_cross_validate_candidates failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "e1_cross_validate_candidates": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"e1_cross_validate_candidates: ok"
     return content, {
-        "name": name,
+        "e1_cross_validate_candidates": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -140,12 +134,7 @@ def e1_cross_validate_candidates_wrapped(X: pd.DataFrame, y: pd.Series, task_typ
 
 
 @tool(response_format="content_and_artifact")
-def e1_select_best_model_wrapped(cv_output: Mapping[str, Any]) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Dict[str, Any],
-    "content": str,
-}]:
+def e1_select_best_model_wrapped(cv_output: Mapping[str, Any]) -> Tuple[str, dict]:
     """Tool wrapper for ``select_best_model``.
 
     Pick the highest-scoring engine from a ``cross_validate_candidates`` output.
@@ -158,11 +147,14 @@ def e1_select_best_model_wrapped(cv_output: Mapping[str, Any]) -> Tuple[str, {
         result = select_best_model(**kwargs)
     except Exception as exc:
         return f"Tool e1_select_best_model failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "e1_select_best_model": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"e1_select_best_model: ok"
     return content, {
-        "name": name,
+        "e1_select_best_model": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -219,7 +211,7 @@ def make_e1_multi_engine_trainer_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR {spec_id}")
+        logger.info(f"    * RUN REACT AGENT FOR E1")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the E1 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}

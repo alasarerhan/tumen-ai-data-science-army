@@ -48,12 +48,7 @@ NODE_TYPE = "report.render"
 # ---------------------------------------------------------------------------
 
 @tool(response_format="content_and_artifact")
-def c5_get_template_wrapped(template_id: str) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Dict[str, Any],
-    "content": str,
-}]:
+def c5_get_template_wrapped(template_id: str) -> Tuple[str, dict]:
     """Tool wrapper for ``get_template``.
 
     Return the template dict for ``template_id``.
@@ -66,11 +61,14 @@ def c5_get_template_wrapped(template_id: str) -> Tuple[str, {
         result = get_template(**kwargs)
     except Exception as exc:
         return f"Tool c5_get_template failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "c5_get_template": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"c5_get_template: ok"
     return content, {
-        "name": name,
+        "c5_get_template": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -78,12 +76,7 @@ def c5_get_template_wrapped(template_id: str) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def c5_build_report_wrapped(template_id: str) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Dict[str, Any],
-    "content": str,
-}]:
+def c5_build_report_wrapped(template_id: str) -> Tuple[str, dict]:
     """Tool wrapper for ``build_report``.
 
     Build a report dict for the given template id.
@@ -96,11 +89,14 @@ def c5_build_report_wrapped(template_id: str) -> Tuple[str, {
         result = build_report(**kwargs)
     except Exception as exc:
         return f"Tool c5_build_report failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "c5_build_report": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"c5_build_report: ok"
     return content, {
-        "name": name,
+        "c5_build_report": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -108,12 +104,7 @@ def c5_build_report_wrapped(template_id: str) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def c5_compute_schedule_wrapped(period: str, starting_at_epoch: float, n_runs: int) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": List[float],
-    "content": str,
-}]:
+def c5_compute_schedule_wrapped(period: str, starting_at_epoch: float, n_runs: int) -> Tuple[str, dict]:
     """Tool wrapper for ``compute_schedule``.
 
     Return the next ``n_runs`` schedule timestamps (epoch seconds).
@@ -126,11 +117,14 @@ def c5_compute_schedule_wrapped(period: str, starting_at_epoch: float, n_runs: i
         result = compute_schedule(**kwargs)
     except Exception as exc:
         return f"Tool c5_compute_schedule failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "c5_compute_schedule": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"c5_compute_schedule: ok"
     return content, {
-        "name": name,
+        "c5_compute_schedule": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -138,12 +132,7 @@ def c5_compute_schedule_wrapped(period: str, starting_at_epoch: float, n_runs: i
 
 
 @tool(response_format="content_and_artifact")
-def c5_render_markdown_wrapped(report: Mapping[str, Any]) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": str,
-    "content": str,
-}]:
+def c5_render_markdown_wrapped(report: Mapping[str, Any]) -> Tuple[str, dict]:
     """Tool wrapper for ``render_markdown``.
 
     Render a built report dict as a Markdown string.
@@ -156,11 +145,14 @@ def c5_render_markdown_wrapped(report: Mapping[str, Any]) -> Tuple[str, {
         result = render_markdown(**kwargs)
     except Exception as exc:
         return f"Tool c5_render_markdown failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "c5_render_markdown": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"c5_render_markdown: ok"
     return content, {
-        "name": name,
+        "c5_render_markdown": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -217,7 +209,7 @@ def make_c5_reports_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR {spec_id}")
+        logger.info(f"    * RUN REACT AGENT FOR C5")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the C5 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}

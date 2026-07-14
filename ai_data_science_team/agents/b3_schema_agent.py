@@ -53,12 +53,7 @@ NODE_TYPE = "schema.infer"
 # ---------------------------------------------------------------------------
 
 @tool(response_format="content_and_artifact")
-def b3_infer_column_type_wrapped(series: pd.Series) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": InferredType,
-    "content": str,
-}]:
+def b3_infer_column_type_wrapped(series: pd.Series) -> Tuple[str, dict]:
     """Tool wrapper for ``infer_column_type``.
 
     Infer a logical type for one column.
@@ -71,11 +66,14 @@ def b3_infer_column_type_wrapped(series: pd.Series) -> Tuple[str, {
         result = infer_column_type(**kwargs)
     except Exception as exc:
         return f"Tool b3_infer_column_type failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "b3_infer_column_type": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"b3_infer_column_type: ok"
     return content, {
-        "name": name,
+        "b3_infer_column_type": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -83,12 +81,7 @@ def b3_infer_column_type_wrapped(series: pd.Series) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def b3_infer_schema_wrapped(df: pd.DataFrame) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Schema,
-    "content": str,
-}]:
+def b3_infer_schema_wrapped(df: pd.DataFrame) -> Tuple[str, dict]:
     """Tool wrapper for ``infer_schema``.
 
     Infer a Schema for every column in ``df``.
@@ -101,11 +94,14 @@ def b3_infer_schema_wrapped(df: pd.DataFrame) -> Tuple[str, {
         result = infer_schema(**kwargs)
     except Exception as exc:
         return f"Tool b3_infer_schema failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "b3_infer_schema": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"b3_infer_schema: ok"
     return content, {
-        "name": name,
+        "b3_infer_schema": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -113,12 +109,7 @@ def b3_infer_schema_wrapped(df: pd.DataFrame) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def b3_build_mapping_wrapped(source: Schema, target: Schema) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": MappingResult,
-    "content": str,
-}]:
+def b3_build_mapping_wrapped(source: Schema, target: Schema) -> Tuple[str, dict]:
     """Tool wrapper for ``build_mapping``.
 
     Match ``source`` columns to ``target`` columns.
@@ -131,11 +122,14 @@ def b3_build_mapping_wrapped(source: Schema, target: Schema) -> Tuple[str, {
         result = build_mapping(**kwargs)
     except Exception as exc:
         return f"Tool b3_build_mapping failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "b3_build_mapping": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"b3_build_mapping: ok"
     return content, {
-        "name": name,
+        "b3_build_mapping": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -143,12 +137,7 @@ def b3_build_mapping_wrapped(source: Schema, target: Schema) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def b3_mapping_summary_wrapped(mapping: MappingResult) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Dict[str, Any],
-    "content": str,
-}]:
+def b3_mapping_summary_wrapped(mapping: MappingResult) -> Tuple[str, dict]:
     """Tool wrapper for ``mapping_summary``.
 
     Flat dict for downstream I/O consumers (I2 catalog, etc.).
@@ -161,11 +150,14 @@ def b3_mapping_summary_wrapped(mapping: MappingResult) -> Tuple[str, {
         result = mapping_summary(**kwargs)
     except Exception as exc:
         return f"Tool b3_mapping_summary failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "b3_mapping_summary": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"b3_mapping_summary: ok"
     return content, {
-        "name": name,
+        "b3_mapping_summary": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -222,7 +214,7 @@ def make_b3_schema_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR {spec_id}")
+        logger.info(f"    * RUN REACT AGENT FOR B3")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the B3 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}

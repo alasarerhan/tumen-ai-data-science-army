@@ -44,12 +44,7 @@ NODE_TYPE = "source.powerbi"
 # ---------------------------------------------------------------------------
 
 @tool(response_format="content_and_artifact")
-def h4_build_powerbi_connector_wrapped(config: ConnectorConfig) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": PowerBIConnector,
-    "content": str,
-}]:
+def h4_build_powerbi_connector_wrapped(config: ConnectorConfig) -> Tuple[str, dict]:
     """Tool wrapper for ``build_powerbi_connector``.
 
     See underlying tool module.
@@ -62,11 +57,14 @@ def h4_build_powerbi_connector_wrapped(config: ConnectorConfig) -> Tuple[str, {
         result = build_powerbi_connector(**kwargs)
     except Exception as exc:
         return f"Tool h4_build_powerbi_connector failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "h4_build_powerbi_connector": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"h4_build_powerbi_connector: ok"
     return content, {
-        "name": name,
+        "h4_build_powerbi_connector": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -120,7 +118,7 @@ def make_h4_powerbi_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR {spec_id}")
+        logger.info(f"    * RUN REACT AGENT FOR H4")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the H4 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}

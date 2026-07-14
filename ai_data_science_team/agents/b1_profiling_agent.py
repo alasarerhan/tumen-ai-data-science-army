@@ -47,12 +47,7 @@ NODE_TYPE = "data.profile"
 # ---------------------------------------------------------------------------
 
 @tool(response_format="content_and_artifact")
-def b1_profile_column_wrapped(series: pd.Series) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": ColumnProfile,
-    "content": str,
-}]:
+def b1_profile_column_wrapped(series: pd.Series) -> Tuple[str, dict]:
     """Tool wrapper for ``profile_column``.
 
     Compute per-column profile including optional PII signal.
@@ -65,11 +60,14 @@ def b1_profile_column_wrapped(series: pd.Series) -> Tuple[str, {
         result = profile_column(**kwargs)
     except Exception as exc:
         return f"Tool b1_profile_column failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "b1_profile_column": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"b1_profile_column: ok"
     return content, {
-        "name": name,
+        "b1_profile_column": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -77,12 +75,7 @@ def b1_profile_column_wrapped(series: pd.Series) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def b1_profile_dataframe_wrapped(df: pd.DataFrame) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": DatasetProfile,
-    "content": str,
-}]:
+def b1_profile_dataframe_wrapped(df: pd.DataFrame) -> Tuple[str, dict]:
     """Tool wrapper for ``profile_dataframe``.
 
     Build a dataset-level profile.
@@ -95,11 +88,14 @@ def b1_profile_dataframe_wrapped(df: pd.DataFrame) -> Tuple[str, {
         result = profile_dataframe(**kwargs)
     except Exception as exc:
         return f"Tool b1_profile_dataframe failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "b1_profile_dataframe": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"b1_profile_dataframe: ok"
     return content, {
-        "name": name,
+        "b1_profile_dataframe": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -154,7 +150,7 @@ def make_b1_profiling_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR {spec_id}")
+        logger.info(f"    * RUN REACT AGENT FOR B1")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the B1 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}

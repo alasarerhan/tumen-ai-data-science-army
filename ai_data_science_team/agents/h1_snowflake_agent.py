@@ -46,12 +46,7 @@ NODE_TYPE = "source.snowflake"
 # ---------------------------------------------------------------------------
 
 @tool(response_format="content_and_artifact")
-def h1_build_snowflake_connector_wrapped(config: ConnectorConfig) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": SnowflakeConnector,
-    "content": str,
-}]:
+def h1_build_snowflake_connector_wrapped(config: ConnectorConfig) -> Tuple[str, dict]:
     """Tool wrapper for ``build_snowflake_connector``.
 
     See underlying tool module.
@@ -64,11 +59,14 @@ def h1_build_snowflake_connector_wrapped(config: ConnectorConfig) -> Tuple[str, 
         result = build_snowflake_connector(**kwargs)
     except Exception as exc:
         return f"Tool h1_build_snowflake_connector failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "h1_build_snowflake_connector": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"h1_build_snowflake_connector: ok"
     return content, {
-        "name": name,
+        "h1_build_snowflake_connector": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -122,7 +120,7 @@ def make_h1_snowflake_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR {spec_id}")
+        logger.info(f"    * RUN REACT AGENT FOR H1")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the H1 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}

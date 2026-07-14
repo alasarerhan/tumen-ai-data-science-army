@@ -53,12 +53,7 @@ NODE_TYPE = "model.fairness_audit"
 # ---------------------------------------------------------------------------
 
 @tool(response_format="content_and_artifact")
-def f3_per_group_metrics_wrapped(y_true: Sequence[int], y_pred: Sequence[int], sensitive: Sequence) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": pd.DataFrame,
-    "content": str,
-}]:
+def f3_per_group_metrics_wrapped(y_true: Sequence[int], y_pred: Sequence[int], sensitive: Sequence) -> Tuple[str, dict]:
     """Tool wrapper for ``per_group_metrics``.
 
     Per-group base rates + selection/TPR/FPR.
@@ -71,11 +66,14 @@ def f3_per_group_metrics_wrapped(y_true: Sequence[int], y_pred: Sequence[int], s
         result = per_group_metrics(**kwargs)
     except Exception as exc:
         return f"Tool f3_per_group_metrics failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "f3_per_group_metrics": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"f3_per_group_metrics: ok"
     return content, {
-        "name": name,
+        "f3_per_group_metrics": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -83,12 +81,7 @@ def f3_per_group_metrics_wrapped(y_true: Sequence[int], y_pred: Sequence[int], s
 
 
 @tool(response_format="content_and_artifact")
-def f3_demographic_parity_difference_wrapped(group_df: pd.DataFrame) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": float,
-    "content": str,
-}]:
+def f3_demographic_parity_difference_wrapped(group_df: pd.DataFrame) -> Tuple[str, dict]:
     """Tool wrapper for ``demographic_parity_difference``.
 
     Max selection_rate − min selection_rate across groups.
@@ -101,11 +94,14 @@ def f3_demographic_parity_difference_wrapped(group_df: pd.DataFrame) -> Tuple[st
         result = demographic_parity_difference(**kwargs)
     except Exception as exc:
         return f"Tool f3_demographic_parity_difference failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "f3_demographic_parity_difference": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"f3_demographic_parity_difference: ok"
     return content, {
-        "name": name,
+        "f3_demographic_parity_difference": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -113,12 +109,7 @@ def f3_demographic_parity_difference_wrapped(group_df: pd.DataFrame) -> Tuple[st
 
 
 @tool(response_format="content_and_artifact")
-def f3_demographic_parity_ratio_wrapped(group_df: pd.DataFrame) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": float,
-    "content": str,
-}]:
+def f3_demographic_parity_ratio_wrapped(group_df: pd.DataFrame) -> Tuple[str, dict]:
     """Tool wrapper for ``demographic_parity_ratio``.
 
     Min / max selection_rate.  Range 0-1, 1 = perfect parity.
@@ -131,11 +122,14 @@ def f3_demographic_parity_ratio_wrapped(group_df: pd.DataFrame) -> Tuple[str, {
         result = demographic_parity_ratio(**kwargs)
     except Exception as exc:
         return f"Tool f3_demographic_parity_ratio failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "f3_demographic_parity_ratio": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"f3_demographic_parity_ratio: ok"
     return content, {
-        "name": name,
+        "f3_demographic_parity_ratio": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -143,12 +137,7 @@ def f3_demographic_parity_ratio_wrapped(group_df: pd.DataFrame) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def f3_equalized_odds_difference_wrapped(group_df: pd.DataFrame) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": float,
-    "content": str,
-}]:
+def f3_equalized_odds_difference_wrapped(group_df: pd.DataFrame) -> Tuple[str, dict]:
     """Tool wrapper for ``equalized_odds_difference``.
 
     Max TPR − min TPR (FPR contribution is symmetrical; we
@@ -161,11 +150,14 @@ def f3_equalized_odds_difference_wrapped(group_df: pd.DataFrame) -> Tuple[str, {
         result = equalized_odds_difference(**kwargs)
     except Exception as exc:
         return f"Tool f3_equalized_odds_difference failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "f3_equalized_odds_difference": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"f3_equalized_odds_difference: ok"
     return content, {
-        "name": name,
+        "f3_equalized_odds_difference": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -173,12 +165,7 @@ def f3_equalized_odds_difference_wrapped(group_df: pd.DataFrame) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def f3_violates_four_fifths_wrapped(group_df: pd.DataFrame) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Dict[str, bool],
-    "content": str,
-}]:
+def f3_violates_four_fifths_wrapped(group_df: pd.DataFrame) -> Tuple[str, dict]:
     """Tool wrapper for ``violates_four_fifths``.
 
     Return per-group violation of the 80% rule (ratio < threshold).
@@ -191,11 +178,14 @@ def f3_violates_four_fifths_wrapped(group_df: pd.DataFrame) -> Tuple[str, {
         result = violates_four_fifths(**kwargs)
     except Exception as exc:
         return f"Tool f3_violates_four_fifths failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "f3_violates_four_fifths": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"f3_violates_four_fifths: ok"
     return content, {
-        "name": name,
+        "f3_violates_four_fifths": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -203,12 +193,7 @@ def f3_violates_four_fifths_wrapped(group_df: pd.DataFrame) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def f3_simulate_threshold_mitigation_wrapped(y_true: Sequence[int], y_pred_proba: Sequence[float], sensitive: Sequence, target_rate: Optional[float]) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": pd.DataFrame,
-    "content": str,
-}]:
+def f3_simulate_threshold_mitigation_wrapped(y_true: Sequence[int], y_pred_proba: Sequence[float], sensitive: Sequence, target_rate: Optional[float]) -> Tuple[str, dict]:
     """Tool wrapper for ``simulate_threshold_mitigation``.
 
     Simulate equalized-odds post-processing by picking per-group
@@ -221,11 +206,14 @@ def f3_simulate_threshold_mitigation_wrapped(y_true: Sequence[int], y_pred_proba
         result = simulate_threshold_mitigation(**kwargs)
     except Exception as exc:
         return f"Tool f3_simulate_threshold_mitigation failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "f3_simulate_threshold_mitigation": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"f3_simulate_threshold_mitigation: ok"
     return content, {
-        "name": name,
+        "f3_simulate_threshold_mitigation": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -233,12 +221,7 @@ def f3_simulate_threshold_mitigation_wrapped(y_true: Sequence[int], y_pred_proba
 
 
 @tool(response_format="content_and_artifact")
-def f3_audit_fairness_wrapped(y_true: Sequence[int], y_pred: Sequence[int], sensitive: Sequence) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": FairnessReport,
-    "content": str,
-}]:
+def f3_audit_fairness_wrapped(y_true: Sequence[int], y_pred: Sequence[int], sensitive: Sequence) -> Tuple[str, dict]:
     """Tool wrapper for ``audit_fairness``.
 
     Run the full F3 audit on a single protected attribute.
@@ -251,11 +234,14 @@ def f3_audit_fairness_wrapped(y_true: Sequence[int], y_pred: Sequence[int], sens
         result = audit_fairness(**kwargs)
     except Exception as exc:
         return f"Tool f3_audit_fairness failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "f3_audit_fairness": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"f3_audit_fairness: ok"
     return content, {
-        "name": name,
+        "f3_audit_fairness": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -315,7 +301,7 @@ def make_f3_fairness_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR {spec_id}")
+        logger.info(f"    * RUN REACT AGENT FOR F3")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the F3 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}

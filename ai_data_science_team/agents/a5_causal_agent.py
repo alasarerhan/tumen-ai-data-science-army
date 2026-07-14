@@ -47,12 +47,7 @@ NODE_TYPE = "model.causal_infer"
 # ---------------------------------------------------------------------------
 
 @tool(response_format="content_and_artifact")
-def a5_did_lift_wrapped(pre_treat_y_pre: Sequence[float], pre_treat_y_post: Sequence[float], control_y_pre: Sequence[float], control_y_post: Sequence[float]) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Dict[str, Any],
-    "content": str,
-}]:
+def a5_did_lift_wrapped(pre_treat_y_pre: Sequence[float], pre_treat_y_post: Sequence[float], control_y_pre: Sequence[float], control_y_post: Sequence[float]) -> Tuple[str, dict]:
     """Tool wrapper for ``did_lift``.
 
     Diff-in-diff average treatment effect on the treated.
@@ -65,11 +60,14 @@ def a5_did_lift_wrapped(pre_treat_y_pre: Sequence[float], pre_treat_y_post: Sequ
         result = did_lift(**kwargs)
     except Exception as exc:
         return f"Tool a5_did_lift failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "a5_did_lift": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"a5_did_lift: ok"
     return content, {
-        "name": name,
+        "a5_did_lift": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -77,12 +75,7 @@ def a5_did_lift_wrapped(pre_treat_y_pre: Sequence[float], pre_treat_y_post: Sequ
 
 
 @tool(response_format="content_and_artifact")
-def a5_adj_lift_wrapped(y: Sequence[float], treatment: Sequence[int], covariates: Sequence[Sequence[float]]) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Dict[str, Any],
-    "content": str,
-}]:
+def a5_adj_lift_wrapped(y: Sequence[float], treatment: Sequence[int], covariates: Sequence[Sequence[float]]) -> Tuple[str, dict]:
     """Tool wrapper for ``adj_lift``.
 
     Adjusted mean difference with one-hot treatment assignment.
@@ -95,11 +88,14 @@ def a5_adj_lift_wrapped(y: Sequence[float], treatment: Sequence[int], covariates
         result = adj_lift(**kwargs)
     except Exception as exc:
         return f"Tool a5_adj_lift failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "a5_adj_lift": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"a5_adj_lift: ok"
     return content, {
-        "name": name,
+        "a5_adj_lift": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -107,12 +103,7 @@ def a5_adj_lift_wrapped(y: Sequence[float], treatment: Sequence[int], covariates
 
 
 @tool(response_format="content_and_artifact")
-def a5_check_propensity_overlap_wrapped(propensity: Sequence[float], label: str) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Dict[str, Any],
-    "content": str,
-}]:
+def a5_check_propensity_overlap_wrapped(propensity: Sequence[float], label: str) -> Tuple[str, dict]:
     """Tool wrapper for ``check_propensity_overlap``.
 
     Sanity check on the propensity-score support.
@@ -125,11 +116,14 @@ def a5_check_propensity_overlap_wrapped(propensity: Sequence[float], label: str)
         result = check_propensity_overlap(**kwargs)
     except Exception as exc:
         return f"Tool a5_check_propensity_overlap failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "a5_check_propensity_overlap": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"a5_check_propensity_overlap: ok"
     return content, {
-        "name": name,
+        "a5_check_propensity_overlap": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -137,12 +131,7 @@ def a5_check_propensity_overlap_wrapped(propensity: Sequence[float], label: str)
 
 
 @tool(response_format="content_and_artifact")
-def a5_e_value_wrapped(point_estimate: float) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": float,
-    "content": str,
-}]:
+def a5_e_value_wrapped(point_estimate: float) -> Tuple[str, dict]:
     """Tool wrapper for ``e_value``.
 
     E-value sensitivity bound (Vansteelandt 2017).
@@ -155,11 +144,14 @@ def a5_e_value_wrapped(point_estimate: float) -> Tuple[str, {
         result = e_value(**kwargs)
     except Exception as exc:
         return f"Tool a5_e_value failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "a5_e_value": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"a5_e_value: ok"
     return content, {
-        "name": name,
+        "a5_e_value": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -216,7 +208,7 @@ def make_a5_causal_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR {spec_id}")
+        logger.info(f"    * RUN REACT AGENT FOR A5")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the A5 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}

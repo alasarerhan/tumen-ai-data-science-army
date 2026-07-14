@@ -48,12 +48,7 @@ NODE_TYPE = "model.hypothesis_test"
 # ---------------------------------------------------------------------------
 
 @tool(response_format="content_and_artifact")
-def a4_recommend_test_wrapped(values: Sequence[float]) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Dict[str, Any],
-    "content": str,
-}]:
+def a4_recommend_test_wrapped(values: Sequence[float]) -> Tuple[str, dict]:
     """Tool wrapper for ``recommend_test``.
 
     Pick a hypothesis test for the data shape.
@@ -66,11 +61,14 @@ def a4_recommend_test_wrapped(values: Sequence[float]) -> Tuple[str, {
         result = recommend_test(**kwargs)
     except Exception as exc:
         return f"Tool a4_recommend_test failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "a4_recommend_test": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"a4_recommend_test: ok"
     return content, {
-        "name": name,
+        "a4_recommend_test": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -78,12 +76,7 @@ def a4_recommend_test_wrapped(values: Sequence[float]) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def a4_run_test_wrapped(values: Sequence[float]) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Dict[str, Any],
-    "content": str,
-}]:
+def a4_run_test_wrapped(values: Sequence[float]) -> Tuple[str, dict]:
     """Tool wrapper for ``run_test``.
 
     Execute the chosen hypothesis test (after :func:`recommend_test`).
@@ -96,11 +89,14 @@ def a4_run_test_wrapped(values: Sequence[float]) -> Tuple[str, {
         result = run_test(**kwargs)
     except Exception as exc:
         return f"Tool a4_run_test failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "a4_run_test": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"a4_run_test: ok"
     return content, {
-        "name": name,
+        "a4_run_test": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -108,12 +104,7 @@ def a4_run_test_wrapped(values: Sequence[float]) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def a4_interpret_result_wrapped(p_value: float, effect_size: float) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Dict[str, Any],
-    "content": str,
-}]:
+def a4_interpret_result_wrapped(p_value: float, effect_size: float) -> Tuple[str, dict]:
     """Tool wrapper for ``interpret_result``.
 
     Translate a p_value + effect_size into a plain-language finding.
@@ -126,11 +117,14 @@ def a4_interpret_result_wrapped(p_value: float, effect_size: float) -> Tuple[str
         result = interpret_result(**kwargs)
     except Exception as exc:
         return f"Tool a4_interpret_result failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "a4_interpret_result": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"a4_interpret_result: ok"
     return content, {
-        "name": name,
+        "a4_interpret_result": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -186,7 +180,7 @@ def make_a4_hypothesis_testing_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR {spec_id}")
+        logger.info(f"    * RUN REACT AGENT FOR A4")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the A4 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}

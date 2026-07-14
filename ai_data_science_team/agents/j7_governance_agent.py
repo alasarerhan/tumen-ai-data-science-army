@@ -59,12 +59,7 @@ NODE_TYPE = "governance.evaluate"
 # ---------------------------------------------------------------------------
 
 @tool(response_format="content_and_artifact")
-def j7_assign_risk_wrapped() -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": RiskAssignment,
-    "content": str,
-}]:
+def j7_assign_risk_wrapped() -> Tuple[str, dict]:
     """Tool wrapper for ``assign_risk``.
 
     See underlying tool module.
@@ -77,11 +72,14 @@ def j7_assign_risk_wrapped() -> Tuple[str, {
         result = assign_risk(**kwargs)
     except Exception as exc:
         return f"Tool j7_assign_risk failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "j7_assign_risk": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"j7_assign_risk: ok"
     return content, {
-        "name": name,
+        "j7_assign_risk": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -89,12 +87,7 @@ def j7_assign_risk_wrapped() -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def j7_required_approvers_wrapped(risk_class: str, policy: RiskPolicy) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": int,
-    "content": str,
-}]:
+def j7_required_approvers_wrapped(risk_class: str, policy: RiskPolicy) -> Tuple[str, dict]:
     """Tool wrapper for ``required_approvers``.
 
     See underlying tool module.
@@ -107,11 +100,14 @@ def j7_required_approvers_wrapped(risk_class: str, policy: RiskPolicy) -> Tuple[
         result = required_approvers(**kwargs)
     except Exception as exc:
         return f"Tool j7_required_approvers failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "j7_required_approvers": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"j7_required_approvers: ok"
     return content, {
-        "name": name,
+        "j7_required_approvers": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -119,12 +115,7 @@ def j7_required_approvers_wrapped(risk_class: str, policy: RiskPolicy) -> Tuple[
 
 
 @tool(response_format="content_and_artifact")
-def j7_start_approval_chain_wrapped() -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": ApprovalChain,
-    "content": str,
-}]:
+def j7_start_approval_chain_wrapped() -> Tuple[str, dict]:
     """Tool wrapper for ``start_approval_chain``.
 
     See underlying tool module.
@@ -137,11 +128,14 @@ def j7_start_approval_chain_wrapped() -> Tuple[str, {
         result = start_approval_chain(**kwargs)
     except Exception as exc:
         return f"Tool j7_start_approval_chain failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "j7_start_approval_chain": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"j7_start_approval_chain: ok"
     return content, {
-        "name": name,
+        "j7_start_approval_chain": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -149,12 +143,7 @@ def j7_start_approval_chain_wrapped() -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def j7_approve_step_wrapped(chain: ApprovalChain) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": None,
-    "content": str,
-}]:
+def j7_approve_step_wrapped(chain: ApprovalChain) -> Tuple[str, dict]:
     """Tool wrapper for ``approve_step``.
 
     Approve a step. Enforces: (1) step must exist, (2) role
@@ -167,11 +156,14 @@ def j7_approve_step_wrapped(chain: ApprovalChain) -> Tuple[str, {
         result = approve_step(**kwargs)
     except Exception as exc:
         return f"Tool j7_approve_step failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "j7_approve_step": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"j7_approve_step: ok"
     return content, {
-        "name": name,
+        "j7_approve_step": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -179,12 +171,7 @@ def j7_approve_step_wrapped(chain: ApprovalChain) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def j7_chain_progress_wrapped(chain: ApprovalChain) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Dict[str, Any],
-    "content": str,
-}]:
+def j7_chain_progress_wrapped(chain: ApprovalChain) -> Tuple[str, dict]:
     """Tool wrapper for ``chain_progress``.
 
     See underlying tool module.
@@ -197,11 +184,14 @@ def j7_chain_progress_wrapped(chain: ApprovalChain) -> Tuple[str, {
         result = chain_progress(**kwargs)
     except Exception as exc:
         return f"Tool j7_chain_progress failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "j7_chain_progress": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"j7_chain_progress: ok"
     return content, {
-        "name": name,
+        "j7_chain_progress": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -209,12 +199,7 @@ def j7_chain_progress_wrapped(chain: ApprovalChain) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def j7_build_checklist_wrapped() -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": List[ChecklistItem],
-    "content": str,
-}]:
+def j7_build_checklist_wrapped() -> Tuple[str, dict]:
     """Tool wrapper for ``build_checklist``.
 
     See underlying tool module.
@@ -227,11 +212,14 @@ def j7_build_checklist_wrapped() -> Tuple[str, {
         result = build_checklist(**kwargs)
     except Exception as exc:
         return f"Tool j7_build_checklist failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "j7_build_checklist": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"j7_build_checklist: ok"
     return content, {
-        "name": name,
+        "j7_build_checklist": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -239,12 +227,7 @@ def j7_build_checklist_wrapped() -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def j7_evaluate_checklist_wrapped() -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": ChecklistEvaluation,
-    "content": str,
-}]:
+def j7_evaluate_checklist_wrapped() -> Tuple[str, dict]:
     """Tool wrapper for ``evaluate_checklist``.
 
     See underlying tool module.
@@ -257,11 +240,14 @@ def j7_evaluate_checklist_wrapped() -> Tuple[str, {
         result = evaluate_checklist(**kwargs)
     except Exception as exc:
         return f"Tool j7_evaluate_checklist failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "j7_evaluate_checklist": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"j7_evaluate_checklist: ok"
     return content, {
-        "name": name,
+        "j7_evaluate_checklist": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -269,12 +255,7 @@ def j7_evaluate_checklist_wrapped() -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def j7_render_audit_report_wrapped(log: AuditLog) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Dict[str, Any],
-    "content": str,
-}]:
+def j7_render_audit_report_wrapped(log: AuditLog) -> Tuple[str, dict]:
     """Tool wrapper for ``render_audit_report``.
 
     See underlying tool module.
@@ -287,11 +268,14 @@ def j7_render_audit_report_wrapped(log: AuditLog) -> Tuple[str, {
         result = render_audit_report(**kwargs)
     except Exception as exc:
         return f"Tool j7_render_audit_report failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "j7_render_audit_report": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"j7_render_audit_report: ok"
     return content, {
-        "name": name,
+        "j7_render_audit_report": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -299,12 +283,7 @@ def j7_render_audit_report_wrapped(log: AuditLog) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def j7_promotion_gate_wrapped() -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Dict[str, Any],
-    "content": str,
-}]:
+def j7_promotion_gate_wrapped() -> Tuple[str, dict]:
     """Tool wrapper for ``promotion_gate``.
 
     Return whether promotion to prod is allowed, with reasons.
@@ -317,11 +296,14 @@ def j7_promotion_gate_wrapped() -> Tuple[str, {
         result = promotion_gate(**kwargs)
     except Exception as exc:
         return f"Tool j7_promotion_gate failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "j7_promotion_gate": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"j7_promotion_gate: ok"
     return content, {
-        "name": name,
+        "j7_promotion_gate": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -383,7 +365,7 @@ def make_j7_governance_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR {spec_id}")
+        logger.info(f"    * RUN REACT AGENT FOR J7")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the J7 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}

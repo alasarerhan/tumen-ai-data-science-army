@@ -167,7 +167,22 @@ blue "==> [3/4] lint (flake8, project config — informational only)"
         flake8_out=$("$FLAKE8" --select=E9,F63,F7,F82 "${PY_FILES[@]}" 2>&1) || true
         if [ -n "$flake8_out" ]; then
             red "    ✗ critical lint errors (E9 / F63 / F7 / F82):"
-            printf '%s\n' "$flake8_out"
+            # Cap the displayed error list at 50 lines to avoid
+            # blowing past the parent shell's stdout buffer (which
+            # triggers SIGPIPE on bash's printf, manifesting as
+            # "printf: Resource temporarily unavailable").  The
+            # full output is dumped to a temp file for later
+            # inspection.
+            flake8_log=$(mktemp -t pre-push-flake8-XXXXXX.log)
+            printf '%s\n' "$flake8_out" > "$flake8_log"
+            n_errors=$(printf '%s\n' "$flake8_out" | wc -l | tr -d ' ')
+            display_lines=$(printf '%s\n' "$flake8_out" | head -n 50)
+            printf '%s\n' "$display_lines"
+            if [ "$n_errors" -gt 50 ]; then
+                echo "    ... ($((n_errors - 50)) more lines truncated; full output: $flake8_log)"
+            else
+                echo "    (full output: $flake8_log)"
+            fi
             FAIL=1
         fi
     fi

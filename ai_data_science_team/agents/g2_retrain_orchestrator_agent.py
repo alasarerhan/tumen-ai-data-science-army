@@ -52,12 +52,7 @@ NODE_TYPE = "monitor.retrain"
 # ---------------------------------------------------------------------------
 
 @tool(response_format="content_and_artifact")
-def g2_build_policy_wrapped(spec: Mapping[str, Any]) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Policy,
-    "content": str,
-}]:
+def g2_build_policy_wrapped(spec: Mapping[str, Any]) -> Tuple[str, dict]:
     """Tool wrapper for ``build_policy``.
 
     Construct a Policy from a declarative spec dict.
@@ -70,11 +65,14 @@ def g2_build_policy_wrapped(spec: Mapping[str, Any]) -> Tuple[str, {
         result = build_policy(**kwargs)
     except Exception as exc:
         return f"Tool g2_build_policy failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "g2_build_policy": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"g2_build_policy: ok"
     return content, {
-        "name": name,
+        "g2_build_policy": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -82,12 +80,7 @@ def g2_build_policy_wrapped(spec: Mapping[str, Any]) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def g2_decide_action_wrapped(signal: Mapping[str, Any], policy: Policy) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Dict[str, Any],
-    "content": str,
-}]:
+def g2_decide_action_wrapped(signal: Mapping[str, Any], policy: Policy) -> Tuple[str, dict]:
     """Tool wrapper for ``decide_action``.
 
     Decide whether to trigger retraining for ``signal`` under ``policy``.
@@ -100,11 +93,14 @@ def g2_decide_action_wrapped(signal: Mapping[str, Any], policy: Policy) -> Tuple
         result = decide_action(**kwargs)
     except Exception as exc:
         return f"Tool g2_decide_action failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "g2_decide_action": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"g2_decide_action: ok"
     return content, {
-        "name": name,
+        "g2_decide_action": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -112,12 +108,7 @@ def g2_decide_action_wrapped(signal: Mapping[str, Any], policy: Policy) -> Tuple
 
 
 @tool(response_format="content_and_artifact")
-def g2_simulate_wrapped(signals: Sequence[Mapping[str, Any]], policy: Policy) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Dict[str, Any],
-    "content": str,
-}]:
+def g2_simulate_wrapped(signals: Sequence[Mapping[str, Any]], policy: Policy) -> Tuple[str, dict]:
     """Tool wrapper for ``simulate``.
 
     Replay ``signals`` against ``policy`` and count triggers.
@@ -130,11 +121,14 @@ def g2_simulate_wrapped(signals: Sequence[Mapping[str, Any]], policy: Policy) ->
         result = simulate(**kwargs)
     except Exception as exc:
         return f"Tool g2_simulate failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "g2_simulate": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"g2_simulate: ok"
     return content, {
-        "name": name,
+        "g2_simulate": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -142,12 +136,7 @@ def g2_simulate_wrapped(signals: Sequence[Mapping[str, Any]], policy: Policy) ->
 
 
 @tool(response_format="content_and_artifact")
-def g2_record_event_wrapped(policy: Policy, signal: Dict[str, Any], decision: Dict[str, Any]) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Event,
-    "content": str,
-}]:
+def g2_record_event_wrapped(policy: Policy, signal: Dict[str, Any], decision: Dict[str, Any]) -> Tuple[str, dict]:
     """Tool wrapper for ``record_event``.
 
     Record a single audit-trail event.
@@ -160,11 +149,14 @@ def g2_record_event_wrapped(policy: Policy, signal: Dict[str, Any], decision: Di
         result = record_event(**kwargs)
     except Exception as exc:
         return f"Tool g2_record_event failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "g2_record_event": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"g2_record_event: ok"
     return content, {
-        "name": name,
+        "g2_record_event": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -172,12 +164,7 @@ def g2_record_event_wrapped(policy: Policy, signal: Dict[str, Any], decision: Di
 
 
 @tool(response_format="content_and_artifact")
-def g2_event_to_dict_wrapped(ev: Event) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Dict[str, Any],
-    "content": str,
-}]:
+def g2_event_to_dict_wrapped(ev: Event) -> Tuple[str, dict]:
     """Tool wrapper for ``event_to_dict``.
 
     See underlying tool module.
@@ -190,11 +177,14 @@ def g2_event_to_dict_wrapped(ev: Event) -> Tuple[str, {
         result = event_to_dict(**kwargs)
     except Exception as exc:
         return f"Tool g2_event_to_dict failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "g2_event_to_dict": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"g2_event_to_dict: ok"
     return content, {
-        "name": name,
+        "g2_event_to_dict": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -202,12 +192,7 @@ def g2_event_to_dict_wrapped(ev: Event) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def g2_build_audit_trail_wrapped(events: Sequence[Event]) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": List[Dict[str, Any]],
-    "content": str,
-}]:
+def g2_build_audit_trail_wrapped(events: Sequence[Event]) -> Tuple[str, dict]:
     """Tool wrapper for ``build_audit_trail``.
 
     Convert a list of events into a chronologically-sorted audit trail.
@@ -220,11 +205,14 @@ def g2_build_audit_trail_wrapped(events: Sequence[Event]) -> Tuple[str, {
         result = build_audit_trail(**kwargs)
     except Exception as exc:
         return f"Tool g2_build_audit_trail failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "g2_build_audit_trail": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"g2_build_audit_trail: ok"
     return content, {
-        "name": name,
+        "g2_build_audit_trail": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -283,7 +271,7 @@ def make_g2_retrain_orchestrator_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR {spec_id}")
+        logger.info(f"    * RUN REACT AGENT FOR G2")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the G2 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}

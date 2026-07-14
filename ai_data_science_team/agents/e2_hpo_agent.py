@@ -50,12 +50,7 @@ NODE_TYPE = "model.hpo"
 # ---------------------------------------------------------------------------
 
 @tool(response_format="content_and_artifact")
-def e2_suggest_default_search_space_wrapped(engine: str, task_type: str) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Dict[str, Dict[str, Any]],
-    "content": str,
-}]:
+def e2_suggest_default_search_space_wrapped(engine: str, task_type: str) -> Tuple[str, dict]:
     """Tool wrapper for ``suggest_default_search_space``.
 
     Return the default search space for an ``(engine, task_type)`` pair.
@@ -68,11 +63,14 @@ def e2_suggest_default_search_space_wrapped(engine: str, task_type: str) -> Tupl
         result = suggest_default_search_space(**kwargs)
     except Exception as exc:
         return f"Tool e2_suggest_default_search_space failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "e2_suggest_default_search_space": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"e2_suggest_default_search_space: ok"
     return content, {
-        "name": name,
+        "e2_suggest_default_search_space": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -80,12 +78,7 @@ def e2_suggest_default_search_space_wrapped(engine: str, task_type: str) -> Tupl
 
 
 @tool(response_format="content_and_artifact")
-def e2_random_sample_params_wrapped(space: Mapping[str, Mapping[str, Any]], rng: Optional[random.Random]) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Dict[str, Any],
-    "content": str,
-}]:
+def e2_random_sample_params_wrapped(space: Mapping[str, Mapping[str, Any]], rng: Optional[random.Random]) -> Tuple[str, dict]:
     """Tool wrapper for ``random_sample_params``.
 
     Sample a parameter dict from ``space``.
@@ -98,11 +91,14 @@ def e2_random_sample_params_wrapped(space: Mapping[str, Mapping[str, Any]], rng:
         result = random_sample_params(**kwargs)
     except Exception as exc:
         return f"Tool e2_random_sample_params failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "e2_random_sample_params": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"e2_random_sample_params: ok"
     return content, {
-        "name": name,
+        "e2_random_sample_params": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -110,12 +106,7 @@ def e2_random_sample_params_wrapped(space: Mapping[str, Mapping[str, Any]], rng:
 
 
 @tool(response_format="content_and_artifact")
-def e2_run_study_wrapped(objective_fn: Callable[[Dict[str, Any]], float], space: Mapping[str, Mapping[str, Any]]) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Dict[str, Any],
-    "content": str,
-}]:
+def e2_run_study_wrapped(objective_fn: Callable[[Dict[str, Any]], float], space: Mapping[str, Mapping[str, Any]]) -> Tuple[str, dict]:
     """Tool wrapper for ``run_study``.
 
     Run an in-tree HPO study using ``RandomSampler`` by default.
@@ -128,11 +119,14 @@ def e2_run_study_wrapped(objective_fn: Callable[[Dict[str, Any]], float], space:
         result = run_study(**kwargs)
     except Exception as exc:
         return f"Tool e2_run_study failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "e2_run_study": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"e2_run_study: ok"
     return content, {
-        "name": name,
+        "e2_run_study": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -188,7 +182,7 @@ def make_e2_hpo_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR {spec_id}")
+        logger.info(f"    * RUN REACT AGENT FOR E2")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the E2 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}

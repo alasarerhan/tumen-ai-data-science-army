@@ -50,12 +50,7 @@ NODE_TYPE = "data.pii_anonymize"
 # ---------------------------------------------------------------------------
 
 @tool(response_format="content_and_artifact")
-def b5_scan_pii_wrapped(df: pd.DataFrame) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": PIIScanReport,
-    "content": str,
-}]:
+def b5_scan_pii_wrapped(df: pd.DataFrame) -> Tuple[str, dict]:
     """Tool wrapper for ``scan_pii``.
 
     Detect PII columns in a DataFrame.
@@ -68,11 +63,14 @@ def b5_scan_pii_wrapped(df: pd.DataFrame) -> Tuple[str, {
         result = scan_pii(**kwargs)
     except Exception as exc:
         return f"Tool b5_scan_pii failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "b5_scan_pii": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"b5_scan_pii: ok"
     return content, {
-        "name": name,
+        "b5_scan_pii": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -80,12 +78,7 @@ def b5_scan_pii_wrapped(df: pd.DataFrame) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def b5_default_strategies_for_wrapped(scan: PIIScanReport) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Dict[str, Dict[str, Any]],
-    "content": str,
-}]:
+def b5_default_strategies_for_wrapped(scan: PIIScanReport) -> Tuple[str, dict]:
     """Tool wrapper for ``default_strategies_for``.
 
     Return default per-column strategies derived from a scan.
@@ -98,11 +91,14 @@ def b5_default_strategies_for_wrapped(scan: PIIScanReport) -> Tuple[str, {
         result = default_strategies_for(**kwargs)
     except Exception as exc:
         return f"Tool b5_default_strategies_for failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "b5_default_strategies_for": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"b5_default_strategies_for: ok"
     return content, {
-        "name": name,
+        "b5_default_strategies_for": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -110,12 +106,7 @@ def b5_default_strategies_for_wrapped(scan: PIIScanReport) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def b5_anonymize_dataframe_wrapped(df: pd.DataFrame, strategies: Mapping[str, Mapping[str, Any]]) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": AnonymisationResult,
-    "content": str,
-}]:
+def b5_anonymize_dataframe_wrapped(df: pd.DataFrame, strategies: Mapping[str, Mapping[str, Any]]) -> Tuple[str, dict]:
     """Tool wrapper for ``anonymize_dataframe``.
 
     Apply per-column anonymisation strategies.
@@ -128,11 +119,14 @@ def b5_anonymize_dataframe_wrapped(df: pd.DataFrame, strategies: Mapping[str, Ma
         result = anonymize_dataframe(**kwargs)
     except Exception as exc:
         return f"Tool b5_anonymize_dataframe failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "b5_anonymize_dataframe": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"b5_anonymize_dataframe: ok"
     return content, {
-        "name": name,
+        "b5_anonymize_dataframe": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -188,7 +182,7 @@ def make_b5_pii_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR {spec_id}")
+        logger.info(f"    * RUN REACT AGENT FOR B5")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the B5 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}

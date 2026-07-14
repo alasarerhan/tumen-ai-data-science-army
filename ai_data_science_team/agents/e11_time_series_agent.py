@@ -49,12 +49,7 @@ NODE_TYPE = "model.train.timeseries"
 # ---------------------------------------------------------------------------
 
 @tool(response_format="content_and_artifact")
-def e11_seasonal_naive_forecast_wrapped(history: Sequence[float], horizon: int, period: int) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": List[float],
-    "content": str,
-}]:
+def e11_seasonal_naive_forecast_wrapped(history: Sequence[float], horizon: int, period: int) -> Tuple[str, dict]:
     """Tool wrapper for ``seasonal_naive_forecast``.
 
     Repeat the last ``period`` window ``horizon`` times.
@@ -67,11 +62,14 @@ def e11_seasonal_naive_forecast_wrapped(history: Sequence[float], horizon: int, 
         result = seasonal_naive_forecast(**kwargs)
     except Exception as exc:
         return f"Tool e11_seasonal_naive_forecast failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "e11_seasonal_naive_forecast": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"e11_seasonal_naive_forecast: ok"
     return content, {
-        "name": name,
+        "e11_seasonal_naive_forecast": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -79,12 +77,7 @@ def e11_seasonal_naive_forecast_wrapped(history: Sequence[float], horizon: int, 
 
 
 @tool(response_format="content_and_artifact")
-def e11_moving_average_forecast_wrapped(history: Sequence[float], horizon: int, window: int) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": List[float],
-    "content": str,
-}]:
+def e11_moving_average_forecast_wrapped(history: Sequence[float], horizon: int, window: int) -> Tuple[str, dict]:
     """Tool wrapper for ``moving_average_forecast``.
 
     Slide a window over the trailing ``window`` observations.
@@ -97,11 +90,14 @@ def e11_moving_average_forecast_wrapped(history: Sequence[float], horizon: int, 
         result = moving_average_forecast(**kwargs)
     except Exception as exc:
         return f"Tool e11_moving_average_forecast failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "e11_moving_average_forecast": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"e11_moving_average_forecast: ok"
     return content, {
-        "name": name,
+        "e11_moving_average_forecast": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -109,12 +105,7 @@ def e11_moving_average_forecast_wrapped(history: Sequence[float], horizon: int, 
 
 
 @tool(response_format="content_and_artifact")
-def e11_multiplicative_seasonal_forecast_wrapped(history: Sequence[float], horizon: int, period: int) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": List[float],
-    "content": str,
-}]:
+def e11_multiplicative_seasonal_forecast_wrapped(history: Sequence[float], horizon: int, period: int) -> Tuple[str, dict]:
     """Tool wrapper for ``multiplicative_seasonal_forecast``.
 
     Forecast = global mean × season-index of the most-recent season.
@@ -127,11 +118,14 @@ def e11_multiplicative_seasonal_forecast_wrapped(history: Sequence[float], horiz
         result = multiplicative_seasonal_forecast(**kwargs)
     except Exception as exc:
         return f"Tool e11_multiplicative_seasonal_forecast failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "e11_multiplicative_seasonal_forecast": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"e11_multiplicative_seasonal_forecast: ok"
     return content, {
-        "name": name,
+        "e11_multiplicative_seasonal_forecast": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -139,12 +133,7 @@ def e11_multiplicative_seasonal_forecast_wrapped(history: Sequence[float], horiz
 
 
 @tool(response_format="content_and_artifact")
-def e11_reconcile_top_down_wrapped(parent_forecast: float, child_histories: Mapping[Any, Sequence[float]]) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Dict[Any, float],
-    "content": str,
-}]:
+def e11_reconcile_top_down_wrapped(parent_forecast: float, child_histories: Mapping[Any, Sequence[float]]) -> Tuple[str, dict]:
     """Tool wrapper for ``reconcile_top_down``.
 
     Top-down reconciliation: each child gets its historical share
@@ -157,11 +146,14 @@ def e11_reconcile_top_down_wrapped(parent_forecast: float, child_histories: Mapp
         result = reconcile_top_down(**kwargs)
     except Exception as exc:
         return f"Tool e11_reconcile_top_down failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "e11_reconcile_top_down": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"e11_reconcile_top_down: ok"
     return content, {
-        "name": name,
+        "e11_reconcile_top_down": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -169,12 +161,7 @@ def e11_reconcile_top_down_wrapped(parent_forecast: float, child_histories: Mapp
 
 
 @tool(response_format="content_and_artifact")
-def e11_holiday_calendar_wrapped(country: str, years: Iterable[int]) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": List[Dict[str, Any]],
-    "content": str,
-}]:
+def e11_holiday_calendar_wrapped(country: str, years: Iterable[int]) -> Tuple[str, dict]:
     """Tool wrapper for ``holiday_calendar``.
 
     Return the list of fixed-date holidays for ``country`` across
@@ -187,11 +174,14 @@ def e11_holiday_calendar_wrapped(country: str, years: Iterable[int]) -> Tuple[st
         result = holiday_calendar(**kwargs)
     except Exception as exc:
         return f"Tool e11_holiday_calendar failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "e11_holiday_calendar": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"e11_holiday_calendar: ok"
     return content, {
-        "name": name,
+        "e11_holiday_calendar": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -199,12 +189,7 @@ def e11_holiday_calendar_wrapped(country: str, years: Iterable[int]) -> Tuple[st
 
 
 @tool(response_format="content_and_artifact")
-def e11_build_panel_wrapped(df: pd.DataFrame) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": pd.DataFrame,
-    "content": str,
-}]:
+def e11_build_panel_wrapped(df: pd.DataFrame) -> Tuple[str, dict]:
     """Tool wrapper for ``build_panel``.
 
     Normalise a raw frame into a long panel (group × ds × y) with
@@ -217,11 +202,14 @@ def e11_build_panel_wrapped(df: pd.DataFrame) -> Tuple[str, {
         result = build_panel(**kwargs)
     except Exception as exc:
         return f"Tool e11_build_panel failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "e11_build_panel": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"e11_build_panel: ok"
     return content, {
-        "name": name,
+        "e11_build_panel": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -280,7 +268,7 @@ def make_e11_time_series_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR {spec_id}")
+        logger.info(f"    * RUN REACT AGENT FOR E11")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the E11 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}

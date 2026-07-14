@@ -48,12 +48,7 @@ NODE_TYPE = "model.bayesian_update"
 # ---------------------------------------------------------------------------
 
 @tool(response_format="content_and_artifact")
-def a3_beta_posterior_wrapped(successes: int, failures: int) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": 'BetaPosterior',
-    "content": str,
-}]:
+def a3_beta_posterior_wrapped(successes: int, failures: int) -> Tuple[str, dict]:
     """Tool wrapper for ``beta_posterior``.
 
     Compute the Beta-Binomial posterior parameters.
@@ -66,11 +61,14 @@ def a3_beta_posterior_wrapped(successes: int, failures: int) -> Tuple[str, {
         result = beta_posterior(**kwargs)
     except Exception as exc:
         return f"Tool a3_beta_posterior failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "a3_beta_posterior": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"a3_beta_posterior: ok"
     return content, {
-        "name": name,
+        "a3_beta_posterior": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -78,12 +76,7 @@ def a3_beta_posterior_wrapped(successes: int, failures: int) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def a3_bayes_decision_wrapped(posterior_a: BetaPosterior, posterior_b: BetaPosterior) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Dict[str, Any],
-    "content": str,
-}]:
+def a3_bayes_decision_wrapped(posterior_a: BetaPosterior, posterior_b: BetaPosterior) -> Tuple[str, dict]:
     """Tool wrapper for ``bayes_decision``.
 
     Pick A or B by posterior evidence.
@@ -96,11 +89,14 @@ def a3_bayes_decision_wrapped(posterior_a: BetaPosterior, posterior_b: BetaPoste
         result = bayes_decision(**kwargs)
     except Exception as exc:
         return f"Tool a3_bayes_decision failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "a3_bayes_decision": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"a3_bayes_decision: ok"
     return content, {
-        "name": name,
+        "a3_bayes_decision": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -108,12 +104,7 @@ def a3_bayes_decision_wrapped(posterior_a: BetaPosterior, posterior_b: BetaPoste
 
 
 @tool(response_format="content_and_artifact")
-def a3_normal_means_posterior_wrapped(samples_a: Sequence[float], samples_b: Sequence[float]) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": NormalMeansPosterior,
-    "content": str,
-}]:
+def a3_normal_means_posterior_wrapped(samples_a: Sequence[float], samples_b: Sequence[float]) -> Tuple[str, dict]:
     """Tool wrapper for ``normal_means_posterior``.
 
     Build a normal-normal conjugate posterior for two samples.
@@ -126,11 +117,14 @@ def a3_normal_means_posterior_wrapped(samples_a: Sequence[float], samples_b: Seq
         result = normal_means_posterior(**kwargs)
     except Exception as exc:
         return f"Tool a3_normal_means_posterior failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "a3_normal_means_posterior": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"a3_normal_means_posterior: ok"
     return content, {
-        "name": name,
+        "a3_normal_means_posterior": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -186,7 +180,7 @@ def make_a3_bayesian_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR {spec_id}")
+        logger.info(f"    * RUN REACT AGENT FOR A3")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the A3 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}

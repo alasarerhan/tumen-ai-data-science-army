@@ -44,12 +44,7 @@ NODE_TYPE = "source.bigquery"
 # ---------------------------------------------------------------------------
 
 @tool(response_format="content_and_artifact")
-def h2_build_bigquery_connector_wrapped(config: ConnectorConfig) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": BigQueryConnector,
-    "content": str,
-}]:
+def h2_build_bigquery_connector_wrapped(config: ConnectorConfig) -> Tuple[str, dict]:
     """Tool wrapper for ``build_bigquery_connector``.
 
     See underlying tool module.
@@ -62,11 +57,14 @@ def h2_build_bigquery_connector_wrapped(config: ConnectorConfig) -> Tuple[str, {
         result = build_bigquery_connector(**kwargs)
     except Exception as exc:
         return f"Tool h2_build_bigquery_connector failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "h2_build_bigquery_connector": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"h2_build_bigquery_connector: ok"
     return content, {
-        "name": name,
+        "h2_build_bigquery_connector": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -120,7 +118,7 @@ def make_h2_bigquery_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR {spec_id}")
+        logger.info(f"    * RUN REACT AGENT FOR H2")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the H2 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}

@@ -49,12 +49,7 @@ NODE_TYPE = "model.robustness"
 # ---------------------------------------------------------------------------
 
 @tool(response_format="content_and_artifact")
-def f5_add_gaussian_noise_wrapped(X: np.ndarray) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": np.ndarray,
-    "content": str,
-}]:
+def f5_add_gaussian_noise_wrapped(X: np.ndarray) -> Tuple[str, dict]:
     """Tool wrapper for ``add_gaussian_noise``.
 
     Add N(0, sigma) noise to numeric columns of ``X``.
@@ -67,11 +62,14 @@ def f5_add_gaussian_noise_wrapped(X: np.ndarray) -> Tuple[str, {
         result = add_gaussian_noise(**kwargs)
     except Exception as exc:
         return f"Tool f5_add_gaussian_noise failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "f5_add_gaussian_noise": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"f5_add_gaussian_noise: ok"
     return content, {
-        "name": name,
+        "f5_add_gaussian_noise": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -79,12 +77,7 @@ def f5_add_gaussian_noise_wrapped(X: np.ndarray) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def f5_mask_features_wrapped(X: np.ndarray, mask_rate: float) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": np.ndarray,
-    "content": str,
-}]:
+def f5_mask_features_wrapped(X: np.ndarray, mask_rate: float) -> Tuple[str, dict]:
     """Tool wrapper for ``mask_features``.
 
     Randomly mask ``mask_rate`` of cells to ``fill_value``.
@@ -97,11 +90,14 @@ def f5_mask_features_wrapped(X: np.ndarray, mask_rate: float) -> Tuple[str, {
         result = mask_features(**kwargs)
     except Exception as exc:
         return f"Tool f5_mask_features failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "f5_mask_features": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"f5_mask_features: ok"
     return content, {
-        "name": name,
+        "f5_mask_features": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -109,12 +105,7 @@ def f5_mask_features_wrapped(X: np.ndarray, mask_rate: float) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def f5_default_scenarios_wrapped(sigma_levels: Sequence[float], mask_levels: Sequence[float]) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": List[Scenario],
-    "content": str,
-}]:
+def f5_default_scenarios_wrapped(sigma_levels: Sequence[float], mask_levels: Sequence[float]) -> Tuple[str, dict]:
     """Tool wrapper for ``default_scenarios``.
 
     Return the spec's default scenario set.
@@ -127,11 +118,14 @@ def f5_default_scenarios_wrapped(sigma_levels: Sequence[float], mask_levels: Seq
         result = default_scenarios(**kwargs)
     except Exception as exc:
         return f"Tool f5_default_scenarios failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "f5_default_scenarios": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"f5_default_scenarios: ok"
     return content, {
-        "name": name,
+        "f5_default_scenarios": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -139,12 +133,7 @@ def f5_default_scenarios_wrapped(sigma_levels: Sequence[float], mask_levels: Seq
 
 
 @tool(response_format="content_and_artifact")
-def f5_evaluate_robustness_wrapped(model_name: str, predict: Callable[[np.ndarray], np.ndarray], X: np.ndarray, y: np.ndarray) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": RobustnessResult,
-    "content": str,
-}]:
+def f5_evaluate_robustness_wrapped(model_name: str, predict: Callable[[np.ndarray], np.ndarray], X: np.ndarray, y: np.ndarray) -> Tuple[str, dict]:
     """Tool wrapper for ``evaluate_robustness``.
 
     Run ``predict`` over each scenario ``replicates`` times.
@@ -157,11 +146,14 @@ def f5_evaluate_robustness_wrapped(model_name: str, predict: Callable[[np.ndarra
         result = evaluate_robustness(**kwargs)
     except Exception as exc:
         return f"Tool f5_evaluate_robustness failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "f5_evaluate_robustness": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"f5_evaluate_robustness: ok"
     return content, {
-        "name": name,
+        "f5_evaluate_robustness": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -218,7 +210,7 @@ def make_f5_robustness_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR {spec_id}")
+        logger.info(f"    * RUN REACT AGENT FOR F5")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the F5 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}

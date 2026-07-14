@@ -57,12 +57,7 @@ NODE_TYPE = "kpi.compute"
 # ---------------------------------------------------------------------------
 
 @tool(response_format="content_and_artifact")
-def c3_define_kpi_wrapped(name: str, code: str) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Dict[str, Any],
-    "content": str,
-}]:
+def c3_define_kpi_wrapped(name: str, code: str) -> Tuple[str, dict]:
     """Tool wrapper for ``define_kpi``.
 
     Build a KPI definition dict.
@@ -75,11 +70,14 @@ def c3_define_kpi_wrapped(name: str, code: str) -> Tuple[str, {
         result = define_kpi(**kwargs)
     except Exception as exc:
         return f"Tool c3_define_kpi failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "c3_define_kpi": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"c3_define_kpi: ok"
     return content, {
-        "name": name,
+        "c3_define_kpi": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -87,12 +85,7 @@ def c3_define_kpi_wrapped(name: str, code: str) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def c3_evaluate_python_code_wrapped(kpi: Mapping[str, Any], dataframe: pd.DataFrame) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Dict[str, Any],
-    "content": str,
-}]:
+def c3_evaluate_python_code_wrapped(kpi: Mapping[str, Any], dataframe: pd.DataFrame) -> Tuple[str, dict]:
     """Tool wrapper for ``evaluate_python_code``.
 
     Run the KPI's Python expression against ``dataframe``.
@@ -105,11 +98,14 @@ def c3_evaluate_python_code_wrapped(kpi: Mapping[str, Any], dataframe: pd.DataFr
         result = evaluate_python_code(**kwargs)
     except Exception as exc:
         return f"Tool c3_evaluate_python_code failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "c3_evaluate_python_code": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"c3_evaluate_python_code: ok"
     return content, {
-        "name": name,
+        "c3_evaluate_python_code": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -117,12 +113,7 @@ def c3_evaluate_python_code_wrapped(kpi: Mapping[str, Any], dataframe: pd.DataFr
 
 
 @tool(response_format="content_and_artifact")
-def c3_compute_schedule_wrapped() -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": List[Dict[str, int]],
-    "content": str,
-}]:
+def c3_compute_schedule_wrapped() -> Tuple[str, dict]:
     """Tool wrapper for ``compute_schedule``.
 
     Generate the timestamps for the last ``lookback_steps`` periods.
@@ -135,11 +126,14 @@ def c3_compute_schedule_wrapped() -> Tuple[str, {
         result = compute_schedule(**kwargs)
     except Exception as exc:
         return f"Tool c3_compute_schedule failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "c3_compute_schedule": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"c3_compute_schedule: ok"
     return content, {
-        "name": name,
+        "c3_compute_schedule": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -147,12 +141,7 @@ def c3_compute_schedule_wrapped() -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def c3_record_period_wrapped(kpi: Mapping[str, Any]) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": KPIHistory,
-    "content": str,
-}]:
+def c3_record_period_wrapped(kpi: Mapping[str, Any]) -> Tuple[str, dict]:
     """Tool wrapper for ``record_period``.
 
     Re-export for clarity at the public surface. Computes the KPI
@@ -165,11 +154,14 @@ def c3_record_period_wrapped(kpi: Mapping[str, Any]) -> Tuple[str, {
         result = record_period(**kwargs)
     except Exception as exc:
         return f"Tool c3_record_period failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "c3_record_period": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"c3_record_period: ok"
     return content, {
-        "name": name,
+        "c3_record_period": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -177,12 +169,7 @@ def c3_record_period_wrapped(kpi: Mapping[str, Any]) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def c3_make_history_wrapped(kpi_id: str) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": KPIHistory,
-    "content": str,
-}]:
+def c3_make_history_wrapped(kpi_id: str) -> Tuple[str, dict]:
     """Tool wrapper for ``make_history``.
 
     See underlying tool module.
@@ -195,11 +182,14 @@ def c3_make_history_wrapped(kpi_id: str) -> Tuple[str, {
         result = make_history(**kwargs)
     except Exception as exc:
         return f"Tool c3_make_history failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "c3_make_history": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"c3_make_history: ok"
     return content, {
-        "name": name,
+        "c3_make_history": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -207,12 +197,7 @@ def c3_make_history_wrapped(kpi_id: str) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def c3_evaluate_and_record_wrapped(kpi: Mapping[str, Any], dataframe: pd.DataFrame, history: KPIHistory) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Dict[str, Any],
-    "content": str,
-}]:
+def c3_evaluate_and_record_wrapped(kpi: Mapping[str, Any], dataframe: pd.DataFrame, history: KPIHistory) -> Tuple[str, dict]:
     """Tool wrapper for ``evaluate_and_record``.
 
     One-shot compute + record.
@@ -225,11 +210,14 @@ def c3_evaluate_and_record_wrapped(kpi: Mapping[str, Any], dataframe: pd.DataFra
         result = evaluate_and_record(**kwargs)
     except Exception as exc:
         return f"Tool c3_evaluate_and_record failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "c3_evaluate_and_record": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"c3_evaluate_and_record: ok"
     return content, {
-        "name": name,
+        "c3_evaluate_and_record": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -237,12 +225,7 @@ def c3_evaluate_and_record_wrapped(kpi: Mapping[str, Any], dataframe: pd.DataFra
 
 
 @tool(response_format="content_and_artifact")
-def c3_build_alarm_wrapped(kpi_id: str) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": AlarmRule,
-    "content": str,
-}]:
+def c3_build_alarm_wrapped(kpi_id: str) -> Tuple[str, dict]:
     """Tool wrapper for ``build_alarm``.
 
     Build an alarm rule for a KPI.
@@ -255,11 +238,14 @@ def c3_build_alarm_wrapped(kpi_id: str) -> Tuple[str, {
         result = build_alarm(**kwargs)
     except Exception as exc:
         return f"Tool c3_build_alarm failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "c3_build_alarm": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"c3_build_alarm: ok"
     return content, {
-        "name": name,
+        "c3_build_alarm": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -267,12 +253,7 @@ def c3_build_alarm_wrapped(kpi_id: str) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def c3_check_alarm_wrapped(rule: AlarmRule) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Dict[str, Any],
-    "content": str,
-}]:
+def c3_check_alarm_wrapped(rule: AlarmRule) -> Tuple[str, dict]:
     """Tool wrapper for ``check_alarm``.
 
     Evaluate ``rule`` against a history window.
@@ -285,11 +266,14 @@ def c3_check_alarm_wrapped(rule: AlarmRule) -> Tuple[str, {
         result = check_alarm(**kwargs)
     except Exception as exc:
         return f"Tool c3_check_alarm failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "c3_check_alarm": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"c3_check_alarm: ok"
     return content, {
-        "name": name,
+        "c3_check_alarm": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -297,12 +281,7 @@ def c3_check_alarm_wrapped(rule: AlarmRule) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def c3_sparkline_points_wrapped(values: Sequence[float], n: int) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": List[Optional[float]],
-    "content": str,
-}]:
+def c3_sparkline_points_wrapped(values: Sequence[float], n: int) -> Tuple[str, dict]:
     """Tool wrapper for ``sparkline_points``.
 
     Downsample a series into ``n`` evenly-spaced points for UI.
@@ -315,11 +294,14 @@ def c3_sparkline_points_wrapped(values: Sequence[float], n: int) -> Tuple[str, {
         result = sparkline_points(**kwargs)
     except Exception as exc:
         return f"Tool c3_sparkline_points failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "c3_sparkline_points": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"c3_sparkline_points: ok"
     return content, {
-        "name": name,
+        "c3_sparkline_points": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -381,7 +363,7 @@ def make_c3_kpi_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR {spec_id}")
+        logger.info(f"    * RUN REACT AGENT FOR C3")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the C3 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}

@@ -50,12 +50,7 @@ NODE_TYPE = "dashboard.compose"
 # ---------------------------------------------------------------------------
 
 @tool(response_format="content_and_artifact")
-def c2_add_panel_wrapped(dashboard: Dashboard) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Panel,
-    "content": str,
-}]:
+def c2_add_panel_wrapped(dashboard: Dashboard) -> Tuple[str, dict]:
     """Tool wrapper for ``add_panel``.
 
     Add a chart panel to a dashboard and return it.
@@ -68,11 +63,14 @@ def c2_add_panel_wrapped(dashboard: Dashboard) -> Tuple[str, {
         result = add_panel(**kwargs)
     except Exception as exc:
         return f"Tool c2_add_panel failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "c2_add_panel": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"c2_add_panel: ok"
     return content, {
-        "name": name,
+        "c2_add_panel": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -80,12 +78,7 @@ def c2_add_panel_wrapped(dashboard: Dashboard) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def c2_validate_layout_wrapped(dashboard: Dashboard) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": List[str],
-    "content": str,
-}]:
+def c2_validate_layout_wrapped(dashboard: Dashboard) -> Tuple[str, dict]:
     """Tool wrapper for ``validate_layout``.
 
     Return a list of layout issues (empty list = valid).
@@ -98,11 +91,14 @@ def c2_validate_layout_wrapped(dashboard: Dashboard) -> Tuple[str, {
         result = validate_layout(**kwargs)
     except Exception as exc:
         return f"Tool c2_validate_layout failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "c2_validate_layout": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"c2_validate_layout: ok"
     return content, {
-        "name": name,
+        "c2_validate_layout": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -110,12 +106,7 @@ def c2_validate_layout_wrapped(dashboard: Dashboard) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def c2_make_share_token_wrapped(dashboard: Dashboard) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": str,
-    "content": str,
-}]:
+def c2_make_share_token_wrapped(dashboard: Dashboard) -> Tuple[str, dict]:
     """Tool wrapper for ``make_share_token``.
 
     Compute a deterministic share token from a dashboard snapshot.
@@ -128,11 +119,14 @@ def c2_make_share_token_wrapped(dashboard: Dashboard) -> Tuple[str, {
         result = make_share_token(**kwargs)
     except Exception as exc:
         return f"Tool c2_make_share_token failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "c2_make_share_token": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"c2_make_share_token: ok"
     return content, {
-        "name": name,
+        "c2_make_share_token": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -140,12 +134,7 @@ def c2_make_share_token_wrapped(dashboard: Dashboard) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def c2_render_snapshot_wrapped(dashboard: Dashboard) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": str,
-    "content": str,
-}]:
+def c2_render_snapshot_wrapped(dashboard: Dashboard) -> Tuple[str, dict]:
     """Tool wrapper for ``render_snapshot``.
 
     Render a deterministic textual snapshot of the dashboard.
@@ -158,11 +147,14 @@ def c2_render_snapshot_wrapped(dashboard: Dashboard) -> Tuple[str, {
         result = render_snapshot(**kwargs)
     except Exception as exc:
         return f"Tool c2_render_snapshot failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "c2_render_snapshot": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"c2_render_snapshot: ok"
     return content, {
-        "name": name,
+        "c2_render_snapshot": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -170,12 +162,7 @@ def c2_render_snapshot_wrapped(dashboard: Dashboard) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def c2_make_dashboard_wrapped(name: str, panels: Sequence[Mapping[str, Any]]) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Dashboard,
-    "content": str,
-}]:
+def c2_make_dashboard_wrapped(name: str, panels: Sequence[Mapping[str, Any]]) -> Tuple[str, dict]:
     """Tool wrapper for ``make_dashboard``.
 
     One-shot constructor that materialises a dashboard from a list
@@ -188,11 +175,14 @@ def c2_make_dashboard_wrapped(name: str, panels: Sequence[Mapping[str, Any]]) ->
         result = make_dashboard(**kwargs)
     except Exception as exc:
         return f"Tool c2_make_dashboard failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "c2_make_dashboard": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"c2_make_dashboard: ok"
     return content, {
-        "name": name,
+        "c2_make_dashboard": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -250,7 +240,7 @@ def make_c2_dashboard_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR {spec_id}")
+        logger.info(f"    * RUN REACT AGENT FOR C2")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the C2 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}

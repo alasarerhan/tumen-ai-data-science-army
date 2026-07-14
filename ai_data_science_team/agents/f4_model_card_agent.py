@@ -50,12 +50,7 @@ NODE_TYPE = "model.card"
 # ---------------------------------------------------------------------------
 
 @tool(response_format="content_and_artifact")
-def f4_generate_card_wrapped(model_id: str) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": ModelCard,
-    "content": str,
-}]:
+def f4_generate_card_wrapped(model_id: str) -> Tuple[str, dict]:
     """Tool wrapper for ``generate_card``.
 
     Generate a fresh model card with default section shells.
@@ -68,11 +63,14 @@ def f4_generate_card_wrapped(model_id: str) -> Tuple[str, {
         result = generate_card(**kwargs)
     except Exception as exc:
         return f"Tool f4_generate_card failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "f4_generate_card": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"f4_generate_card: ok"
     return content, {
-        "name": name,
+        "f4_generate_card": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -80,12 +78,7 @@ def f4_generate_card_wrapped(model_id: str) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def f4_update_section_wrapped(card: ModelCard, section: str, content: str) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": ModelCard,
-    "content": str,
-}]:
+def f4_update_section_wrapped(card: ModelCard, section: str, content: str) -> Tuple[str, dict]:
     """Tool wrapper for ``update_section``.
 
     Update or insert a section on a card.
@@ -98,11 +91,14 @@ def f4_update_section_wrapped(card: ModelCard, section: str, content: str) -> Tu
         result = update_section(**kwargs)
     except Exception as exc:
         return f"Tool f4_update_section failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "f4_update_section": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"f4_update_section: ok"
     return content, {
-        "name": name,
+        "f4_update_section": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -110,12 +106,7 @@ def f4_update_section_wrapped(card: ModelCard, section: str, content: str) -> Tu
 
 
 @tool(response_format="content_and_artifact")
-def f4_render_html_wrapped(card: ModelCard) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": str,
-    "content": str,
-}]:
+def f4_render_html_wrapped(card: ModelCard) -> Tuple[str, dict]:
     """Tool wrapper for ``render_html``.
 
     Render the card as a stand-alone HTML document.
@@ -128,11 +119,14 @@ def f4_render_html_wrapped(card: ModelCard) -> Tuple[str, {
         result = render_html(**kwargs)
     except Exception as exc:
         return f"Tool f4_render_html failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "f4_render_html": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"f4_render_html: ok"
     return content, {
-        "name": name,
+        "f4_render_html": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -140,12 +134,7 @@ def f4_render_html_wrapped(card: ModelCard) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def f4_render_pdf_wrapped(card: ModelCard) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": bytes,
-    "content": str,
-}]:
+def f4_render_pdf_wrapped(card: ModelCard) -> Tuple[str, dict]:
     """Tool wrapper for ``render_pdf``.
 
     Render PDF if WeasyPrint is available, else return HTML bytes
@@ -158,11 +147,14 @@ def f4_render_pdf_wrapped(card: ModelCard) -> Tuple[str, {
         result = render_pdf(**kwargs)
     except Exception as exc:
         return f"Tool f4_render_pdf failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "f4_render_pdf": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"f4_render_pdf: ok"
     return content, {
-        "name": name,
+        "f4_render_pdf": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -170,12 +162,7 @@ def f4_render_pdf_wrapped(card: ModelCard) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def f4_get_card_wrapped(card_id: str) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": ModelCard,
-    "content": str,
-}]:
+def f4_get_card_wrapped(card_id: str) -> Tuple[str, dict]:
     """Tool wrapper for ``get_card``.
 
     See underlying tool module.
@@ -188,11 +175,14 @@ def f4_get_card_wrapped(card_id: str) -> Tuple[str, {
         result = get_card(**kwargs)
     except Exception as exc:
         return f"Tool f4_get_card failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "f4_get_card": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"f4_get_card: ok"
     return content, {
-        "name": name,
+        "f4_get_card": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -200,12 +190,7 @@ def f4_get_card_wrapped(card_id: str) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def f4_list_cards_wrapped(model_id: str) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": List[ModelCard],
-    "content": str,
-}]:
+def f4_list_cards_wrapped(model_id: str) -> Tuple[str, dict]:
     """Tool wrapper for ``list_cards``.
 
     See underlying tool module.
@@ -218,11 +203,14 @@ def f4_list_cards_wrapped(model_id: str) -> Tuple[str, {
         result = list_cards(**kwargs)
     except Exception as exc:
         return f"Tool f4_list_cards failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "f4_list_cards": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"f4_list_cards: ok"
     return content, {
-        "name": name,
+        "f4_list_cards": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -281,7 +269,7 @@ def make_f4_model_card_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR {spec_id}")
+        logger.info(f"    * RUN REACT AGENT FOR F4")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the F4 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}

@@ -51,12 +51,7 @@ NODE_TYPE = "data.diff"
 # ---------------------------------------------------------------------------
 
 @tool(response_format="content_and_artifact")
-def j13_profile_columns_wrapped(df: pd.DataFrame) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Dict[str, ColumnStats],
-    "content": str,
-}]:
+def j13_profile_columns_wrapped(df: pd.DataFrame) -> Tuple[str, dict]:
     """Tool wrapper for ``profile_columns``.
 
     See underlying tool module.
@@ -69,11 +64,14 @@ def j13_profile_columns_wrapped(df: pd.DataFrame) -> Tuple[str, {
         result = profile_columns(**kwargs)
     except Exception as exc:
         return f"Tool j13_profile_columns failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "j13_profile_columns": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"j13_profile_columns: ok"
     return content, {
-        "name": name,
+        "j13_profile_columns": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -81,12 +79,7 @@ def j13_profile_columns_wrapped(df: pd.DataFrame) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def j13_numeric_shift_wrapped(left: pd.Series, right: pd.Series) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Dict[str, float],
-    "content": str,
-}]:
+def j13_numeric_shift_wrapped(left: pd.Series, right: pd.Series) -> Tuple[str, dict]:
     """Tool wrapper for ``numeric_shift``.
 
     Return mean / std / null_rate shift for a numeric column.
@@ -99,11 +92,14 @@ def j13_numeric_shift_wrapped(left: pd.Series, right: pd.Series) -> Tuple[str, {
         result = numeric_shift(**kwargs)
     except Exception as exc:
         return f"Tool j13_numeric_shift failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "j13_numeric_shift": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"j13_numeric_shift: ok"
     return content, {
-        "name": name,
+        "j13_numeric_shift": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -111,12 +107,7 @@ def j13_numeric_shift_wrapped(left: pd.Series, right: pd.Series) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def j13_schema_delta_wrapped(left: pd.DataFrame, right: pd.DataFrame) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Tuple[List[str], List[str], List[str]],
-    "content": str,
-}]:
+def j13_schema_delta_wrapped(left: pd.DataFrame, right: pd.DataFrame) -> Tuple[str, dict]:
     """Tool wrapper for ``schema_delta``.
 
     See underlying tool module.
@@ -129,11 +120,14 @@ def j13_schema_delta_wrapped(left: pd.DataFrame, right: pd.DataFrame) -> Tuple[s
         result = schema_delta(**kwargs)
     except Exception as exc:
         return f"Tool j13_schema_delta failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "j13_schema_delta": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"j13_schema_delta: ok"
     return content, {
-        "name": name,
+        "j13_schema_delta": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -141,12 +135,7 @@ def j13_schema_delta_wrapped(left: pd.DataFrame, right: pd.DataFrame) -> Tuple[s
 
 
 @tool(response_format="content_and_artifact")
-def j13_key_set_diff_wrapped(left: pd.DataFrame, right: pd.DataFrame, key: str) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Tuple[Set[Any], Set[Any]],
-    "content": str,
-}]:
+def j13_key_set_diff_wrapped(left: pd.DataFrame, right: pd.DataFrame, key: str) -> Tuple[str, dict]:
     """Tool wrapper for ``key_set_diff``.
 
     Return (keys_only_in_left, keys_only_in_right).
@@ -159,11 +148,14 @@ def j13_key_set_diff_wrapped(left: pd.DataFrame, right: pd.DataFrame, key: str) 
         result = key_set_diff(**kwargs)
     except Exception as exc:
         return f"Tool j13_key_set_diff failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "j13_key_set_diff": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"j13_key_set_diff: ok"
     return content, {
-        "name": name,
+        "j13_key_set_diff": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -171,12 +163,7 @@ def j13_key_set_diff_wrapped(left: pd.DataFrame, right: pd.DataFrame, key: str) 
 
 
 @tool(response_format="content_and_artifact")
-def j13_diff_summary_wrapped(left: pd.DataFrame, right: pd.DataFrame) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": DiffSummary,
-    "content": str,
-}]:
+def j13_diff_summary_wrapped(left: pd.DataFrame, right: pd.DataFrame) -> Tuple[str, dict]:
     """Tool wrapper for ``diff_summary``.
 
     Full structural + distribution diff.
@@ -189,11 +176,14 @@ def j13_diff_summary_wrapped(left: pd.DataFrame, right: pd.DataFrame) -> Tuple[s
         result = diff_summary(**kwargs)
     except Exception as exc:
         return f"Tool j13_diff_summary failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "j13_diff_summary": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"j13_diff_summary: ok"
     return content, {
-        "name": name,
+        "j13_diff_summary": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -201,12 +191,7 @@ def j13_diff_summary_wrapped(left: pd.DataFrame, right: pd.DataFrame) -> Tuple[s
 
 
 @tool(response_format="content_and_artifact")
-def j13_diff_payload_wrapped(left: pd.DataFrame, right: pd.DataFrame) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Dict[str, Any],
-    "content": str,
-}]:
+def j13_diff_payload_wrapped(left: pd.DataFrame, right: pd.DataFrame) -> Tuple[str, dict]:
     """Tool wrapper for ``diff_payload``.
 
     See underlying tool module.
@@ -219,11 +204,14 @@ def j13_diff_payload_wrapped(left: pd.DataFrame, right: pd.DataFrame) -> Tuple[s
         result = diff_payload(**kwargs)
     except Exception as exc:
         return f"Tool j13_diff_payload failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "j13_diff_payload": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"j13_diff_payload: ok"
     return content, {
-        "name": name,
+        "j13_diff_payload": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -282,7 +270,7 @@ def make_j13_data_diff_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR {spec_id}")
+        logger.info(f"    * RUN REACT AGENT FOR J13")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the J13 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}

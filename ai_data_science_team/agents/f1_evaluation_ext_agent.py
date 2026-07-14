@@ -50,12 +50,7 @@ NODE_TYPE = "model.evaluate.ext"
 # ---------------------------------------------------------------------------
 
 @tool(response_format="content_and_artifact")
-def f1_evaluate_calibration_wrapped(y_true: Sequence[int], y_prob: Sequence[float], n_bins: int) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": CalibrationReport,
-    "content": str,
-}]:
+def f1_evaluate_calibration_wrapped(y_true: Sequence[int], y_prob: Sequence[float], n_bins: int) -> Tuple[str, dict]:
     """Tool wrapper for ``evaluate_calibration``.
 
     Compute calibration metrics for a binary classifier.
@@ -68,11 +63,14 @@ def f1_evaluate_calibration_wrapped(y_true: Sequence[int], y_prob: Sequence[floa
         result = evaluate_calibration(**kwargs)
     except Exception as exc:
         return f"Tool f1_evaluate_calibration failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "f1_evaluate_calibration": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"f1_evaluate_calibration: ok"
     return content, {
-        "name": name,
+        "f1_evaluate_calibration": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -80,12 +78,7 @@ def f1_evaluate_calibration_wrapped(y_true: Sequence[int], y_prob: Sequence[floa
 
 
 @tool(response_format="content_and_artifact")
-def f1_optimize_threshold_wrapped(y_true: Sequence[int], y_prob: Sequence[float]) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": ThresholdReport,
-    "content": str,
-}]:
+def f1_optimize_threshold_wrapped(y_true: Sequence[int], y_prob: Sequence[float]) -> Tuple[str, dict]:
     """Tool wrapper for ``optimize_threshold``.
 
     Sweep thresholds from 0 to 1 by ``step`` and pick the argmin.
@@ -98,11 +91,14 @@ def f1_optimize_threshold_wrapped(y_true: Sequence[int], y_prob: Sequence[float]
         result = optimize_threshold(**kwargs)
     except Exception as exc:
         return f"Tool f1_optimize_threshold failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "f1_optimize_threshold": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"f1_optimize_threshold: ok"
     return content, {
-        "name": name,
+        "f1_optimize_threshold": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -110,12 +106,7 @@ def f1_optimize_threshold_wrapped(y_true: Sequence[int], y_prob: Sequence[float]
 
 
 @tool(response_format="content_and_artifact")
-def f1_evaluate_segments_wrapped(df: pd.DataFrame, y_true: Sequence[int], y_pred: Sequence[int], segment_columns: Sequence[str]) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": List[Dict[str, Any]],
-    "content": str,
-}]:
+def f1_evaluate_segments_wrapped(df: pd.DataFrame, y_true: Sequence[int], y_pred: Sequence[int], segment_columns: Sequence[str]) -> Tuple[str, dict]:
     """Tool wrapper for ``evaluate_segments``.
 
     Per-segment metrics table.
@@ -128,11 +119,14 @@ def f1_evaluate_segments_wrapped(df: pd.DataFrame, y_true: Sequence[int], y_pred
         result = evaluate_segments(**kwargs)
     except Exception as exc:
         return f"Tool f1_evaluate_segments failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "f1_evaluate_segments": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"f1_evaluate_segments: ok"
     return content, {
-        "name": name,
+        "f1_evaluate_segments": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -188,7 +182,7 @@ def make_f1_evaluation_ext_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR {spec_id}")
+        logger.info(f"    * RUN REACT AGENT FOR F1")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the F1 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}

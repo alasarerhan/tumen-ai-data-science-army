@@ -56,12 +56,7 @@ NODE_TYPE = "feature.register"
 # ---------------------------------------------------------------------------
 
 @tool(response_format="content_and_artifact")
-def d3_register_feature_wrapped(store: FeatureStore) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": FeatureDefinition,
-    "content": str,
-}]:
+def d3_register_feature_wrapped(store: FeatureStore) -> Tuple[str, dict]:
     """Tool wrapper for ``register_feature``.
 
     See underlying tool module.
@@ -74,11 +69,14 @@ def d3_register_feature_wrapped(store: FeatureStore) -> Tuple[str, {
         result = register_feature(**kwargs)
     except Exception as exc:
         return f"Tool d3_register_feature failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "d3_register_feature": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"d3_register_feature: ok"
     return content, {
-        "name": name,
+        "d3_register_feature": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -86,12 +84,7 @@ def d3_register_feature_wrapped(store: FeatureStore) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def d3_search_features_wrapped(store: FeatureStore) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": List[FeatureDefinition],
-    "content": str,
-}]:
+def d3_search_features_wrapped(store: FeatureStore) -> Tuple[str, dict]:
     """Tool wrapper for ``search_features``.
 
     See underlying tool module.
@@ -104,11 +97,14 @@ def d3_search_features_wrapped(store: FeatureStore) -> Tuple[str, {
         result = search_features(**kwargs)
     except Exception as exc:
         return f"Tool d3_search_features failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "d3_search_features": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"d3_search_features: ok"
     return content, {
-        "name": name,
+        "d3_search_features": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -116,12 +112,7 @@ def d3_search_features_wrapped(store: FeatureStore) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def d3_version_sort_key_wrapped(version: str) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Tuple[int, ...],
-    "content": str,
-}]:
+def d3_version_sort_key_wrapped(version: str) -> Tuple[str, dict]:
     """Tool wrapper for ``version_sort_key``.
 
     See underlying tool module.
@@ -134,11 +125,14 @@ def d3_version_sort_key_wrapped(version: str) -> Tuple[str, {
         result = version_sort_key(**kwargs)
     except Exception as exc:
         return f"Tool d3_version_sort_key failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "d3_version_sort_key": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"d3_version_sort_key: ok"
     return content, {
-        "name": name,
+        "d3_version_sort_key": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -146,12 +140,7 @@ def d3_version_sort_key_wrapped(version: str) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def d3_latest_version_wrapped(store: FeatureStore, name: str) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Optional[FeatureDefinition],
-    "content": str,
-}]:
+def d3_latest_version_wrapped(store: FeatureStore, name: str) -> Tuple[str, dict]:
     """Tool wrapper for ``latest_version``.
 
     See underlying tool module.
@@ -164,11 +153,14 @@ def d3_latest_version_wrapped(store: FeatureStore, name: str) -> Tuple[str, {
         result = latest_version(**kwargs)
     except Exception as exc:
         return f"Tool d3_latest_version failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "d3_latest_version": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"d3_latest_version: ok"
     return content, {
-        "name": name,
+        "d3_latest_version": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -176,12 +168,7 @@ def d3_latest_version_wrapped(store: FeatureStore, name: str) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def d3_check_consistency_wrapped() -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": ConsistencyReport,
-    "content": str,
-}]:
+def d3_check_consistency_wrapped() -> Tuple[str, dict]:
     """Tool wrapper for ``check_consistency``.
 
     See underlying tool module.
@@ -194,11 +181,14 @@ def d3_check_consistency_wrapped() -> Tuple[str, {
         result = check_consistency(**kwargs)
     except Exception as exc:
         return f"Tool d3_check_consistency failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "d3_check_consistency": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"d3_check_consistency: ok"
     return content, {
-        "name": name,
+        "d3_check_consistency": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -206,12 +196,7 @@ def d3_check_consistency_wrapped() -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def d3_probe_freshness_wrapped(record: FreshnessRecord) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": FreshnessReport,
-    "content": str,
-}]:
+def d3_probe_freshness_wrapped(record: FreshnessRecord) -> Tuple[str, dict]:
     """Tool wrapper for ``probe_freshness``.
 
     See underlying tool module.
@@ -224,11 +209,14 @@ def d3_probe_freshness_wrapped(record: FreshnessRecord) -> Tuple[str, {
         result = probe_freshness(**kwargs)
     except Exception as exc:
         return f"Tool d3_probe_freshness failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "d3_probe_freshness": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"d3_probe_freshness: ok"
     return content, {
-        "name": name,
+        "d3_probe_freshness": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -236,12 +224,7 @@ def d3_probe_freshness_wrapped(record: FreshnessRecord) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def d3_bulk_probe_freshness_wrapped(records: Sequence[FreshnessRecord]) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": List[FreshnessReport],
-    "content": str,
-}]:
+def d3_bulk_probe_freshness_wrapped(records: Sequence[FreshnessRecord]) -> Tuple[str, dict]:
     """Tool wrapper for ``bulk_probe_freshness``.
 
     See underlying tool module.
@@ -254,11 +237,14 @@ def d3_bulk_probe_freshness_wrapped(records: Sequence[FreshnessRecord]) -> Tuple
         result = bulk_probe_freshness(**kwargs)
     except Exception as exc:
         return f"Tool d3_bulk_probe_freshness failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "d3_bulk_probe_freshness": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"d3_bulk_probe_freshness: ok"
     return content, {
-        "name": name,
+        "d3_bulk_probe_freshness": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -266,12 +252,7 @@ def d3_bulk_probe_freshness_wrapped(records: Sequence[FreshnessRecord]) -> Tuple
 
 
 @tool(response_format="content_and_artifact")
-def d3_attach_lineage_wrapped(store: FeatureStore) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": FeatureDefinition,
-    "content": str,
-}]:
+def d3_attach_lineage_wrapped(store: FeatureStore) -> Tuple[str, dict]:
     """Tool wrapper for ``attach_lineage``.
 
     See underlying tool module.
@@ -284,11 +265,14 @@ def d3_attach_lineage_wrapped(store: FeatureStore) -> Tuple[str, {
         result = attach_lineage(**kwargs)
     except Exception as exc:
         return f"Tool d3_attach_lineage failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "d3_attach_lineage": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"d3_attach_lineage: ok"
     return content, {
-        "name": name,
+        "d3_attach_lineage": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -296,12 +280,7 @@ def d3_attach_lineage_wrapped(store: FeatureStore) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def d3_catalog_payload_wrapped(store: FeatureStore, feature_ids: Sequence[str]) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": Dict[str, Any],
-    "content": str,
-}]:
+def d3_catalog_payload_wrapped(store: FeatureStore, feature_ids: Sequence[str]) -> Tuple[str, dict]:
     """Tool wrapper for ``catalog_payload``.
 
     See underlying tool module.
@@ -314,11 +293,14 @@ def d3_catalog_payload_wrapped(store: FeatureStore, feature_ids: Sequence[str]) 
         result = catalog_payload(**kwargs)
     except Exception as exc:
         return f"Tool d3_catalog_payload failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "d3_catalog_payload": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"d3_catalog_payload: ok"
     return content, {
-        "name": name,
+        "d3_catalog_payload": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -380,7 +362,7 @@ def make_d3_feature_store_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR {spec_id}")
+        logger.info(f"    * RUN REACT AGENT FOR D3")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the D3 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}

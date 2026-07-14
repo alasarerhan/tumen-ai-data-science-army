@@ -50,12 +50,7 @@ NODE_TYPE = "kpi.root_cause"
 # ---------------------------------------------------------------------------
 
 @tool(response_format="content_and_artifact")
-def c4_waterfall_wrapped(df: pd.DataFrame) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": WaterfallResult,
-    "content": str,
-}]:
+def c4_waterfall_wrapped(df: pd.DataFrame) -> Tuple[str, dict]:
     """Tool wrapper for ``waterfall``.
 
     Decompose a metric change by a dimension.
@@ -68,11 +63,14 @@ def c4_waterfall_wrapped(df: pd.DataFrame) -> Tuple[str, {
         result = waterfall(**kwargs)
     except Exception as exc:
         return f"Tool c4_waterfall failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "c4_waterfall": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"c4_waterfall: ok"
     return content, {
-        "name": name,
+        "c4_waterfall": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -80,12 +78,7 @@ def c4_waterfall_wrapped(df: pd.DataFrame) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def c4_drill_down_wrapped(df: pd.DataFrame) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": DrillDownResult,
-    "content": str,
-}]:
+def c4_drill_down_wrapped(df: pd.DataFrame) -> Tuple[str, dict]:
     """Tool wrapper for ``drill_down``.
 
     Drill from ``parent_value`` into the next ``child_dimension``.
@@ -98,11 +91,14 @@ def c4_drill_down_wrapped(df: pd.DataFrame) -> Tuple[str, {
         result = drill_down(**kwargs)
     except Exception as exc:
         return f"Tool c4_drill_down failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "c4_drill_down": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"c4_drill_down: ok"
     return content, {
-        "name": name,
+        "c4_drill_down": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -110,12 +106,7 @@ def c4_drill_down_wrapped(df: pd.DataFrame) -> Tuple[str, {
 
 
 @tool(response_format="content_and_artifact")
-def c4_render_narrative_wrapped(result: WaterfallResult) -> Tuple[str, {
-    "name": str,
-    "args": dict,
-    "result": str,
-    "content": str,
-}]:
+def c4_render_narrative_wrapped(result: WaterfallResult) -> Tuple[str, dict]:
     """Tool wrapper for ``render_narrative``.
 
     Build a deterministic narrative template.
@@ -128,11 +119,14 @@ def c4_render_narrative_wrapped(result: WaterfallResult) -> Tuple[str, {
         result = render_narrative(**kwargs)
     except Exception as exc:
         return f"Tool c4_render_narrative failed: {exc}", {
-            "name": name, "args": kwargs, "result": None, "content": f"error: {exc}"
+            "c4_render_narrative": kwargs,
+            "args": kwargs,
+            "result": None,
+            "content": f"error: {exc}",
         }
     content = f"c4_render_narrative: ok"
     return content, {
-        "name": name,
+        "c4_render_narrative": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -188,7 +182,7 @@ def make_c4_rootcause_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR {spec_id}")
+        logger.info(f"    * RUN REACT AGENT FOR C4")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the C4 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}

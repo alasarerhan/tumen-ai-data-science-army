@@ -109,7 +109,7 @@ Durum: 📋 katalogda · ✍️ detay spec yazıldı · 🚧 implementasyonda ·
 | J13 | Data Diff Paneli | P2 | 3 | ✍️ | specs/J13-data-diff.md |
 | K1 | Workflow Designer 2.0 | P0 | 1 | ✅ | specs/K1-designer-2.md |
 | K2 | ModelOps Kontrol Merkezi | P0 | 1 | ✅ | specs/K2-modelops-center.md |
-| K3 | UI Standartları & Design System | P0 | 1 | ✍️ | specs/K3-ui-standards.md |
+| K3 | UI Standartları & Design System | P0 | 1 | ✅ | specs/K3-ui-standards.md |
 
 ---
 

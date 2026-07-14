@@ -124,8 +124,10 @@ class TestSummariseMetrics:
         assert math.isnan(s["mean"])
 
     def test_single_value_std_zero(self, store):
-        i3.record_run(store, experiment_id="e1", model_id="m",
-                       metrics={"auc": 0.5})
+        i3.record_run(
+            store, experiment_id="e1", model_id="m",
+            metrics={"auc": 0.5},
+        )
         s = i3.summarise_metrics(store, "e1", "auc")
         assert s["std"] == 0.0
 
@@ -140,8 +142,10 @@ class TestParallelCoordinates:
         assert len(payload["points"]) == 3
 
     def test_payload_missing_metric_nan(self, store):
-        i3.record_run(store, experiment_id="e1", model_id="m",
-                       metrics={"auc": 0.7})
+        i3.record_run(
+            store, experiment_id="e1", model_id="m",
+            metrics={"auc": 0.7},
+        )
         payload = i3.parallel_coordinates_payload(
             store, "e1", ["auc", "f1"],
         )

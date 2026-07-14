@@ -83,11 +83,9 @@ Tablolar: `catalog_tables` (`id, source_id, schema_name, name, row_estimate, las
 **Durumlar:** Loading — ağaç skeleton'u; Empty — "Henüz kaynak taranmadı" + "İlk taramayı başlat" CTA; Error — tarama hatası banner'ı + "tekrar dene"; bayat snapshot uyarısı.
 
 ## 4. Bağımlılıklar
-
-- **Spec'ler:** B1 (profil kartı bileşeni), B5 (PII rozeti), I1 (planner tüketicisi), J3 (schema_changes olayı), J12 (usage → lineage temeli), H1–H7 (taranacak konektörler).
+- **Spec'ler:** B1 (profil kartı bileşeni), B5 (PII rozeti), (planner tüketicisi), (schema_changes olayı), J12 (usage → lineage temeli), H1–H7 (taranacak konektörler).
 - **Mevcut kod:** data source kayıt servisi, `apps/platform-api-app` route yapısı, `runtime_engine.py` (tarama job'larında retry).
 - **Kütüphaneler:** sentence-transformers veya mevcut LLM embedding endpoint'i; SQLAlchemy/Alembic.
-
 ## 5. Kapsam Dışı
 
 - Tam lineage grafı (J12), veri kalite kuralları (B2), erişim yetkilendirme/governance (J7), dbt/harici katalog (DataHub vb.) senkronu, gerçek zamanlı CDC tabanlı şema izleme.

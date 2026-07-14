@@ -59,11 +59,9 @@ Her kayıtlı model için Google Model Cards standardından uyarlanmış, otomat
 - Durumlar: loading = bölüm skeleton'ları; empty = "Card üretilmedi" + "Şimdi üret" CTA; error = bölüm bazlı hata (bir bölüm hata verirse diğerleri render edilir).
 
 ## 4. Bağımlılıklar
-
-- Spec: F1 (kalibrasyon/segment metrikleri), F2 (karşılaştırma geçmişi bölümü), F3 (fairness bölümü), J12 (lineage), G5 (stage bilgisi), K2/K3.
+- Spec: F1 (kalibrasyon/segment metrikleri), F2 (karşılaştırma geçmişi bölümü), F3 (fairness bölümü), J12 (lineage), G5 (stage bilgisi), K2/.
 - Kütüphaneler: `mlflow` (run/param/metric okuma), `weasyprint` (PDF), `jinja2` (HTML şablonu).
 - Kod: `services/modelops_service.py::_persisted_registry_entry` (card'ın overview kaynağı), `ml_agents/model_evaluation_agent.py` çıktı artifact'ları.
-
 ## 5. Kapsam Dışı
 
 - Dış paylaşım/public card hosting.

@@ -53,14 +53,12 @@ Akış:
 **Entegrasyon:** I2'nin `Catalog.tsx`'ine `ProfileBadge` eklenir. `Sparkline` (K3) kullanılır.
 
 ## 4. Bağımlılıklar
-
 - B5 (PII Detection): `pii_signal` alanı B5 sonuçlarından gelir.
-- B7 (Data Ingestion): profil yenileme periyodu ingestion'a bağlanır (J3 trigger'ı).
+- B7 (Data Ingestion): profil yenileme periyodu ingestion'a bağlanır (trigger'ı).
 - I2 (Data Catalog): kolon istatistikleri katalog alanlarına map'lenir.
 - G1 (Auto Drift): profili baseline olarak kullanır.
 - J13 (Data Diff): iki profilin farkı.
 - Backend: `pandas`, `great_expectations`, `pydeepl`, `presidio`.
-
 ## 5. Kapsam Dışı
 
 - Streaming profili (debezium/CDV) — sadece batch profile'lar.

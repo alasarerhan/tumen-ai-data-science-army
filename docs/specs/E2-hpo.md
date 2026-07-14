@@ -82,15 +82,13 @@ Ayrı node yerine `model.train` config'ine `hpo` bloğu eklenir (E1 sözleşmesi
 - **Durumlar:** loading = canlı trial sayacı + progress bar (n_trials'a göre); empty = "Bu workflow'da HPO study yok" CTA; error = fail nedeni + "uzayı düzenle" linki.
 
 ## 4. Bağımlılıklar
-
-- **Spec'ler:** **E1 (zorunlu ön koşul — EngineAdapter ve çıktı şeması), E3 (`engine=dl` uzayları), I3 (görselleştirme yüzeyi), K3.**
+- **Spec'ler:** **E1 (zorunlu ön koşul — EngineAdapter ve çıktı şeması), E3 (`engine=dl` uzayları), I3 (görselleştirme yüzeyi), .**
 - **Kütüphaneler:** `optuna>=3.6`, `mlflow` (mevcut), `plotly` benzeri grafikler frontend'de (recharts/visx), E1 engine paketleri.
 - **Kod entegrasyon noktaları:**
   - `ai_data_science_team/ml_agents/hpo_agent.py` (yeni), `multi_engine_ml_agent.py` (final fit devri)
   - `apps/platform-api-app/platform_api/services/workflow_node_executor_service.py::_execute_model_train` (`config.hpo.enabled` dallanması)
   - `apps/platform-api-app/platform_api/workers/workflow_worker.py` (uzun koşan study için heartbeat/progress raporu)
   - `frontend/src/app/screens/` Experiments ekranı + `WorkflowDesigner.tsx` config paneli
-
 ## 5. Kapsam Dışı
 
 - Dağıtık/paralel trial yürütme (tek worker, sıralı), multi-objective optimizasyon, NAS, H2O engine'i için HPO (H2O kendi AutoML'ini kullanır), hiperband dışı gelişmiş pruner konfigürasyonları.

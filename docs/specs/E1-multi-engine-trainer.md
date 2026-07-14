@@ -86,15 +86,13 @@ Node çıktısı (tüm engine'ler için ortak — G4 `model.predict` bu şemaya 
 - **Entegrasyon:** I3 Experiments leaderboard'u `engine` rozetini bu çıktıdan okur; F2 karşılaştırma ekranı `metrics` şemasını kullanır.
 
 ## 4. Bağımlılıklar
-
-- **Spec'ler:** G4 (model.predict bu `model_path`+`input_schema`'yı tüketir), E2 (HPO `engine_params` uzayını optimize eder), E3 (`engine=dl` dispatch'i), F2, I3, K1/K3.
+- **Spec'ler:** G4 (model.predict bu `model_path`+`input_schema`'yı tüketir), E2 (HPO `engine_params` uzayını optimize eder), E3 (`engine=dl` dispatch'i), F2, I3, /.
 - **Kütüphaneler:** `scikit-learn`, `xgboost`, `lightgbm`, `joblib`, `mlflow` (mevcut), `shap` (feature importance fallback — opsiyonel).
 - **Kod entegrasyon noktaları:**
   - `apps/platform-api-app/platform_api/services/workflow_node_executor_service.py::_execute_model_train`
   - `apps/platform-api-app/platform_api/services/workflow_node_catalog_service.py` (`model.train` config şeması)
   - `ai_data_science_team/ml_agents/multi_engine_ml_agent.py` (yeni)
   - `frontend/src/app/screens/WorkflowDesigner.tsx` (node config paneli)
-
 ## 5. Kapsam Dışı
 
 - Optuna araması (E2), deep learning implementasyonu (E3 — burada yalnızca dispatch), model serving (G3), ensemble/stacking (J10), AutoML tarzı otomatik engine seçimi, GPU eğitim.

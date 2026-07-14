@@ -79,15 +79,13 @@ PyTorch tabanlı MLP/TabNet (tabular) ve LSTM/TFT (time series) modellerini E1 `
 - **Entegrasyon:** metrik kartı ve leaderboard E1 bileşenleriyle aynı; I3'te engine rozeti `dl`; E2 HPO açıksa search_space önerisi dl parametrelerini (lr, dropout, hidden size) kapsar.
 
 ## 4. Bağımlılıklar
-
-- **Spec'ler:** **E1 (zorunlu — dispatch + ortak şema)**, E2 (dl arama uzayı), G4 (bundle'dan predict), I3, K1/K3.
+- **Spec'ler:** **E1 (zorunlu — dispatch + ortak şema)**, E2 (dl arama uzayı), G4 (bundle'dan predict), I3, /.
 - **Kütüphaneler:** `torch>=2.2`, `pytorch-tabnet` (opsiyonel), `pytorch-forecasting` + `lightning` (opsiyonel, TFT), `mlflow`, `joblib`.
 - **Kod entegrasyon noktaları:**
   - `ai_data_science_team/ml_agents/deep_learning_agent.py` (yeni)
   - `apps/platform-api-app/platform_api/services/workflow_node_executor_service.py` (E1 dispatch içinden çağrı + progress callback)
   - `apps/platform-api-app/platform_api/workers/workflow_worker.py` (progress persist)
   - `frontend/src/app/screens/WorkflowDesigner.tsx` + run detay ekranı (canlı eğri)
-
 ## 5. Kapsam Dışı
 
 - NLP/CV mimarileri (E4/E5), dağıtık/multi-GPU eğitim, ONNX/TorchScript export (G3'e), transfer learning, otomatik mimari seçimi (NAS), TabNet/TFT'nin attention görselleştirmesi.

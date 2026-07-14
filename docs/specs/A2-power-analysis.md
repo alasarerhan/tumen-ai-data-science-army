@@ -59,12 +59,10 @@ Akış:
 **Entegrasyon:** `frontend/src/app/screens/Experiments.tsx` içinde `PowerAnalysisPanel` bileşeni; MetricCard/ChartContainer (K3) yeniden kullanılır.
 
 ## 4. Bağımlılıklar
-
-- **Spec:** A1 (aynı ekran + router), K3 (bileşenler), I2 (dataset kolon istatistikleri — opsiyonel hızlandırıcı).
+- **Spec:** A1 (aynı ekran + router), (bileşenler), I2 (dataset kolon istatistikleri — opsiyonel hızlandırıcı).
 - **Python:** `statsmodels.stats.power` (NormalIndPower, TTestIndPower), `statsmodels.stats.proportion.proportion_effectsize`, `scipy.stats`, `pandas`.
 - **JS:** chart kütüphanesi (canlı eğri), debounce'lu slider.
 - **Kod noktaları:** `platform_api/routes/experiments.py`, `ai_data_science_team/tools/` (mevcut tool pattern'i), `frontend/src/app/screens/Experiments.tsx`.
-
 ## 5. Kapsam Dışı
 
 - Sequential/adaptive tasarım (grup sequential sınırlar).

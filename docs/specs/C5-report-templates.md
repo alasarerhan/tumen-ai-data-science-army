@@ -55,13 +55,11 @@
 **Entegrasyon:** K3 tasarım sistemi bileşenleri kullanılır (DataTable / MetricCard / StatusBadge / ChartContainer / DiffView).
 
 ## 4. Bağımlılıklar
-
 - A1 (experiment reports)
 - C3 (KPI rolls)
-- K3 (exports)
+- (exports)
 - `jinja2`
 - `weasyprint`
-
 ## 5. Kapsam Dışı
 
 - MVP dışı: çoklu kullanıcı işbirliği (CRDT) yetenekleri

@@ -55,13 +55,11 @@ ModelOps kapalı döngü kokpit: registry, detay sekmeleri, retrain policy, cham
 **Entegrasyon:** K3 tasarım sistemi bileşenleri kullanılır (DataTable / MetricCard / StatusBadge / ChartContainer / DiffView).
 
 ## 4. Bağımlılıklar
-
-- K1 (designer for new workflows)
+- (designer for new workflows)
 - G1/G2 (drift/retrain)
 - F2 (champion-challenger)
 - `react-flow`
 - `echarts`
-
 ## 5. Kapsam Dışı
 
 - MVP dışı: çoklu kullanıcı işbirliği (CRDT) yetenekleri

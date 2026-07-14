@@ -63,11 +63,9 @@ Checklist tanımı örneği:
 **Entegrasyon:** K2 registry'de risk rozeti kolonu; G5 promotion akışı governance kapısından geçer; J12 lineage düğümüne "onay geçmişi" bağlantısı.
 
 ## 4. Bağımlılıklar
-
 - Mevcut: `hitl/` modülü, `services/hitl_service.py`, `services/audit_service.py`, `HITLApproval.tsx`, workflow versiyonlama/ETag deseni (`routes/workflows.py`).
-- Spec'ler: G5 (promotion), F4/J6/G1/F2 (checklist kanıt kaynakları), K2, K3.
+- Spec'ler: G5 (promotion), F4/J6/G1/F2 (checklist kanıt kaynakları), K2, .
 - PDF üretimi: mevcut rapor export altyapısı (C5 ile ortak).
-
 ## 5. Kapsam Dışı
 
 - Harici GRC sistem entegrasyonu (ServiceNow vb.), yasal uyum şablonları (EU AI Act formu), veri erişim yetkilendirmesi/RBAC'ın kendisi (platform genel auth'unun işi), otomatik risk sınıfı tahmini.

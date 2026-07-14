@@ -55,12 +55,10 @@ KPI değişim sinyali gelince sorulmadan çok adımlı araştırma başlatır.
 **Entegrasyon:** K3 tasarım sistemi bileşenleri kullanılır (DataTable / MetricCard / StatusBadge / ChartContainer / DiffView).
 
 ## 4. Bağımlılıklar
-
 - C4 (root cause)
 - C3 (KPI triggers)
 - `langgraph (autonomous)`
-- `E10 (what-if for hypotheses)`
-
+- `(what-if for hypotheses)`
 ## 5. Kapsam Dışı
 
 - MVP dışı: çoklu kullanıcı işbirliği (CRDT) yetenekleri

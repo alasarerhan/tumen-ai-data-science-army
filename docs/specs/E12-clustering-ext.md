@@ -55,12 +55,10 @@ K-means/DBSCAN/Hierarchical; LLM ile küme profilleme ve iş anlamı isimlendirm
 **Entegrasyon:** K3 tasarım sistemi bileşenleri kullanılır (DataTable / MetricCard / StatusBadge / ChartContainer / DiffView).
 
 ## 4. Bağımlılıklar
-
 - F1 (evaluation)
 - I2 (catalog)
-- J8 (visual recipes)
+- (visual recipes)
 - `sklearn`
-
 ## 5. Kapsam Dışı
 
 - MVP dışı: çoklu kullanıcı işbirliği (CRDT) yetenekleri

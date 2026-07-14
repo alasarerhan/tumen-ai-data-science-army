@@ -59,12 +59,10 @@ Akış:
 **Entegrasyon:** WorkflowDesigner paletine `experiment.analyze` node'u; RunDetail'de experiment_report artifact'ı için özel görselleştirici.
 
 ## 4. Bağımlılıklar
-
-- **Spec:** A2 (sihirbazın ilk adımı olarak power analysis), A3 (Bayesian sekmesi), C5 (rapor export), K3 (bileşen standartları).
+- **Spec:** A2 (sihirbazın ilk adımı olarak power analysis), A3 (Bayesian sekmesi), C5 (rapor export), (bileşen standartları).
 - **Python:** `scipy.stats` (ttest_ind, mannwhitneyu, chi2_contingency, shapiro, levene), `statsmodels.stats.multitest` (multipletests), `statsmodels.stats.proportion` (proportion_confint), `numpy/pandas`.
-- **JS:** mevcut chart kütüphanesi (ChartContainer, K3), ReactFlow (Designer entegrasyonu).
+- **JS:** mevcut chart kütüphanesi (ChartContainer, ), ReactFlow (Designer entegrasyonu).
 - **Kod noktaları:** `ai_data_science_team/agents/ab_testing_agent.py`, `platform_api/services/workflow_node_catalog_service.py`, `platform_api/services/workflow_node_executor_service.py`, `platform_api/routes/workflows.py` (route pattern referansı), `frontend/src/app/screens/RunDetail.tsx`.
-
 ## 5. Kapsam Dışı
 
 - Deney atama/feature-flag altyapısı (trafik bölme platform dışı).

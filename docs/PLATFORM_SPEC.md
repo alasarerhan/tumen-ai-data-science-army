@@ -41,15 +41,11 @@ Durum: 📋 katalogda · ✍️ detay spec yazıldı · 🚧 implementasyonda ·
 | A3 | Bayesian Analysis | P2 | 3 | ✅ | specs/A3-bayesian-analysis.md |
 | A4 | Hypothesis Testing Danışmanı | P1 | 2 | ✅ | specs/A4-hypothesis-testing.md |
 | A5 | Causal Inference | P2 | 3 | ✅ | specs/A5-causal-inference.md |
-| A6 | Uplift Modeling | P3 | 4 | ✅ | specs/A6-uplift-modeling.md |
 | B1 | Data Profiling genişletmesi | P1 | 2 | ✅ | specs/B1-data-profiling.md |
 | B2 | Data Validation / Kalite Kapısı | P0 | 1 | ✅ | specs/B2-data-validation.md |
 | B3 | Schema Inference & Mapping | P1 | 2 | ✅ | specs/B3-schema-inference.md |
-| B4 | Deduplication & Entity Resolution | P2 | 3 | ✍️ | specs/B4-entity-resolution.md |
 | B5 | PII Detection & Anonymization | P1 | 2 | ✅ | specs/B5-pii-detection.md |
-| B6 | Synthetic Data | P2 | 3 | ✍️ | specs/B6-synthetic-data.md |
 | B7 | Data Ingestion / ELT | P1 | 2 | ✅ | specs/B7-data-ingestion.md |
-| B8 | SQL Optimizer | P2 | 3 | ✍️ | specs/B8-sql-optimizer.md |
 | C1 | Insight Mining (EDA eki) | P2 | 3 | ✍️ | specs/C1-insight-mining.md |
 | C2 | Dashboard Kompozisyonu | P2 | 3 | ✍️ | specs/C2-dashboard-composition.md |
 | C3 | KPI / Business Metrics | P1 | 2 | ✅ | specs/C3-kpi-metrics.md |
@@ -61,13 +57,6 @@ Durum: 📋 katalogda · ✍️ detay spec yazıldı · 🚧 implementasyonda ·
 | E1 | Sklearn/XGBoost/LightGBM Trainer | P0 | 1 | ✅ | specs/E1-multi-engine-trainer.md |
 | E2 | Hyperparameter Optimization | P0 | 1 | ✅ | specs/E2-hpo.md |
 | E3 | Deep Learning (Tabular/TS) | P1 | 2 | ✍️ | specs/E3-deep-learning.md |
-| E4 | NLP / Text Analytics | P1 | 2 | ✍️ | specs/E4-nlp.md |
-| E5 | Computer Vision | P3 | 4 | ✍️ | specs/E5-computer-vision.md |
-| E6 | Recommender System | P2 | 3 | ✍️ | specs/E6-recommender.md |
-| E7 | Survival Analysis | P3 | 4 | ✍️ | specs/E7-survival-analysis.md |
-| E8 | Graph ML | P3 | 4 | ✍️ | specs/E8-graph-ml.md |
-| E9 | Optimization / OR | P3 | 4 | ✍️ | specs/E9-optimization-or.md |
-| E10 | Simulation / What-If | P2 | 3 | ✍️ | specs/E10-what-if.md |
 | E11 | Time Series genişletmesi | P2 | 3 | ✍️ | specs/E11-time-series-ext.md |
 | E12 | Clustering genişletmesi | P2 | 3 | ✍️ | specs/E12-clustering-ext.md |
 | F1 | Evaluation genişletmesi | P1 | 2 | ✅ | specs/F1-evaluation-ext.md |
@@ -81,7 +70,6 @@ Durum: 📋 katalogda · ✍️ detay spec yazıldı · 🚧 implementasyonda ·
 | G3 | Gerçek Model Serving/Deploy | P1 | 2 | ✅ | specs/G3-model-serving.md |
 | G4 | Batch Scoring + model.predict | P0 | 1 | ✅ | specs/G4-batch-scoring.md |
 | G5 | Registry Promotion | P1 | 2 | ✍️ | specs/G5-registry-promotion.md |
-| G6 | Cost Optimization | P2 | 3 | ✍️ | specs/G6-cost-optimization.md |
 | G7 | Incident / Alerting | P2 | 3 | ✍️ | specs/G7-alerting.md |
 | H1 | Snowflake Connector | P1 | 2 | ✍️ | specs/H1-snowflake.md |
 | H2 | BigQuery Connector | P1 | 2 | ✍️ | specs/H2-bigquery.md |
@@ -90,26 +78,16 @@ Durum: 📋 katalogda · ✍️ detay spec yazıldı · 🚧 implementasyonda ·
 | H5 | Google Sheets Connector | P2 | 3 | ✍️ | specs/H5-google-sheets.md |
 | H6 | S3/GCS Dataset Connector | P1 | 2 | ✍️ | specs/H6-object-storage.md |
 | H7 | REST API Data Source | P2 | 3 | ✍️ | specs/H7-rest-api-source.md |
-| I1 | LLM Pipeline Planner + Copilot UI | P0 | 1 | ✅ | specs/I1-llm-pipeline-planner.md |
 | I2 | Data Catalog & Semantik Katman | P1 | 2 | ✅ | specs/I2-data-catalog.md |
 | I3 | Experiment Tracking / Leaderboard | P1 | 2 | ✍️ | specs/I3-experiment-tracking.md |
-| I4 | Notebook Export | P2 | 3 | ✍️ | specs/I4-notebook-export.md |
 | J1 | Otonom İnvestigasyon | P1 | 2 | ✍️ | specs/J1-autonomous-investigation.md |
-| J2 | Self-Healing Pipeline | P1 | 2 | ✍️ | specs/J2-self-healing.md |
-| J3 | Olay Tabanlı Tetikleyiciler | P1 | 2 | ✍️ | specs/J3-event-triggers.md |
 | J4 | Model Evaluation Store | P1 | 2 | ✍️ | specs/J4-evaluation-store.md |
-| J5 | Data Labeling | P2 | 3 | ✍️ | specs/J5-data-labeling.md |
 | J6 | Responsible AI Dashboard | P2 | 3 | ✍️ | specs/J6-responsible-ai.md |
 | J7 | Governance Katmanı | P2 | 3 | ✍️ | specs/J7-governance.md |
-| J8 | Visual Recipe Kitaplığı | P2 | 3 | ✍️ | specs/J8-visual-recipes.md |
-| J9 | Proje Şablonları | P1 | 2 | ✍️ | specs/J9-project-templates.md |
-| J10 | Blueprint/Leaderboard Arama | P2 | 3 | ✍️ | specs/J10-blueprint-search.md |
 | J11 | Shadow/Canary Deployment | P2 | 3 | ✍️ | specs/J11-shadow-canary.md |
 | J12 | Uçtan Uca Lineage Grafı | P2 | 3 | ✍️ | specs/J12-lineage-graph.md |
 | J13 | Data Diff Paneli | P2 | 3 | ✍️ | specs/J13-data-diff.md |
-| K1 | Workflow Designer 2.0 | P0 | 1 | ✅ | specs/K1-designer-2.md |
 | K2 | ModelOps Kontrol Merkezi | P0 | 1 | ✅ | specs/K2-modelops-center.md |
-| K3 | UI Standartları & Design System | P0 | 1 | ✅ | specs/K3-ui-standards.md |
 
 ---
 

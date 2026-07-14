@@ -67,11 +67,9 @@
 - Durumlar: loading = iki kolonlu skeleton; empty (karşılaştırma yok) = "Challenger seç ve karşılaştır" sihirbaz CTA'sı; error = başarısız run logu linkiyle banner. Karar verilmiş karşılaştırmalar salt-okunur (bar yerine karar timeline'ı).
 
 ## 4. Bağımlılıklar
-
-- Spec: F1 (metrik hesaplayıcılar paylaşılır), G2 (bu node'u orkestrasyonda çağırır), G5 (stage promotion), K2/K3, HITL sistemi (`platform_api/hitl/`, `services/hitl_service.py`).
+- Spec: F1 (metrik hesaplayıcılar paylaşılır), G2 (bu node'u orkestrasyonda çağırır), G5 (stage promotion), K2/HITL sistemi (`platform_api/hitl/`, `services/hitl_service.py`).
 - Kütüphaneler: `statsmodels`, `scipy`, `scikit-learn`, `mlflow` (karşılaştırma run'ı loglanır).
 - Kod: `services/modelops_service.py` (register/record_deployment), `workers/workflow_worker.py` (async çalıştırma).
-
 ## 5. Kapsam Dışı
 
 - Canlı trafik karşılaştırması (shadow/canary → J11).

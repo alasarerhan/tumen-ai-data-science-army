@@ -55,14 +55,12 @@ Planlanmış veya artımlılık anahtarı olan veri kaynaklarından periyodik ol
 **Entegrasyon:** K3 tasarım sistemi bileşenleri kullanılır (DataTable / MetricCard / StatusBadge / ChartContainer / DiffView).
 
 ## 4. Bağımlılıklar
-
 - B1 (profiling on ingest)
-- J3 (event triggers)
+- (event triggers)
 - I2 (catalog registration)
 - `sqlalchemy`
 - `pyarrow`
 - `pandas`
-
 ## 5. Kapsam Dışı
 
 - MVP dışı: çoklu kullanıcı işbirliği (CRDT) yetenekleri

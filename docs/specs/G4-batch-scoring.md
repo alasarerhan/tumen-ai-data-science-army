@@ -77,9 +77,8 @@ Sürükle → model seç → versiyon seç → çıktı hedefi → inline valida
 
 ## 4. Bağımlılıklar
 - Mevcut kod: `agents/model_serving_agent.py`, `modelops_service.py`, runtime_engine node registry, artifact store, `services/quota_service.py`.
-- Spec'ler: G5 (stage çözümü — opsiyonel, `version` ile bağımsız çalışır), K1/K3 (UI standartları), B3 (şema eşleme önerisi — sadece link).
+- Spec'ler: G5 (stage çözümü — opsiyonel, `version` ile bağımsız çalışır), /(UI standartları), B3 (şema eşleme önerisi — sadece link).
 - Kütüphaneler: pandas, pyarrow (parquet), mlflow (model URI çözümü varsa).
-
 ## 5. Kapsam Dışı
 - Online/realtime serving (G3), shadow/canary (J11), tahmin sonrası drift hesabı (G1 tüketir ama burada hesaplanmaz), streaming skorlama, GPU batch inference.
 

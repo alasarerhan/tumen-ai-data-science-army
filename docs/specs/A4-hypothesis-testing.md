@@ -58,11 +58,9 @@ Akış:
 **Entegrasyon:** AIWorkspace mesaj renderer'ına yeni artifact tipi; RunDetail'de `stat_test_report` görselleştirici; Designer paletinde node.
 
 ## 4. Bağımlılıklar
-
-- **Spec:** I1 (supervisor routing genişlemesi ile uyum), K3, A1 (etki büyüklüğü/CI bileşenleri paylaşılır).
+- **Spec:** (supervisor routing genişlemesi ile uyum), A1 (etki büyüklüğü/CI bileşenleri paylaşılır).
 - **Python:** `scipy.stats` (shapiro, levene, ttest_ind, mannwhitneyu, f_oneway, kruskal, chi2_contingency, fisher_exact), `statsmodels.stats.multicomp` (pairwise_tukeyhsd), `scikit-posthocs` (Dunn), `pingouin` (opsiyonel, etki büyüklükleri).
 - **Kod noktaları:** `ai_data_science_team/multiagents/supervisor_ds_team.py`, `ai_data_science_team/multiagents/chat_workspace.py`, `platform_api/routes/chat.py`, `frontend/src/app/screens/AIWorkspace.tsx`.
-
 ## 5. Kapsam Dışı
 
 - Deney analizi (A1'in işi; agent A/B sorusu algılarsa A1'e yönlendirme mesajı verir).

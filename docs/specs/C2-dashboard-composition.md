@@ -55,12 +55,10 @@ Birden çok grafik artifact'ını tek dashboard'a bağlar; sürükle-bırak düz
 **Entegrasyon:** K3 tasarım sistemi bileşenleri kullanılır (DataTable / MetricCard / StatusBadge / ChartContainer / DiffView).
 
 ## 4. Bağımlılıklar
-
 - C3 (KPI cards)
-- E10 (interactive)
-- K3 (design system)
+- (interactive)
+- (design system)
 - `react-grid-layout`
-
 ## 5. Kapsam Dışı
 
 - MVP dışı: çoklu kullanıcı işbirliği (CRDT) yetenekleri

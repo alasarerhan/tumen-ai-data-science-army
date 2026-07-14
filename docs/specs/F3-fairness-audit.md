@@ -59,11 +59,9 @@ Model tahminlerinin korunan gruplar (cinsiyet, yaş bandı, bölge vb.) arasınd
 - Durumlar: loading = stepper; empty = "Henüz fairness audit yok" + kolon seçim CTA; error = eyleme dönük mesaj ("hassas kolon eksik: gender").
 
 ## 4. Bağımlılıklar
-
-- Spec: F1 (skorlanmış tahmin altyapısı), F4 (model card fairness bölümünü bu artifact'tan okur), J6/J7, B5 (PII/hassas kolon adayları), K3.
+- Spec: F1 (skorlanmış tahmin altyapısı), F4 (model card fairness bölümünü bu artifact'tan okur), J6/J7, B5 (PII/hassas kolon adayları), .
 - Kütüphaneler: `fairlearn>=0.10`, `scikit-learn`, `pandas`.
 - Kod: `ml_agents/model_evaluation_agent.py` (ortak skorlayıcı yardımcıları), `services/modelops_service.py`.
-
 ## 5. Kapsam Dışı
 
 - In-processing mitigation (adversarial debiasing, ExponentiatedGradient ile yeniden eğitim) — yalnız post-processing simülasyonu.

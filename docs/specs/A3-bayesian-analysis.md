@@ -55,12 +55,10 @@ Akış:
 **Entegrasyon:** A1 sonuç sayfası sekme yapısı; ChartContainer/MetricCard (K3).
 
 ## 4. Bağımlılıklar
-
-- **Spec:** A1 (zorunlu ön koşul — aynı deney kaydı ve sonuç sayfası), K3.
+- **Spec:** A1 (zorunlu ön koşul — aynı deney kaydı ve sonuç sayfası), .
 - **Python:** `numpy`, `scipy.stats` (beta, norm), `pymc>=5` + `arviz` (opsiyonel extra: `pip install .[bayesian]`), `pandas`.
 - **JS:** yoğunluk eğrisi çizimi (mevcut chart kütüphanesi, area chart).
 - **Kod noktaları:** `platform_api/routes/experiments.py`, `platform_api/workers/workflow_worker.py` (async job), `ai_data_science_team/tools/`, `frontend/src/app/screens/Experiments.tsx`.
-
 ## 5. Kapsam Dışı
 
 - Bayesian örneklem planlaması / sequential durdurma kuralları.

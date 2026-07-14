@@ -60,11 +60,9 @@ Mevcut `ml_agents/model_evaluation_agent.py` temel metrikleri üretiyor; bu spec
 - Durumlar: loading = skeleton grafik; empty = "Henüz genişletilmiş değerlendirme yok" + "Şimdi çalıştır" CTA; error = hata kodu Türkçe mesaja çevrilmiş banner + "tekrar dene".
 
 ## 4. Bağımlılıklar
-
-- Spec: F2 (aynı metrik hesaplayıcıları paylaşır), J4 (sonuçlar evaluation store'a akar), K2/K3 (UI yüzeyi).
+- Spec: F2 (aynı metrik hesaplayıcıları paylaşır), J4 (sonuçlar evaluation store'a akar), K2/(UI yüzeyi).
 - Kütüphaneler: `scikit-learn` (calibration_curve, CalibratedClassifierCV, metrics), `numpy`, mevcut `mlflow` loglama.
 - Kod entegrasyonu: `ml_agents/model_evaluation_agent.py`, `services/workflow_node_executor_service.py`, `services/modelops_service.py::record_monitor_snapshot`.
-
 ## 5. Kapsam Dışı
 
 - Regresyon kalibrasyonu (conformal prediction) — F5/ileri faz.

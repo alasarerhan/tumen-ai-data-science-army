@@ -58,11 +58,9 @@
 **Entegrasyon:** K2 model detay sekmesi; F4 model card'a fairness özeti bölümü; J7 checklist'i `fairness_status`'u kanıt olarak okur.
 
 ## 4. Bağımlılıklar
-
-- F3 (fairness metrik motoru — bu spec onu ekrana taşır), F4, J7, K2, K3 (ChartContainer/DataTable/StatusBadge).
+- F3 (fairness metrik motoru — bu spec onu ekrana taşır), F4, J7, K2, (ChartContainer/DataTable/StatusBadge).
 - Kütüphaneler: `shap`, `fairlearn` (adaylar); ECharts.
 - Kod noktaları: `services/artifact_service.py`, model registry servisleri.
-
 ## 5. Kapsam Dışı
 
 - LLM/GenAI model denetimi, counterfactual üretimi, otomatik bias azaltma uygulaması (yalnız öneri), regresyon modelleri için fairness (ilk sürüm sınıflandırma), gerçek zamanlı üretim trafiği analizi (G1'in alanı).

@@ -68,7 +68,7 @@ def e2_suggest_default_search_space_wrapped(engine: str, task_type: str) -> Tupl
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"e2_suggest_default_search_space: ok"
+    content = "e2_suggest_default_search_space: ok"
     return content, {
         "e2_suggest_default_search_space": kwargs,
         "args": kwargs,
@@ -96,7 +96,7 @@ def e2_random_sample_params_wrapped(space: Mapping[str, Mapping[str, Any]], rng:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"e2_random_sample_params: ok"
+    content = "e2_random_sample_params: ok"
     return content, {
         "e2_random_sample_params": kwargs,
         "args": kwargs,
@@ -124,14 +124,13 @@ def e2_run_study_wrapped(objective_fn: Callable[[Dict[str, Any]], float], space:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"e2_run_study: ok"
+    content = "e2_run_study: ok"
     return content, {
         "e2_run_study": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
     }
-
 
 
 E2_TOOLS = [
@@ -182,14 +181,14 @@ def make_e2_hpo_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR E2")
+        logger.info("    * RUN REACT AGENT FOR E2")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the E2 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}
         return react_agent.invoke(input_payload, invoke_react_agent_kwargs)
 
     def post_process(state: GraphState):
-        logger.info(f"    * POST-PROCESSING E2 RESULTS")
+        logger.info("    * POST-PROCESSING E2 RESULTS")
         internal = state.get("messages", []) or []
         if not internal:
             return {"messages": [], "tool_calls": []}

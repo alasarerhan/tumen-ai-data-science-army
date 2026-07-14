@@ -66,7 +66,7 @@ def b2_expectation_suite_from_template_wrapped(template_name: str, dataset: pd.D
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"b2_expectation_suite_from_template: ok"
+    content = "b2_expectation_suite_from_template: ok"
     return content, {
         "b2_expectation_suite_from_template": kwargs,
         "args": kwargs,
@@ -84,7 +84,7 @@ def b2_validate_against_suite_wrapped(df: pd.DataFrame, suite: Sequence[Mapping[
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: b2_validate_against_suite")
-    kwargs = {'df': df, 'suite': suite}
+    kwargs = {'d': df, 'suite': suite}
     try:
         result = validate_against_suite(**kwargs)
     except Exception as exc:
@@ -94,7 +94,7 @@ def b2_validate_against_suite_wrapped(df: pd.DataFrame, suite: Sequence[Mapping[
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"b2_validate_against_suite: ok"
+    content = "b2_validate_against_suite: ok"
     return content, {
         "b2_validate_against_suite": kwargs,
         "args": kwargs,
@@ -122,14 +122,13 @@ def b2_summarise_suite_run_wrapped(result: Mapping[str, Any]) -> Tuple[str, dict
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"b2_summarise_suite_run: ok"
+    content = "b2_summarise_suite_run: ok"
     return content, {
         "b2_summarise_suite_run": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
     }
-
 
 
 B2_TOOLS = [
@@ -180,14 +179,14 @@ def make_b2_quality_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR B2")
+        logger.info("    * RUN REACT AGENT FOR B2")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the B2 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}
         return react_agent.invoke(input_payload, invoke_react_agent_kwargs)
 
     def post_process(state: GraphState):
-        logger.info(f"    * POST-PROCESSING B2 RESULTS")
+        logger.info("    * POST-PROCESSING B2 RESULTS")
         internal = state.get("messages", []) or []
         if not internal:
             return {"messages": [], "tool_calls": []}

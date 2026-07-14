@@ -61,7 +61,7 @@ def d2_filter_scores_wrapped(df: pd.DataFrame, target: pd.Series) -> Tuple[str, 
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: d2_filter_scores")
-    kwargs = {'df': df, 'target': target}
+    kwargs = {'d': df, 'target': target}
     try:
         result = filter_scores(**kwargs)
     except Exception as exc:
@@ -71,7 +71,7 @@ def d2_filter_scores_wrapped(df: pd.DataFrame, target: pd.Series) -> Tuple[str, 
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"d2_filter_scores: ok"
+    content = "d2_filter_scores: ok"
     return content, {
         "d2_filter_scores": kwargs,
         "args": kwargs,
@@ -89,7 +89,7 @@ def d2_select_filter_wrapped(df: pd.DataFrame, target: pd.Series) -> Tuple[str, 
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: d2_select_filter")
-    kwargs = {'df': df, 'target': target}
+    kwargs = {'d': df, 'target': target}
     try:
         result = select_filter(**kwargs)
     except Exception as exc:
@@ -99,7 +99,7 @@ def d2_select_filter_wrapped(df: pd.DataFrame, target: pd.Series) -> Tuple[str, 
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"d2_select_filter: ok"
+    content = "d2_select_filter: ok"
     return content, {
         "d2_select_filter": kwargs,
         "args": kwargs,
@@ -117,7 +117,7 @@ def d2_select_wrapper_wrapped(df: pd.DataFrame, target: pd.Series) -> Tuple[str,
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: d2_select_wrapper")
-    kwargs = {'df': df, 'target': target}
+    kwargs = {'d': df, 'target': target}
     try:
         result = select_wrapper(**kwargs)
     except Exception as exc:
@@ -127,7 +127,7 @@ def d2_select_wrapper_wrapped(df: pd.DataFrame, target: pd.Series) -> Tuple[str,
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"d2_select_wrapper: ok"
+    content = "d2_select_wrapper: ok"
     return content, {
         "d2_select_wrapper": kwargs,
         "args": kwargs,
@@ -145,7 +145,7 @@ def d2_select_embedded_wrapped(df: pd.DataFrame, target: pd.Series) -> Tuple[str
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: d2_select_embedded")
-    kwargs = {'df': df, 'target': target}
+    kwargs = {'d': df, 'target': target}
     try:
         result = select_embedded(**kwargs)
     except Exception as exc:
@@ -155,7 +155,7 @@ def d2_select_embedded_wrapped(df: pd.DataFrame, target: pd.Series) -> Tuple[str
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"d2_select_embedded: ok"
+    content = "d2_select_embedded: ok"
     return content, {
         "d2_select_embedded": kwargs,
         "args": kwargs,
@@ -173,7 +173,7 @@ def d2_detect_leakage_wrapped(df: pd.DataFrame, target: pd.Series) -> Tuple[str,
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: d2_detect_leakage")
-    kwargs = {'df': df, 'target': target}
+    kwargs = {'d': df, 'target': target}
     try:
         result = detect_leakage(**kwargs)
     except Exception as exc:
@@ -183,7 +183,7 @@ def d2_detect_leakage_wrapped(df: pd.DataFrame, target: pd.Series) -> Tuple[str,
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"d2_detect_leakage: ok"
+    content = "d2_detect_leakage: ok"
     return content, {
         "d2_detect_leakage": kwargs,
         "args": kwargs,
@@ -211,7 +211,7 @@ def d2_multicollinearity_report_wrapped(df: pd.DataFrame) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"d2_multicollinearity_report: ok"
+    content = "d2_multicollinearity_report: ok"
     return content, {
         "d2_multicollinearity_report": kwargs,
         "args": kwargs,
@@ -229,7 +229,7 @@ def d2_select_feature_wrapped(df: pd.DataFrame, target: pd.Series) -> Tuple[str,
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: d2_select_feature")
-    kwargs = {'df': df, 'target': target}
+    kwargs = {'d': df, 'target': target}
     try:
         result = select_feature(**kwargs)
     except Exception as exc:
@@ -239,14 +239,13 @@ def d2_select_feature_wrapped(df: pd.DataFrame, target: pd.Series) -> Tuple[str,
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"d2_select_feature: ok"
+    content = "d2_select_feature: ok"
     return content, {
         "d2_select_feature": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
     }
-
 
 
 D2_TOOLS = [
@@ -301,14 +300,14 @@ def make_d2_features_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR D2")
+        logger.info("    * RUN REACT AGENT FOR D2")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the D2 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}
         return react_agent.invoke(input_payload, invoke_react_agent_kwargs)
 
     def post_process(state: GraphState):
-        logger.info(f"    * POST-PROCESSING D2 RESULTS")
+        logger.info("    * POST-PROCESSING D2 RESULTS")
         internal = state.get("messages", []) or []
         if not internal:
             return {"messages": [], "tool_calls": []}

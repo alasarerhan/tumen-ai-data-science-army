@@ -68,7 +68,7 @@ def f4_generate_card_wrapped(model_id: str) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"f4_generate_card: ok"
+    content = "f4_generate_card: ok"
     return content, {
         "f4_generate_card": kwargs,
         "args": kwargs,
@@ -96,7 +96,7 @@ def f4_update_section_wrapped(card: ModelCard, section: str, content: str) -> Tu
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"f4_update_section: ok"
+    content = "f4_update_section: ok"
     return content, {
         "f4_update_section": kwargs,
         "args": kwargs,
@@ -124,7 +124,7 @@ def f4_render_html_wrapped(card: ModelCard) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"f4_render_html: ok"
+    content = "f4_render_html: ok"
     return content, {
         "f4_render_html": kwargs,
         "args": kwargs,
@@ -147,14 +147,14 @@ def f4_render_pdf_wrapped(card: ModelCard) -> Tuple[str, dict]:
         result = render_pdf(**kwargs)
     except Exception as exc:
         return f"Tool f4_render_pdf failed: {exc}", {
-            "f4_render_pdf": kwargs,
+            "f4_render_pd": kwargs,
             "args": kwargs,
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"f4_render_pdf: ok"
+    content = "f4_render_pdf: ok"
     return content, {
-        "f4_render_pdf": kwargs,
+        "f4_render_pd": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -180,7 +180,7 @@ def f4_get_card_wrapped(card_id: str) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"f4_get_card: ok"
+    content = "f4_get_card: ok"
     return content, {
         "f4_get_card": kwargs,
         "args": kwargs,
@@ -208,14 +208,13 @@ def f4_list_cards_wrapped(model_id: str) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"f4_list_cards: ok"
+    content = "f4_list_cards: ok"
     return content, {
         "f4_list_cards": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
     }
-
 
 
 F4_TOOLS = [
@@ -269,14 +268,14 @@ def make_f4_model_card_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR F4")
+        logger.info("    * RUN REACT AGENT FOR F4")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the F4 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}
         return react_agent.invoke(input_payload, invoke_react_agent_kwargs)
 
     def post_process(state: GraphState):
-        logger.info(f"    * POST-PROCESSING F4 RESULTS")
+        logger.info("    * POST-PROCESSING F4 RESULTS")
         internal = state.get("messages", []) or []
         if not internal:
             return {"messages": [], "tool_calls": []}

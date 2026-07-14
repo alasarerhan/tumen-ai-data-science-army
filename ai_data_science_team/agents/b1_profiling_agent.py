@@ -65,7 +65,7 @@ def b1_profile_column_wrapped(series: pd.Series) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"b1_profile_column: ok"
+    content = "b1_profile_column: ok"
     return content, {
         "b1_profile_column": kwargs,
         "args": kwargs,
@@ -93,14 +93,13 @@ def b1_profile_dataframe_wrapped(df: pd.DataFrame) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"b1_profile_dataframe: ok"
+    content = "b1_profile_dataframe: ok"
     return content, {
         "b1_profile_dataframe": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
     }
-
 
 
 B1_TOOLS = [
@@ -150,14 +149,14 @@ def make_b1_profiling_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR B1")
+        logger.info("    * RUN REACT AGENT FOR B1")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the B1 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}
         return react_agent.invoke(input_payload, invoke_react_agent_kwargs)
 
     def post_process(state: GraphState):
-        logger.info(f"    * POST-PROCESSING B1 RESULTS")
+        logger.info("    * POST-PROCESSING B1 RESULTS")
         internal = state.get("messages", []) or []
         if not internal:
             return {"messages": [], "tool_calls": []}

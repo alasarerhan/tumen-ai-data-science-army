@@ -63,7 +63,7 @@ def f6_judge_output_wrapped(text: str, code: str) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"f6_judge_output: ok"
+    content = "f6_judge_output: ok"
     return content, {
         "f6_judge_output": kwargs,
         "args": kwargs,
@@ -91,14 +91,13 @@ def f6_judge_batch_wrapped(items: Sequence[Mapping[str, str]]) -> Tuple[str, dic
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"f6_judge_batch: ok"
+    content = "f6_judge_batch: ok"
     return content, {
         "f6_judge_batch": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
     }
-
 
 
 F6_TOOLS = [
@@ -148,14 +147,14 @@ def make_f6_llm_judge_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR F6")
+        logger.info("    * RUN REACT AGENT FOR F6")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the F6 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}
         return react_agent.invoke(input_payload, invoke_react_agent_kwargs)
 
     def post_process(state: GraphState):
-        logger.info(f"    * POST-PROCESSING F6 RESULTS")
+        logger.info("    * POST-PROCESSING F6 RESULTS")
         internal = state.get("messages", []) or []
         if not internal:
             return {"messages": [], "tool_calls": []}

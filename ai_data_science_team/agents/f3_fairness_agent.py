@@ -71,7 +71,7 @@ def f3_per_group_metrics_wrapped(y_true: Sequence[int], y_pred: Sequence[int], s
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"f3_per_group_metrics: ok"
+    content = "f3_per_group_metrics: ok"
     return content, {
         "f3_per_group_metrics": kwargs,
         "args": kwargs,
@@ -99,7 +99,7 @@ def f3_demographic_parity_difference_wrapped(group_df: pd.DataFrame) -> Tuple[st
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"f3_demographic_parity_difference: ok"
+    content = "f3_demographic_parity_difference: ok"
     return content, {
         "f3_demographic_parity_difference": kwargs,
         "args": kwargs,
@@ -127,7 +127,7 @@ def f3_demographic_parity_ratio_wrapped(group_df: pd.DataFrame) -> Tuple[str, di
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"f3_demographic_parity_ratio: ok"
+    content = "f3_demographic_parity_ratio: ok"
     return content, {
         "f3_demographic_parity_ratio": kwargs,
         "args": kwargs,
@@ -155,7 +155,7 @@ def f3_equalized_odds_difference_wrapped(group_df: pd.DataFrame) -> Tuple[str, d
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"f3_equalized_odds_difference: ok"
+    content = "f3_equalized_odds_difference: ok"
     return content, {
         "f3_equalized_odds_difference": kwargs,
         "args": kwargs,
@@ -183,7 +183,7 @@ def f3_violates_four_fifths_wrapped(group_df: pd.DataFrame) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"f3_violates_four_fifths: ok"
+    content = "f3_violates_four_fifths: ok"
     return content, {
         "f3_violates_four_fifths": kwargs,
         "args": kwargs,
@@ -211,7 +211,7 @@ def f3_simulate_threshold_mitigation_wrapped(y_true: Sequence[int], y_pred_proba
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"f3_simulate_threshold_mitigation: ok"
+    content = "f3_simulate_threshold_mitigation: ok"
     return content, {
         "f3_simulate_threshold_mitigation": kwargs,
         "args": kwargs,
@@ -239,14 +239,13 @@ def f3_audit_fairness_wrapped(y_true: Sequence[int], y_pred: Sequence[int], sens
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"f3_audit_fairness: ok"
+    content = "f3_audit_fairness: ok"
     return content, {
         "f3_audit_fairness": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
     }
-
 
 
 F3_TOOLS = [
@@ -301,14 +300,14 @@ def make_f3_fairness_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR F3")
+        logger.info("    * RUN REACT AGENT FOR F3")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the F3 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}
         return react_agent.invoke(input_payload, invoke_react_agent_kwargs)
 
     def post_process(state: GraphState):
-        logger.info(f"    * POST-PROCESSING F3 RESULTS")
+        logger.info("    * POST-PROCESSING F3 RESULTS")
         internal = state.get("messages", []) or []
         if not internal:
             return {"messages": [], "tool_calls": []}

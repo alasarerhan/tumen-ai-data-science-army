@@ -65,7 +65,7 @@ def a5_did_lift_wrapped(pre_treat_y_pre: Sequence[float], pre_treat_y_post: Sequ
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"a5_did_lift: ok"
+    content = "a5_did_lift: ok"
     return content, {
         "a5_did_lift": kwargs,
         "args": kwargs,
@@ -93,7 +93,7 @@ def a5_adj_lift_wrapped(y: Sequence[float], treatment: Sequence[int], covariates
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"a5_adj_lift: ok"
+    content = "a5_adj_lift: ok"
     return content, {
         "a5_adj_lift": kwargs,
         "args": kwargs,
@@ -121,7 +121,7 @@ def a5_check_propensity_overlap_wrapped(propensity: Sequence[float], label: str)
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"a5_check_propensity_overlap: ok"
+    content = "a5_check_propensity_overlap: ok"
     return content, {
         "a5_check_propensity_overlap": kwargs,
         "args": kwargs,
@@ -149,14 +149,13 @@ def a5_e_value_wrapped(point_estimate: float) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"a5_e_value: ok"
+    content = "a5_e_value: ok"
     return content, {
         "a5_e_value": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
     }
-
 
 
 A5_TOOLS = [
@@ -208,14 +207,14 @@ def make_a5_causal_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR A5")
+        logger.info("    * RUN REACT AGENT FOR A5")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the A5 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}
         return react_agent.invoke(input_payload, invoke_react_agent_kwargs)
 
     def post_process(state: GraphState):
-        logger.info(f"    * POST-PROCESSING A5 RESULTS")
+        logger.info("    * POST-PROCESSING A5 RESULTS")
         internal = state.get("messages", []) or []
         if not internal:
             return {"messages": [], "tool_calls": []}

@@ -382,7 +382,7 @@ class FeatureEngineeringAgent(BaseAgent):
         """
         if self.response:
             if self.response.get("feature_engineer_function_path"):
-                log_details = f"""
+                log_details = """
 ## Featuring Engineering Agent Log Summary:
 
 Function Path: {self.response.get("feature_engineer_function_path")}

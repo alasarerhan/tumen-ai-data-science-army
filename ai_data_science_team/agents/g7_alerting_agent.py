@@ -74,7 +74,7 @@ def g7_define_rule_wrapped(store: AlertStore) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"g7_define_rule: ok"
+    content = "g7_define_rule: ok"
     return content, {
         "g7_define_rule": kwargs,
         "args": kwargs,
@@ -102,7 +102,7 @@ def g7_evaluate_rule_wrapped(rule: AlertRule) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"g7_evaluate_rule: ok"
+    content = "g7_evaluate_rule: ok"
     return content, {
         "g7_evaluate_rule": kwargs,
         "args": kwargs,
@@ -130,7 +130,7 @@ def g7_raise_incident_wrapped(store: AlertStore) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"g7_raise_incident: ok"
+    content = "g7_raise_incident: ok"
     return content, {
         "g7_raise_incident": kwargs,
         "args": kwargs,
@@ -158,7 +158,7 @@ def g7_acknowledge_incident_wrapped(inc: Incident) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"g7_acknowledge_incident: ok"
+    content = "g7_acknowledge_incident: ok"
     return content, {
         "g7_acknowledge_incident": kwargs,
         "args": kwargs,
@@ -186,7 +186,7 @@ def g7_resolve_incident_wrapped(inc: Incident) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"g7_resolve_incident: ok"
+    content = "g7_resolve_incident: ok"
     return content, {
         "g7_resolve_incident": kwargs,
         "args": kwargs,
@@ -214,7 +214,7 @@ def g7_tick_escalation_wrapped(inc: Incident) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"g7_tick_escalation: ok"
+    content = "g7_tick_escalation: ok"
     return content, {
         "g7_tick_escalation": kwargs,
         "args": kwargs,
@@ -242,7 +242,7 @@ def g7_route_to_channels_wrapped(inc: Incident) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"g7_route_to_channels: ok"
+    content = "g7_route_to_channels: ok"
     return content, {
         "g7_route_to_channels": kwargs,
         "args": kwargs,
@@ -270,7 +270,7 @@ def g7_channel_template_wrapped(channel: str, payload: Mapping[str, Any]) -> Tup
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"g7_channel_template: ok"
+    content = "g7_channel_template: ok"
     return content, {
         "g7_channel_template": kwargs,
         "args": kwargs,
@@ -298,14 +298,13 @@ def g7_summarise_wrapped(store: IncidentStore) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"g7_summarise: ok"
+    content = "g7_summarise: ok"
     return content, {
         "g7_summarise": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
     }
-
 
 
 G7_TOOLS = [
@@ -362,14 +361,14 @@ def make_g7_alerting_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR G7")
+        logger.info("    * RUN REACT AGENT FOR G7")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the G7 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}
         return react_agent.invoke(input_payload, invoke_react_agent_kwargs)
 
     def post_process(state: GraphState):
-        logger.info(f"    * POST-PROCESSING G7 RESULTS")
+        logger.info("    * POST-PROCESSING G7 RESULTS")
         internal = state.get("messages", []) or []
         if not internal:
             return {"messages": [], "tool_calls": []}

@@ -69,7 +69,7 @@ def e3_detect_device_wrapped(prefer: Optional[str]) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"e3_detect_device: ok"
+    content = "e3_detect_device: ok"
     return content, {
         "e3_detect_device": kwargs,
         "args": kwargs,
@@ -97,7 +97,7 @@ def e3_build_mlp_classifier_wrapped(n_features: int, n_classes: int, hidden: Seq
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"e3_build_mlp_classifier: ok"
+    content = "e3_build_mlp_classifier: ok"
     return content, {
         "e3_build_mlp_classifier": kwargs,
         "args": kwargs,
@@ -125,7 +125,7 @@ def e3_build_mlp_regressor_wrapped(n_features: int, hidden: Sequence[int], dropo
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"e3_build_mlp_regressor: ok"
+    content = "e3_build_mlp_regressor: ok"
     return content, {
         "e3_build_mlp_regressor": kwargs,
         "args": kwargs,
@@ -153,7 +153,7 @@ def e3_build_lstm_forecaster_wrapped(n_features: int, hidden: int, layers: int, 
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"e3_build_lstm_forecaster: ok"
+    content = "e3_build_lstm_forecaster: ok"
     return content, {
         "e3_build_lstm_forecaster": kwargs,
         "args": kwargs,
@@ -181,7 +181,7 @@ def e3_build_lstm_classifier_wrapped(n_features: int, n_classes: int, hidden: in
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"e3_build_lstm_classifier: ok"
+    content = "e3_build_lstm_classifier: ok"
     return content, {
         "e3_build_lstm_classifier": kwargs,
         "args": kwargs,
@@ -209,7 +209,7 @@ def e3_train_mlp_classifier_wrapped(X: np.ndarray, y: np.ndarray) -> Tuple[str, 
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"e3_train_mlp_classifier: ok"
+    content = "e3_train_mlp_classifier: ok"
     return content, {
         "e3_train_mlp_classifier": kwargs,
         "args": kwargs,
@@ -237,14 +237,13 @@ def e3_train_lstm_forecaster_wrapped(X: np.ndarray, y: np.ndarray) -> Tuple[str,
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"e3_train_lstm_forecaster: ok"
+    content = "e3_train_lstm_forecaster: ok"
     return content, {
         "e3_train_lstm_forecaster": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
     }
-
 
 
 E3_TOOLS = [
@@ -299,14 +298,14 @@ def make_e3_deep_learning_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR E3")
+        logger.info("    * RUN REACT AGENT FOR E3")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the E3 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}
         return react_agent.invoke(input_payload, invoke_react_agent_kwargs)
 
     def post_process(state: GraphState):
-        logger.info(f"    * POST-PROCESSING E3 RESULTS")
+        logger.info("    * POST-PROCESSING E3 RESULTS")
         internal = state.get("messages", []) or []
         if not internal:
             return {"messages": [], "tool_calls": []}

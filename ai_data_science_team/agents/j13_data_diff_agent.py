@@ -43,7 +43,7 @@ from ai_data_science_team.tools.j13_data_diff import (
 logger = logging.getLogger(__name__)
 
 AGENT_NAME = "j13_agent"
-NODE_TYPE = "data.diff"
+NODE_TYPE = "data.dif"
 
 
 # ---------------------------------------------------------------------------
@@ -69,7 +69,7 @@ def j13_profile_columns_wrapped(df: pd.DataFrame) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"j13_profile_columns: ok"
+    content = "j13_profile_columns: ok"
     return content, {
         "j13_profile_columns": kwargs,
         "args": kwargs,
@@ -97,7 +97,7 @@ def j13_numeric_shift_wrapped(left: pd.Series, right: pd.Series) -> Tuple[str, d
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"j13_numeric_shift: ok"
+    content = "j13_numeric_shift: ok"
     return content, {
         "j13_numeric_shift": kwargs,
         "args": kwargs,
@@ -125,7 +125,7 @@ def j13_schema_delta_wrapped(left: pd.DataFrame, right: pd.DataFrame) -> Tuple[s
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"j13_schema_delta: ok"
+    content = "j13_schema_delta: ok"
     return content, {
         "j13_schema_delta": kwargs,
         "args": kwargs,
@@ -148,14 +148,14 @@ def j13_key_set_diff_wrapped(left: pd.DataFrame, right: pd.DataFrame, key: str) 
         result = key_set_diff(**kwargs)
     except Exception as exc:
         return f"Tool j13_key_set_diff failed: {exc}", {
-            "j13_key_set_diff": kwargs,
+            "j13_key_set_dif": kwargs,
             "args": kwargs,
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"j13_key_set_diff: ok"
+    content = "j13_key_set_diff: ok"
     return content, {
-        "j13_key_set_diff": kwargs,
+        "j13_key_set_dif": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -181,7 +181,7 @@ def j13_diff_summary_wrapped(left: pd.DataFrame, right: pd.DataFrame) -> Tuple[s
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"j13_diff_summary: ok"
+    content = "j13_diff_summary: ok"
     return content, {
         "j13_diff_summary": kwargs,
         "args": kwargs,
@@ -209,14 +209,13 @@ def j13_diff_payload_wrapped(left: pd.DataFrame, right: pd.DataFrame) -> Tuple[s
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"j13_diff_payload: ok"
+    content = "j13_diff_payload: ok"
     return content, {
         "j13_diff_payload": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
     }
-
 
 
 J13_TOOLS = [
@@ -270,14 +269,14 @@ def make_j13_data_diff_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR J13")
+        logger.info("    * RUN REACT AGENT FOR J13")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the J13 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}
         return react_agent.invoke(input_payload, invoke_react_agent_kwargs)
 
     def post_process(state: GraphState):
-        logger.info(f"    * POST-PROCESSING J13 RESULTS")
+        logger.info("    * POST-PROCESSING J13 RESULTS")
         internal = state.get("messages", []) or []
         if not internal:
             return {"messages": [], "tool_calls": []}

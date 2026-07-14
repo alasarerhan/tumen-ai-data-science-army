@@ -70,7 +70,7 @@ def g2_build_policy_wrapped(spec: Mapping[str, Any]) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"g2_build_policy: ok"
+    content = "g2_build_policy: ok"
     return content, {
         "g2_build_policy": kwargs,
         "args": kwargs,
@@ -98,7 +98,7 @@ def g2_decide_action_wrapped(signal: Mapping[str, Any], policy: Policy) -> Tuple
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"g2_decide_action: ok"
+    content = "g2_decide_action: ok"
     return content, {
         "g2_decide_action": kwargs,
         "args": kwargs,
@@ -126,7 +126,7 @@ def g2_simulate_wrapped(signals: Sequence[Mapping[str, Any]], policy: Policy) ->
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"g2_simulate: ok"
+    content = "g2_simulate: ok"
     return content, {
         "g2_simulate": kwargs,
         "args": kwargs,
@@ -154,7 +154,7 @@ def g2_record_event_wrapped(policy: Policy, signal: Dict[str, Any], decision: Di
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"g2_record_event: ok"
+    content = "g2_record_event: ok"
     return content, {
         "g2_record_event": kwargs,
         "args": kwargs,
@@ -182,7 +182,7 @@ def g2_event_to_dict_wrapped(ev: Event) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"g2_event_to_dict: ok"
+    content = "g2_event_to_dict: ok"
     return content, {
         "g2_event_to_dict": kwargs,
         "args": kwargs,
@@ -210,14 +210,13 @@ def g2_build_audit_trail_wrapped(events: Sequence[Event]) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"g2_build_audit_trail: ok"
+    content = "g2_build_audit_trail: ok"
     return content, {
         "g2_build_audit_trail": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
     }
-
 
 
 G2_TOOLS = [
@@ -271,14 +270,14 @@ def make_g2_retrain_orchestrator_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR G2")
+        logger.info("    * RUN REACT AGENT FOR G2")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the G2 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}
         return react_agent.invoke(input_payload, invoke_react_agent_kwargs)
 
     def post_process(state: GraphState):
-        logger.info(f"    * POST-PROCESSING G2 RESULTS")
+        logger.info("    * POST-PROCESSING G2 RESULTS")
         internal = state.get("messages", []) or []
         if not internal:
             return {"messages": [], "tool_calls": []}

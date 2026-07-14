@@ -69,7 +69,7 @@ def j12_add_node_wrapped(graph: LineageGraph) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"j12_add_node: ok"
+    content = "j12_add_node: ok"
     return content, {
         "j12_add_node": kwargs,
         "args": kwargs,
@@ -97,7 +97,7 @@ def j12_add_edge_wrapped(graph: LineageGraph, source: str, target: str, relation
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"j12_add_edge: ok"
+    content = "j12_add_edge: ok"
     return content, {
         "j12_add_edge": kwargs,
         "args": kwargs,
@@ -125,7 +125,7 @@ def j12_ancestors_wrapped(graph: LineageGraph, node_id: str) -> Tuple[str, dict]
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"j12_ancestors: ok"
+    content = "j12_ancestors: ok"
     return content, {
         "j12_ancestors": kwargs,
         "args": kwargs,
@@ -153,7 +153,7 @@ def j12_descendants_wrapped(graph: LineageGraph, node_id: str) -> Tuple[str, dic
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"j12_descendants: ok"
+    content = "j12_descendants: ok"
     return content, {
         "j12_descendants": kwargs,
         "args": kwargs,
@@ -181,7 +181,7 @@ def j12_render_graph_wrapped(graph: LineageGraph) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"j12_render_graph: ok"
+    content = "j12_render_graph: ok"
     return content, {
         "j12_render_graph": kwargs,
         "args": kwargs,
@@ -209,14 +209,13 @@ def j12_node_summary_wrapped(graph: LineageGraph, node_id: str) -> Tuple[str, di
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"j12_node_summary: ok"
+    content = "j12_node_summary: ok"
     return content, {
         "j12_node_summary": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
     }
-
 
 
 J12_TOOLS = [
@@ -270,14 +269,14 @@ def make_j12_lineage_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR J12")
+        logger.info("    * RUN REACT AGENT FOR J12")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the J12 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}
         return react_agent.invoke(input_payload, invoke_react_agent_kwargs)
 
     def post_process(state: GraphState):
-        logger.info(f"    * POST-PROCESSING J12 RESULTS")
+        logger.info("    * POST-PROCESSING J12 RESULTS")
         internal = state.get("messages", []) or []
         if not internal:
             return {"messages": [], "tool_calls": []}

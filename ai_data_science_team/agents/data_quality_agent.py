@@ -22,7 +22,6 @@ Quality Score (0–100) components
 from __future__ import annotations
 
 
-
 import logging
 
 logger = logging.getLogger(__name__)
@@ -172,7 +171,7 @@ def profile_data_quality(
 
     issues_str = "; ".join(issues) if issues else "none detected"
     content = (
-        f"Data quality profiling complete.  "
+        "Data quality profiling complete.  "
         f"Quality score: {quality_score}/100.  "
         f"Dataset: {n_rows} rows × {n_cols} cols.  "
         f"Issues: {issues_str}."
@@ -276,7 +275,7 @@ def get_data_quality_params(
     """
     logger.info("    * Tool: get_data_quality_params")
     return (
-        f"Data quality agent configured with "
+        "Data quality agent configured with "
         f"outlier_method='{outlier_method}', outlier_threshold={outlier_threshold}."
     )
 

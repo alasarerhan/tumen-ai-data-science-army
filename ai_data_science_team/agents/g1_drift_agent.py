@@ -68,7 +68,7 @@ def g1_psi_wrapped(baseline: Sequence[float] | np.ndarray, current: Sequence[flo
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"g1_psi: ok"
+    content = "g1_psi: ok"
     return content, {
         "g1_psi": kwargs,
         "args": kwargs,
@@ -96,7 +96,7 @@ def g1_ks2_wrapped(baseline: Sequence[float] | np.ndarray, current: Sequence[flo
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"g1_ks2: ok"
+    content = "g1_ks2: ok"
     return content, {
         "g1_ks2": kwargs,
         "args": kwargs,
@@ -114,7 +114,7 @@ def g1_feature_drift_report_wrapped(baseline_df: pd.DataFrame, current_df: pd.Da
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: g1_feature_drift_report")
-    kwargs = {'baseline_df': baseline_df, 'current_df': current_df}
+    kwargs = {'baseline_d': baseline_df, 'current_df': current_df}
     try:
         result = feature_drift_report(**kwargs)
     except Exception as exc:
@@ -124,7 +124,7 @@ def g1_feature_drift_report_wrapped(baseline_df: pd.DataFrame, current_df: pd.Da
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"g1_feature_drift_report: ok"
+    content = "g1_feature_drift_report: ok"
     return content, {
         "g1_feature_drift_report": kwargs,
         "args": kwargs,
@@ -152,7 +152,7 @@ def g1_performance_drift_wrapped(baseline_metric: float, current_metric: float) 
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"g1_performance_drift: ok"
+    content = "g1_performance_drift: ok"
     return content, {
         "g1_performance_drift": kwargs,
         "args": kwargs,
@@ -170,7 +170,7 @@ def g1_drift_signal_payload_wrapped(baseline_df: pd.DataFrame, current_df: pd.Da
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: g1_drift_signal_payload")
-    kwargs = {'baseline_df': baseline_df, 'current_df': current_df}
+    kwargs = {'baseline_d': baseline_df, 'current_df': current_df}
     try:
         result = drift_signal_payload(**kwargs)
     except Exception as exc:
@@ -180,14 +180,13 @@ def g1_drift_signal_payload_wrapped(baseline_df: pd.DataFrame, current_df: pd.Da
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"g1_drift_signal_payload: ok"
+    content = "g1_drift_signal_payload: ok"
     return content, {
         "g1_drift_signal_payload": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
     }
-
 
 
 G1_TOOLS = [
@@ -240,14 +239,14 @@ def make_g1_drift_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR G1")
+        logger.info("    * RUN REACT AGENT FOR G1")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the G1 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}
         return react_agent.invoke(input_payload, invoke_react_agent_kwargs)
 
     def post_process(state: GraphState):
-        logger.info(f"    * POST-PROCESSING G1 RESULTS")
+        logger.info("    * POST-PROCESSING G1 RESULTS")
         internal = state.get("messages", []) or []
         if not internal:
             return {"messages": [], "tool_calls": []}

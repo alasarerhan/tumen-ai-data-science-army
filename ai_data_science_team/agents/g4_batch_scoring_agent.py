@@ -59,7 +59,7 @@ def g4_align_features_wrapped(df: pd.DataFrame, expected_features: Sequence[str]
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: g4_align_features")
-    kwargs = {'df': df, 'expected_features': expected_features}
+    kwargs = {'d': df, 'expected_features': expected_features}
     try:
         result = align_features(**kwargs)
     except Exception as exc:
@@ -69,7 +69,7 @@ def g4_align_features_wrapped(df: pd.DataFrame, expected_features: Sequence[str]
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"g4_align_features: ok"
+    content = "g4_align_features: ok"
     return content, {
         "g4_align_features": kwargs,
         "args": kwargs,
@@ -97,7 +97,7 @@ def g4_resolve_model_wrapped(model: Any) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"g4_resolve_model: ok"
+    content = "g4_resolve_model: ok"
     return content, {
         "g4_resolve_model": kwargs,
         "args": kwargs,
@@ -115,7 +115,7 @@ def g4_predict_dataframe_wrapped(df: pd.DataFrame, model: Any) -> Tuple[str, dic
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: g4_predict_dataframe")
-    kwargs = {'df': df, 'model': model}
+    kwargs = {'d': df, 'model': model}
     try:
         result = predict_dataframe(**kwargs)
     except Exception as exc:
@@ -125,7 +125,7 @@ def g4_predict_dataframe_wrapped(df: pd.DataFrame, model: Any) -> Tuple[str, dic
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"g4_predict_dataframe: ok"
+    content = "g4_predict_dataframe: ok"
     return content, {
         "g4_predict_dataframe": kwargs,
         "args": kwargs,
@@ -143,7 +143,7 @@ def g4_chunked_predict_wrapped(df: pd.DataFrame, model: Any) -> Tuple[str, dict]
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: g4_chunked_predict")
-    kwargs = {'df': df, 'model': model}
+    kwargs = {'d': df, 'model': model}
     try:
         result = chunked_predict(**kwargs)
     except Exception as exc:
@@ -153,7 +153,7 @@ def g4_chunked_predict_wrapped(df: pd.DataFrame, model: Any) -> Tuple[str, dict]
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"g4_chunked_predict: ok"
+    content = "g4_chunked_predict: ok"
     return content, {
         "g4_chunked_predict": kwargs,
         "args": kwargs,
@@ -181,14 +181,13 @@ def g4_scoring_report_wrapped(n_rows: int, duration_s: float, model_uri: str) ->
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"g4_scoring_report: ok"
+    content = "g4_scoring_report: ok"
     return content, {
         "g4_scoring_report": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
     }
-
 
 
 G4_TOOLS = [
@@ -241,14 +240,14 @@ def make_g4_batch_scoring_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR G4")
+        logger.info("    * RUN REACT AGENT FOR G4")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the G4 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}
         return react_agent.invoke(input_payload, invoke_react_agent_kwargs)
 
     def post_process(state: GraphState):
-        logger.info(f"    * POST-PROCESSING G4 RESULTS")
+        logger.info("    * POST-PROCESSING G4 RESULTS")
         internal = state.get("messages", []) or []
         if not internal:
             return {"messages": [], "tool_calls": []}

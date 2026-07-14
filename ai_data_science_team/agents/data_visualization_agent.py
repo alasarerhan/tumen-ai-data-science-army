@@ -417,7 +417,7 @@ class DataVisualizationAgent(BaseAgent):
         """
         if self.response:
             if self.response.get("data_visualization_function_path"):
-                log_details = f"""
+                log_details = """
 ## Data Visualization Agent Log Summary:
 
 Function Path: {self.response.get("data_visualization_function_path")}

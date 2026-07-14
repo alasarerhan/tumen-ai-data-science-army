@@ -70,7 +70,7 @@ def j11_start_deployment_wrapped(store: DeploymentStore) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"j11_start_deployment: ok"
+    content = "j11_start_deployment: ok"
     return content, {
         "j11_start_deployment": kwargs,
         "args": kwargs,
@@ -98,7 +98,7 @@ def j11_record_live_sample_wrapped(store: DeploymentStore, deployment_id: str) -
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"j11_record_live_sample: ok"
+    content = "j11_record_live_sample: ok"
     return content, {
         "j11_record_live_sample": kwargs,
         "args": kwargs,
@@ -126,7 +126,7 @@ def j11_evaluate_rollback_wrapped(store: DeploymentStore, deployment_id: str) ->
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"j11_evaluate_rollback: ok"
+    content = "j11_evaluate_rollback: ok"
     return content, {
         "j11_evaluate_rollback": kwargs,
         "args": kwargs,
@@ -154,7 +154,7 @@ def j11_mark_status_wrapped(store: DeploymentStore, deployment_id: str, status: 
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"j11_mark_status: ok"
+    content = "j11_mark_status: ok"
     return content, {
         "j11_mark_status": kwargs,
         "args": kwargs,
@@ -182,7 +182,7 @@ def j11_summarise_deployment_wrapped(store: DeploymentStore, deployment_id: str)
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"j11_summarise_deployment: ok"
+    content = "j11_summarise_deployment: ok"
     return content, {
         "j11_summarise_deployment": kwargs,
         "args": kwargs,
@@ -210,14 +210,13 @@ def j11_list_deployments_wrapped(store: DeploymentStore) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"j11_list_deployments: ok"
+    content = "j11_list_deployments: ok"
     return content, {
         "j11_list_deployments": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
     }
-
 
 
 J11_TOOLS = [
@@ -271,14 +270,14 @@ def make_j11_shadow_canary_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR J11")
+        logger.info("    * RUN REACT AGENT FOR J11")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the J11 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}
         return react_agent.invoke(input_payload, invoke_react_agent_kwargs)
 
     def post_process(state: GraphState):
-        logger.info(f"    * POST-PROCESSING J11 RESULTS")
+        logger.info("    * POST-PROCESSING J11 RESULTS")
         internal = state.get("messages", []) or []
         if not internal:
             return {"messages": [], "tool_calls": []}

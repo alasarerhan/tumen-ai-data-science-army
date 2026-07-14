@@ -67,7 +67,7 @@ def e11_seasonal_naive_forecast_wrapped(history: Sequence[float], horizon: int, 
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"e11_seasonal_naive_forecast: ok"
+    content = "e11_seasonal_naive_forecast: ok"
     return content, {
         "e11_seasonal_naive_forecast": kwargs,
         "args": kwargs,
@@ -95,7 +95,7 @@ def e11_moving_average_forecast_wrapped(history: Sequence[float], horizon: int, 
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"e11_moving_average_forecast: ok"
+    content = "e11_moving_average_forecast: ok"
     return content, {
         "e11_moving_average_forecast": kwargs,
         "args": kwargs,
@@ -123,7 +123,7 @@ def e11_multiplicative_seasonal_forecast_wrapped(history: Sequence[float], horiz
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"e11_multiplicative_seasonal_forecast: ok"
+    content = "e11_multiplicative_seasonal_forecast: ok"
     return content, {
         "e11_multiplicative_seasonal_forecast": kwargs,
         "args": kwargs,
@@ -151,7 +151,7 @@ def e11_reconcile_top_down_wrapped(parent_forecast: float, child_histories: Mapp
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"e11_reconcile_top_down: ok"
+    content = "e11_reconcile_top_down: ok"
     return content, {
         "e11_reconcile_top_down": kwargs,
         "args": kwargs,
@@ -179,7 +179,7 @@ def e11_holiday_calendar_wrapped(country: str, years: Iterable[int]) -> Tuple[st
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"e11_holiday_calendar: ok"
+    content = "e11_holiday_calendar: ok"
     return content, {
         "e11_holiday_calendar": kwargs,
         "args": kwargs,
@@ -207,14 +207,13 @@ def e11_build_panel_wrapped(df: pd.DataFrame) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"e11_build_panel: ok"
+    content = "e11_build_panel: ok"
     return content, {
         "e11_build_panel": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
     }
-
 
 
 E11_TOOLS = [
@@ -268,14 +267,14 @@ def make_e11_time_series_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR E11")
+        logger.info("    * RUN REACT AGENT FOR E11")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the E11 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}
         return react_agent.invoke(input_payload, invoke_react_agent_kwargs)
 
     def post_process(state: GraphState):
-        logger.info(f"    * POST-PROCESSING E11 RESULTS")
+        logger.info("    * POST-PROCESSING E11 RESULTS")
         internal = state.get("messages", []) or []
         if not internal:
             return {"messages": [], "tool_calls": []}

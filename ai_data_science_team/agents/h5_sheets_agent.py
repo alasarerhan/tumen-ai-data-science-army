@@ -62,14 +62,13 @@ def h5_build_sheets_connector_wrapped(config: ConnectorConfig) -> Tuple[str, dic
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"h5_build_sheets_connector: ok"
+    content = "h5_build_sheets_connector: ok"
     return content, {
         "h5_build_sheets_connector": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
     }
-
 
 
 H5_TOOLS = [
@@ -118,14 +117,14 @@ def make_h5_sheets_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR H5")
+        logger.info("    * RUN REACT AGENT FOR H5")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the H5 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}
         return react_agent.invoke(input_payload, invoke_react_agent_kwargs)
 
     def post_process(state: GraphState):
-        logger.info(f"    * POST-PROCESSING H5 RESULTS")
+        logger.info("    * POST-PROCESSING H5 RESULTS")
         internal = state.get("messages", []) or []
         if not internal:
             return {"messages": [], "tool_calls": []}

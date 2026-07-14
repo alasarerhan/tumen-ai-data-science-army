@@ -66,7 +66,7 @@ def a4_recommend_test_wrapped(values: Sequence[float]) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"a4_recommend_test: ok"
+    content = "a4_recommend_test: ok"
     return content, {
         "a4_recommend_test": kwargs,
         "args": kwargs,
@@ -94,7 +94,7 @@ def a4_run_test_wrapped(values: Sequence[float]) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"a4_run_test: ok"
+    content = "a4_run_test: ok"
     return content, {
         "a4_run_test": kwargs,
         "args": kwargs,
@@ -122,14 +122,13 @@ def a4_interpret_result_wrapped(p_value: float, effect_size: float) -> Tuple[str
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"a4_interpret_result: ok"
+    content = "a4_interpret_result: ok"
     return content, {
         "a4_interpret_result": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
     }
-
 
 
 A4_TOOLS = [
@@ -180,14 +179,14 @@ def make_a4_hypothesis_testing_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR A4")
+        logger.info("    * RUN REACT AGENT FOR A4")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the A4 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}
         return react_agent.invoke(input_payload, invoke_react_agent_kwargs)
 
     def post_process(state: GraphState):
-        logger.info(f"    * POST-PROCESSING A4 RESULTS")
+        logger.info("    * POST-PROCESSING A4 RESULTS")
         internal = state.get("messages", []) or []
         if not internal:
             return {"messages": [], "tool_calls": []}

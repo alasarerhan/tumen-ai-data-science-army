@@ -427,7 +427,7 @@ def health_check(
 
     if not status["has_predict"]:
         return (
-            f"HEALTH CHECK FAILED – model object has no predict() method.",
+            "HEALTH CHECK FAILED – model object has no predict() method.",
             status,
         )
 

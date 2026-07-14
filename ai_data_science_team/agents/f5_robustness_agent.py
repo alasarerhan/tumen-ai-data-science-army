@@ -67,7 +67,7 @@ def f5_add_gaussian_noise_wrapped(X: np.ndarray) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"f5_add_gaussian_noise: ok"
+    content = "f5_add_gaussian_noise: ok"
     return content, {
         "f5_add_gaussian_noise": kwargs,
         "args": kwargs,
@@ -95,7 +95,7 @@ def f5_mask_features_wrapped(X: np.ndarray, mask_rate: float) -> Tuple[str, dict
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"f5_mask_features: ok"
+    content = "f5_mask_features: ok"
     return content, {
         "f5_mask_features": kwargs,
         "args": kwargs,
@@ -123,7 +123,7 @@ def f5_default_scenarios_wrapped(sigma_levels: Sequence[float], mask_levels: Seq
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"f5_default_scenarios: ok"
+    content = "f5_default_scenarios: ok"
     return content, {
         "f5_default_scenarios": kwargs,
         "args": kwargs,
@@ -151,14 +151,13 @@ def f5_evaluate_robustness_wrapped(model_name: str, predict: Callable[[np.ndarra
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"f5_evaluate_robustness: ok"
+    content = "f5_evaluate_robustness: ok"
     return content, {
         "f5_evaluate_robustness": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
     }
-
 
 
 F5_TOOLS = [
@@ -210,14 +209,14 @@ def make_f5_robustness_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR F5")
+        logger.info("    * RUN REACT AGENT FOR F5")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the F5 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}
         return react_agent.invoke(input_payload, invoke_react_agent_kwargs)
 
     def post_process(state: GraphState):
-        logger.info(f"    * POST-PROCESSING F5 RESULTS")
+        logger.info("    * POST-PROCESSING F5 RESULTS")
         internal = state.get("messages", []) or []
         if not internal:
             return {"messages": [], "tool_calls": []}

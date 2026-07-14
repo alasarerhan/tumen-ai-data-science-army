@@ -390,7 +390,7 @@ class DataWranglingAgent(BaseAgent):
         """
         if self.response:
             if self.response.get("data_wrangler_function_path"):
-                log_details = f"""
+                log_details = """
 ## Data Wrangling Agent Log Summary:
 
 Function Path: {self.response.get("data_wrangler_function_path")}

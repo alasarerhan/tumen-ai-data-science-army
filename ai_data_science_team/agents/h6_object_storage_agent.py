@@ -62,14 +62,13 @@ def h6_build_object_storage_connector_wrapped(config: ConnectorConfig) -> Tuple[
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"h6_build_object_storage_connector: ok"
+    content = "h6_build_object_storage_connector: ok"
     return content, {
         "h6_build_object_storage_connector": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
     }
-
 
 
 H6_TOOLS = [
@@ -118,14 +117,14 @@ def make_h6_object_storage_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR H6")
+        logger.info("    * RUN REACT AGENT FOR H6")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the H6 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}
         return react_agent.invoke(input_payload, invoke_react_agent_kwargs)
 
     def post_process(state: GraphState):
-        logger.info(f"    * POST-PROCESSING H6 RESULTS")
+        logger.info("    * POST-PROCESSING H6 RESULTS")
         internal = state.get("messages", []) or []
         if not internal:
             return {"messages": [], "tool_calls": []}

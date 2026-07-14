@@ -72,7 +72,7 @@ def j6_compute_fairness_wrapped() -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"j6_compute_fairness: ok"
+    content = "j6_compute_fairness: ok"
     return content, {
         "j6_compute_fairness": kwargs,
         "args": kwargs,
@@ -100,7 +100,7 @@ def j6_compute_explainability_wrapped() -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"j6_compute_explainability: ok"
+    content = "j6_compute_explainability: ok"
     return content, {
         "j6_compute_explainability": kwargs,
         "args": kwargs,
@@ -128,7 +128,7 @@ def j6_discover_error_slices_wrapped() -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"j6_discover_error_slices: ok"
+    content = "j6_discover_error_slices: ok"
     return content, {
         "j6_discover_error_slices": kwargs,
         "args": kwargs,
@@ -156,7 +156,7 @@ def j6_suggest_mitigations_wrapped(fairness: Optional[FairnessReport], error_sli
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"j6_suggest_mitigations: ok"
+    content = "j6_suggest_mitigations: ok"
     return content, {
         "j6_suggest_mitigations": kwargs,
         "args": kwargs,
@@ -184,7 +184,7 @@ def j6_build_dashboard_wrapped() -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"j6_build_dashboard: ok"
+    content = "j6_build_dashboard: ok"
     return content, {
         "j6_build_dashboard": kwargs,
         "args": kwargs,
@@ -212,14 +212,13 @@ def j6_dashboard_payload_wrapped(d: ResponsibleAIDashboard) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"j6_dashboard_payload: ok"
+    content = "j6_dashboard_payload: ok"
     return content, {
         "j6_dashboard_payload": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
     }
-
 
 
 J6_TOOLS = [
@@ -273,14 +272,14 @@ def make_j6_responsible_ai_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR J6")
+        logger.info("    * RUN REACT AGENT FOR J6")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the J6 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}
         return react_agent.invoke(input_payload, invoke_react_agent_kwargs)
 
     def post_process(state: GraphState):
-        logger.info(f"    * POST-PROCESSING J6 RESULTS")
+        logger.info("    * POST-PROCESSING J6 RESULTS")
         internal = state.get("messages", []) or []
         if not internal:
             return {"messages": [], "tool_calls": []}

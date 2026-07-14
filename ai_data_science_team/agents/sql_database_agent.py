@@ -350,7 +350,7 @@ class SQLDatabaseAgent(BaseAgent):
         """
         if self.response:
             if self.response.get("sql_database_function_path"):
-                log_details = f"""
+                log_details = """
 ## SQL Database Agent Log Summary:
 
 Function Path: {self.response.get("sql_database_function_path")}
@@ -730,7 +730,7 @@ def make_sql_database_agent(
 
         logger.info("    * CREATE PYTHON FUNCTION TO RUN SQL CODE")
 
-        response = f"""
+        response = """
 def {function_name}(connection):
     import pandas as pd
     import sqlalchemy as sql

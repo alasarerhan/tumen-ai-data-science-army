@@ -70,7 +70,7 @@ def j1_detect_change_wrapped() -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"j1_detect_change: ok"
+    content = "j1_detect_change: ok"
     return content, {
         "j1_detect_change": kwargs,
         "args": kwargs,
@@ -98,7 +98,7 @@ def j1_isolate_dimension_wrapped() -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"j1_isolate_dimension: ok"
+    content = "j1_isolate_dimension: ok"
     return content, {
         "j1_isolate_dimension": kwargs,
         "args": kwargs,
@@ -126,7 +126,7 @@ def j1_quantify_contributors_wrapped() -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"j1_quantify_contributors: ok"
+    content = "j1_quantify_contributors: ok"
     return content, {
         "j1_quantify_contributors": kwargs,
         "args": kwargs,
@@ -154,7 +154,7 @@ def j1_narrate_wrapped() -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"j1_narrate: ok"
+    content = "j1_narrate: ok"
     return content, {
         "j1_narrate": kwargs,
         "args": kwargs,
@@ -182,14 +182,13 @@ def j1_investigate_wrapped() -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"j1_investigate: ok"
+    content = "j1_investigate: ok"
     return content, {
         "j1_investigate": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
     }
-
 
 
 J1_TOOLS = [
@@ -242,14 +241,14 @@ def make_j1_investigation_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR J1")
+        logger.info("    * RUN REACT AGENT FOR J1")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the J1 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}
         return react_agent.invoke(input_payload, invoke_react_agent_kwargs)
 
     def post_process(state: GraphState):
-        logger.info(f"    * POST-PROCESSING J1 RESULTS")
+        logger.info("    * POST-PROCESSING J1 RESULTS")
         internal = state.get("messages", []) or []
         if not internal:
             return {"messages": [], "tool_calls": []}

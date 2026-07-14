@@ -68,7 +68,7 @@ def b5_scan_pii_wrapped(df: pd.DataFrame) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"b5_scan_pii: ok"
+    content = "b5_scan_pii: ok"
     return content, {
         "b5_scan_pii": kwargs,
         "args": kwargs,
@@ -96,7 +96,7 @@ def b5_default_strategies_for_wrapped(scan: PIIScanReport) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"b5_default_strategies_for: ok"
+    content = "b5_default_strategies_for: ok"
     return content, {
         "b5_default_strategies_for": kwargs,
         "args": kwargs,
@@ -114,7 +114,7 @@ def b5_anonymize_dataframe_wrapped(df: pd.DataFrame, strategies: Mapping[str, Ma
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: b5_anonymize_dataframe")
-    kwargs = {'df': df, 'strategies': strategies}
+    kwargs = {'d': df, 'strategies': strategies}
     try:
         result = anonymize_dataframe(**kwargs)
     except Exception as exc:
@@ -124,14 +124,13 @@ def b5_anonymize_dataframe_wrapped(df: pd.DataFrame, strategies: Mapping[str, Ma
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"b5_anonymize_dataframe: ok"
+    content = "b5_anonymize_dataframe: ok"
     return content, {
         "b5_anonymize_dataframe": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
     }
-
 
 
 B5_TOOLS = [
@@ -182,14 +181,14 @@ def make_b5_pii_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR B5")
+        logger.info("    * RUN REACT AGENT FOR B5")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the B5 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}
         return react_agent.invoke(input_payload, invoke_react_agent_kwargs)
 
     def post_process(state: GraphState):
-        logger.info(f"    * POST-PROCESSING B5 RESULTS")
+        logger.info("    * POST-PROCESSING B5 RESULTS")
         internal = state.get("messages", []) or []
         if not internal:
             return {"messages": [], "tool_calls": []}

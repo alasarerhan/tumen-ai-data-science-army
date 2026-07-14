@@ -79,7 +79,7 @@ def i2_add_source_wrapped(catalog: Catalog) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"i2_add_source: ok"
+    content = "i2_add_source: ok"
     return content, {
         "i2_add_source": kwargs,
         "args": kwargs,
@@ -107,7 +107,7 @@ def i2_add_table_wrapped(catalog: Catalog, source_name: str, table_name: str, co
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"i2_add_table: ok"
+    content = "i2_add_table: ok"
     return content, {
         "i2_add_table": kwargs,
         "args": kwargs,
@@ -135,7 +135,7 @@ def i2_attach_profile_wrapped(catalog: Catalog, source_name: str, profile: Mappi
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"i2_attach_profile: ok"
+    content = "i2_attach_profile: ok"
     return content, {
         "i2_attach_profile": kwargs,
         "args": kwargs,
@@ -163,7 +163,7 @@ def i2_add_pii_badges_wrapped(catalog: Catalog, source_name: str, pii_scan: Mapp
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"i2_add_pii_badges: ok"
+    content = "i2_add_pii_badges: ok"
     return content, {
         "i2_add_pii_badges": kwargs,
         "args": kwargs,
@@ -191,7 +191,7 @@ def i2_catalog_tree_wrapped(catalog: Catalog) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"i2_catalog_tree: ok"
+    content = "i2_catalog_tree: ok"
     return content, {
         "i2_catalog_tree": kwargs,
         "args": kwargs,
@@ -219,7 +219,7 @@ def i2_add_term_wrapped(catalog: Catalog, term: str) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"i2_add_term: ok"
+    content = "i2_add_term: ok"
     return content, {
         "i2_add_term": kwargs,
         "args": kwargs,
@@ -247,7 +247,7 @@ def i2_bind_term_column_wrapped(catalog: Catalog, term: str) -> Tuple[str, dict]
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"i2_bind_term_column: ok"
+    content = "i2_bind_term_column: ok"
     return content, {
         "i2_bind_term_column": kwargs,
         "args": kwargs,
@@ -275,7 +275,7 @@ def i2_search_wrapped(catalog: Catalog, query: str) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"i2_search: ok"
+    content = "i2_search: ok"
     return content, {
         "i2_search": kwargs,
         "args": kwargs,
@@ -303,7 +303,7 @@ def i2_resolve_data_wrapped(catalog: Catalog, term: str) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"i2_resolve_data: ok"
+    content = "i2_resolve_data: ok"
     return content, {
         "i2_resolve_data": kwargs,
         "args": kwargs,
@@ -331,7 +331,7 @@ def i2_record_lineage_wrapped(catalog: Catalog) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"i2_record_lineage: ok"
+    content = "i2_record_lineage: ok"
     return content, {
         "i2_record_lineage": kwargs,
         "args": kwargs,
@@ -359,7 +359,7 @@ def i2_lineage_for_wrapped(catalog: Catalog, source_name: str, table: Optional[s
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"i2_lineage_for: ok"
+    content = "i2_lineage_for: ok"
     return content, {
         "i2_lineage_for": kwargs,
         "args": kwargs,
@@ -387,14 +387,13 @@ def i2_make_catalog_wrapped() -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"i2_make_catalog: ok"
+    content = "i2_make_catalog: ok"
     return content, {
         "i2_make_catalog": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
     }
-
 
 
 I2_TOOLS = [
@@ -454,14 +453,14 @@ def make_i2_catalog_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR I2")
+        logger.info("    * RUN REACT AGENT FOR I2")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the I2 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}
         return react_agent.invoke(input_payload, invoke_react_agent_kwargs)
 
     def post_process(state: GraphState):
-        logger.info(f"    * POST-PROCESSING I2 RESULTS")
+        logger.info("    * POST-PROCESSING I2 RESULTS")
         internal = state.get("messages", []) or []
         if not internal:
             return {"messages": [], "tool_calls": []}

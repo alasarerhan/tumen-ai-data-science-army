@@ -72,7 +72,7 @@ def d4_class_distribution_wrapped(y: Sequence[Any]) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"d4_class_distribution: ok"
+    content = "d4_class_distribution: ok"
     return content, {
         "d4_class_distribution": kwargs,
         "args": kwargs,
@@ -100,7 +100,7 @@ def d4_is_imbalanced_wrapped(dist: ClassDistribution) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"d4_is_imbalanced: ok"
+    content = "d4_is_imbalanced: ok"
     return content, {
         "d4_is_imbalanced": kwargs,
         "args": kwargs,
@@ -128,7 +128,7 @@ def d4_select_strategy_wrapped(dist: ClassDistribution) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"d4_select_strategy: ok"
+    content = "d4_select_strategy: ok"
     return content, {
         "d4_select_strategy": kwargs,
         "args": kwargs,
@@ -156,7 +156,7 @@ def d4_estimate_strategy_impact_wrapped(dist: ClassDistribution, strategy: str) 
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"d4_estimate_strategy_impact: ok"
+    content = "d4_estimate_strategy_impact: ok"
     return content, {
         "d4_estimate_strategy_impact": kwargs,
         "args": kwargs,
@@ -184,7 +184,7 @@ def d4_recommend_metrics_wrapped(dist: ClassDistribution) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"d4_recommend_metrics: ok"
+    content = "d4_recommend_metrics: ok"
     return content, {
         "d4_recommend_metrics": kwargs,
         "args": kwargs,
@@ -212,7 +212,7 @@ def d4_undersample_indices_wrapped(y: Sequence[Any]) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"d4_undersample_indices: ok"
+    content = "d4_undersample_indices: ok"
     return content, {
         "d4_undersample_indices": kwargs,
         "args": kwargs,
@@ -240,7 +240,7 @@ def d4_class_weight_wrapped(y: Sequence[Any]) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"d4_class_weight: ok"
+    content = "d4_class_weight: ok"
     return content, {
         "d4_class_weight": kwargs,
         "args": kwargs,
@@ -268,7 +268,7 @@ def d4_apply_strategy_wrapped(y: Sequence[Any], strategy: str) -> Tuple[str, dic
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"d4_apply_strategy: ok"
+    content = "d4_apply_strategy: ok"
     return content, {
         "d4_apply_strategy": kwargs,
         "args": kwargs,
@@ -296,14 +296,13 @@ def d4_balance_payload_wrapped(dist: ClassDistribution) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"d4_balance_payload: ok"
+    content = "d4_balance_payload: ok"
     return content, {
         "d4_balance_payload": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
     }
-
 
 
 D4_TOOLS = [
@@ -360,14 +359,14 @@ def make_d4_balance_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR D4")
+        logger.info("    * RUN REACT AGENT FOR D4")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the D4 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}
         return react_agent.invoke(input_payload, invoke_react_agent_kwargs)
 
     def post_process(state: GraphState):
-        logger.info(f"    * POST-PROCESSING D4 RESULTS")
+        logger.info("    * POST-PROCESSING D4 RESULTS")
         internal = state.get("messages", []) or []
         if not internal:
             return {"messages": [], "tool_calls": []}

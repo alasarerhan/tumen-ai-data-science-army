@@ -22,7 +22,6 @@ Drift severity thresholds (PSI)
 from __future__ import annotations
 
 
-
 import logging
 
 logger = logging.getLogger(__name__)
@@ -373,7 +372,7 @@ def compute_performance(
         content = (
             f"Performance assessment complete ({task}).  "
             f"Metrics: {', '.join(f'{k}={v:.4f}' for k, v in list(computed.items())[:3])}.  "
-            f"No degradation vs baseline."
+            "No degradation vs baseline."
         )
     return content, artifact
 
@@ -399,7 +398,7 @@ def get_monitoring_params(
     """
     logger.info("    * Tool: get_monitoring_params")
     return (
-        f"Model monitoring agent configured with "
+        "Model monitoring agent configured with "
         f"drift_method='{drift_method}', psi_bins={psi_bins}, task_type='{task_type}'."
     )
 

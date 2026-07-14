@@ -69,7 +69,7 @@ def b7_register_ingest_job_wrapped(name: str, source: str, target: str) -> Tuple
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"b7_register_ingest_job: ok"
+    content = "b7_register_ingest_job: ok"
     return content, {
         "b7_register_ingest_job": kwargs,
         "args": kwargs,
@@ -97,7 +97,7 @@ def b7_compute_watermark_wrapped(job_id: str, previous: Any, current: Any) -> Tu
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"b7_compute_watermark: ok"
+    content = "b7_compute_watermark: ok"
     return content, {
         "b7_compute_watermark": kwargs,
         "args": kwargs,
@@ -120,14 +120,14 @@ def b7_incremental_diff_wrapped(baseline: pd.DataFrame, current: pd.DataFrame) -
         result = incremental_diff(**kwargs)
     except Exception as exc:
         return f"Tool b7_incremental_diff failed: {exc}", {
-            "b7_incremental_diff": kwargs,
+            "b7_incremental_dif": kwargs,
             "args": kwargs,
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"b7_incremental_diff: ok"
+    content = "b7_incremental_diff: ok"
     return content, {
-        "b7_incremental_diff": kwargs,
+        "b7_incremental_dif": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
@@ -153,14 +153,13 @@ def b7_record_run_wrapped(job_id: str, run_id: str, status: str, started_at: str
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"b7_record_run: ok"
+    content = "b7_record_run: ok"
     return content, {
         "b7_record_run": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
     }
-
 
 
 B7_TOOLS = [
@@ -212,14 +211,14 @@ def make_b7_data_ingestion_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR B7")
+        logger.info("    * RUN REACT AGENT FOR B7")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the B7 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}
         return react_agent.invoke(input_payload, invoke_react_agent_kwargs)
 
     def post_process(state: GraphState):
-        logger.info(f"    * POST-PROCESSING B7 RESULTS")
+        logger.info("    * POST-PROCESSING B7 RESULTS")
         internal = state.get("messages", []) or []
         if not internal:
             return {"messages": [], "tool_calls": []}

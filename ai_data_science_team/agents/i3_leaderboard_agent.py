@@ -67,7 +67,7 @@ def i3_record_run_wrapped(store: ExperimentStore) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"i3_record_run: ok"
+    content = "i3_record_run: ok"
     return content, {
         "i3_record_run": kwargs,
         "args": kwargs,
@@ -95,7 +95,7 @@ def i3_leaderboard_wrapped(store: ExperimentStore, experiment_id: str, primary_m
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"i3_leaderboard: ok"
+    content = "i3_leaderboard: ok"
     return content, {
         "i3_leaderboard": kwargs,
         "args": kwargs,
@@ -123,7 +123,7 @@ def i3_summarise_metrics_wrapped(store: ExperimentStore, experiment_id: str, met
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"i3_summarise_metrics: ok"
+    content = "i3_summarise_metrics: ok"
     return content, {
         "i3_summarise_metrics": kwargs,
         "args": kwargs,
@@ -151,14 +151,13 @@ def i3_parallel_coordinates_payload_wrapped(store: ExperimentStore, experiment_i
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"i3_parallel_coordinates_payload: ok"
+    content = "i3_parallel_coordinates_payload: ok"
     return content, {
         "i3_parallel_coordinates_payload": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
     }
-
 
 
 I3_TOOLS = [
@@ -210,14 +209,14 @@ def make_i3_leaderboard_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR I3")
+        logger.info("    * RUN REACT AGENT FOR I3")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the I3 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}
         return react_agent.invoke(input_payload, invoke_react_agent_kwargs)
 
     def post_process(state: GraphState):
-        logger.info(f"    * POST-PROCESSING I3 RESULTS")
+        logger.info("    * POST-PROCESSING I3 RESULTS")
         internal = state.get("messages", []) or []
         if not internal:
             return {"messages": [], "tool_calls": []}

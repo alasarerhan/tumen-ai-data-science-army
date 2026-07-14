@@ -68,7 +68,7 @@ def j4_record_evaluation_wrapped(store: EvalStore) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"j4_record_evaluation: ok"
+    content = "j4_record_evaluation: ok"
     return content, {
         "j4_record_evaluation": kwargs,
         "args": kwargs,
@@ -96,7 +96,7 @@ def j4_query_evaluations_wrapped(store: EvalStore) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"j4_query_evaluations: ok"
+    content = "j4_query_evaluations: ok"
     return content, {
         "j4_query_evaluations": kwargs,
         "args": kwargs,
@@ -124,7 +124,7 @@ def j4_compare_models_wrapped(store: EvalStore, model_ids: Sequence[str], datase
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"j4_compare_models: ok"
+    content = "j4_compare_models: ok"
     return content, {
         "j4_compare_models": kwargs,
         "args": kwargs,
@@ -152,7 +152,7 @@ def j4_summarise_over_datasets_wrapped(store: EvalStore, model_id: str, metric: 
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"j4_summarise_over_datasets: ok"
+    content = "j4_summarise_over_datasets: ok"
     return content, {
         "j4_summarise_over_datasets": kwargs,
         "args": kwargs,
@@ -180,14 +180,13 @@ def j4_slice_by_feature_wrapped(store: EvalStore) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"j4_slice_by_feature: ok"
+    content = "j4_slice_by_feature: ok"
     return content, {
         "j4_slice_by_feature": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
     }
-
 
 
 J4_TOOLS = [
@@ -240,14 +239,14 @@ def make_j4_eval_store_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR J4")
+        logger.info("    * RUN REACT AGENT FOR J4")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the J4 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}
         return react_agent.invoke(input_payload, invoke_react_agent_kwargs)
 
     def post_process(state: GraphState):
-        logger.info(f"    * POST-PROCESSING J4 RESULTS")
+        logger.info("    * POST-PROCESSING J4 RESULTS")
         internal = state.get("messages", []) or []
         if not internal:
             return {"messages": [], "tool_calls": []}

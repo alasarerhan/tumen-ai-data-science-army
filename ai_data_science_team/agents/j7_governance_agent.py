@@ -77,7 +77,7 @@ def j7_assign_risk_wrapped() -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"j7_assign_risk: ok"
+    content = "j7_assign_risk: ok"
     return content, {
         "j7_assign_risk": kwargs,
         "args": kwargs,
@@ -105,7 +105,7 @@ def j7_required_approvers_wrapped(risk_class: str, policy: RiskPolicy) -> Tuple[
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"j7_required_approvers: ok"
+    content = "j7_required_approvers: ok"
     return content, {
         "j7_required_approvers": kwargs,
         "args": kwargs,
@@ -133,7 +133,7 @@ def j7_start_approval_chain_wrapped() -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"j7_start_approval_chain: ok"
+    content = "j7_start_approval_chain: ok"
     return content, {
         "j7_start_approval_chain": kwargs,
         "args": kwargs,
@@ -161,7 +161,7 @@ def j7_approve_step_wrapped(chain: ApprovalChain) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"j7_approve_step: ok"
+    content = "j7_approve_step: ok"
     return content, {
         "j7_approve_step": kwargs,
         "args": kwargs,
@@ -189,7 +189,7 @@ def j7_chain_progress_wrapped(chain: ApprovalChain) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"j7_chain_progress: ok"
+    content = "j7_chain_progress: ok"
     return content, {
         "j7_chain_progress": kwargs,
         "args": kwargs,
@@ -217,7 +217,7 @@ def j7_build_checklist_wrapped() -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"j7_build_checklist: ok"
+    content = "j7_build_checklist: ok"
     return content, {
         "j7_build_checklist": kwargs,
         "args": kwargs,
@@ -245,7 +245,7 @@ def j7_evaluate_checklist_wrapped() -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"j7_evaluate_checklist: ok"
+    content = "j7_evaluate_checklist: ok"
     return content, {
         "j7_evaluate_checklist": kwargs,
         "args": kwargs,
@@ -273,7 +273,7 @@ def j7_render_audit_report_wrapped(log: AuditLog) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"j7_render_audit_report: ok"
+    content = "j7_render_audit_report: ok"
     return content, {
         "j7_render_audit_report": kwargs,
         "args": kwargs,
@@ -301,14 +301,13 @@ def j7_promotion_gate_wrapped() -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"j7_promotion_gate: ok"
+    content = "j7_promotion_gate: ok"
     return content, {
         "j7_promotion_gate": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
     }
-
 
 
 J7_TOOLS = [
@@ -365,14 +364,14 @@ def make_j7_governance_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR J7")
+        logger.info("    * RUN REACT AGENT FOR J7")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the J7 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}
         return react_agent.invoke(input_payload, invoke_react_agent_kwargs)
 
     def post_process(state: GraphState):
-        logger.info(f"    * POST-PROCESSING J7 RESULTS")
+        logger.info("    * POST-PROCESSING J7 RESULTS")
         internal = state.get("messages", []) or []
         if not internal:
             return {"messages": [], "tool_calls": []}

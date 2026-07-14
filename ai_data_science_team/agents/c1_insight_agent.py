@@ -78,7 +78,7 @@ def c1_find_anomalies_wrapped(df: pd.DataFrame) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"c1_find_anomalies: ok"
+    content = "c1_find_anomalies: ok"
     return content, {
         "c1_find_anomalies": kwargs,
         "args": kwargs,
@@ -106,7 +106,7 @@ def c1_find_strong_correlations_wrapped(df: pd.DataFrame) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"c1_find_strong_correlations: ok"
+    content = "c1_find_strong_correlations: ok"
     return content, {
         "c1_find_strong_correlations": kwargs,
         "args": kwargs,
@@ -134,7 +134,7 @@ def c1_find_skewness_wrapped(df: pd.DataFrame) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"c1_find_skewness: ok"
+    content = "c1_find_skewness: ok"
     return content, {
         "c1_find_skewness": kwargs,
         "args": kwargs,
@@ -162,7 +162,7 @@ def c1_find_missing_patterns_wrapped(df: pd.DataFrame) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"c1_find_missing_patterns: ok"
+    content = "c1_find_missing_patterns: ok"
     return content, {
         "c1_find_missing_patterns": kwargs,
         "args": kwargs,
@@ -190,7 +190,7 @@ def c1_find_class_imbalance_wrapped(df: pd.DataFrame) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"c1_find_class_imbalance: ok"
+    content = "c1_find_class_imbalance: ok"
     return content, {
         "c1_find_class_imbalance": kwargs,
         "args": kwargs,
@@ -218,7 +218,7 @@ def c1_find_constants_and_outliers_wrapped(df: pd.DataFrame) -> Tuple[str, dict]
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"c1_find_constants_and_outliers: ok"
+    content = "c1_find_constants_and_outliers: ok"
     return content, {
         "c1_find_constants_and_outliers": kwargs,
         "args": kwargs,
@@ -246,14 +246,13 @@ def c1_mine_insights_wrapped(df: pd.DataFrame) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"c1_mine_insights: ok"
+    content = "c1_mine_insights: ok"
     return content, {
         "c1_mine_insights": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
     }
-
 
 
 C1_TOOLS = [
@@ -308,14 +307,14 @@ def make_c1_insight_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR C1")
+        logger.info("    * RUN REACT AGENT FOR C1")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the C1 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}
         return react_agent.invoke(input_payload, invoke_react_agent_kwargs)
 
     def post_process(state: GraphState):
-        logger.info(f"    * POST-PROCESSING C1 RESULTS")
+        logger.info("    * POST-PROCESSING C1 RESULTS")
         internal = state.get("messages", []) or []
         if not internal:
             return {"messages": [], "tool_calls": []}

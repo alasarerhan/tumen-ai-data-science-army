@@ -68,7 +68,7 @@ def f1_evaluate_calibration_wrapped(y_true: Sequence[int], y_prob: Sequence[floa
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"f1_evaluate_calibration: ok"
+    content = "f1_evaluate_calibration: ok"
     return content, {
         "f1_evaluate_calibration": kwargs,
         "args": kwargs,
@@ -96,7 +96,7 @@ def f1_optimize_threshold_wrapped(y_true: Sequence[int], y_prob: Sequence[float]
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"f1_optimize_threshold: ok"
+    content = "f1_optimize_threshold: ok"
     return content, {
         "f1_optimize_threshold": kwargs,
         "args": kwargs,
@@ -114,7 +114,7 @@ def f1_evaluate_segments_wrapped(df: pd.DataFrame, y_true: Sequence[int], y_pred
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: f1_evaluate_segments")
-    kwargs = {'df': df, 'y_true': y_true, 'y_pred': y_pred, 'segment_columns': segment_columns}
+    kwargs = {'d': df, 'y_true': y_true, 'y_pred': y_pred, 'segment_columns': segment_columns}
     try:
         result = evaluate_segments(**kwargs)
     except Exception as exc:
@@ -124,14 +124,13 @@ def f1_evaluate_segments_wrapped(df: pd.DataFrame, y_true: Sequence[int], y_pred
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"f1_evaluate_segments: ok"
+    content = "f1_evaluate_segments: ok"
     return content, {
         "f1_evaluate_segments": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
     }
-
 
 
 F1_TOOLS = [
@@ -182,14 +181,14 @@ def make_f1_evaluation_ext_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR F1")
+        logger.info("    * RUN REACT AGENT FOR F1")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the F1 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}
         return react_agent.invoke(input_payload, invoke_react_agent_kwargs)
 
     def post_process(state: GraphState):
-        logger.info(f"    * POST-PROCESSING F1 RESULTS")
+        logger.info("    * POST-PROCESSING F1 RESULTS")
         internal = state.get("messages", []) or []
         if not internal:
             return {"messages": [], "tool_calls": []}

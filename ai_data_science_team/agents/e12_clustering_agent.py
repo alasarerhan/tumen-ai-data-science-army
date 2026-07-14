@@ -73,7 +73,7 @@ def e12_run_kmeans_wrapped(X: np.ndarray) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"e12_run_kmeans: ok"
+    content = "e12_run_kmeans: ok"
     return content, {
         "e12_run_kmeans": kwargs,
         "args": kwargs,
@@ -101,7 +101,7 @@ def e12_run_dbscan_wrapped(X: np.ndarray) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"e12_run_dbscan: ok"
+    content = "e12_run_dbscan: ok"
     return content, {
         "e12_run_dbscan": kwargs,
         "args": kwargs,
@@ -129,7 +129,7 @@ def e12_run_hierarchical_wrapped(X: np.ndarray) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"e12_run_hierarchical: ok"
+    content = "e12_run_hierarchical: ok"
     return content, {
         "e12_run_hierarchical": kwargs,
         "args": kwargs,
@@ -157,7 +157,7 @@ def e12_compute_silhouette_wrapped(X: np.ndarray, labels: np.ndarray) -> Tuple[s
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"e12_compute_silhouette: ok"
+    content = "e12_compute_silhouette: ok"
     return content, {
         "e12_compute_silhouette": kwargs,
         "args": kwargs,
@@ -185,7 +185,7 @@ def e12_compute_calinski_harabasz_wrapped(X: np.ndarray, labels: np.ndarray) -> 
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"e12_compute_calinski_harabasz: ok"
+    content = "e12_compute_calinski_harabasz: ok"
     return content, {
         "e12_compute_calinski_harabasz": kwargs,
         "args": kwargs,
@@ -213,7 +213,7 @@ def e12_cluster_sizes_wrapped(labels: Sequence[int]) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"e12_cluster_sizes: ok"
+    content = "e12_cluster_sizes: ok"
     return content, {
         "e12_cluster_sizes": kwargs,
         "args": kwargs,
@@ -241,7 +241,7 @@ def e12_profile_clusters_wrapped(X: np.ndarray, labels: Sequence[int], feature_n
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"e12_profile_clusters: ok"
+    content = "e12_profile_clusters: ok"
     return content, {
         "e12_profile_clusters": kwargs,
         "args": kwargs,
@@ -269,7 +269,7 @@ def e12_build_naming_seeds_wrapped(profiles: Sequence[Mapping[str, Any]]) -> Tup
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"e12_build_naming_seeds: ok"
+    content = "e12_build_naming_seeds: ok"
     return content, {
         "e12_build_naming_seeds": kwargs,
         "args": kwargs,
@@ -297,7 +297,7 @@ def e12_segmentation_template_wrapped(profiles: Sequence[Mapping[str, Any]], nam
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"e12_segmentation_template: ok"
+    content = "e12_segmentation_template: ok"
     return content, {
         "e12_segmentation_template": kwargs,
         "args": kwargs,
@@ -325,7 +325,7 @@ def e12_run_clustering_wrapped(X: Any) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"e12_run_clustering: ok"
+    content = "e12_run_clustering: ok"
     return content, {
         "e12_run_clustering": kwargs,
         "args": kwargs,
@@ -353,14 +353,13 @@ def e12_result_payload_wrapped(r: ClusteringResult) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"e12_result_payload: ok"
+    content = "e12_result_payload: ok"
     return content, {
         "e12_result_payload": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
     }
-
 
 
 E12_TOOLS = [
@@ -419,14 +418,14 @@ def make_e12_clustering_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR E12")
+        logger.info("    * RUN REACT AGENT FOR E12")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the E12 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}
         return react_agent.invoke(input_payload, invoke_react_agent_kwargs)
 
     def post_process(state: GraphState):
-        logger.info(f"    * POST-PROCESSING E12 RESULTS")
+        logger.info("    * POST-PROCESSING E12 RESULTS")
         internal = state.get("messages", []) or []
         if not internal:
             return {"messages": [], "tool_calls": []}

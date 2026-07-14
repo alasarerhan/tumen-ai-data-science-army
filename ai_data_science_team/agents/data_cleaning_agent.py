@@ -316,7 +316,7 @@ class DataCleaningAgent(BaseAgent):
         """
         if self.response:
             if self.response.get("data_cleaner_function_path"):
-                log_details = f"""
+                log_details = """
 ## Data Cleaning Agent Log Summary:
 
 Function Path: {self.response.get("data_cleaner_function_path")}

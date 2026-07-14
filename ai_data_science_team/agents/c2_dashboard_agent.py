@@ -68,7 +68,7 @@ def c2_add_panel_wrapped(dashboard: Dashboard) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"c2_add_panel: ok"
+    content = "c2_add_panel: ok"
     return content, {
         "c2_add_panel": kwargs,
         "args": kwargs,
@@ -96,7 +96,7 @@ def c2_validate_layout_wrapped(dashboard: Dashboard) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"c2_validate_layout: ok"
+    content = "c2_validate_layout: ok"
     return content, {
         "c2_validate_layout": kwargs,
         "args": kwargs,
@@ -124,7 +124,7 @@ def c2_make_share_token_wrapped(dashboard: Dashboard) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"c2_make_share_token: ok"
+    content = "c2_make_share_token: ok"
     return content, {
         "c2_make_share_token": kwargs,
         "args": kwargs,
@@ -152,7 +152,7 @@ def c2_render_snapshot_wrapped(dashboard: Dashboard) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"c2_render_snapshot: ok"
+    content = "c2_render_snapshot: ok"
     return content, {
         "c2_render_snapshot": kwargs,
         "args": kwargs,
@@ -180,14 +180,13 @@ def c2_make_dashboard_wrapped(name: str, panels: Sequence[Mapping[str, Any]]) ->
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"c2_make_dashboard: ok"
+    content = "c2_make_dashboard: ok"
     return content, {
         "c2_make_dashboard": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
     }
-
 
 
 C2_TOOLS = [
@@ -240,14 +239,14 @@ def make_c2_dashboard_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR C2")
+        logger.info("    * RUN REACT AGENT FOR C2")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the C2 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}
         return react_agent.invoke(input_payload, invoke_react_agent_kwargs)
 
     def post_process(state: GraphState):
-        logger.info(f"    * POST-PROCESSING C2 RESULTS")
+        logger.info("    * POST-PROCESSING C2 RESULTS")
         internal = state.get("messages", []) or []
         if not internal:
             return {"messages": [], "tool_calls": []}

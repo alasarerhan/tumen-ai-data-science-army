@@ -18,7 +18,6 @@ checkpointing.  (Checkpointing a non-serialisable model is not supported.)
 from __future__ import annotations
 
 
-
 import logging
 
 logger = logging.getLogger(__name__)

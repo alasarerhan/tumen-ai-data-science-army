@@ -75,7 +75,7 @@ def c3_define_kpi_wrapped(name: str, code: str) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"c3_define_kpi: ok"
+    content = "c3_define_kpi: ok"
     return content, {
         "c3_define_kpi": kwargs,
         "args": kwargs,
@@ -103,7 +103,7 @@ def c3_evaluate_python_code_wrapped(kpi: Mapping[str, Any], dataframe: pd.DataFr
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"c3_evaluate_python_code: ok"
+    content = "c3_evaluate_python_code: ok"
     return content, {
         "c3_evaluate_python_code": kwargs,
         "args": kwargs,
@@ -131,7 +131,7 @@ def c3_compute_schedule_wrapped() -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"c3_compute_schedule: ok"
+    content = "c3_compute_schedule: ok"
     return content, {
         "c3_compute_schedule": kwargs,
         "args": kwargs,
@@ -159,7 +159,7 @@ def c3_record_period_wrapped(kpi: Mapping[str, Any]) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"c3_record_period: ok"
+    content = "c3_record_period: ok"
     return content, {
         "c3_record_period": kwargs,
         "args": kwargs,
@@ -187,7 +187,7 @@ def c3_make_history_wrapped(kpi_id: str) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"c3_make_history: ok"
+    content = "c3_make_history: ok"
     return content, {
         "c3_make_history": kwargs,
         "args": kwargs,
@@ -215,7 +215,7 @@ def c3_evaluate_and_record_wrapped(kpi: Mapping[str, Any], dataframe: pd.DataFra
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"c3_evaluate_and_record: ok"
+    content = "c3_evaluate_and_record: ok"
     return content, {
         "c3_evaluate_and_record": kwargs,
         "args": kwargs,
@@ -243,7 +243,7 @@ def c3_build_alarm_wrapped(kpi_id: str) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"c3_build_alarm: ok"
+    content = "c3_build_alarm: ok"
     return content, {
         "c3_build_alarm": kwargs,
         "args": kwargs,
@@ -271,7 +271,7 @@ def c3_check_alarm_wrapped(rule: AlarmRule) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"c3_check_alarm: ok"
+    content = "c3_check_alarm: ok"
     return content, {
         "c3_check_alarm": kwargs,
         "args": kwargs,
@@ -299,14 +299,13 @@ def c3_sparkline_points_wrapped(values: Sequence[float], n: int) -> Tuple[str, d
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"c3_sparkline_points: ok"
+    content = "c3_sparkline_points: ok"
     return content, {
         "c3_sparkline_points": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
     }
-
 
 
 C3_TOOLS = [
@@ -363,14 +362,14 @@ def make_c3_kpi_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR C3")
+        logger.info("    * RUN REACT AGENT FOR C3")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the C3 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}
         return react_agent.invoke(input_payload, invoke_react_agent_kwargs)
 
     def post_process(state: GraphState):
-        logger.info(f"    * POST-PROCESSING C3 RESULTS")
+        logger.info("    * POST-PROCESSING C3 RESULTS")
         internal = state.get("messages", []) or []
         if not internal:
             return {"messages": [], "tool_calls": []}

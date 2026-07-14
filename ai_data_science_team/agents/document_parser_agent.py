@@ -35,7 +35,6 @@ Set via ``scrape_mode`` state key (default 'http').
 from __future__ import annotations
 
 
-
 import logging
 
 logger = logging.getLogger(__name__)
@@ -88,7 +87,7 @@ def parse_document(
 
     Parameters:
         document_source : File path OR raw content string (injected from state).
-        document_type   : 'pdf', 'docx', 'html', 'txt', or 'auto' (injected).
+        document_type   : 'pd', 'docx', 'html', 'txt', or 'auto' (injected).
         extraction_mode : 'text', 'tables', or 'full' (injected).
         max_pages       : Maximum pages to parse for PDF (injected, 0 = all).
 
@@ -105,8 +104,8 @@ def parse_document(
         src_lower = (document_source or "").lower()
         if src_lower.startswith("http://") or src_lower.startswith("https://"):
             dtype = "url"
-        elif src_lower.endswith(".pdf"):
-            dtype = "pdf"
+        elif src_lower.endswith(".pd"):
+            dtype = "pd"
         elif src_lower.endswith(".docx"):
             dtype = "docx"
         elif src_lower.endswith(".html") or src_lower.endswith(".htm"):
@@ -123,7 +122,7 @@ def parse_document(
     n_pages = 0
 
     # ---- PDF ----------------------------------------------------------------
-    if dtype == "pdf":
+    if dtype == "pd":
         try:
             import pdfplumber  # type: ignore
 
@@ -464,7 +463,7 @@ def make_document_parser_agent(
     model : Any
         LangChain LLM (must support tool-calling, e.g. ChatOpenAI).
     document_type : str
-        Default document type: 'pdf', 'docx', 'html', 'txt', 'auto'. Default 'auto'.
+        Default document type: 'pd', 'docx', 'html', 'txt', 'auto'. Default 'auto'.
     extraction_mode : str
         Default extraction mode: 'text', 'tables', 'full'. Default 'text'.
     max_pages : int
@@ -616,7 +615,7 @@ class DocumentParserAgent(BaseAgent):
     model : Any
         LangChain LLM (must support tool-calling, e.g. ChatOpenAI).
     document_type : str
-        Default document type: 'pdf', 'docx', 'html', 'txt', 'auto'. Default 'auto'.
+        Default document type: 'pd', 'docx', 'html', 'txt', 'auto'. Default 'auto'.
     extraction_mode : str
         Extraction mode: 'text', 'tables', 'full'. Default 'text'.
     max_pages : int

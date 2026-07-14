@@ -74,7 +74,7 @@ def d3_register_feature_wrapped(store: FeatureStore) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"d3_register_feature: ok"
+    content = "d3_register_feature: ok"
     return content, {
         "d3_register_feature": kwargs,
         "args": kwargs,
@@ -102,7 +102,7 @@ def d3_search_features_wrapped(store: FeatureStore) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"d3_search_features: ok"
+    content = "d3_search_features: ok"
     return content, {
         "d3_search_features": kwargs,
         "args": kwargs,
@@ -130,7 +130,7 @@ def d3_version_sort_key_wrapped(version: str) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"d3_version_sort_key: ok"
+    content = "d3_version_sort_key: ok"
     return content, {
         "d3_version_sort_key": kwargs,
         "args": kwargs,
@@ -158,7 +158,7 @@ def d3_latest_version_wrapped(store: FeatureStore, name: str) -> Tuple[str, dict
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"d3_latest_version: ok"
+    content = "d3_latest_version: ok"
     return content, {
         "d3_latest_version": kwargs,
         "args": kwargs,
@@ -186,7 +186,7 @@ def d3_check_consistency_wrapped() -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"d3_check_consistency: ok"
+    content = "d3_check_consistency: ok"
     return content, {
         "d3_check_consistency": kwargs,
         "args": kwargs,
@@ -214,7 +214,7 @@ def d3_probe_freshness_wrapped(record: FreshnessRecord) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"d3_probe_freshness: ok"
+    content = "d3_probe_freshness: ok"
     return content, {
         "d3_probe_freshness": kwargs,
         "args": kwargs,
@@ -242,7 +242,7 @@ def d3_bulk_probe_freshness_wrapped(records: Sequence[FreshnessRecord]) -> Tuple
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"d3_bulk_probe_freshness: ok"
+    content = "d3_bulk_probe_freshness: ok"
     return content, {
         "d3_bulk_probe_freshness": kwargs,
         "args": kwargs,
@@ -270,7 +270,7 @@ def d3_attach_lineage_wrapped(store: FeatureStore) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"d3_attach_lineage: ok"
+    content = "d3_attach_lineage: ok"
     return content, {
         "d3_attach_lineage": kwargs,
         "args": kwargs,
@@ -298,14 +298,13 @@ def d3_catalog_payload_wrapped(store: FeatureStore, feature_ids: Sequence[str]) 
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"d3_catalog_payload: ok"
+    content = "d3_catalog_payload: ok"
     return content, {
         "d3_catalog_payload": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
     }
-
 
 
 D3_TOOLS = [
@@ -362,14 +361,14 @@ def make_d3_feature_store_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR D3")
+        logger.info("    * RUN REACT AGENT FOR D3")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the D3 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}
         return react_agent.invoke(input_payload, invoke_react_agent_kwargs)
 
     def post_process(state: GraphState):
-        logger.info(f"    * POST-PROCESSING D3 RESULTS")
+        logger.info("    * POST-PROCESSING D3 RESULTS")
         internal = state.get("messages", []) or []
         if not internal:
             return {"messages": [], "tool_calls": []}

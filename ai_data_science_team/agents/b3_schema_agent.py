@@ -71,7 +71,7 @@ def b3_infer_column_type_wrapped(series: pd.Series) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"b3_infer_column_type: ok"
+    content = "b3_infer_column_type: ok"
     return content, {
         "b3_infer_column_type": kwargs,
         "args": kwargs,
@@ -99,7 +99,7 @@ def b3_infer_schema_wrapped(df: pd.DataFrame) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"b3_infer_schema: ok"
+    content = "b3_infer_schema: ok"
     return content, {
         "b3_infer_schema": kwargs,
         "args": kwargs,
@@ -127,7 +127,7 @@ def b3_build_mapping_wrapped(source: Schema, target: Schema) -> Tuple[str, dict]
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"b3_build_mapping: ok"
+    content = "b3_build_mapping: ok"
     return content, {
         "b3_build_mapping": kwargs,
         "args": kwargs,
@@ -155,14 +155,13 @@ def b3_mapping_summary_wrapped(mapping: MappingResult) -> Tuple[str, dict]:
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"b3_mapping_summary: ok"
+    content = "b3_mapping_summary: ok"
     return content, {
         "b3_mapping_summary": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
     }
-
 
 
 B3_TOOLS = [
@@ -214,14 +213,14 @@ def make_b3_schema_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR B3")
+        logger.info("    * RUN REACT AGENT FOR B3")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the B3 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}
         return react_agent.invoke(input_payload, invoke_react_agent_kwargs)
 
     def post_process(state: GraphState):
-        logger.info(f"    * POST-PROCESSING B3 RESULTS")
+        logger.info("    * POST-PROCESSING B3 RESULTS")
         internal = state.get("messages", []) or []
         if not internal:
             return {"messages": [], "tool_calls": []}

@@ -70,7 +70,7 @@ def g3_allocate_port_wrapped(used_ports: Optional[Iterable[int]]) -> Tuple[str, 
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"g3_allocate_port: ok"
+    content = "g3_allocate_port: ok"
     return content, {
         "g3_allocate_port": kwargs,
         "args": kwargs,
@@ -98,7 +98,7 @@ def g3_render_dockerfile_wrapped(model_id: str, version: str) -> Tuple[str, dict
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"g3_render_dockerfile: ok"
+    content = "g3_render_dockerfile: ok"
     return content, {
         "g3_render_dockerfile": kwargs,
         "args": kwargs,
@@ -126,7 +126,7 @@ def g3_render_bentofile_wrapped(model_id: str, version: str) -> Tuple[str, dict]
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"g3_render_bentofile: ok"
+    content = "g3_render_bentofile: ok"
     return content, {
         "g3_render_bentofile": kwargs,
         "args": kwargs,
@@ -154,7 +154,7 @@ def g3_render_fastapi_app_wrapped(model_id: str, version: str) -> Tuple[str, dic
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"g3_render_fastapi_app: ok"
+    content = "g3_render_fastapi_app: ok"
     return content, {
         "g3_render_fastapi_app": kwargs,
         "args": kwargs,
@@ -182,7 +182,7 @@ def g3_record_deployment_wrapped(model_id: str, version: str, target: str) -> Tu
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"g3_record_deployment: ok"
+    content = "g3_record_deployment: ok"
     return content, {
         "g3_record_deployment": kwargs,
         "args": kwargs,
@@ -210,14 +210,13 @@ def g3_record_rollback_wrapped(deployment_id: str, from_version: str, to_version
             "result": None,
             "content": f"error: {exc}",
         }
-    content = f"g3_record_rollback: ok"
+    content = "g3_record_rollback: ok"
     return content, {
         "g3_record_rollback": kwargs,
         "args": kwargs,
         "result": result,
         "content": content,
     }
-
 
 
 G3_TOOLS = [
@@ -271,14 +270,14 @@ def make_g3_model_serving_agent(
         return {"messages": [("user", state.get("user_instructions"))]}
 
     def run_react_agent(state: GraphState):
-        logger.info(f"    * RUN REACT AGENT FOR G3")
+        logger.info("    * RUN REACT AGENT FOR G3")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
         messages = [("system", "You are the G3 agent. Use the available tools to complete the user's request.")] + list(base)
         input_payload = {"messages": messages}
         return react_agent.invoke(input_payload, invoke_react_agent_kwargs)
 
     def post_process(state: GraphState):
-        logger.info(f"    * POST-PROCESSING G3 RESULTS")
+        logger.info("    * POST-PROCESSING G3 RESULTS")
         internal = state.get("messages", []) or []
         if not internal:
             return {"messages": [], "tool_calls": []}

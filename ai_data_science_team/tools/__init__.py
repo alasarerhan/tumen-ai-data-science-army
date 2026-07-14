@@ -50,7 +50,6 @@ def register_all_tools() -> None:
     from ai_data_science_team.tools.anomaly import ANOMALY_TOOLS
     from ai_data_science_team.tools.feature_engineering import FEATURE_ENGINEERING_TOOLS
     from ai_data_science_team.tools.model import MODEL_TOOLS
-    from ai_data_science_team.tools.ab_testing import AB_TESTING_TOOL_NAMES
 
 
 register_all_tools()

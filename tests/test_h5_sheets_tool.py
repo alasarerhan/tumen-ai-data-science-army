@@ -70,13 +70,3 @@ class TestBehaviors:
         assert r["status"] == "ok"
         assert r["rows_written"] == 2
 
-
-class TestRegistry:
-    def test_present(self):
-        for x in (
-            "h5_sheets_check_connection",
-            "h5_sheets_read_range",
-            "h5_sheets_list_sheets",
-            "h5_sheets_write_range",
-        ):
-            assert x in h5.H5_SHEETS_TOOL_NAMES

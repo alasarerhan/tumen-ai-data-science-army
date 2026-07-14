@@ -250,14 +250,3 @@ class TestOrchestrator:
         p = e12.result_payload(r)
         json.dumps(p)  # must not raise
 
-
-class TestToolNamesRegistry:
-    def test_registry_complete(self):
-        names = e12.E12_CLUSTERING_TOOL_NAMES
-        for n in ("e12_run_kmeans", "e12_run_dbscan",
-                  "e12_run_hierarchical", "e12_compute_silhouette",
-                  "e12_compute_calinski_harabasz",
-                  "e12_profile_clusters", "e12_build_naming_seeds",
-                  "e12_segmentation_template", "e12_run_clustering",
-                  "e12_result_payload"):
-            assert n in names

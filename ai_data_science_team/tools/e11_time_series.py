@@ -23,7 +23,6 @@ Public surface
 * :func:`holiday_calendar` — return Turkey / US / generic
   holiday dates between two years.
 * :func:`build_panel` — assemble a (group × ds × y) dataframe.
-* :func:`E11_TIME_SERIES_TOOL_NAMES` — registry constant.
 """
 
 from __future__ import annotations
@@ -229,11 +228,3 @@ def build_panel(
 # ---------------------------------------------------------------------------
 
 
-E11_TIME_SERIES_TOOL_NAMES = [
-    "e11_seasonal_naive",
-    "e11_moving_average",
-    "e11_multiplicative_seasonal",
-    "e11_reconcile_top_down",
-    "e11_holiday_calendar",
-    "e11_build_panel",
-]

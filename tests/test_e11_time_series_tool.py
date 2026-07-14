@@ -130,8 +130,3 @@ class TestBuildPanel:
         with pytest.raises(ValueError):
             e11.build_panel(df, group_columns=["store"], ds_column="ds", y_column="y")
 
-
-class TestRegistry:
-    def test_present(self):
-        assert "e11_seasonal_naive" in e11.E11_TIME_SERIES_TOOL_NAMES
-        assert "e11_holiday_calendar" in e11.E11_TIME_SERIES_TOOL_NAMES

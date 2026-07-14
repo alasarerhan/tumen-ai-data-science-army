@@ -84,15 +84,3 @@ class TestBehaviors:
         assert "bk" in u
         assert "k1" in u
 
-
-class TestRegistry:
-    def test_present(self):
-        for x in (
-            "h6_object_storage_check_connection",
-            "h6_object_storage_list",
-            "h6_object_storage_read",
-            "h6_object_storage_write",
-            "h6_object_storage_signed_url",
-            "h6_object_storage_head",
-        ):
-            assert x in h6.H6_OBJECT_STORAGE_TOOL_NAMES

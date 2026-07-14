@@ -15,15 +15,6 @@ from ai_data_science_team.tools.h1_snowflake import (
 )
 
 
-H4_POWERBI_TOOL_NAMES: List[str] = [
-    "h4_powerbi_check_connection",
-    "h4_powerbi_list_workspaces",
-    "h4_powerbi_list_datasets",
-    "h4_powerbi_refresh_dataset",
-    "h4_powerbi_run_dax",
-]
-
-
 class PowerBIConnector(BaseConnector):
     kind = "powerbi"
     driver = "msal + powerbiclient"

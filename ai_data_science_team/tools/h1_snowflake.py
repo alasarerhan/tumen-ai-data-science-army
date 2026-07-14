@@ -164,13 +164,5 @@ class SnowflakeConnector(BaseConnector):
         }
 
 
-H1_SNOWFLAKE_TOOL_NAMES: List[str] = [
-    "h1_snowflake_check_connection",
-    "h1_snowflake_sample_query",
-    "h1_snowflake_schema_introspect",
-    "h1_snowflake_pushdown_query_plan",
-]
-
-
 def build_snowflake_connector(config: ConnectorConfig) -> SnowflakeConnector:
     return SnowflakeConnector(config)

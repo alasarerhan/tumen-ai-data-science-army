@@ -94,14 +94,3 @@ class TestBehaviors:
         rows = c.run_dax("EVALUATE ROW(\"k\", 1)")
         assert rows[0]["value"] == 1
 
-
-class TestRegistry:
-    def test_present(self):
-        for x in (
-            "h4_powerbi_check_connection",
-            "h4_powerbi_list_workspaces",
-            "h4_powerbi_list_datasets",
-            "h4_powerbi_refresh_dataset",
-            "h4_powerbi_run_dax",
-        ):
-            assert x in h4.H4_POWERBI_TOOL_NAMES

@@ -17,7 +17,6 @@ The module exposes:
   a light imputer/scaler with the candidate model.
 * :func:`cross_validate_candidates` — run cross-validation across all
   candidates with ``cv`` settings and return per-candidate metrics.
-* :func:`E1_MULTI_ENGINE_TOOL_NAMES` — registry constant.
 """
 
 from __future__ import annotations
@@ -362,13 +361,6 @@ __all__ = [
     "build_pipeline",
     "cross_validate_candidates",
     "select_best_model",
-    "E1_MULTI_ENGINE_TOOL_NAMES",
 ]
 
 
-E1_MULTI_ENGINE_TOOL_NAMES = [
-    "e1_candidates_for_task",
-    "e1_build_pipeline",
-    "e1_cross_validate",
-    "e1_select_best",
-]

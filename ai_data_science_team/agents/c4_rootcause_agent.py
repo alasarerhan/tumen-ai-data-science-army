@@ -28,7 +28,6 @@ from ai_data_science_team.utils.regex import format_agent_name
 import pandas as pd
 
 from ai_data_science_team.tools.c4_rootcause import (
-    C4_ROOTCAUSE_TOOL_NAMES,
     DrillDownResult,
     DrillSlice,
     WaterfallResult,

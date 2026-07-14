@@ -281,13 +281,3 @@ def catalog_payload(
     }
 
 
-D3_FEATURE_STORE_TOOL_NAMES: List[str] = [
-    "d3_register_feature",
-    "d3_search_features",
-    "d3_latest_version",
-    "d3_check_consistency",
-    "d3_probe_freshness",
-    "d3_bulk_probe_freshness",
-    "d3_attach_lineage",
-    "d3_catalog_payload",
-]

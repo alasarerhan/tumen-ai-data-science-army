@@ -22,7 +22,6 @@ Public surface
   might be targets.
 * :func:`mine_insights` — orchestrator that runs all of the above
   and returns a ranked list of Insight cards.
-* :func:`C1_INSIGHT_TOOL_NAMES` — registry constant.
 """
 
 from __future__ import annotations
@@ -434,15 +433,6 @@ __all__ = [
     "find_class_imbalance",
     "find_constants_and_outliers",
     "mine_insights",
-    "C1_INSIGHT_TOOL_NAMES",
 ]
 
 
-C1_INSIGHT_TOOL_NAMES = [
-    "c1_find_anomalies",
-    "c1_find_strong_correlations",
-    "c1_find_skewness",
-    "c1_find_missing_patterns",
-    "c1_find_class_imbalance",
-    "c1_mine_insights",
-]

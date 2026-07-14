@@ -227,9 +227,3 @@ def evaluate_robustness(
     )
 
 
-F5_ROBUSTNESS_TOOL_NAMES: List[str] = [
-    "f5_add_gaussian_noise",
-    "f5_mask_features",
-    "f5_default_scenarios",
-    "f5_evaluate_robustness",
-]

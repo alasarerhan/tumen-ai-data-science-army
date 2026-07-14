@@ -28,7 +28,6 @@ Public surface
 * :func:`resolve_data(term)` — the I1 planner's call: given a
   NL term return the top matching source.column candidates.
 * :func:`record_lineage` — minimal "who uses what" lineage.
-* :func:`I2_CATALOG_TOOL_NAMES` — registry constant.
 """
 
 from __future__ import annotations
@@ -36,7 +35,6 @@ from __future__ import annotations
 import unicodedata
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple
-
 
 
 # ---------------------------------------------------------------------------
@@ -564,16 +562,6 @@ __all__ = [
     "record_lineage",
     "lineage_for",
     "make_catalog",
-    "I2_CATALOG_TOOL_NAMES",
 ]
 
 
-I2_CATALOG_TOOL_NAMES = [
-    "i2_add_source",
-    "i2_attach_profile",
-    "i2_add_pii_badges",
-    "i2_catalog_tree",
-    "i2_search",
-    "i2_resolve_data",
-    "i2_lineage",
-]

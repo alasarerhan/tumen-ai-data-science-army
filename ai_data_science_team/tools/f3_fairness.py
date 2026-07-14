@@ -279,16 +279,6 @@ __all__ = [
     "simulate_threshold_mitigation",
     "FairnessReport",
     "audit_fairness",
-    "F3_FAIRNESS_TOOL_NAMES",
 ]
 
 
-F3_FAIRNESS_TOOL_NAMES = [
-    "f3_per_group_metrics",
-    "f3_demographic_parity_difference",
-    "f3_demographic_parity_ratio",
-    "f3_equalized_odds_difference",
-    "f3_violates_four_fifths",
-    "f3_simulate_threshold_mitigation",
-    "f3_audit_fairness",
-]

@@ -18,7 +18,6 @@ Implements:
   windows; returns ``delta``, ``delta_pct``, ``threshold_breached``.
 * :func:`drift_signal_payload` — combine feature + performance into a
   single payload consumable by G2 retrain-policy agent.
-* :func:`G1_DRIFT_TOOL_NAMES` — registry constant.
 """
 
 from __future__ import annotations
@@ -342,14 +341,6 @@ __all__ = [
     "feature_drift_report",
     "performance_drift",
     "drift_signal_payload",
-    "G1_DRIFT_TOOL_NAMES",
 ]
 
 
-G1_DRIFT_TOOL_NAMES = [
-    "g1_psi",
-    "g1_ks2",
-    "g1_feature_drift",
-    "g1_performance_drift",
-    "g1_drift_signal",
-]

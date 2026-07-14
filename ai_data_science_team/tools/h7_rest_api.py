@@ -17,14 +17,6 @@ from ai_data_science_team.tools.h1_snowflake import (
 )
 
 
-H7_REST_API_TOOL_NAMES: List[str] = [
-    "h7_rest_api_check_connection",
-    "h7_rest_api_probe",
-    "h7_rest_api_schema_infer",
-    "h7_rest_api_paginate",
-]
-
-
 class RESTConnector(BaseConnector):
     kind = "rest"
     driver = "httpx / requests"

@@ -28,7 +28,6 @@ from ai_data_science_team.utils.regex import format_agent_name
 from typing import Dict, Sequence
 
 from ai_data_science_team.tools.a3_bayesian import (
-    A3_BAYESIAN_TOOL_NAMES,
     BetaPosterior,
     NormalMeansPosterior,
     bayes_decision,

@@ -23,7 +23,6 @@ Public surface
 * :func:`decide_action` — pick one of ``trigger|monitor|ignore``
   given the signal + policy.
 * :func:`record_event` — append to the audit trail.
-* :func:`G2_RETRAIN_TOOL_NAMES` — registry constant.
 """
 
 from __future__ import annotations
@@ -297,13 +296,6 @@ __all__ = [
     "record_event",
     "event_to_dict",
     "build_audit_trail",
-    "G2_RETRAIN_TOOL_NAMES",
 ]
 
 
-G2_RETRAIN_TOOL_NAMES = [
-    "g2_build_policy",
-    "g2_decide",
-    "g2_simulate",
-    "g2_record",
-]

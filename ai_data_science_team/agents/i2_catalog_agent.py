@@ -31,7 +31,6 @@ from ai_data_science_team.tools.i2_catalog import (
     Catalog,
     ColumnEntry,
     DEFAULT_SYNONYMS,
-    I2_CATALOG_TOOL_NAMES,
     SearchHit,
     SourceEntry,
     TableEntry,

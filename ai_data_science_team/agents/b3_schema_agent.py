@@ -29,7 +29,6 @@ import pandas as pd
 from typing import Dict
 
 from ai_data_science_team.tools.b3_schema import (
-    B3_SCHEMA_TOOL_NAMES,
     ColumnInference,
     ColumnMapping,
     InferredType,

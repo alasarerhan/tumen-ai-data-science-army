@@ -16,14 +16,6 @@ from ai_data_science_team.tools.h1_snowflake import (
 )
 
 
-H3_TABLEAU_TOOL_NAMES: List[str] = [
-    "h3_tableau_check_connection",
-    "h3_tableau_list_workbooks",
-    "h3_tableau_schema_introspect",
-    "h3_tableau_export_workbook",
-]
-
-
 class TableauConnector(BaseConnector):
     kind = "tableau"
     driver = "tableau-api-lib / tableauserverclient"

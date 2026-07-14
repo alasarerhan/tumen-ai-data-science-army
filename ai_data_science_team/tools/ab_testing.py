@@ -635,16 +635,6 @@ __all__ = [
     "apply_multiple_comparison_correction",
     "detect_sequential_peeking",
     "recommend_decision",
-    "AB_TESTING_TOOL_NAMES",
 ]
 
 
-AB_TESTING_TOOL_NAMES = [
-    "ab_check_srm",
-    "ab_analyze_continuous",
-    "ab_analyze_proportion",
-    "ab_apply_cuped",
-    "ab_correct_multiple",
-    "ab_detect_peeking",
-    "ab_recommend_decision",
-]

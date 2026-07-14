@@ -29,7 +29,6 @@ import pandas as pd
 from typing import Dict, Optional, Sequence
 
 from ai_data_science_team.tools.f3_fairness import (
-    F3_FAIRNESS_TOOL_NAMES,
     FOUR_FIFTHS,
     FairnessReport,
     audit_fairness,

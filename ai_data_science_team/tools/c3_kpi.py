@@ -25,7 +25,6 @@ Public surface
 * :func:`check_alarm` — evaluate an alarm rule against a series.
 * :func:`sparkline_points(values, n=20)` — downsample a series for
   a card UI.
-* :func:`C3_KPI_TOOL_NAMES` — registry constant.
 """
 
 from __future__ import annotations
@@ -421,16 +420,6 @@ __all__ = [
     "build_alarm",
     "check_alarm",
     "sparkline_points",
-    "C3_KPI_TOOL_NAMES",
 ]
 
 
-C3_KPI_TOOL_NAMES = [
-    "c3_define_kpi",
-    "c3_evaluate_python",
-    "c3_compute_schedule",
-    "c3_history",
-    "c3_alarm",
-    "c3_alarm_check",
-    "c3_sparkline",
-]

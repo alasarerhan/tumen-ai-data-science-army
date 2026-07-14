@@ -15,14 +15,6 @@ from ai_data_science_team.tools.h1_snowflake import (
 )
 
 
-H5_SHEETS_TOOL_NAMES: List[str] = [
-    "h5_sheets_check_connection",
-    "h5_sheets_read_range",
-    "h5_sheets_list_sheets",
-    "h5_sheets_write_range",
-]
-
-
 class GoogleSheetsConnector(BaseConnector):
     kind = "sheets"
     driver = "gspread / google-api-python-client"

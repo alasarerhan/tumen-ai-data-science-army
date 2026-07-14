@@ -91,13 +91,3 @@ class TestSnowflakeConnector:
         d2 = c.pushdown_query_plan("DELETE FROM t")
         assert d2["pushdown_eligible"] is False
 
-
-class TestToolRegistry:
-    def test_present(self):
-        for x in (
-            "h1_snowflake_check_connection",
-            "h1_snowflake_sample_query",
-            "h1_snowflake_schema_introspect",
-            "h1_snowflake_pushdown_query_plan",
-        ):
-            assert x in h1.H1_SNOWFLAKE_TOOL_NAMES

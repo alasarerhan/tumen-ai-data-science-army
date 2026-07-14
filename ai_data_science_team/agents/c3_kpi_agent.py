@@ -31,7 +31,6 @@ from typing import List, Dict, Optional, Sequence, Mapping
 from ai_data_science_team.tools.c3_kpi import (
     ALARM_KINDS,
     AlarmRule,
-    C3_KPI_TOOL_NAMES,
     KPIHistory,
     PERIODS,
     build_alarm,

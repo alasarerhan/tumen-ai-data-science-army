@@ -39,7 +39,6 @@ Public surface
   LeakageReport with suspect columns.
 * :func:`multicollinearity_report(df, *, threshold=5.0)` → VIF +
   correlation matrix.
-* :func:`D2_FEATURES_TOOL_NAMES` — registry constant.
 """
 
 from __future__ import annotations
@@ -590,15 +589,6 @@ __all__ = [
     "LeakageReport",
     "LeakageFinding",
     "multicollinearity_report",
-    "D2_FEATURES_TOOL_NAMES",
 ]
 
 
-D2_FEATURES_TOOL_NAMES = [
-    "d2_filter_scores",
-    "d2_select_filter",
-    "d2_select_wrapper",
-    "d2_select_embedded",
-    "d2_detect_leakage",
-    "d2_multicollinearity",
-]

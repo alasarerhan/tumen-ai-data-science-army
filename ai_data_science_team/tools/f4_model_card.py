@@ -210,10 +210,3 @@ def list_cards(model_id: str) -> List[ModelCard]:
     return [c for c in CARD_REGISTRY.values() if c.model_id == model_id]
 
 
-F4_MODEL_CARD_TOOL_NAMES: List[str] = [
-    "f4_generate_card",
-    "f4_update_section",
-    "f4_render_html",
-    "f4_render_pdf",
-    "f4_list_cards",
-]

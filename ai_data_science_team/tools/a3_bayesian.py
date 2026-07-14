@@ -17,7 +17,6 @@ Public surface
 * :func:`normal_means_posterior` — normal-normal conjugate update.
 * :func:`bayes_decision` — choose A vs B based on
   ``P(B>A)`` + expected-loss threshold.
-* :func:`A3_BAYESIAN_TOOL_NAMES` — registry constant.
 """
 
 from __future__ import annotations
@@ -299,12 +298,6 @@ __all__ = [
     "bayes_decision",
     "normal_means_posterior",
     "NormalMeansPosterior",
-    "A3_BAYESIAN_TOOL_NAMES",
 ]
 
 
-A3_BAYESIAN_TOOL_NAMES = [
-    "a3_beta_posterior",
-    "a3_bayes_decision",
-    "a3_normal_means",
-]

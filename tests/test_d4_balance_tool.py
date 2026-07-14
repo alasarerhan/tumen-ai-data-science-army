@@ -246,13 +246,3 @@ class TestBalancePayload:
         p = d4.balance_payload(d)
         json.dumps(p)  # must not raise
 
-
-class TestToolNamesRegistry:
-    def test_registry_complete(self):
-        names = d4.D4_BALANCE_TOOL_NAMES
-        for n in ("d4_class_distribution", "d4_is_imbalanced",
-                  "d4_select_strategy", "d4_estimate_strategy_impact",
-                  "d4_recommend_metrics", "d4_undersample_indices",
-                  "d4_class_weight", "d4_apply_strategy",
-                  "d4_balance_payload"):
-            assert n in names

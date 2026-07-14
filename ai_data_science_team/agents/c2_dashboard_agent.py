@@ -28,7 +28,6 @@ from ai_data_science_team.utils.regex import format_agent_name
 from typing import List, Sequence, Mapping
 
 from ai_data_science_team.tools.c2_dashboard import (
-    C2_DASHBOARD_TOOL_NAMES,
     Dashboard,
     Panel,
     add_panel,

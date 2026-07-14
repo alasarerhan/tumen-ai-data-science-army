@@ -23,7 +23,6 @@ Public surface
 * :func:`validate_layout` — check overlaps + bounds.
 * :func:`render_snapshot` — deterministic textual snapshot.
 * :func:`make_dashboard` — one-shot constructor + shareable token.
-* :func:`C2_DASHBOARD_TOOL_NAMES` — registry constant.
 """
 
 from __future__ import annotations
@@ -33,7 +32,6 @@ import json
 import uuid
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Mapping, Optional, Sequence
-
 
 
 # ---------------------------------------------------------------------------
@@ -297,14 +295,6 @@ __all__ = [
     "make_share_token",
     "render_snapshot",
     "make_dashboard",
-    "C2_DASHBOARD_TOOL_NAMES",
 ]
 
 
-C2_DASHBOARD_TOOL_NAMES = [
-    "c2_add_panel",
-    "c2_validate_layout",
-    "c2_render_snapshot",
-    "c2_make_share_token",
-    "c2_make_dashboard",
-]

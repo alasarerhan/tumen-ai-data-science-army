@@ -17,7 +17,6 @@ Public surface
   statistic + p_value + effect-size summary.
 * :func:`interpret_result` — translate a p_value + effect-size into
   a plain-language finding.
-* :func:`A4_HYPOTHESIS_TESTING_TOOL_NAMES` — registry constant.
 """
 
 from __future__ import annotations
@@ -354,12 +353,6 @@ __all__ = [
     "recommend_test",
     "run_test",
     "interpret_result",
-    "A4_HYPOTHESIS_TESTING_TOOL_NAMES",
 ]
 
 
-A4_HYPOTHESIS_TESTING_TOOL_NAMES = [
-    "a4_recommend_test",
-    "a4_run_test",
-    "a4_interpret_result",
-]

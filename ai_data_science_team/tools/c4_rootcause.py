@@ -25,7 +25,6 @@ Public surface
   DrillDownResult.
 * :func:`render_narrative(result, *, kpi_name)` → str (template
   narrative for the agent layer to enrich).
-* :func:`C4_ROOTCAUSE_TOOL_NAMES` — registry constant.
 """
 
 from __future__ import annotations
@@ -364,12 +363,6 @@ __all__ = [
     "waterfall",
     "drill_down",
     "render_narrative",
-    "C4_ROOTCAUSE_TOOL_NAMES",
 ]
 
 
-C4_ROOTCAUSE_TOOL_NAMES = [
-    "c4_waterfall",
-    "c4_drill_down",
-    "c4_narrative",
-]

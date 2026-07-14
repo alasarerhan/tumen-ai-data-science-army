@@ -96,9 +96,3 @@ class TestJudgeBatch:
         assert len(scores) == 3
         assert all(isinstance(s, f6.JudgeScore) for s in scores)
 
-
-class TestRegistry:
-    def test_present(self):
-        names = f6.F6_LLM_JUDGE_TOOL_NAMES
-        for x in ("f6_judge_output", "f6_judge_batch", "f6_code_quality"):
-            assert x in names

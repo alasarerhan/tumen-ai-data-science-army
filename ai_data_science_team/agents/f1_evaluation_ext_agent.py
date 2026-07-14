@@ -30,7 +30,6 @@ from typing import List, Dict, Sequence
 
 from ai_data_science_team.tools.f1_evaluation_ext import (
     CalibrationReport,
-    F1_EVALUATION_EXT_TOOL_NAMES,
     SegmentRow,
     ThresholdReport,
     evaluate_calibration,

@@ -23,7 +23,6 @@ Public surface
   output described in spec §2.
 * :func:`resolve_model` — turn ``{model_id, version, stage,
   artifact}`` into a concrete model object.
-* :func:`G4_BATCH_SCORING_TOOL_NAMES` — registry constant.
 """
 
 from __future__ import annotations
@@ -301,13 +300,6 @@ __all__ = [
     "predict_dataframe",
     "chunked_predict",
     "scoring_report",
-    "G4_BATCH_SCORING_TOOL_NAMES",
 ]
 
 
-G4_BATCH_SCORING_TOOL_NAMES = [
-    "g4_align_features",
-    "g4_predict",
-    "g4_chunked_predict",
-    "g4_scoring_report",
-]

@@ -18,7 +18,6 @@ Public surface
 * :func:`profile_column(series, *, name=None, pii_scan=True)` →
   ``ColumnProfile`` with summary + PII signal.
 * :func:`_pii_scan(series, name)` → returns ``{"pii_signal", "pii_kind"}``.
-* :func:`B1_PROFILING_TOOL_NAMES`` — registry constant.
 """
 
 from __future__ import annotations
@@ -338,11 +337,6 @@ __all__ = [
     "DatasetProfile",
     "profile_column",
     "profile_dataframe",
-    "B1_PROFILING_TOOL_NAMES",
 ]
 
 
-B1_PROFILING_TOOL_NAMES = [
-    "b1_profile_column",
-    "b1_profile_dataframe",
-]

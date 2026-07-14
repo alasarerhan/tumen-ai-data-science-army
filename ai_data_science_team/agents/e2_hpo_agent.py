@@ -29,7 +29,6 @@ from typing import Dict, Optional, Mapping, Callable
 import random
 
 from ai_data_science_team.tools.e2_hpo import (
-    E2_HPO_TOOL_NAMES,
     HPOResult,
     RandomSampler,
     TrialResult,

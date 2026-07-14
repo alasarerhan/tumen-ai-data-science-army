@@ -28,7 +28,6 @@ from ai_data_science_team.utils.regex import format_agent_name
 from typing import List, Dict, Tuple, Optional, Mapping
 
 from ai_data_science_team.tools.g5_promotion import (
-    G5_PROMOTION_TOOL_NAMES,
     ModelVersionRecord,
     STAGES,
     VALID_TRANSITIONS,

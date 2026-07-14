@@ -335,14 +335,3 @@ def summarise(
     return counts
 
 
-G7_ALERTING_TOOL_NAMES: List[str] = [
-    "g7_define_rule",
-    "g7_evaluate_rule",
-    "g7_raise_incident",
-    "g7_acknowledge_incident",
-    "g7_resolve_incident",
-    "g7_tick_escalation",
-    "g7_route_to_channels",
-    "g7_channel_template",
-    "g7_summarise",
-]

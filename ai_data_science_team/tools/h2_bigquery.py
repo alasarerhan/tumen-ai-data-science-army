@@ -18,14 +18,6 @@ from ai_data_science_team.tools.h1_snowflake import (
 )
 
 
-H2_BIGQUERY_TOOL_NAMES: List[str] = [
-    "h2_bigquery_check_connection",
-    "h2_bigquery_sample_query",
-    "h2_bigquery_schema_introspect",
-    "h2_bigquery_query_cost_estimate",
-]
-
-
 class BigQueryConnector(BaseConnector):
     kind = "bigquery"
     driver = "google-cloud-bigquery"

@@ -159,8 +159,3 @@ class TestMLflowAliasSync:
         # mlflow likely not in the runtime; either ok or no_mlflow.
         assert out["status"] in {"ok", "no_mlflow"}
 
-
-class TestRegistry:
-    def test_present(self):
-        assert "g5_request_promotion" in g5.G5_PROMOTION_TOOL_NAMES
-        assert "g5_approve" in g5.G5_PROMOTION_TOOL_NAMES

@@ -602,7 +602,6 @@ __all__ = [
     "estimate_runtime_days",
     "suggest_stratification",
     "design_experiment",
-    "POWER_ANALYSIS_TOOL_NAMES",
 ]
 
 

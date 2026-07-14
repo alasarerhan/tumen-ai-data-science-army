@@ -30,7 +30,6 @@ Public surface
   ``AnonymisationResult``.
 * :func:`default_strategies_for(scan)` — heuristic per-column
   recommendations.
-* :func:`B5_PII_TOOL_NAMES` — registry constant.
 """
 
 from __future__ import annotations
@@ -432,12 +431,6 @@ __all__ = [
     "default_strategies_for",
     "AnonymisationResult",
     "anonymize_dataframe",
-    "B5_PII_TOOL_NAMES",
 ]
 
 
-B5_PII_TOOL_NAMES = [
-    "b5_scan_pii",
-    "b5_default_strategies",
-    "b5_anonymize",
-]

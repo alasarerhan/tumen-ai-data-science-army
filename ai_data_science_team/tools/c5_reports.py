@@ -18,7 +18,6 @@ Public surface
   period, and KPI/event payload.
 * :func:`render_markdown` — render a built report to Markdown.
 * :func:`compute_schedule` — period-aware next-run timestamp.
-* :func:`C5_REPORT_TOOL_NAMES` — registry constant.
 """
 
 from __future__ import annotations
@@ -326,13 +325,6 @@ __all__ = [
     "build_report",
     "compute_schedule",
     "render_markdown",
-    "C5_REPORT_TOOL_NAMES",
 ]
 
 
-C5_REPORT_TOOL_NAMES = [
-    "c5_get_template",
-    "c5_build_report",
-    "c5_render_markdown",
-    "c5_compute_schedule",
-]

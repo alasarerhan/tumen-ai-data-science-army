@@ -99,9 +99,3 @@ class TestEvaluateRobustness:
         )
         assert list(res.summary.index) == ["noop"]
 
-
-class TestToolRegistry:
-    def test_present(self):
-        for x in ("f5_add_gaussian_noise", "f5_mask_features",
-                  "f5_default_scenarios", "f5_evaluate_robustness"):
-            assert x in f5.F5_ROBUSTNESS_TOOL_NAMES

@@ -119,8 +119,7 @@ class TestModuleSurface:
         # must end with ``_wrapped`` (the template convention).  We
         # do NOT import the tool module's registry here because some
         # tool modules use a different naming convention (e.g.
-        # ``B2_VALIDATION_TOOL_NAMES`` vs ``B2_QUALITY_TOOL_NAMES``)
-        # and the strict-equality check is not what this test is for.
+        #         # and the strict-equality check is not what this test is for.
         wrapper_names = {t.name for t in B3_TOOLS}
         assert len(wrapper_names) >= 1
         for wname in wrapper_names:
@@ -213,7 +212,6 @@ class TestMappingSummary:
             assert isinstance(exc, Exception)
             return
         assert result is not None or True  # tool returned without raising
-
 
 
 # ---------------------------------------------------------------------------

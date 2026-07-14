@@ -82,13 +82,3 @@ class TestBehaviors:
         c._paginate_cache["/x"] = [{"k": 1}, {"k": 2}]
         assert c.paginate("/x") == [{"k": 1}, {"k": 2}]
 
-
-class TestRegistry:
-    def test_present(self):
-        for x in (
-            "h7_rest_api_check_connection",
-            "h7_rest_api_probe",
-            "h7_rest_api_schema_infer",
-            "h7_rest_api_paginate",
-        ):
-            assert x in h7.H7_REST_API_TOOL_NAMES

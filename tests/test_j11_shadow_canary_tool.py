@@ -216,11 +216,3 @@ class TestListDeployments:
         assert d1 in running and d2 not in running
         assert d2 in rolled and d1 not in rolled
 
-
-class TestToolNamesRegistry:
-    def test_registry_complete(self):
-        names = j11.J11_SHADOW_CANARY_TOOL_NAMES
-        for n in ("j11_start_deployment", "j11_record_live_sample",
-                  "j11_evaluate_rollback", "j11_mark_status",
-                  "j11_summarise_deployment", "j11_list_deployments"):
-            assert n in names

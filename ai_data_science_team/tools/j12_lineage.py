@@ -160,11 +160,3 @@ def node_summary(graph: LineageGraph, node_id: str) -> Dict[str, Any]:
     }
 
 
-J12_LINEAGE_TOOL_NAMES: List[str] = [
-    "j12_add_node",
-    "j12_add_edge",
-    "j12_ancestors",
-    "j12_descendants",
-    "j12_render_graph",
-    "j12_node_summary",
-]

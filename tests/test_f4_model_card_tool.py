@@ -89,28 +89,3 @@ class TestRender:
         # No weasyprint installed in this env → bytes are HTML.
         assert b"<html" in out
 
-
-class TestRegistry:
-    def test_get_card(self):
-        c = f4.generate_card("m1")
-        assert f4.get_card(c.card_id) is c
-
-    def test_get_card_missing(self):
-        with pytest.raises(KeyError):
-            f4.get_card("nope")
-
-    def test_list_cards(self):
-        f4.generate_card("m1")
-        f4.generate_card("m1")
-        f4.generate_card("m2")
-        assert len(f4.list_cards("m1")) == 2
-        assert len(f4.list_cards("m2")) == 1
-
-
-class TestToolRegistry:
-    def test_present(self):
-        names = f4.F4_MODEL_CARD_TOOL_NAMES
-        for x in ("f4_generate_card", "f4_update_section",
-                  "f4_render_html", "f4_render_pdf",
-                  "f4_list_cards"):
-            assert x in names

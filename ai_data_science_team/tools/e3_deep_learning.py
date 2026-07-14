@@ -22,11 +22,9 @@ Public surface
   ReduceLROnPlateau; returns dict with loss curve + meta.
 * :func:`train_lstm_forecaster` — fit LSTM forecaster on a
   supervised (X, y) tensor pair.
-* :func:`E3_DEEP_LEARNING_TOOL_NAMES` — registry constant.
 """
 
 from __future__ import annotations
-
 
 
 import logging
@@ -469,14 +467,6 @@ __all__ = [
     "build_lstm_classifier",
     "train_mlp_classifier",
     "train_lstm_forecaster",
-    "E3_DEEP_LEARNING_TOOL_NAMES",
 ]
 
 
-E3_DEEP_LEARNING_TOOL_NAMES = [
-    "e3_detect_device",
-    "e3_train_mlp",
-    "e3_train_lstm",
-    "e3_build_mlp",
-    "e3_build_lstm",
-]

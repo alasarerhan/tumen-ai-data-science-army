@@ -28,7 +28,6 @@ from ai_data_science_team.utils.regex import format_agent_name
 from typing import Dict, Sequence
 
 from ai_data_science_team.tools.f2_champion_challenger import (
-    F2_CHAMPION_CHALLENGER_TOOL_NAMES,
     auc_with_delong_ci,
     compare_models,
     delong_pvalue,

@@ -21,7 +21,6 @@ Public surface
 * :func:`render_fastapi_app` — produce a FastAPI scaffold.
 * :func:`record_deployment` — build a deployment record.
 * :func:`record_rollback` — build a rollback record.
-* :func:`G3_SERVING_TOOL_NAMES` — registry constant.
 """
 
 from __future__ import annotations
@@ -232,15 +231,6 @@ __all__ = [
     "render_fastapi_app",
     "record_deployment",
     "record_rollback",
-    "G3_SERVING_TOOL_NAMES",
 ]
 
 
-G3_SERVING_TOOL_NAMES = [
-    "g3_allocate_port",
-    "g3_render_dockerfile",
-    "g3_render_bentofile",
-    "g3_render_fastapi_app",
-    "g3_record_deployment",
-    "g3_record_rollback",
-]

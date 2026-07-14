@@ -17,7 +17,6 @@ Public surface
 * :func:`evaluate_calibration` — Brier + ECE + reliability curve.
 * :func:`optimize_threshold` — argmin threshold + expected cost.
 * :func:`evaluate_segments` — per-segment metrics table.
-* :func:`F1_EVALUATION_EXT_TOOL_NAMES` — registry constant.
 """
 
 from __future__ import annotations
@@ -339,12 +338,6 @@ __all__ = [
     "ThresholdReport",
     "optimize_threshold",
     "evaluate_segments",
-    "F1_EVALUATION_EXT_TOOL_NAMES",
 ]
 
 
-F1_EVALUATION_EXT_TOOL_NAMES = [
-    "f1_evaluate_calibration",
-    "f1_optimize_threshold",
-    "f1_evaluate_segments",
-]

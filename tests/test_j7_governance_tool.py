@@ -263,14 +263,3 @@ class TestPromotionGate:
             e.action == "promotion.evaluate" for e in audit.entries
         )
 
-
-class TestToolNamesRegistry:
-    def test_registry_complete(self):
-        names = j7.J7_GOVERNANCE_TOOL_NAMES
-        for n in ("j7_assign_risk", "j7_required_approvers",
-                  "j7_start_approval_chain", "j7_approve_step",
-                  "j7_chain_progress", "j7_build_checklist",
-                  "j7_evaluate_checklist", "j7_audit_record",
-                  "j7_audit_filter", "j7_render_audit_report",
-                  "j7_promotion_gate"):
-            assert n in names

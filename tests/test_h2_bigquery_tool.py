@@ -73,13 +73,3 @@ class TestBehaviors:
         # 1 TB → $5.
         assert e["estimated_cost_usd"] == 5.0
 
-
-class TestRegistry:
-    def test_present(self):
-        for x in (
-            "h2_bigquery_check_connection",
-            "h2_bigquery_sample_query",
-            "h2_bigquery_schema_introspect",
-            "h2_bigquery_query_cost_estimate",
-        ):
-            assert x in h2.H2_BIGQUERY_TOOL_NAMES

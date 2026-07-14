@@ -17,7 +17,6 @@ Public surface
 * :func:`adj_lift` — adjusted mean difference after demeaning.
 * :func:`check_propensity_overlap` — sanity check on cov-support.
 * :func:`e_value` — E-value sensitivity bound.
-* :func:`A5_CAUSAL_TOOL_NAMES` — registry constant.
 """
 
 from __future__ import annotations
@@ -140,13 +139,6 @@ __all__ = [
     "adj_lift",
     "check_propensity_overlap",
     "e_value",
-    "A5_CAUSAL_TOOL_NAMES",
 ]
 
 
-A5_CAUSAL_TOOL_NAMES = [
-    "a5_did_lift",
-    "a5_adj_lift",
-    "a5_propensity_overlap",
-    "a5_e_value",
-]

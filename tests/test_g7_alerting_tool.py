@@ -314,13 +314,3 @@ class TestSummarise:
         s = g7.summarise(incidents)
         assert s["total"] == 0
 
-
-class TestToolNamesRegistry:
-    def test_registry_complete(self):
-        names = g7.G7_ALERTING_TOOL_NAMES
-        for n in ("g7_define_rule", "g7_evaluate_rule",
-                  "g7_raise_incident", "g7_acknowledge_incident",
-                  "g7_resolve_incident", "g7_tick_escalation",
-                  "g7_route_to_channels", "g7_channel_template",
-                  "g7_summarise"):
-            assert n in names

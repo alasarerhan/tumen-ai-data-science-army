@@ -30,7 +30,6 @@ from typing import List, Dict
 
 from ai_data_science_team.tools.c1_insight import (
     ALL_KINDS,
-    C1_INSIGHT_TOOL_NAMES,
     Insight,
     KIND_ANOMALY,
     KIND_CONSTANT,

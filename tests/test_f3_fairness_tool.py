@@ -108,9 +108,3 @@ class TestAuditFairness:
         )
         assert rep.mitigated is not None
 
-
-class TestRegistry:
-    def test_present(self):
-        assert "f3_audit_fairness" in f3.F3_FAIRNESS_TOOL_NAMES
-        assert "f3_per_group_metrics" in f3.F3_FAIRNESS_TOOL_NAMES
-        assert "f3_violates_four_fifths" in f3.F3_FAIRNESS_TOOL_NAMES

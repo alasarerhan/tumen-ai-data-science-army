@@ -351,16 +351,6 @@ def mlflow_alias_sync(
     }
 
 
-G5_PROMOTION_TOOL_NAMES = [
-    "g5_register_version",
-    "g5_request_promotion",
-    "g5_approve",
-    "g5_demote",
-    "g5_get_version_by_stage",
-    "g5_mlflow_alias_sync",
-]
-
-
 __all__ = [
     "STAGES",
     "VALID_TRANSITIONS",
@@ -373,5 +363,4 @@ __all__ = [
     "demote",
     "get_version_by_stage",
     "mlflow_alias_sync",
-    "G5_PROMOTION_TOOL_NAMES",
 ]

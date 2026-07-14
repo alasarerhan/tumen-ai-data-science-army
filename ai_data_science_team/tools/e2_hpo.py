@@ -23,7 +23,6 @@ Public surface
 * :func:`run_study` — execute ``n_trials`` evaluations, log per-trial
   to MLflow (if available), return the HPO result dict specified in
   the spec.
-* :func:`E2_HPO_TOOL_NAMES` — registry constant.
 """
 
 from __future__ import annotations
@@ -517,12 +516,6 @@ __all__ = [
     "TrialResult",
     "HPOResult",
     "run_study",
-    "E2_HPO_TOOL_NAMES",
 ]
 
 
-E2_HPO_TOOL_NAMES = [
-    "e2_suggest_search_space",
-    "e2_sample",
-    "e2_run_study",
-]

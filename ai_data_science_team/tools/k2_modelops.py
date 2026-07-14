@@ -24,7 +24,6 @@ Public surface
   registry card, perf snapshot, drift rollup, lineage links.
 * :func:`record_champion_change` — emit an audit-friendly dict when
   the champion changes (consumed by F2's promote flow).
-* :func:`K2_MODELOPS_TOOL_NAMES` — registry constant.
 """
 
 from __future__ import annotations
@@ -228,12 +227,6 @@ __all__ = [
     "aggregate_registry_summary",
     "build_model_detail",
     "record_champion_change",
-    "K2_MODELOPS_TOOL_NAMES",
 ]
 
 
-K2_MODELOPS_TOOL_NAMES = [
-    "k2_aggregate_registry",
-    "k2_model_detail",
-    "k2_record_champion_change",
-]

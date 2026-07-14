@@ -184,10 +184,3 @@ def slice_by_feature(
     return out
 
 
-J4_MODEL_EVAL_STORE_TOOL_NAMES: List[str] = [
-    "j4_record_evaluation",
-    "j4_query_evaluations",
-    "j4_compare_models",
-    "j4_summarise_over_datasets",
-    "j4_slice_by_feature",
-]

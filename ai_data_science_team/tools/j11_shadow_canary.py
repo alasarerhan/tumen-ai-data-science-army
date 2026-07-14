@@ -240,11 +240,3 @@ def list_deployments(
     return out
 
 
-J11_SHADOW_CANARY_TOOL_NAMES: List[str] = [
-    "j11_start_deployment",
-    "j11_record_live_sample",
-    "j11_evaluate_rollback",
-    "j11_mark_status",
-    "j11_summarise_deployment",
-    "j11_list_deployments",
-]

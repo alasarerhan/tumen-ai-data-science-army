@@ -28,7 +28,6 @@ from ai_data_science_team.utils.regex import format_agent_name
 from typing import Dict, Sequence
 
 from ai_data_science_team.tools.a5_causal import (
-    A5_CAUSAL_TOOL_NAMES,
     adj_lift,
     check_propensity_overlap,
     did_lift,

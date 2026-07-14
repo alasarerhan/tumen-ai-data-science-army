@@ -151,9 +151,3 @@ class TestParallelCoordinates:
         )
         assert payload["points"][0]["f1"] != payload["points"][0]["f1"]  # NaN
 
-
-class TestToolNamesRegistry:
-    def test_registry_has_expected_functions(self):
-        assert "i3_record_run" in i3.I3_EXPERIMENT_TRACKING_TOOL_NAMES
-        assert "i3_leaderboard" in i3.I3_EXPERIMENT_TRACKING_TOOL_NAMES
-        assert "i3_summarise_metrics" in i3.I3_EXPERIMENT_TRACKING_TOOL_NAMES

@@ -28,7 +28,6 @@ from ai_data_science_team.utils.regex import format_agent_name
 from typing import Dict, Sequence
 
 from ai_data_science_team.tools.a4_hypothesis_testing import (
-    A4_HYPOTHESIS_TESTING_TOOL_NAMES,
     HypothesisTestResult,
     TestRecommendation,
     interpret_result,

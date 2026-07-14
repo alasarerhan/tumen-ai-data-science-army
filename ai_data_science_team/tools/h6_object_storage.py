@@ -17,16 +17,6 @@ from ai_data_science_team.tools.h1_snowflake import (
 )
 
 
-H6_OBJECT_STORAGE_TOOL_NAMES: List[str] = [
-    "h6_object_storage_check_connection",
-    "h6_object_storage_list",
-    "h6_object_storage_read",
-    "h6_object_storage_write",
-    "h6_object_storage_signed_url",
-    "h6_object_storage_head",
-]
-
-
 class ObjectStorageConnector(BaseConnector):
     kind = "object_storage"  # "s3" or "gcs" via ``provider`` param
 

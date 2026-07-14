@@ -164,12 +164,3 @@ class TestSliceByFeature:
         )
         assert slices == {}
 
-
-class TestToolNamesRegistry:
-    def test_registry_complete(self):
-        names = j4.J4_MODEL_EVAL_STORE_TOOL_NAMES
-        assert "j4_record_evaluation" in names
-        assert "j4_query_evaluations" in names
-        assert "j4_compare_models" in names
-        assert "j4_summarise_over_datasets" in names
-        assert "j4_slice_by_feature" in names

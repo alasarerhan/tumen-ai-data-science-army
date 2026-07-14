@@ -86,13 +86,3 @@ class TestBehaviors:
         with pytest.raises(h3.ConnectorError):
             c.export_workbook("wb-1", fmt="weird")
 
-
-class TestRegistry:
-    def test_present(self):
-        for x in (
-            "h3_tableau_check_connection",
-            "h3_tableau_list_workbooks",
-            "h3_tableau_schema_introspect",
-            "h3_tableau_export_workbook",
-        ):
-            assert x in h3.H3_TABLEAU_TOOL_NAMES

@@ -155,10 +155,3 @@ class TestTrainLstmForecaster:
         with pytest.raises(ValueError):
             e3.train_lstm_forecaster(np.zeros((10, 3)), np.zeros((10, 1)))
 
-
-class TestToolRegistry:
-    def test_registry_present(self):
-        names = e3.E3_DEEP_LEARNING_TOOL_NAMES
-        assert "e3_train_mlp" in names
-        assert "e3_train_lstm" in names
-        assert "e3_detect_device" in names

@@ -141,11 +141,3 @@ class TestNodeSummary:
         with pytest.raises(KeyError):
             j12.node_summary(graph, "nope")
 
-
-class TestToolNamesRegistry:
-    def test_registry_complete(self):
-        names = j12.J12_LINEAGE_TOOL_NAMES
-        for n in ("j12_add_node", "j12_add_edge",
-                  "j12_ancestors", "j12_descendants",
-                  "j12_render_graph", "j12_node_summary"):
-            assert n in names

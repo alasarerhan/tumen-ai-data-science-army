@@ -177,14 +177,6 @@ def parallel_coordinates_payload(
     }
 
 
-I3_EXPERIMENT_TRACKING_TOOL_NAMES: List[str] = [
-    "i3_record_run",
-    "i3_leaderboard",
-    "i3_summarise_metrics",
-    "i3_parallel_coordinates_payload",
-]
-
-
 # numpy is referenced above; ensure the module-level import is
 # added if it wasn't already pulled in.  A redundant import is a
 # no-op so the call below is safe.

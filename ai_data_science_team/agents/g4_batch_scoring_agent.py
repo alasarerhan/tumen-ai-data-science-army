@@ -30,7 +30,6 @@ from typing import Dict, Tuple, Any, Sequence
 
 from ai_data_science_team.tools.g4_batch_scoring import (
     FeatureAlignment,
-    G4_BATCH_SCORING_TOOL_NAMES,
     ScoringReport,
     align_features,
     chunked_predict,

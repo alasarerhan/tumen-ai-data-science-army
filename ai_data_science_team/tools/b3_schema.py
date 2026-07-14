@@ -25,7 +25,6 @@ Public surface
 * :func:`build_mapping(source, target, *, corrections=None)` →
   MappingResult with per-source-column decision + confidence.
 * :func:`mapping_summary(mapping)` → flat dict for downstream I/O.
-* :func:`B3_SCHEMA_TOOL_NAMES` — registry constant.
 """
 
 from __future__ import annotations
@@ -553,13 +552,6 @@ __all__ = [
     "MappingResult",
     "build_mapping",
     "mapping_summary",
-    "B3_SCHEMA_TOOL_NAMES",
 ]
 
 
-B3_SCHEMA_TOOL_NAMES = [
-    "b3_infer_type",
-    "b3_infer_schema",
-    "b3_build_mapping",
-    "b3_mapping_summary",
-]

@@ -18,7 +18,6 @@ Public surface
 * :func:`compare_models` — end-to-end: load y_true + two model
   prediction frames, run tests, return a structured comparison
   artifact and a per-rule decision.
-* :func:`F2_CHAMPION_CHALLENGER_TOOL_NAMES` — registry constant used
   by the LangGraph agent binding.
 """
 
@@ -573,13 +572,6 @@ __all__ = [
     "auc_with_delong_ci",
     "delong_pvalue",
     "compare_models",
-    "F2_CHAMPION_CHALLENGER_TOOL_NAMES",
 ]
 
 
-F2_CHAMPION_CHALLENGER_TOOL_NAMES = [
-    "f2_mcnemar",
-    "f2_wilcoxon",
-    "f2_delong",
-    "f2_compare",
-]

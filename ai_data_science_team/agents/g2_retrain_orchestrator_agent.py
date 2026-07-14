@@ -29,7 +29,6 @@ from typing import List, Dict, Sequence, Mapping
 
 from ai_data_science_team.tools.g2_retrain_orchestrator import (
     Event,
-    G2_RETRAIN_TOOL_NAMES,
     Policy,
     Trigger,
     build_audit_trail,

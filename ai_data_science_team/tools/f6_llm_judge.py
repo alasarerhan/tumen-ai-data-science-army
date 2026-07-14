@@ -174,9 +174,3 @@ def judge_batch(
     ]
 
 
-F6_LLM_JUDGE_TOOL_NAMES: List[str] = [
-    "f6_judge_output",
-    "f6_judge_batch",
-    "f6_code_quality",
-    "f6_score_faithfulness",
-]

@@ -150,11 +150,3 @@ class TestInvestigateOrchestrator:
         )
         assert inv.detection.detected is False
 
-
-class TestToolNamesRegistry:
-    def test_registry_complete(self):
-        names = j1.J1_INVESTIGATION_TOOL_NAMES
-        for n in ("j1_detect_change", "j1_isolate_dimension",
-                  "j1_quantify_contributors", "j1_narrate",
-                  "j1_investigate"):
-            assert n in names

@@ -263,10 +263,3 @@ def investigate(
     )
 
 
-J1_INVESTIGATION_TOOL_NAMES: List[str] = [
-    "j1_detect_change",
-    "j1_isolate_dimension",
-    "j1_quantify_contributors",
-    "j1_narrate",
-    "j1_investigate",
-]

@@ -375,15 +375,3 @@ def result_payload(r: ClusteringResult) -> Dict[str, Any]:
     }
 
 
-E12_CLUSTERING_TOOL_NAMES: List[str] = [
-    "e12_run_kmeans",
-    "e12_run_dbscan",
-    "e12_run_hierarchical",
-    "e12_compute_silhouette",
-    "e12_compute_calinski_harabasz",
-    "e12_profile_clusters",
-    "e12_build_naming_seeds",
-    "e12_segmentation_template",
-    "e12_run_clustering",
-    "e12_result_payload",
-]

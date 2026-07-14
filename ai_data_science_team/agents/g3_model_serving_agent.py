@@ -29,7 +29,6 @@ from typing import Dict, Optional, Iterable
 
 from ai_data_science_team.tools.g3_model_serving import (
     DeploymentRecord,
-    G3_SERVING_TOOL_NAMES,
     PORT_POOL,
     RollbackRecord,
     allocate_port,

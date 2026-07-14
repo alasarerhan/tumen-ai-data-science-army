@@ -157,11 +157,3 @@ class TestBuildDashboard:
         p = j6.dashboard_payload(d)
         json.dumps(p)  # must not raise
 
-
-class TestToolNamesRegistry:
-    def test_registry_complete(self):
-        names = j6.J6_RESPONSIBLE_AI_TOOL_NAMES
-        for n in ("j6_compute_fairness", "j6_compute_explainability",
-                  "j6_discover_error_slices", "j6_suggest_mitigations",
-                  "j6_build_dashboard", "j6_dashboard_payload"):
-            assert n in names

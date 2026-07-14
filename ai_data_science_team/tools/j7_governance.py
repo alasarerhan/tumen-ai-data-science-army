@@ -313,16 +313,3 @@ def promotion_gate(
     }
 
 
-J7_GOVERNANCE_TOOL_NAMES: List[str] = [
-    "j7_assign_risk",
-    "j7_required_approvers",
-    "j7_start_approval_chain",
-    "j7_approve_step",
-    "j7_chain_progress",
-    "j7_build_checklist",
-    "j7_evaluate_checklist",
-    "j7_audit_record",
-    "j7_audit_filter",
-    "j7_render_audit_report",
-    "j7_promotion_gate",
-]

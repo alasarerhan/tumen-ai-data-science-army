@@ -299,11 +299,3 @@ def dashboard_payload(d: ResponsibleAIDashboard) -> Dict[str, Any]:
     }
 
 
-J6_RESPONSIBLE_AI_TOOL_NAMES: List[str] = [
-    "j6_compute_fairness",
-    "j6_compute_explainability",
-    "j6_discover_error_slices",
-    "j6_suggest_mitigations",
-    "j6_build_dashboard",
-    "j6_dashboard_payload",
-]

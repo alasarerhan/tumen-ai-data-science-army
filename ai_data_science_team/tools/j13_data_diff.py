@@ -189,10 +189,3 @@ def diff_payload(
     }
 
 
-J13_DATA_DIFF_TOOL_NAMES: List[str] = [
-    "j13_profile_columns",
-    "j13_schema_delta",
-    "j13_key_set_diff",
-    "j13_diff_summary",
-    "j13_diff_payload",
-]

@@ -18,7 +18,6 @@ Public surface
 * :func:`incremental_diff` — classify rows between baseline + current
   DataFrames as added/removed/changed.
 * :func:`record_run` — produce a run-history row.
-* :func:`B7_INGEST_TOOL_NAMES` — registry constant.
 """
 
 from __future__ import annotations
@@ -297,13 +296,6 @@ __all__ = [
     "compute_watermark",
     "incremental_diff",
     "record_run",
-    "B7_INGEST_TOOL_NAMES",
 ]
 
 
-B7_INGEST_TOOL_NAMES = [
-    "b7_register_job",
-    "b7_compute_watermark",
-    "b7_incremental_diff",
-    "b7_record_run",
-]

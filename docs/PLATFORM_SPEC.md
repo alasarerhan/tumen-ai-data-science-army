@@ -74,7 +74,7 @@ Durum: 📋 katalogda · ✍️ detay spec yazıldı · 🚧 implementasyonda ·
 | H1 | Snowflake Connector | P1 | 2 | ✅ | specs/H1-snowflake.md |
 | H2 | BigQuery Connector | P1 | 2 | ✅ | specs/H2-bigquery.md |
 | H3 | Tableau Connector | P1 | 2 | ✅ | specs/H3-tableau.md |
-| H4 | PowerBI Connector | P1 | 2 | ✍️ | specs/H4-powerbi.md |
+| H4 | PowerBI Connector | P1 | 2 | ✅ | specs/H4-powerbi.md |
 | H5 | Google Sheets Connector | P2 | 3 | ✍️ | specs/H5-google-sheets.md |
 | H6 | S3/GCS Dataset Connector | P1 | 2 | ✍️ | specs/H6-object-storage.md |
 | H7 | REST API Data Source | P2 | 3 | ✍️ | specs/H7-rest-api-source.md |

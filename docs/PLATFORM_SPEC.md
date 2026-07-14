@@ -50,7 +50,7 @@ Durum: 📋 katalogda · ✍️ detay spec yazıldı · 🚧 implementasyonda ·
 | C2 | Dashboard Kompozisyonu | P2 | 3 | ✅ | specs/C2-dashboard-composition.md |
 | C3 | KPI / Business Metrics | P1 | 2 | ✅ | specs/C3-kpi-metrics.md |
 | C4 | Root Cause Analysis | P1 | 2 | ✅ | specs/C4-root-cause-analysis.md |
-| C5 | Rapor genişletmesi (şablon/export) | P2 | 3 | ✍️ | specs/C5-report-templates.md |
+| C5 | Rapor genişletmesi (şablon/export) | P2 | 3 | ✅ | specs/C5-report-templates.md |
 | D2 | Feature Selection + Leakage | P1 | 2 | ✅ | specs/D2-feature-selection.md |
 | D3 | Feature Store | P2 | 3 | ✍️ | specs/D3-feature-store.md |
 | D4 | Imbalanced Data | P1 | 2 | ✍️ | specs/D4-imbalanced-data.md |

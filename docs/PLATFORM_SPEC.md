@@ -39,7 +39,7 @@ Durum: 📋 katalogda · ✍️ detay spec yazıldı · 🚧 implementasyonda ·
 | A1 | AB Testing | P0 | 1 | ✅ | specs/A1-ab-testing.md |
 | A2 | Power Analysis & Deney Tasarımı | P1 | 2 | ✅ | specs/A2-power-analysis.md |
 | A3 | Bayesian Analysis | P2 | 3 | ✍️ | specs/A3-bayesian-analysis.md |
-| A4 | Hypothesis Testing Danışmanı | P1 | 2 | ✍️ | specs/A4-hypothesis-testing.md |
+| A4 | Hypothesis Testing Danışmanı | P1 | 2 | ✅ | specs/A4-hypothesis-testing.md |
 | A5 | Causal Inference | P2 | 3 | ✍️ | specs/A5-causal-inference.md |
 | A6 | Uplift Modeling | P3 | 4 | ✍️ | specs/A6-uplift-modeling.md |
 | B1 | Data Profiling genişletmesi | P1 | 2 | ✍️ | specs/B1-data-profiling.md |

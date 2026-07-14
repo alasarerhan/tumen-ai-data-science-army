@@ -90,7 +90,7 @@ Durum: 📋 katalogda · ✍️ detay spec yazıldı · 🚧 implementasyonda ·
 | H5 | Google Sheets Connector | P2 | 3 | ✍️ | specs/H5-google-sheets.md |
 | H6 | S3/GCS Dataset Connector | P1 | 2 | ✍️ | specs/H6-object-storage.md |
 | H7 | REST API Data Source | P2 | 3 | ✍️ | specs/H7-rest-api-source.md |
-| I1 | LLM Pipeline Planner + Copilot UI | P0 | 1 | ✍️ | specs/I1-llm-pipeline-planner.md |
+| I1 | LLM Pipeline Planner + Copilot UI | P0 | 1 | ✅ | specs/I1-llm-pipeline-planner.md |
 | I2 | Data Catalog & Semantik Katman | P1 | 2 | ✍️ | specs/I2-data-catalog.md |
 | I3 | Experiment Tracking / Leaderboard | P1 | 2 | ✍️ | specs/I3-experiment-tracking.md |
 | I4 | Notebook Export | P2 | 3 | ✍️ | specs/I4-notebook-export.md |

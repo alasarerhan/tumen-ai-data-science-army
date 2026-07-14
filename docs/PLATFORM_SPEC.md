@@ -76,7 +76,7 @@ Durum: 📋 katalogda · ✍️ detay spec yazıldı · 🚧 implementasyonda ·
 | H3 | Tableau Connector | P1 | 2 | ✅ | specs/H3-tableau.md |
 | H4 | PowerBI Connector | P1 | 2 | ✅ | specs/H4-powerbi.md |
 | H5 | Google Sheets Connector | P2 | 3 | ✅ | specs/H5-google-sheets.md |
-| H6 | S3/GCS Dataset Connector | P1 | 2 | ✍️ | specs/H6-object-storage.md |
+| H6 | S3/GCS Dataset Connector | P1 | 2 | ✅ | specs/H6-object-storage.md |
 | H7 | REST API Data Source | P2 | 3 | ✍️ | specs/H7-rest-api-source.md |
 | I2 | Data Catalog & Semantik Katman | P1 | 2 | ✅ | specs/I2-data-catalog.md |
 | I3 | Experiment Tracking / Leaderboard | P1 | 2 | ✍️ | specs/I3-experiment-tracking.md |

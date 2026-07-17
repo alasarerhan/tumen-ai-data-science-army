@@ -1,12 +1,13 @@
 from __future__ import annotations
 
+
 from typing import Any
 
 from .merge_support import parse_list_value
 
 
 def execute_merge_plan(dfs: list[Any], merge_cfg: dict[str, Any], last_human: str):
-    import pandas as pd
+    import pandas as pd  # noqa: E402, F401
 
     op = str(merge_cfg.get("operation") or "join").strip().lower()
     if any(word in last_human.lower() for word in ("concat", "append", "union")):

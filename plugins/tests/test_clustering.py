@@ -44,7 +44,7 @@ def _make_random_data(n: int = 50, n_features: int = 4, seed: int = 0) -> List[L
 
 
 def test_kmeans_returns_labels():
-    from ai_data_science_team.tools.clustering import run_kmeans
+    from ai_data_science_team.tools.e12_clustering import run_kmeans
 
     data = _make_blob_data()
     text, result = run_kmeans.func(data=data, n_clusters=3, random_state=0)
@@ -54,7 +54,7 @@ def test_kmeans_returns_labels():
 
 
 def test_kmeans_correct_n_clusters():
-    from ai_data_science_team.tools.clustering import run_kmeans
+    from ai_data_science_team.tools.e12_clustering import run_kmeans
 
     data = _make_blob_data(n_per_cluster=20, centers=[[0, 0], [10, 10]])
     _, result = run_kmeans.func(data=data, n_clusters=2, random_state=42)
@@ -63,7 +63,7 @@ def test_kmeans_correct_n_clusters():
 
 
 def test_kmeans_inertia_positive():
-    from ai_data_science_team.tools.clustering import run_kmeans
+    from ai_data_science_team.tools.e12_clustering import run_kmeans
 
     data = _make_blob_data()
     _, result = run_kmeans.func(data=data, n_clusters=3, random_state=0)
@@ -71,7 +71,7 @@ def test_kmeans_inertia_positive():
 
 
 def test_kmeans_silhouette_range():
-    from ai_data_science_team.tools.clustering import run_kmeans
+    from ai_data_science_team.tools.e12_clustering import run_kmeans
 
     data = _make_blob_data()
     _, result = run_kmeans.func(data=data, n_clusters=3, random_state=0)
@@ -81,7 +81,7 @@ def test_kmeans_silhouette_range():
 
 
 def test_kmeans_centroids_shape():
-    from ai_data_science_team.tools.clustering import run_kmeans
+    from ai_data_science_team.tools.e12_clustering import run_kmeans
 
     data = _make_blob_data()
     _, result = run_kmeans.func(data=data, n_clusters=3, random_state=0)
@@ -90,7 +90,7 @@ def test_kmeans_centroids_shape():
 
 
 def test_kmeans_cluster_sizes_sum():
-    from ai_data_science_team.tools.clustering import run_kmeans
+    from ai_data_science_team.tools.e12_clustering import run_kmeans
 
     data = _make_blob_data()
     _, result = run_kmeans.func(data=data, n_clusters=3)
@@ -104,7 +104,7 @@ def test_kmeans_cluster_sizes_sum():
 
 
 def test_dbscan_returns_labels():
-    from ai_data_science_team.tools.clustering import run_dbscan
+    from ai_data_science_team.tools.e12_clustering import run_dbscan
 
     data = _make_blob_data(noise=0.2)
     text, result = run_dbscan.func(data=data, eps=0.5, min_samples=3)
@@ -114,7 +114,7 @@ def test_dbscan_returns_labels():
 
 
 def test_dbscan_finds_clusters():
-    from ai_data_science_team.tools.clustering import run_dbscan
+    from ai_data_science_team.tools.e12_clustering import run_dbscan
 
     data = _make_blob_data(noise=0.15, centers=[[0, 0], [10, 10]])
     _, result = run_dbscan.func(data=data, eps=0.5, min_samples=3)
@@ -122,7 +122,7 @@ def test_dbscan_finds_clusters():
 
 
 def test_dbscan_noise_count_type():
-    from ai_data_science_team.tools.clustering import run_dbscan
+    from ai_data_science_team.tools.e12_clustering import run_dbscan
 
     data = _make_blob_data()
     _, result = run_dbscan.func(data=data, eps=0.5, min_samples=3)
@@ -131,7 +131,7 @@ def test_dbscan_noise_count_type():
 
 
 def test_dbscan_result_keys():
-    from ai_data_science_team.tools.clustering import run_dbscan
+    from ai_data_science_team.tools.e12_clustering import run_dbscan
 
     data = _make_blob_data()
     _, result = run_dbscan.func(data=data, eps=0.5, min_samples=3)
@@ -146,7 +146,7 @@ def test_dbscan_result_keys():
 
 
 def test_pca_output_shape():
-    from ai_data_science_team.tools.clustering import reduce_pca
+    from ai_data_science_team.tools.e12_clustering import reduce_pca
 
     data = _make_random_data(n=50, n_features=6)
     text, result = reduce_pca.func(data=data, n_components=2)
@@ -157,7 +157,7 @@ def test_pca_output_shape():
 
 
 def test_pca_explained_variance_sums_to_one():
-    from ai_data_science_team.tools.clustering import reduce_pca
+    from ai_data_science_team.tools.e12_clustering import reduce_pca
 
     data = _make_random_data(n=60, n_features=4)
     _, result = reduce_pca.func(data=data, n_components=4)
@@ -166,7 +166,7 @@ def test_pca_explained_variance_sums_to_one():
 
 
 def test_pca_result_keys():
-    from ai_data_science_team.tools.clustering import reduce_pca
+    from ai_data_science_team.tools.e12_clustering import reduce_pca
 
     data = _make_random_data()
     _, result = reduce_pca.func(data=data, n_components=2)
@@ -176,7 +176,7 @@ def test_pca_result_keys():
 
 
 def test_pca_cumulative_variance_correct():
-    from ai_data_science_team.tools.clustering import reduce_pca
+    from ai_data_science_team.tools.e12_clustering import reduce_pca
 
     data = _make_random_data(n=50, n_features=4)
     _, result = reduce_pca.func(data=data, n_components=2)
@@ -190,7 +190,7 @@ def test_pca_cumulative_variance_correct():
 
 
 def test_tsne_output_shape():
-    from ai_data_science_team.tools.clustering import reduce_tsne
+    from ai_data_science_team.tools.e12_clustering import reduce_tsne
 
     data = _make_random_data(n=30, n_features=4)
     text, result = reduce_tsne.func(
@@ -203,7 +203,7 @@ def test_tsne_output_shape():
 
 
 def test_tsne_result_keys():
-    from ai_data_science_team.tools.clustering import reduce_tsne
+    from ai_data_science_team.tools.e12_clustering import reduce_tsne
 
     data = _make_random_data(n=20, n_features=3)
     _, result = reduce_tsne.func(
@@ -214,7 +214,7 @@ def test_tsne_result_keys():
 
 
 def test_tsne_kl_divergence_positive():
-    from ai_data_science_team.tools.clustering import reduce_tsne
+    from ai_data_science_team.tools.e12_clustering import reduce_tsne
 
     data = _make_random_data(n=20, n_features=3)
     _, result = reduce_tsne.func(
@@ -229,7 +229,7 @@ def test_tsne_kl_divergence_positive():
 
 
 def test_cluster_profile_keys():
-    from ai_data_science_team.tools.clustering import compute_cluster_profile
+    from ai_data_science_team.tools.e12_clustering import compute_cluster_profile
 
     data = _make_blob_data()
     labels = [0] * 30 + [1] * 30 + [2] * 30
@@ -242,7 +242,7 @@ def test_cluster_profile_keys():
 
 
 def test_cluster_profile_sizes_correct():
-    from ai_data_science_team.tools.clustering import compute_cluster_profile
+    from ai_data_science_team.tools.e12_clustering import compute_cluster_profile
 
     data = _make_blob_data()
     labels = [0] * 30 + [1] * 30 + [2] * 30
@@ -253,7 +253,7 @@ def test_cluster_profile_sizes_correct():
 
 
 def test_cluster_profile_mean_length():
-    from ai_data_science_team.tools.clustering import compute_cluster_profile
+    from ai_data_science_team.tools.e12_clustering import compute_cluster_profile
 
     data = _make_random_data(n=40, n_features=5)
     labels = [i % 4 for i in range(40)]
@@ -268,7 +268,7 @@ def test_cluster_profile_mean_length():
 
 
 def test_silhouette_range():
-    from ai_data_science_team.tools.clustering import compute_silhouette
+    from ai_data_science_team.tools.e12_clustering import compute_silhouette
 
     data = _make_blob_data()
     labels = [0] * 30 + [1] * 30 + [2] * 30
@@ -280,7 +280,7 @@ def test_silhouette_range():
 
 
 def test_silhouette_single_cluster_returns_none():
-    from ai_data_science_team.tools.clustering import compute_silhouette
+    from ai_data_science_team.tools.e12_clustering import compute_silhouette
 
     data = _make_blob_data()
     labels = [0] * len(data)
@@ -289,7 +289,7 @@ def test_silhouette_single_cluster_returns_none():
 
 
 def test_silhouette_result_keys():
-    from ai_data_science_team.tools.clustering import compute_silhouette
+    from ai_data_science_team.tools.e12_clustering import compute_silhouette
 
     data = _make_blob_data()
     labels = [0] * 30 + [1] * 30 + [2] * 30
@@ -299,7 +299,7 @@ def test_silhouette_result_keys():
 
 
 def test_silhouette_per_cluster_count():
-    from ai_data_science_team.tools.clustering import compute_silhouette
+    from ai_data_science_team.tools.e12_clustering import compute_silhouette
 
     data = _make_blob_data()
     labels = [0] * 30 + [1] * 30 + [2] * 30

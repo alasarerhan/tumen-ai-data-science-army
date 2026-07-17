@@ -441,7 +441,7 @@ def test_ingress_class_name_non_empty():
 
 def test_deployment_references_service_account_automount():
     v = _values()
-    deploy_text = _template_text("deployment.yaml")
+    _template_text("deployment.yaml")
     sa = v["serviceAccount"]
     assert "serviceAccount" in v
     assert "automount" in sa

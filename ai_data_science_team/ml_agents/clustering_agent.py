@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Clustering and Segmentation Agent — M14.
 
 Provides ``ClusteringAgent``:
@@ -12,8 +14,8 @@ Building on ``BaseAgent`` (CompiledStateGraph subclass) with the standard
 
 Example usage::
 
-    from langchain_openai import ChatOpenAI
-    from ai_data_science_team.ml_agents.clustering_agent import ClusteringAgent
+    from langchain_openai import ChatOpenAI  # noqa: E402, F401
+    from ai_data_science_team.ml_agents.clustering_agent import ClusteringAgent  # noqa: E402, F401
 
     llm   = ChatOpenAI(model="gpt-4o-mini")
     agent = ClusteringAgent(model=llm)
@@ -28,30 +30,26 @@ Example usage::
     logger.info(agent.get_ai_message())
     logger.info(agent.get_artifacts())
 """
-from __future__ import annotations
-
-
-
-import logging
+import logging  # noqa: E402, F401
 
 logger = logging.getLogger(__name__)
-from typing import Any, Dict, List, Optional, Sequence
+from typing import Any, Dict, List, Optional, Sequence  # noqa: E402, F401
 
-from langchain_core.messages import AIMessage, BaseMessage
-from langgraph.graph import END, START, StateGraph
-from langgraph.types import Checkpointer
-from typing_extensions import Annotated, TypedDict
+from langchain_core.messages import AIMessage, BaseMessage  # noqa: E402, F401
+from langgraph.graph import END, START, StateGraph  # noqa: E402, F401
+from langgraph.types import Checkpointer  # noqa: E402, F401
+from typing_extensions import Annotated, TypedDict  # noqa: E402, F401
 
 try:
-    from IPython.display import Markdown  # optional — only needed in notebook contexts
+    from IPython.display import Markdown  # optional — only needed in notebook contexts  # noqa: E402, F401
 except ImportError:
     Markdown = None  # type: ignore[assignment,misc]
 
-from langchain.agents import create_agent
-from langgraph.graph.message import add_messages
+from langchain.agents import create_agent  # noqa: E402, F401
+from langgraph.graph.message import add_messages  # noqa: E402, F401
 
-from ai_data_science_team.templates import BaseAgent
-from ai_data_science_team.tools.clustering import (
+from ai_data_science_team.templates import BaseAgent  # noqa: E402, F401
+from ai_data_science_team.tools.e12_clustering import (  # noqa: E402, F401
     run_kmeans,
     run_dbscan,
     reduce_pca,
@@ -59,8 +57,8 @@ from ai_data_science_team.tools.clustering import (
     compute_cluster_profile,
     compute_silhouette,
 )
-from ai_data_science_team.utils.messages import get_tool_call_names
-from ai_data_science_team.utils.regex import format_agent_name
+from ai_data_science_team.utils.messages import get_tool_call_names  # noqa: E402, F401
+from ai_data_science_team.utils.regex import format_agent_name  # noqa: E402, F401
 
 # ---------------------------------------------------------------------------
 # Tools exposed to the agent

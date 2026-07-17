@@ -1,10 +1,9 @@
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, TYPE_CHECKING
 
-from ai_data_science_team.constants import SessionKeys, PipelineStudioLimits
-from ai_data_science_team.exceptions import (
-    UndoNotSupportedError,
-    DatasetNotFoundError,
-)
+from ai_data_science_team.constants import PipelineStudioLimits
+
+if TYPE_CHECKING:
+    PipelineStudioState = object  # type: ignore[assignment,misc]
 
 
 class HistoryManager:
@@ -128,7 +127,6 @@ def _apply_snapshot_action(
 
 
 def undo_last_action(state: "PipelineStudioState") -> None:
-    from .state_management import get_state
     manager = HistoryManager(state)
     
     action = manager.pop_undo()

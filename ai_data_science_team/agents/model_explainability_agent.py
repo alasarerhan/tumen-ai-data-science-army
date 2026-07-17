@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """
 ModelExplainabilityAgent
 ========================
@@ -15,13 +17,10 @@ serialization so it works cleanly inside a LangGraph workflow without
 checkpointing.  (Checkpointing a non-serialisable model is not supported.)
 """
 
-from __future__ import annotations
-
-
-import logging
+import logging  # noqa: E402, F401
 
 logger = logging.getLogger(__name__)
-from typing_extensions import (
+from typing_extensions import (  # noqa: E402, F401
     Annotated,
     Any,
     Dict,
@@ -32,20 +31,20 @@ from typing_extensions import (
     TypedDict,
 )
 
-import pandas as pd
-from IPython.display import Markdown
+import pandas as pd  # noqa: E402, F401
+from IPython.display import Markdown  # noqa: E402, F401
 
-from langchain.agents import create_agent
-from langchain.tools import tool
-from langchain_core.messages import AIMessage, BaseMessage
-from langgraph.graph import END, START, StateGraph
-from langgraph.graph.message import add_messages
-from langgraph.prebuilt import InjectedState
-from langgraph.types import Checkpointer
+from langchain.agents import create_agent  # noqa: E402, F401
+from langchain.tools import tool  # noqa: E402, F401
+from langchain_core.messages import AIMessage, BaseMessage  # noqa: E402, F401
+from langgraph.graph import END, START, StateGraph  # noqa: E402, F401
+from langgraph.graph.message import add_messages  # noqa: E402, F401
+from langgraph.prebuilt import InjectedState  # noqa: E402, F401
+from langgraph.types import Checkpointer  # noqa: E402, F401
 
-from ai_data_science_team.templates import BaseAgent
-from ai_data_science_team.utils.messages import get_tool_call_names
-from ai_data_science_team.utils.regex import format_agent_name
+from ai_data_science_team.templates import BaseAgent  # noqa: E402, F401
+from ai_data_science_team.utils.messages import get_tool_call_names  # noqa: E402, F401
+from ai_data_science_team.utils.regex import format_agent_name  # noqa: E402, F401
 
 AGENT_NAME = "model_explainability_agent"
 
@@ -80,10 +79,10 @@ def explain_with_shap(
     """
     logger.info("    * Tool: explain_with_shap")
 
-    import numpy as np
+    import numpy as np  # noqa: E402, F401
 
     try:
-        import shap  # type: ignore
+        import shap  # type: ignore  # noqa: E402, F401
     except ImportError as exc:
         raise RuntimeError(
             "SHAP is required for this tool.  Install with: pip install shap"
@@ -193,8 +192,8 @@ def explain_with_lime(
     logger.info(f"    * Tool: explain_with_lime (sample_index={sample_index})")
 
     try:
-        import lime  # type: ignore
-        import lime.lime_tabular  # type: ignore
+        import lime  # type: ignore  # noqa: E402, F401
+        import lime.lime_tabular  # type: ignore  # noqa: E402, F401
     except ImportError as exc:
         raise RuntimeError(
             "LIME is required for this tool.  Install with: pip install lime"
@@ -210,7 +209,7 @@ def explain_with_lime(
     mode = "classification" if is_classifier else "regression"
 
     try:
-        n_classes = (
+        (
             len(model_artifact.classes_)
             if hasattr(model_artifact, "classes_")
             else 2
@@ -221,7 +220,6 @@ def explain_with_lime(
             else None
         )
     except Exception:
-        n_classes = 2
         class_names = None
 
     explainer = lime.lime_tabular.LimeTabularExplainer(
@@ -405,7 +403,7 @@ def make_model_explainability_agent(
         explain_artifact: Dict = {}
         for msg in internal_messages:
             art = getattr(msg, "artifact", None)
-            name = getattr(msg, "name", "") or ""
+            getattr(msg, "name", "") or ""
             if art is not None and isinstance(art, dict):
                 if "feature_importance" in art:
                     explain_artifact["shap"] = art

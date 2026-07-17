@@ -12,7 +12,7 @@ def _is_agent_output_report_message(m: BaseMessage) -> bool:
     """
     Detect verbose JSON "Agent Outputs" reports emitted by node_func_report_agent_outputs.
     """
-    from langchain_core.messages import AIMessage
+    from langchain_core.messages import AIMessage  # noqa: E402, F401
     
     if not isinstance(m, AIMessage):
         return False
@@ -40,7 +40,7 @@ def _supervisor_merge_messages(
     - Truncate very long message bodies
     - Keep only the last N messages
     """
-    from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
+    from langchain_core.messages import AIMessage, HumanMessage, SystemMessage  # noqa: E402, F401
     
     merged = add_messages(left or [], right or [])
 
@@ -90,7 +90,7 @@ def _clean_messages(msgs: Sequence[BaseMessage]) -> Sequence[BaseMessage]:
     """
     Strip tool call payloads to avoid OpenAI 'tool_calls' vs 'functions' conflicts.
     """
-    from langchain_core.messages import AIMessage
+    from langchain_core.messages import AIMessage  # noqa: E402, F401
     
     cleaned: list[BaseMessage] = []
     for m in msgs or []:

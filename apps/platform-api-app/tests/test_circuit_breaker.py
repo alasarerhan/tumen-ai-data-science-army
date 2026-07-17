@@ -13,14 +13,11 @@ from __future__ import annotations
 
 import time
 import threading
-from unittest.mock import MagicMock, patch
 
-import pytest
 
 from platform_api.core.circuit_breaker import (
     CircuitBreakerConfig,
     DistributedCircuitBreaker,
-    REDIS_AVAILABLE,
 )
 
 

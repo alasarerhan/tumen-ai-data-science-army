@@ -8,16 +8,13 @@ Atlamak icin:
     python -m pytest tests/ -v -m "not integration"
 """
 
-import os
 import pytest
+
+from _llm import make_chat_model, skip_no_key
 
 pytestmark = pytest.mark.integration
 
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
-skip_no_key = pytest.mark.skipif(
-    not OPENAI_API_KEY,
-    reason="OPENAI_API_KEY is not set — skipping integration tests",
-)
+
 
 langchain_openai = pytest.importorskip(
     "langchain_openai",
@@ -52,8 +49,7 @@ def _resume(agent, decision, config):
 
 @pytest.fixture(scope="module")
 def llm():
-    from langchain_openai import ChatOpenAI
-    return ChatOpenAI(model="gpt-4o-mini", temperature=0, max_tokens=400)
+    return make_chat_model(temperature=0, max_tokens=400)
 
 
 # ---------------------------------------------------------------------------

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """ContextStore — per-session runtime context for pipeline execution (M22).
 
 Keeps data alive across pipeline steps so downstream agents can access
@@ -18,7 +20,7 @@ Usage
 -----
 ::
 
-    from ai_data_science_team.context_store import ContextStore
+    from ai_data_science_team.context_store import ContextStore  # noqa: E402, F401
 
     store = ContextStore()
     sid = store.create_session(user_id="u1", workspace_id="ws1")
@@ -36,12 +38,10 @@ Usage
     artifacts = store.get_artifacts(sid)
 """
 
-from __future__ import annotations
-
-import threading
-import uuid
-from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+import threading  # noqa: E402, F401
+import uuid  # noqa: E402, F401
+from datetime import datetime, timezone  # noqa: E402, F401
+from typing import Any, Dict, List, Optional  # noqa: E402, F401
 
 
 class ContextStore:

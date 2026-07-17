@@ -1,342 +1,323 @@
-"""
-b1_profiling
-============
-
-Deterministic dataset profiling tools supporting **B1 — Data
-Profiling Genişletmesi** (spec ``docs/specs/B1-data-profiling.md``).
-
-Provides per-column statistical profiles plus a lightweight PII
-signal detector and a dataset-level summary that the I2 catalog can
-consume. The output is what ``catalog.columns[*].stats`` and the
-column-card "Istatistik" tab render from.
-
-Public surface
---------------
-
-* :func:`profile_dataframe(df, *, include_pii_scan=True, sample_size=None)`
-  → top-level ``DatasetProfile``.
-* :func:`profile_column(series, *, name=None, pii_scan=True)` →
-  ``ColumnProfile`` with summary + PII signal.
-* :func:`_pii_scan(series, name)` → returns ``{"pii_signal", "pii_kind"}``.
-"""
-
 from __future__ import annotations
 
-import re
-from dataclasses import dataclass
-from typing import Any, Dict, List, Optional
+"""Data profiling tools for the AI Data Science Team.
 
-import numpy as np
-import pandas as pd
+This module provides tools for analyzing and profiling datasets.
+These tools are used by agents to understand data structure before processing.
 
+Tools
+-----
+- profile_dataframe: Analyze column types, cardinality, and statistics
+- infer_units: Infer measurement units from column names
+- resolve_column_aliases: Match user-provided names to actual column names
+"""
 
-# ---------------------------------------------------------------------------
-# PII heuristics — regex + column-name sniff (matches B5 spec keywords).
-# ---------------------------------------------------------------------------
+import difflib  # noqa: E402, F401
+import re  # noqa: E402, F401
 
+import pandas as pd  # noqa: E402, F401
 
-_EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
-_TURKISH_PHONE_RE = re.compile(r"^(?:\+?90|0)?\s?5\d{2}[\s-]?\d{3}[\s-]?\d{2}[\s-]?\d{2}$")
-_TCKN_RE = re.compile(r"^\d{11}$")  # Turkish ID number (11 digits)
-_IBAN_RE = re.compile(r"^[A-Z]{2}\d{2}[A-Z0-9]{12,30}$")
-_CARD_RE = re.compile(r"^(?:\d[ -]?){13,19}$")
-
-
-PII_NAME_HINTS: Dict[str, str] = {
-    "email": "email",
-    "e_mail": "email",
-    "mail": "email",
-    "phone": "phone",
-    "telefon": "phone",
-    "tel": "phone",
-    "mobile": "phone",
-    "gsm": "phone",
-    "tckn": "tckn",
-    "tc_kimlik": "tckn",
-    "identity": "tckn",
-    "ssn": "ssn",
-    "iban": "iban",
-    "account": "iban",
-    "card": "card",
-    "credit_card": "card",
-    "name": "name",
-    "first_name": "name",
-    "last_name": "name",
-    "ad": "name",
-    "soyad": "name",
-    "address": "address",
-    "adres": "address",
-}
+from ai_data_science_team.tool_registry import (  # noqa: E402, F401
+    ToolParameter,
+    register_tool,
+)
 
 
-def _column_name_signal(name: str) -> Optional[str]:
-    n = name.lower().replace("-", "_").strip()
-    # Token-level match: split on underscores/spaces and look up tokens.
-    tokens = [t for t in re.split(r"[_\s]+", n) if t]
-    matched: List[str] = []
-    for tok in tokens:
-        if tok in PII_NAME_HINTS:
-            matched.append(PII_NAME_HINTS[tok])
-    if matched:
-        # Most-specific hit wins; "tckn" beats "email" if both appear.
-        order = ["card", "iban", "tckn", "ssn", "phone", "email", "name", "address"]
-        for kind in order:
-            if kind in matched:
-                return kind
-    return None
-
-
-def _sample_strings(series: pd.Series, *, max_n: int = 100) -> List[str]:
-    cleaned = series.dropna().astype(str).tolist()
-    return cleaned[:max_n]
-
-
-def _pii_scan(series: pd.Series, name: Optional[str]) -> Dict[str, Any]:
-    """Lightweight PII heuristic over a column.
-
-    Two signals combined:
-      * column-name heuristic (PII_NAME_HINTS).
-      * value-pattern heuristic over up to 100 non-null samples
-        (email, phone, TCKN, IBAN, card).
-    """
-    name_hint = _column_name_signal(name or series.name or "")
-    sample_strings = _sample_strings(series)
-
-    signal = "low"
-    kind: Optional[str] = None
-    matched_ratio = 0.0
-
-    if not sample_strings:
-        if name_hint:
-            signal = "warning"
-            kind = name_hint
-            return {"pii_signal": signal, "pii_kind": kind, "match_ratio": 0.0}
-
-    # Value-pattern checks
-    pattern_kinds: Dict[str, re.Pattern] = {
-        "email": _EMAIL_RE,
-        "phone": _TURKISH_PHONE_RE,
-        "tckn": _TCKN_RE,
-        "iban": _IBAN_RE,
-        "card": _CARD_RE,
-    }
-
-    for kind_key, regex in pattern_kinds.items():
-        matches = sum(1 for s in sample_strings if regex.match(s.strip()))
-        if matches:
-            r = matches / len(sample_strings)
-            if r > matched_ratio:
-                matched_ratio = r
-                kind = kind_key
-            if r >= 0.6:
-                signal = "high"
-            elif r >= 0.3:
-                signal = "warning"
-
-    if name_hint:
-        # Promote the signal so the catalog flags the column.
-        if signal == "low":
-            signal = "warning"
-        if kind is None:
-            kind = name_hint
-
-    return {
-        "pii_signal": signal,
-        "pii_kind": kind,
-        "match_ratio": float(matched_ratio),
-    }
-
-
-# ---------------------------------------------------------------------------
-# Column-level profile
-# ---------------------------------------------------------------------------
-
-
-@dataclass
-class ColumnProfile:
-    name: str
-    dtype: str
-    n: int
-    n_missing: int
-    n_unique: int
-    is_numeric: bool
-    is_categorical: bool
-    stats: Dict[str, Any]
-    pii: Dict[str, Any]
-
-    def to_dict(self) -> Dict[str, Any]:
-        return {
-            "name": self.name,
-            "dtype": self.dtype,
-            "n": self.n,
-            "n_missing": self.n_missing,
-            "n_unique": self.n_unique,
-            "is_numeric": self.is_numeric,
-            "is_categorical": self.is_categorical,
-            "stats": dict(self.stats),
-            "pii": dict(self.pii),
-        }
-
-
-def profile_column(
-    series: pd.Series,
-    *,
-    name: Optional[str] = None,
-    pii_scan: bool = True,
-    max_top_n: int = 10,
-) -> ColumnProfile:
-    """Compute per-column profile including optional PII signal."""
-    col_name = name or str(series.name or "")
-    n = int(len(series))
-    n_missing = int(series.isna().sum())
-    n_unique = int(series.dropna().nunique())
-
-    is_numeric = bool(pd.api.types.is_numeric_dtype(series))
-    # `is_categorical_dtype` is deprecated in pandas 2.x; use
-    # isinstance directly on the dtype for forward-compat.
-    is_categorical = bool(
-        pd.api.types.is_string_dtype(series)
-        or isinstance(series.dtype, pd.CategoricalDtype)
-    )
-
-    stats: Dict[str, Any] = {}
-    if is_numeric and n - n_missing > 0:
-        non_null = series.dropna().astype(float)
-        stats.update(
-            {
-                "min": float(non_null.min()),
-                "max": float(non_null.max()),
-                "mean": float(non_null.mean()),
-                "median": float(non_null.median()),
-                "std": float(non_null.std(ddof=0)) if n - n_missing > 1 else 0.0,
-                "q01": float(non_null.quantile(0.01)),
-                "q99": float(non_null.quantile(0.99)),
-                "zeros": int((non_null == 0).sum()),
-            }
-        )
-        # Histogram into 10 equal-width bins.
-        try:
-            counts, edges = np.histogram(non_null.to_numpy(), bins=10)
-            stats["histogram"] = [
-                {"lo": float(edges[i]), "hi": float(edges[i + 1]), "count": int(counts[i])}
-                for i in range(len(counts))
-            ]
-        except (ValueError, TypeError):
-            stats["histogram"] = []
-    elif is_categorical and n - n_missing > 0:
-        counts = series.dropna().value_counts()
-        stats["top_values"] = [
-            {"value": str(v), "count": int(c)}
-            for v, c in counts.head(max_top_n).items()
-        ]
-    elif pd.api.types.is_datetime64_any_dtype(series) and n - n_missing > 0:
-        ts = series.dropna()
-        stats.update({"min": str(ts.min()), "max": str(ts.max())})
-
-    pii: Dict[str, Any] = (
-        _pii_scan(series, col_name)
-        if pii_scan and (is_categorical or is_numeric)
-        else {"pii_signal": "low", "pii_kind": None, "match_ratio": 0.0}
-    )
-
-    return ColumnProfile(
-        name=col_name,
-        dtype=str(series.dtype),
-        n=n,
-        n_missing=n_missing,
-        n_unique=n_unique,
-        is_numeric=is_numeric,
-        is_categorical=is_categorical,
-        stats=stats,
-        pii=pii,
-    )
-
-
-# ---------------------------------------------------------------------------
-# Dataset-level profile
-# ---------------------------------------------------------------------------
-
-
-@dataclass
-class DatasetProfile:
-    n_rows: int
-    n_cols: int
-    columns: List[ColumnProfile]
-    pii_columns: List[str]
-    schema_hash: str
-
-    def to_dict(self) -> Dict[str, Any]:
-        return {
-            "n_rows": self.n_rows,
-            "n_cols": self.n_cols,
-            "columns": [c.to_dict() for c in self.columns],
-            "pii_columns": list(self.pii_columns),
-            "schema_hash": self.schema_hash,
-        }
-
-
-def _schema_hash(df: pd.DataFrame) -> str:
-    """Stable hash of a frame's schema (column names + dtypes).
-
-    Format: lowercase hex of sha1, first 12 chars.
-    """
-    import hashlib
-
-    s = "|".join(f"{c}:{df[c].dtype}" for c in df.columns)
-    return hashlib.sha1(s.encode("utf-8")).hexdigest()[:12]
-
-
-def profile_dataframe(
-    df: pd.DataFrame,
-    *,
-    include_pii_scan: bool = True,
-    sample_size: Optional[int] = None,
-) -> DatasetProfile:
-    """Build a dataset-level profile.
+@register_tool(
+    name="profile_dataframe",
+    description="Analyze a DataFrame to determine column types, cardinality, and statistics.",
+    parameters={
+        "data": ToolParameter(type="object", description="Input DataFrame as dict", required=True),
+    },
+    returns="Dict with column types, cardinality, and statistics",
+    namespace="core.profiling",
+    capabilities=["profiling", "analysis", "schema", "statistics"],
+    cost_tier="low",
+)
+def profile_dataframe(data: pd.DataFrame | dict) -> dict:
+    """Profile a DataFrame to understand its structure.
 
     Parameters
     ----------
-    df : pd.DataFrame
-        The dataset to profile.
-    include_pii_scan : bool
-        Run the PII detector per column.  Disable for purely numeric
-        signals-only flows when PII risk is already known.
-    sample_size : int, optional
-        If the frame has more rows than ``sample_size``, take a
-        random subsample first (deterministic seed for reproducibility).
+    data : DataFrame or dict
+        Input data.
+
+    Returns
+    -------
+    dict
+        Profile with:
+        - n_rows: number of rows
+        - columns: list of column names
+        - numeric_cols: numeric columns
+        - categorical_cols: categorical columns
+        - datetime_cols: datetime columns
+        - boolean_cols: boolean columns
+        - low_cardinality_numeric: numeric columns with <=10 unique values
+        - high_cardinality_categorical: categorical columns with high cardinality
     """
-    if df.shape[0] == 0 or df.shape[1] == 0:
-        return DatasetProfile(
-            n_rows=int(df.shape[0]),
-            n_cols=int(df.shape[1]),
-            columns=[],
-            pii_columns=[],
-            schema_hash=_schema_hash(df),
-        )
+    df = pd.DataFrame(data) if isinstance(data, dict) else data
 
-    if sample_size is not None and df.shape[0] > sample_size:
-        df = df.sample(n=sample_size, random_state=0).reset_index(drop=True)
+    if not isinstance(df, pd.DataFrame) or df.empty:
+        return {
+            "n_rows": 0,
+            "columns": [],
+            "numeric_cols": [],
+            "categorical_cols": [],
+            "datetime_cols": [],
+            "boolean_cols": [],
+            "low_cardinality_numeric": [],
+            "high_cardinality_categorical": [],
+        }
 
-    columns = [
-        profile_column(df[c], name=str(c), pii_scan=include_pii_scan)
-        for c in df.columns
-    ]
-    pii_columns = [c.name for c in columns if c.pii.get("pii_signal") in {"warning", "high"}]
+    n_rows = len(df)
+    sample = df.head(5000) if n_rows > 5000 else df
 
-    return DatasetProfile(
-        n_rows=int(df.shape[0]),
-        n_cols=int(df.shape[1]),
-        columns=columns,
-        pii_columns=pii_columns,
-        schema_hash=_schema_hash(df),
+    columns = [str(c) for c in list(sample.columns)]
+    numeric_cols: list[str] = []
+    categorical_cols: list[str] = []
+    datetime_cols: list[str] = []
+    boolean_cols: list[str] = []
+    low_card_numeric: list[str] = []
+    high_card_categorical: list[str] = []
+
+    for col in columns:
+        s = sample[col]
+        try:
+            nunique = int(s.nunique(dropna=True))
+        except Exception:
+            nunique = 0
+
+        if pd.api.types.is_bool_dtype(s):
+            boolean_cols.append(col)
+            categorical_cols.append(col)
+            continue
+        if pd.api.types.is_datetime64_any_dtype(s):
+            datetime_cols.append(col)
+            continue
+        if pd.api.types.is_numeric_dtype(s):
+            numeric_cols.append(col)
+            if nunique <= 10:
+                low_card_numeric.append(col)
+                categorical_cols.append(col)
+            continue
+
+        categorical_cols.append(col)
+        if nunique >= max(20, int(0.2 * max(n_rows, 1))):
+            high_card_categorical.append(col)
+
+    return {
+        "n_rows": n_rows,
+        "columns": columns,
+        "numeric_cols": numeric_cols,
+        "categorical_cols": categorical_cols,
+        "datetime_cols": datetime_cols,
+        "boolean_cols": boolean_cols,
+        "low_cardinality_numeric": low_card_numeric,
+        "high_cardinality_categorical": high_card_categorical,
+    }
+
+
+@register_tool(
+    name="infer_units",
+    description="Infer measurement units from column names (e.g., 'age' -> 'years', 'price' -> 'USD').",
+    parameters={
+        "columns": ToolParameter(type="array", description="List of column names", required=True),
+    },
+    returns="Dict mapping column names to inferred units",
+    namespace="core.profiling",
+    capabilities=["profiling", "units", "metadata"],
+    cost_tier="low",
+)
+def infer_units(columns: list[str]) -> dict[str, str]:
+    """Infer measurement units from column names.
+
+    Parameters
+    ----------
+    columns : list[str]
+        List of column names.
+
+    Returns
+    -------
+    dict
+        Mapping of column names to inferred units.
+    """
+    units = {}
+    for col in columns:
+        col_lower = col.lower()
+        unit = None
+        if "%" in col_lower or "pct" in col_lower or "percent" in col_lower:
+            unit = "%"
+        elif "usd" in col_lower or "price" in col_lower or "amount" in col_lower:
+            unit = "USD"
+        elif "cost" in col_lower or "charge" in col_lower:
+            unit = "USD"
+        elif "date" in col_lower or "time" in col_lower:
+            unit = "date/time"
+        elif "age" in col_lower:
+            unit = "years"
+        elif col_lower.endswith("_id") or col_lower == "id":
+            unit = None
+        if unit:
+            units[col] = unit
+    return units
+
+
+@register_tool(
+    name="resolve_column_aliases",
+    description="Match user-provided column names to actual DataFrame column names using fuzzy matching.",
+    parameters={
+        "text": ToolParameter(type="string", description="User-provided text to search for column names", required=True),
+        "columns": ToolParameter(type="array", description="List of actual column names", required=True),
+    },
+    returns="Dict mapping user terms to actual column names",
+    namespace="core.profiling",
+    capabilities=["profiling", "matching", "fuzzy"],
+    cost_tier="low",
+)
+def resolve_column_aliases(text: str, columns: list[str]) -> dict[str, str]:
+    """Resolve column aliases using fuzzy matching.
+
+    Parameters
+    ----------
+    text : str
+        User-provided text to search for column names.
+    columns : list[str]
+        List of actual column names.
+
+    Returns
+    -------
+    dict
+        Mapping of user terms to actual column names.
+    """
+    def _normalize(value: str) -> str:
+        if not isinstance(value, str):
+            return ""
+        return re.sub(r"[^a-z0-9]+", "", value.lower())
+
+    if not isinstance(text, str) or not text.strip():
+        return {}
+    columns = [str(c) for c in columns if isinstance(c, str)]
+    if not columns:
+        return {}
+
+    col_norm_map = {c: _normalize(c) for c in columns}
+    tokens = re.findall(r"[A-Za-z0-9_]+", text.lower())
+    candidates = set(tokens)
+    for i in range(len(tokens) - 1):
+        candidates.add(tokens[i] + tokens[i + 1])
+        candidates.add(f"{tokens[i]}_{tokens[i + 1]}")
+
+    aliases: dict[str, str] = {}
+    for cand in list(candidates):
+        cand_norm = _normalize(cand)
+        if not cand_norm or len(cand_norm) < 3:
+            continue
+        best = None
+        best_score = 0.0
+        for col, col_norm in col_norm_map.items():
+            if not col_norm:
+                continue
+            if cand_norm == col_norm or cand_norm in col_norm:
+                best = col
+                best_score = 1.0
+                break
+            score = difflib.SequenceMatcher(None, cand_norm, col_norm).ratio()
+            if score > best_score:
+                best_score = score
+                best = col
+        if best and best_score >= 0.82:
+            aliases[cand] = best
+    return aliases
+
+
+@register_tool(
+    name="format_profile_for_prompt",
+    description="Format a DataFrame profile for inclusion in an LLM prompt.",
+    parameters={
+        "profile": ToolParameter(type="object", description="Profile dict from profile_dataframe", required=True),
+    },
+    returns="Formatted string for LLM prompt",
+    namespace="core.profiling",
+    capabilities=["profiling", "formatting", "prompt"],
+    cost_tier="low",
+)
+def format_profile_for_prompt(profile: dict) -> str:
+    """Format a profile for LLM prompt.
+
+    Parameters
+    ----------
+    profile : dict
+        Profile from profile_dataframe.
+
+    Returns
+    -------
+    str
+        Formatted string.
+    """
+    if not isinstance(profile, dict):
+        return ""
+
+    def _fmt(values: list[str]) -> str:
+        return ", ".join(values[:12]) if values else "None"
+
+    return "\n".join(
+        [
+            f"Rows: {profile.get('n_rows')}",
+            f"Numeric: {_fmt(profile.get('numeric_cols') or [])}",
+            f"Categorical: {_fmt(profile.get('categorical_cols') or [])}",
+            f"Datetime: {_fmt(profile.get('datetime_cols') or [])}",
+            f"Boolean: {_fmt(profile.get('boolean_cols') or [])}",
+            f"Low-card numeric: {_fmt(profile.get('low_cardinality_numeric') or [])}",
+            f"High-card categorical: {_fmt(profile.get('high_cardinality_categorical') or [])}",
+        ]
     )
 
 
-__all__ = [
-    "ColumnProfile",
-    "DatasetProfile",
-    "profile_column",
+PROFILING_TOOLS = [
     "profile_dataframe",
+    "infer_units",
+    "resolve_column_aliases",
+    "format_profile_for_prompt",
 ]
 
 
+__all__ = [
+    "profile_dataframe",
+    "infer_units",
+    "resolve_column_aliases",
+    "format_profile_for_prompt",
+    "PROFILING_TOOLS",
+]
+
+# Compatibility shims — modernized profiling module dropped these names but the
+# agent file expects them. Each is a thin forwarder to the modernized equivalent
+# or a minimal local implementation.
+
+def profile_column(series, *, top_categories=5, hist_bins=10):
+    """Profile a single column — returns dict with dtype, null_rate, uniques, etc."""
+    out = {
+        "name": getattr(series, "name", None),
+        "dtype": str(series.dtype),
+        "n": int(len(series)),
+        "null_rate": float(series.isna().mean()) if hasattr(series, "isna") else 0.0,
+        "uniques": int(series.nunique(dropna=True)) if hasattr(series, "nunique") else None,
+    }
+    if out["null_rate"] is None:
+        out["null_rate"] = 0.0
+    if hasattr(series, "dtype") and series.dtype.kind in "fi":
+        try:
+            s = series.dropna().astype(float)
+            if len(s):
+                out["min"] = float(s.min())
+                out["max"] = float(s.max())
+                out["mean"] = float(s.mean())
+                out["std"] = float(s.std())
+        except Exception:
+            pass
+    elif hasattr(series, "dtype") and series.dtype.kind == "O":
+        try:
+            vc = series.value_counts().head(top_categories)
+            out["top_categories"] = [(str(k), int(v)) for k, v in vc.items()]
+        except Exception:
+            pass
+    return out

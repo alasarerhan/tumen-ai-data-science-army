@@ -24,9 +24,9 @@ Example
 >>> df = conn.read("sales.csv", max_rows=100)
 """
 
-from ai_data_science_team.connectors.base import DataConnector
-from ai_data_science_team.connectors.local_file_connector import LocalFileConnector
-from ai_data_science_team.connectors.sql_connector import SQLConnector
+from ai_data_science_team.connectors.base import DataConnector  # noqa: F401
+from ai_data_science_team.connectors.local_file_connector import LocalFileConnector  # noqa: F401
+from ai_data_science_team.connectors.sql_connector import SQLConnector  # noqa: F401
 
 __all__ = [
     "DataConnector",
@@ -44,7 +44,7 @@ def load_connector_plugins() -> dict[str, type]:
     or if no plugins are installed.
     """
     try:
-        from importlib.metadata import entry_points
+        from importlib.metadata import entry_points  # noqa: F401
         eps = entry_points(group="ai_data_science_team.connectors")
         return {ep.name: ep.load() for ep in eps}
     except Exception:

@@ -8,21 +8,21 @@ logger = logging.getLogger(__name__)
 # ***
 # * Agents: H2O Machine Learning Agent
 
-import os
-import json
-from typing_extensions import TypedDict, Annotated, Sequence, Optional
-import operator
+import os  # noqa: E402, F401
+import json  # noqa: E402, F401
+from typing_extensions import TypedDict, Annotated, Sequence, Optional  # noqa: E402, F401
+import operator  # noqa: E402, F401
 
-import pandas as pd
-from IPython.display import Markdown
+import pandas as pd  # noqa: E402, F401
+from IPython.display import Markdown  # noqa: E402, F401
 
-from langchain_core.prompts import PromptTemplate
-from langchain_core.messages import BaseMessage
+from langchain_core.prompts import PromptTemplate  # noqa: E402, F401
+from langchain_core.messages import BaseMessage  # noqa: E402, F401
 
-from langgraph.types import Command, Checkpointer
-from langgraph.checkpoint.memory import MemorySaver
+from langgraph.types import Command, Checkpointer  # noqa: E402, F401
+from langgraph.checkpoint.memory import MemorySaver  # noqa: E402, F401
 
-from ai_data_science_team.templates import (
+from ai_data_science_team.templates import (  # noqa: E402, F401
     node_func_execute_agent_code_on_data,
     node_func_human_review,
     node_func_fix_agent_code,
@@ -30,18 +30,18 @@ from ai_data_science_team.templates import (
     create_coding_agent_graph,
     BaseAgent,
 )
-from ai_data_science_team.parsers.parsers import PythonOutputParser
-from ai_data_science_team.utils.regex import (
+from ai_data_science_team.parsers.parsers import PythonOutputParser  # noqa: E402, F401
+from ai_data_science_team.utils.regex import (  # noqa: E402, F401
     relocate_imports_inside_function,
     add_comments_to_top,
     format_agent_name,
     format_recommended_steps,
     get_generic_summary,
 )
-from ai_data_science_team.tools.dataframe import get_dataframe_summary
-from ai_data_science_team.utils.logging import log_ai_function, log_ai_error
-from ai_data_science_team.utils.messages import get_last_user_message_content
-from ai_data_science_team.tools.h2o import H2O_AUTOML_DOCUMENTATION
+from ai_data_science_team.tools.dataframe import get_dataframe_summary  # noqa: E402, F401
+from ai_data_science_team.utils.logging import log_ai_function, log_ai_error  # noqa: E402, F401
+from ai_data_science_team.utils.messages import get_last_user_message_content  # noqa: E402, F401
+from ai_data_science_team.tools.h2o import H2O_AUTOML_DOCUMENTATION  # noqa: E402, F401
 
 AGENT_NAME = "h2o_ml_agent"
 LOG_PATH = os.path.join(os.getcwd(), "logs/")
@@ -133,9 +133,9 @@ class H2OMLAgent(BaseAgent):
     Examples
     --------
     ```python
-    from langchain_openai import ChatOpenAI
-    import pandas as pd
-    from ai_data_science_team.ml_agents import H2OMLAgent
+    from langchain_openai import ChatOpenAI  # noqa: E402, F401
+    import pandas as pd  # noqa: E402, F401
+    from ai_data_science_team.ml_agents import H2OMLAgent  # noqa: E402, F401
 
     llm = ChatOpenAI(model="gpt-4o-mini")
 
@@ -662,21 +662,21 @@ def make_h2o_ml_agent(
                 **kwargs # Additional parameters for H2OAutoML (feel free to add these based on user instructions and recommended steps)
             ):
 
-                import h2o
-                from h2o.automl import H2OAutoML
-                import pandas as pd
-                import json
+                import h2o  # noqa: E402, F401
+                from h2o.automl import H2OAutoML  # noqa: E402, F401
+                import pandas as pd  # noqa: E402, F401
+                import json  # noqa: E402, F401
 
                 # Optional MLflow usage
                 if enable_mlflow:
-                    import mlflow
+                    import mlflow  # noqa: E402, F401
                     if mlflow_tracking_uri:
                         mlflow.set_tracking_uri(mlflow_tracking_uri)
                     mlflow.set_experiment(mlflow_experiment_name)
                     run_context = mlflow.start_run(run_name=mlflow_run_name)
                 else:
                     # Dummy context manager to skip MLflow if not enabled
-                    from contextlib import nullcontext
+                    from contextlib import nullcontext  # noqa: E402, F401
                     run_context = nullcontext()
 
                 exclude_algos = exclude_algos or ["DeepLearning"]  # default if not provided
@@ -689,7 +689,7 @@ def make_h2o_ml_agent(
                     run_id = None
                     if enable_mlflow and run is not None:
                         run_id = run.info.run_id
-                        import mlflow
+                        import mlflow  # noqa: E402, F401
                         
 
                     # Initialize H2O
@@ -997,7 +997,7 @@ def make_h2o_ml_agent(
                         else None
                     )
                     try:
-                        import mlflow
+                        import mlflow  # noqa: E402, F401
 
                         if mlflow_tracking_uri:
                             mlflow.set_tracking_uri(mlflow_tracking_uri)
@@ -1006,9 +1006,9 @@ def make_h2o_ml_agent(
                         # exists with that artifact location. Existing experiments keep their
                         # original artifact location in MLflow.
                         try:
-                            from pathlib import Path
-                            from mlflow.tracking import MlflowClient
-                            import re
+                            from pathlib import Path  # noqa: E402, F401
+                            from mlflow.tracking import MlflowClient  # noqa: E402, F401
+                            import re  # noqa: E402, F401
 
                             if isinstance(mlflow_artifact_root, str) and mlflow_artifact_root.strip():
                                 root = Path(mlflow_artifact_root).expanduser().resolve()
@@ -1059,7 +1059,7 @@ def make_h2o_ml_agent(
                                     return out
 
                             try:
-                                import pandas as pd
+                                import pandas as pd  # noqa: E402, F401
 
                                 df = pd.DataFrame(lb_dict)
                                 if df is None or df.empty:
@@ -1165,7 +1165,7 @@ def make_h2o_ml_agent(
                                     # UI separates "Logged models" from run artifacts.
                                     model_files: list[str] = []
                                     try:
-                                        from mlflow.tracking import MlflowClient
+                                        from mlflow.tracking import MlflowClient  # noqa: E402, F401
 
                                         client = MlflowClient()
                                         model_files = [

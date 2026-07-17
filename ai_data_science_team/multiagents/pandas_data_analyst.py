@@ -11,16 +11,16 @@ from langgraph.graph.message import add_messages
 import logging
 
 logger = logging.getLogger(__name__)
-from typing_extensions import TypedDict, Annotated, Sequence, Union
+from typing_extensions import TypedDict, Annotated, Sequence, Union  # noqa: E402, F401
 
-import pandas as pd
-import json
-from IPython.display import Markdown
+import pandas as pd  # noqa: E402, F401
+import json  # noqa: E402, F401
+from IPython.display import Markdown  # noqa: E402, F401
 
-from ai_data_science_team.templates import BaseAgent
-from ai_data_science_team.agents import DataWranglingAgent, DataVisualizationAgent
-from ai_data_science_team.utils.plotly import plotly_from_dict
-from ai_data_science_team.utils.regex import (
+from ai_data_science_team.templates import BaseAgent  # noqa: E402, F401
+from ai_data_science_team.agents import DataWranglingAgent, DataVisualizationAgent  # noqa: E402, F401
+from ai_data_science_team.utils.plotly import plotly_from_dict  # noqa: E402, F401
+from ai_data_science_team.utils.regex import (  # noqa: E402, F401
     remove_consecutive_duplicates,
     get_generic_summary,
 )

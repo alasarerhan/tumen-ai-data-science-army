@@ -8,7 +8,7 @@ Covers:
 from __future__ import annotations
 
 import uuid
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from fastapi import HTTPException
@@ -131,7 +131,6 @@ async def test_require_workspace_member_grants_admin():
 
 @pytest.mark.asyncio
 async def test_require_workspace_member_raises_403_non_member():
-    from platform_api.authz.dependencies import _get_workspace_and_membership
 
     ws = _make_workspace()
 

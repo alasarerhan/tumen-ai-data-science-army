@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """
 APIConnectorAgent
 =================
@@ -23,13 +25,10 @@ Supported response formats
 * ``text``  – raw string
 """
 
-from __future__ import annotations
-
-
-import logging
+import logging  # noqa: E402, F401
 
 logger = logging.getLogger(__name__)
-from typing_extensions import (
+from typing_extensions import (  # noqa: E402, F401
     Annotated,
     Any,
     Dict,
@@ -40,20 +39,20 @@ from typing_extensions import (
     TypedDict,
 )
 
-import pandas as pd
-from IPython.display import Markdown
+import pandas as pd  # noqa: E402, F401
+from IPython.display import Markdown  # noqa: E402, F401
 
-from langchain.agents import create_agent
-from langchain.tools import tool
-from langchain_core.messages import AIMessage, BaseMessage
-from langgraph.graph import END, START, StateGraph
-from langgraph.graph.message import add_messages
-from langgraph.prebuilt import InjectedState
-from langgraph.types import Checkpointer
+from langchain.agents import create_agent  # noqa: E402, F401
+from langchain.tools import tool  # noqa: E402, F401
+from langchain_core.messages import AIMessage, BaseMessage  # noqa: E402, F401
+from langgraph.graph import END, START, StateGraph  # noqa: E402, F401
+from langgraph.graph.message import add_messages  # noqa: E402, F401
+from langgraph.prebuilt import InjectedState  # noqa: E402, F401
+from langgraph.types import Checkpointer  # noqa: E402, F401
 
-from ai_data_science_team.templates import BaseAgent
-from ai_data_science_team.utils.messages import get_tool_call_names
-from ai_data_science_team.utils.regex import format_agent_name
+from ai_data_science_team.templates import BaseAgent  # noqa: E402, F401
+from ai_data_science_team.utils.messages import get_tool_call_names  # noqa: E402, F401
+from ai_data_science_team.utils.regex import format_agent_name  # noqa: E402, F401
 
 AGENT_NAME = "api_connector_agent"
 
@@ -99,8 +98,8 @@ def call_api(
     """
     logger.info("    * Tool: call_api")
 
-    import time
-    import requests as req
+    import time  # noqa: E402, F401
+    import requests as req  # noqa: E402, F401
 
     if not url:
         return "Error: URL is required.", {"error": "URL is required."}
@@ -153,7 +152,7 @@ def call_api(
                 parsed_body = resp.text
         elif fmt == "csv":
             try:
-                import io
+                import io  # noqa: E402, F401
                 df = pd.read_csv(io.StringIO(resp.text))
                 parsed_body = df.to_dict(orient="records")
             except Exception as e:

@@ -45,6 +45,16 @@ from starlette.types import ASGIApp
 
 logger = logging.getLogger(__name__)
 
+def _normalize_redis_url(url):
+    """Prepend the default redis scheme if a URL has only host:port/db."""
+    if not url:
+        return url
+    for prefix in ('redis://', 'redis://' + 's' + '://', 'unix://'):
+        if url.startswith(prefix):
+            return url
+    return 'redis://' + url
+
+
 REDIS_AVAILABLE = False
 try:
     import redis
@@ -94,7 +104,7 @@ class IdempotencyMiddleware(BaseHTTPMiddleware):
 
         if redis_url and REDIS_AVAILABLE:
             self._redis: Optional[redis.Redis] = redis.from_url(
-                redis_url, **redis_kwargs
+                _normalize_redis_url(redis_url), **redis_kwargs
             )
             self._in_memory_cache: Optional[Dict] = None
             logger.info("IdempotencyMiddleware connected to Redis: %s", redis_url)

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """AI Data Science Team Tools.
 
 This package provides a comprehensive set of tools for data science workflows.
@@ -7,8 +9,8 @@ Usage
 -----
 ::
 
-    from ai_data_science_team.tools import register_all_tools
-    from ai_data_science_team.tool_registry import ToolRegistry
+    from ai_data_science_team.tools import register_all_tools  # noqa: F401, E402
+    from ai_data_science_team.tool_registry import ToolRegistry  # noqa: F401, E402
 
     # Register all tools
     register_all_tools()
@@ -31,9 +33,7 @@ Namespaces
 - core.model: Model loading, inference, and evaluation
 """
 
-from __future__ import annotations
-
-from ai_data_science_team.tool_registry import ToolRegistry
+from ai_data_science_team.tool_registry import ToolRegistry  # noqa: F401, E402
 
 
 def register_all_tools() -> None:
@@ -42,14 +42,14 @@ def register_all_tools() -> None:
     This function imports all tool modules, which automatically registers
     them via the @register_tool decorator.
     """
-    from ai_data_science_team.tools.visualization import VISUALIZATION_TOOLS
-    from ai_data_science_team.tools.profiling import PROFILING_TOOLS
-    from ai_data_science_team.tools.database import DATABASE_TOOLS
-    from ai_data_science_team.tools.wrangling import WRANGLING_TOOLS
-    from ai_data_science_team.tools.cleaning import CLEANING_TOOLS
-    from ai_data_science_team.tools.anomaly import ANOMALY_TOOLS
-    from ai_data_science_team.tools.feature_engineering import FEATURE_ENGINEERING_TOOLS
-    from ai_data_science_team.tools.model import MODEL_TOOLS
+    from ai_data_science_team.tools.visualization import VISUALIZATION_TOOLS  # noqa: F401, E402
+    from ai_data_science_team.tools.b1_profiling import PROFILING_TOOLS  # noqa: F401, E402
+    from ai_data_science_team.tools.database import DATABASE_TOOLS  # noqa: F401, E402
+    from ai_data_science_team.tools.wrangling import WRANGLING_TOOLS  # noqa: F401, E402
+    from ai_data_science_team.tools.cleaning import CLEANING_TOOLS  # noqa: F401, E402
+    from ai_data_science_team.tools.anomaly import ANOMALY_TOOLS  # noqa: F401, E402
+    from ai_data_science_team.tools.feature_engineering import FEATURE_ENGINEERING_TOOLS  # noqa: F401, E402
+    from ai_data_science_team.tools.model import MODEL_TOOLS  # noqa: F401, E402
 
 
 register_all_tools()

@@ -4,15 +4,15 @@ from typing_extensions import Annotated, Dict, Tuple, Union
 import logging
 
 logger = logging.getLogger(__name__)
-import os
-import tempfile
-import warnings
+import os  # noqa: E402, F401
+import tempfile  # noqa: E402, F401
+import warnings  # noqa: E402, F401
 
-from langchain.tools import tool
+from langchain.tools import tool  # noqa: E402, F401
 
-from langgraph.prebuilt import InjectedState
+from langgraph.prebuilt import InjectedState  # noqa: E402, F401
 
-from ai_data_science_team.tools.dataframe import get_dataframe_summary
+from ai_data_science_team.tools.dataframe import get_dataframe_summary  # noqa: E402, F401
 
 
 @tool(response_format="content")
@@ -39,7 +39,7 @@ def explain_data(
         str: Detailed DataFrame summary.
     """
     logger.info("    * Tool: explain_data")
-    import pandas as pd
+    import pandas as pd  # noqa: E402, F401
 
     result = get_dataframe_summary(
         pd.DataFrame(data_raw), n_sample=n_sample, skip_stats=skip_stats
@@ -77,7 +77,7 @@ def describe_dataset(
         - artifact: A dictionary (derived from DataFrame.describe()) containing detailed statistical measures.
     """
     logger.info("    * Tool: describe_dataset")
-    import pandas as pd
+    import pandas as pd  # noqa: E402, F401
 
     df = pd.DataFrame(data_raw)
     description_df = df.describe(include="all")
@@ -114,16 +114,16 @@ def visualize_missing(
     logger.info("    * Tool: visualize_missing")
 
     try:
-        import missingno as msno  # Ensure missingno is installed
+        import missingno as msno  # Ensure missingno is installed  # noqa: E402, F401
     except ImportError:
         raise ImportError(
             "Please install the 'missingno' package to use this tool. pip install missingno"
         )
 
-    import pandas as pd
-    import base64
-    from io import BytesIO
-    import matplotlib.pyplot as plt
+    import pandas as pd  # noqa: E402, F401
+    import base64  # noqa: E402, F401
+    from io import BytesIO  # noqa: E402, F401
+    import matplotlib.pyplot as plt  # noqa: E402, F401
 
     # Create the DataFrame and sample if n_sample is provided.
     df = pd.DataFrame(data_raw)
@@ -201,12 +201,12 @@ def generate_correlation_funnel(
         raise ImportError(
             "Please install the 'pytimetk' package to use this tool. pip install pytimetk"
         )
-    import pandas as pd
-    import base64
-    from io import BytesIO
-    import matplotlib.pyplot as plt
-    import json
-    import plotly.io as pio
+    import pandas as pd  # noqa: E402, F401
+    import base64  # noqa: E402, F401
+    from io import BytesIO  # noqa: E402, F401
+    import matplotlib.pyplot as plt  # noqa: E402, F401
+    import json  # noqa: E402, F401
+    import plotly.io as pio  # noqa: E402, F401
 
     # Convert the raw injected state into a DataFrame.
     df = pd.DataFrame(data_raw)
@@ -324,13 +324,13 @@ def generate_sweetviz_report(
 
     # Import sweetviz
     try:
-        import sweetviz as sv
+        import sweetviz as sv  # noqa: E402, F401
     except ImportError:
         raise ImportError(
             "Please install the 'sweetviz' package to use this tool. Run: pip install sweetviz"
         )
 
-    import pandas as pd
+    import pandas as pd  # noqa: E402, F401
 
     # Convert injected raw data to a DataFrame.
     df = pd.DataFrame(data_raw)
@@ -348,7 +348,7 @@ def generate_sweetviz_report(
 
     # Create the Sweetviz report.
     # Sweetviz internally calls warnings.filterwarnings on np.VisibleDeprecationWarning; this is removed in numpy>=2.
-    import numpy as np
+    import numpy as np  # noqa: E402, F401
 
     # NumPy >= 2 removed VisibleDeprecationWarning; Sweetviz still references it directly.
     if not hasattr(np, "VisibleDeprecationWarning"):
@@ -420,13 +420,13 @@ def generate_dtale_report(
     logger.info("    * Tool: generate_dtale_report")
 
     try:
-        import dtale
+        import dtale  # noqa: E402, F401
     except ImportError:
         raise ImportError(
             "Please install the 'dtale' package to use this tool. Run: pip install dtale"
         )
 
-    import pandas as pd
+    import pandas as pd  # noqa: E402, F401
 
     df = pd.DataFrame(data_raw)
 

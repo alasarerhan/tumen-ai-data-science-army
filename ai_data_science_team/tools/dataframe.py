@@ -29,8 +29,8 @@ def get_dataframe_summary(
     Example:
     --------
     ``` python
-    import pandas as pd
-    from sklearn.datasets import load_iris
+    import pandas as pd  # noqa: E402, F401
+    from sklearn.datasets import load_iris  # noqa: E402, F401
     data = load_iris(as_frame=True)
     dataframes = {
         "iris": data.frame,

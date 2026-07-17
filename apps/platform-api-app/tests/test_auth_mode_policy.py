@@ -4,7 +4,7 @@ import pytest
 from fastapi import HTTPException
 from fastapi.security import HTTPAuthorizationCredentials
 from starlette.requests import Request
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 import sys
 import types
 

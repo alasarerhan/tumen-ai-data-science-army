@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """WorkflowResolver — scenario detection and WorkflowSpec resolution (M22).
 
 Three execution scenarios
@@ -33,8 +35,8 @@ Usage
 -----
 ::
 
-    from ai_data_science_team.workflow_resolver import WorkflowResolver
-    from ai_data_science_team.agent_registry import AgentRegistry
+    from ai_data_science_team.workflow_resolver import WorkflowResolver  # noqa: E402, F401
+    from ai_data_science_team.agent_registry import AgentRegistry  # noqa: E402, F401
 
     resolver = WorkflowResolver(
         model=llm,
@@ -48,13 +50,11 @@ Usage
     # result2 = {"scenario": "supervised", "spec": my_spec, "errors": []}
 """
 
-from __future__ import annotations
+import json  # noqa: E402, F401
+import re  # noqa: E402, F401
+from typing import Any, Dict, List, Optional  # noqa: E402, F401
 
-import json
-import re
-from typing import Any, Dict, List, Optional
-
-from langchain_core.messages import HumanMessage
+from langchain_core.messages import HumanMessage  # noqa: E402, F401
 
 
 # ---------------------------------------------------------------------------
@@ -232,7 +232,7 @@ class WorkflowResolver:
     ----------
     model : BaseChatModel | None
         LLM used **only** in the *Dynamic* scenario to generate a WorkflowSpec
-        from a natural-language goal.  Not required for Supervised/Manual.
+        from a natural-language goal.  Not required for Supervised/Manual.  # noqa: E402, F401
     registry_catalog : list[dict] | None
         Output of ``AgentRegistry.to_catalog()`` — injected into the LLM
         prompt so the model knows which agents are available.

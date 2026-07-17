@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """ToolRegistry - Central registry for all agent tools (OwnPilot pattern).
 
 This module provides a unified tool management system following the OwnPilot pattern:
@@ -16,7 +18,7 @@ Usage
 -----
 ::
 
-    from ai_data_science_team.tool_registry import ToolRegistry, ToolDefinition
+    from ai_data_science_team.tool_registry import ToolRegistry, ToolDefinition  # noqa: E402, F401
 
     # Register a tool
     ToolRegistry.register(
@@ -42,12 +44,10 @@ Usage
     result = executor(data=df, x="age", y="income")
 """
 
-from __future__ import annotations
-
-import threading
-from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, List
-from enum import Enum
+import threading  # noqa: E402, F401
+from dataclasses import dataclass, field  # noqa: E402, F401
+from typing import Any, Callable, Dict, List  # noqa: E402, F401
+from enum import Enum  # noqa: E402, F401
 
 
 class ToolNamespace(str, Enum):
@@ -358,7 +358,7 @@ def register_tool(
             capabilities=["visualization", "scatter"],
         )
         def scatter_plot(data, x, y):
-            import plotly.express as px
+            import plotly.express as px  # noqa: E402, F401
             return px.scatter(data, x=x, y=y)
     """
     def decorator(func: ToolExecutor) -> ToolExecutor:

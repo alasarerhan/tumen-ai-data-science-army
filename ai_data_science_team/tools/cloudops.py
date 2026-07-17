@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """CloudOps tools — Infrastructure as Code, Containerization, CI/CD (M16).
 
 All tools are pure-Python code generators that require no external API calls.
@@ -21,14 +23,12 @@ CI/CD
     generate_github_actions_workflow  Generate a GitHub Actions workflow YAML.
     generate_gitlab_ci_pipeline       Generate a .gitlab-ci.yml pipeline definition.
 """
-from __future__ import annotations
+import json  # noqa: E402, F401
+import textwrap  # noqa: E402, F401
+from decimal import Decimal, ROUND_HALF_UP  # noqa: E402, F401
+from typing import Any, Dict, List, Tuple  # noqa: E402, F401
 
-import json
-import textwrap
-from decimal import Decimal, ROUND_HALF_UP
-from typing import Any, Dict, List, Tuple
-
-from langchain.tools import tool
+from langchain.tools import tool  # noqa: E402, F401
 
 # ---------------------------------------------------------------------------
 # Internal helpers
@@ -382,7 +382,7 @@ def validate_hcl_syntax(hcl: str) -> Tuple[str, Dict[str, Any]]:
     if valid:
         status_text = "✅ HCL syntax looks valid (basic structural check passed)."
         if warnings:
-            status_text += f"\n⚠️  Warnings:\n" + "\n".join(f"  - {w}" for w in warnings)
+            status_text += "\n⚠️  Warnings:\n" + "\n".join(f"  - {w}" for w in warnings)
     else:
         status_text = "❌ HCL validation failed:\n" + "\n".join(f"  - {e}" for e in errors)
         if warnings:
@@ -457,7 +457,7 @@ def generate_dockerfile(
     cfg = _DOCKERFILE_BASES.get(lang, {
         "base": f"{lang}:{version}",
         "install": f"# install {lang} dependencies",
-        "start": f"./entrypoint.sh",
+        "start": "./entrypoint.sh",
     })
     base_image = cfg["base"].format(version=version)
     install_cmd = cfg["install"]
@@ -568,7 +568,7 @@ def generate_docker_compose_yaml(services_json: str) -> Tuple[str, Dict[str, Any
         lines.append(f"    image: {image}")
 
         if port:
-            lines.append(f"    ports:")
+            lines.append("    ports:")
             lines.append(f'      - "{port}:{port}"')
 
         if env:
@@ -844,7 +844,7 @@ def generate_gitlab_ci_pipeline(
     job_blocks: List[str] = []
     for stage in stage_list:
         if stage == "install":
-            job_blocks.append(f"""\
+            job_blocks.append("""\
 install:dependencies:
   stage: install
   script:
@@ -869,7 +869,7 @@ test:unit:
         path: coverage.xml
 """)
         elif stage == "build":
-            job_blocks.append(f"""\
+            job_blocks.append("""\
 build:docker:
   stage: build
   image: docker:24
@@ -882,7 +882,7 @@ build:docker:
     - main
 """)
         elif stage == "deploy":
-            job_blocks.append(f"""\
+            job_blocks.append("""\
 deploy:production:
   stage: deploy
   script:

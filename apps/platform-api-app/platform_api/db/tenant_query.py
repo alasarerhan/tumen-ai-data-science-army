@@ -35,7 +35,7 @@ Design
 from __future__ import annotations
 
 import uuid
-from typing import Generic, Type, TypeVar, overload
+from typing import Generic, Type, TypeVar
 
 from fastapi import HTTPException
 from sqlalchemy import and_, func, or_, select

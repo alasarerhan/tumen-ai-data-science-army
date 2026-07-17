@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Auto-generated h2o node module.
 
 Extracted from the 3,400-line ``supervisor_ds_team.py`` monolith
@@ -5,27 +7,14 @@ during the L2 code-review remediation pass.  Uses dependency
 injection via the ``H2oNodeDeps`` dataclass.
 """
 
-from __future__ import annotations
+import logging  # noqa: E402, F401
+from dataclasses import dataclass  # noqa: E402, F401
+from typing import Any, Callable  # noqa: E402, F401
 
-import logging
-from dataclasses import dataclass
-from typing import Any, Callable
+from langchain_core.messages import AIMessage  # noqa: E402, F401
 
-from langchain_core.messages import AIMessage
-
-from ai_data_science_team.multiagents.supervisor import (
-    SupervisorDSState,
-    _get_last_human_text,
-    append_error_message,
-    ensure_dataset_registry,
-    ensure_df,
-    format_result_with_llm,
-    get_active_data,
-    is_empty_df,
-    merge_messages,
-    register_dataset,
-    tag_messages,
-)
+from ai_data_science_team.multiagents.supervisor import (  # noqa: E402, F401
+    SupervisorDSState)
 
 logger = logging.getLogger(__name__)
 
@@ -65,16 +54,14 @@ def make_node_h2o(deps: H2oNodeDeps) -> Callable[[SupervisorDSState], dict]:
                     "data_wrangled",
                     "data_sql",
                     "data_raw",
-                ],
-            )
+                ])
         )
         if deps.is_empty_df(active_df):
             return {
                 "messages": [
                     AIMessage(
                         content="No dataset is available for modeling. Load data and (optionally) engineer features first.",
-                        name="h2o_ml_agent",
-                    )
+                        name="h2o_ml_agent")
                 ],
                 "last_worker": "H2O_ML_Agent",
             }
@@ -85,7 +72,7 @@ def make_node_h2o(deps: H2oNodeDeps) -> Callable[[SupervisorDSState], dict]:
             w in last_human.lower()
             for w in ("predict", "prediction", "score", "scoring", "inference")
         ):
-            import re
+            import re  # noqa: E402, F401
 
             def _extract_run_id(text: str) -> str | None:
                 t = text or ""
@@ -126,8 +113,8 @@ def make_node_h2o(deps: H2oNodeDeps) -> Callable[[SupervisorDSState], dict]:
                 # If no explicit run_id, try newest run in the configured experiment.
                 if not (isinstance(run_id, str) and run_id.strip()):
                     try:
-                        import mlflow
-                        from mlflow.tracking import MlflowClient
+                        import mlflow  # noqa: E402, F401
+                        from mlflow.tracking import MlflowClient  # noqa: E402, F401
 
                         tracking_uri = cfg.get("mlflow_tracking_uri")
                         if isinstance(tracking_uri, str) and tracking_uri.strip():
@@ -139,8 +126,7 @@ def make_node_h2o(deps: H2oNodeDeps) -> Callable[[SupervisorDSState], dict]:
                             runs = client.search_runs(
                                 experiment_ids=[exp.experiment_id],
                                 order_by=["attributes.start_time DESC"],
-                                max_results=25,
-                            )
+                                max_results=25)
 
                             def _run_has_model_artifact(rid: str) -> bool:
                                 try:
@@ -173,10 +159,10 @@ def make_node_h2o(deps: H2oNodeDeps) -> Callable[[SupervisorDSState], dict]:
                     )
                     x_df = active_df.drop(columns=[target]) if target else active_df
                     try:
-                        import mlflow
-                        import pandas as pd
-                        import h2o
-                        from mlflow.tracking import MlflowClient
+                        import mlflow  # noqa: E402, F401
+                        import pandas as pd  # noqa: E402, F401
+                        import h2o  # noqa: E402, F401
+                        from mlflow.tracking import MlflowClient  # noqa: E402, F401
 
                         tracking_uri = cfg.get("mlflow_tracking_uri")
                         if isinstance(tracking_uri, str) and tracking_uri.strip():
@@ -203,8 +189,7 @@ def make_node_h2o(deps: H2oNodeDeps) -> Callable[[SupervisorDSState], dict]:
                                             "This usually means you logged workflow artifacts (tables/json) but did not log a model. "
                                             "Train with MLflow enabled (H2O training logs to `model/`), or provide a run id that contains a model."
                                         ),
-                                        name="h2o_ml_agent",
-                                    )
+                                        name="h2o_ml_agent")
                                 ],
                                 "last_worker": "H2O_ML_Agent",
                             }
@@ -270,8 +255,7 @@ def make_node_h2o(deps: H2oNodeDeps) -> Callable[[SupervisorDSState], dict]:
                                 preds_df.insert(
                                     1,
                                     f"actual_{target}",
-                                    active_df[target].reset_index(drop=True),
-                                )
+                                    active_df[target].reset_index(drop=True))
                         except Exception:
                             pass
 
@@ -286,8 +270,7 @@ def make_node_h2o(deps: H2oNodeDeps) -> Callable[[SupervisorDSState], dict]:
                                         "Tip: scoring must use the same feature schema as training. "
                                         "If you trained on engineered features, set the active dataset to that feature dataset before scoring."
                                     ),
-                                    name="h2o_ml_agent",
-                                )
+                                    name="h2o_ml_agent")
                             ],
                             "last_worker": "H2O_ML_Agent",
                         }
@@ -316,8 +299,7 @@ def make_node_h2o(deps: H2oNodeDeps) -> Callable[[SupervisorDSState], dict]:
                                 },
                             },
                             parent_id=active_dataset_id,
-                            make_active=True,
-                        )
+                            make_active=True)
                     except Exception:
                         pred_id = None
 
@@ -350,8 +332,7 @@ def make_node_h2o(deps: H2oNodeDeps) -> Callable[[SupervisorDSState], dict]:
                                 "To make predictions, provide an H2O `model_id` (or train a model first). "
                                 "Example: `predict with model `XGBoost_grid_...` on the dataset`."
                             ),
-                            name="h2o_ml_agent",
-                        )
+                            name="h2o_ml_agent")
                     ],
                     "last_worker": "H2O_ML_Agent",
                 }
@@ -366,7 +347,7 @@ def make_node_h2o(deps: H2oNodeDeps) -> Callable[[SupervisorDSState], dict]:
             x_df = active_df.drop(columns=[target]) if target else active_df
 
             try:
-                import h2o
+                import h2o  # noqa: E402, F401
 
                 h2o.init()
                 model = h2o.get_model(model_id.strip())
@@ -379,8 +360,7 @@ def make_node_h2o(deps: H2oNodeDeps) -> Callable[[SupervisorDSState], dict]:
                         preds_df.insert(
                             1,
                             f"actual_{target}",
-                            active_df[target].reset_index(drop=True),
-                        )
+                            active_df[target].reset_index(drop=True))
                 except Exception:
                     pass
                 preds_data = preds_df.to_dict()
@@ -393,8 +373,7 @@ def make_node_h2o(deps: H2oNodeDeps) -> Callable[[SupervisorDSState], dict]:
                                 "Tip: model IDs are only available while the H2O cluster is running. "
                                 "If you restarted, retrain or load a saved model."
                             ),
-                            name="h2o_ml_agent",
-                        )
+                            name="h2o_ml_agent")
                     ],
                     "last_worker": "H2O_ML_Agent",
                 }
@@ -425,8 +404,7 @@ def make_node_h2o(deps: H2oNodeDeps) -> Callable[[SupervisorDSState], dict]:
                         },
                     },
                     parent_id=active_dataset_id,
-                    make_active=True,
-                )
+                    make_active=True)
             except Exception:
                 pred_id = None
 
@@ -456,8 +434,7 @@ def make_node_h2o(deps: H2oNodeDeps) -> Callable[[SupervisorDSState], dict]:
             messages=before_msgs,
             user_instructions=last_human,
             data_raw=active_df,
-            target_variable=state.get("target_variable"),
-        )
+            target_variable=state.get("target_variable"))
         response = deps.h2o_ml_agent.response or {}
         merged = deps.merge_messages(before_msgs, response)
         merged["messages"] = deps.tag_messages(merged.get("messages"), "h2o_ml_agent")
@@ -465,8 +442,7 @@ def make_node_h2o(deps: H2oNodeDeps) -> Callable[[SupervisorDSState], dict]:
             "h2o_ml_agent",
             response.get("leaderboard"),
             deps._get_last_human_text(before_msgs),
-            extra_text="H2O AutoML results.",
-        )
+            extra_text="H2O AutoML results.")
         if summary_text:
             merged["messages"].append(
                 AIMessage(content=summary_text, name="h2o_ml_agent")
@@ -476,23 +452,20 @@ def make_node_h2o(deps: H2oNodeDeps) -> Callable[[SupervisorDSState], dict]:
             "h2o_ml_agent",
             response.get("h2o_train_error"),
             response.get("h2o_train_error_log_path"),
-            prefix="Model training error",
-        )
+            prefix="Model training error")
         mlflow_run_id = response.get("mlflow_run_id")
         if mlflow_run_id:
             merged["messages"].append(
                 AIMessage(
                     content=f"MLflow logging enabled. Run ID: `{mlflow_run_id}`",
-                    name="h2o_ml_agent",
-                )
+                    name="h2o_ml_agent")
             )
             model_uri = response.get("mlflow_model_uri")
             if isinstance(model_uri, str) and model_uri.strip():
                 merged["messages"].append(
                     AIMessage(
                         content=f"MLflow model URI: `{model_uri.strip()}`",
-                        name="h2o_ml_agent",
-                    )
+                        name="h2o_ml_agent")
                 )
         leaderboard = response.get("leaderboard")
         return {

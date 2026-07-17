@@ -1,11 +1,10 @@
 # Libraries
-from typing import TypedDict, Annotated, Sequence, Literal
+from typing import TypedDict, Annotated, Sequence
 import operator
 
 from langchain_core.prompts import PromptTemplate
 from langchain_core.messages import BaseMessage
 
-from langgraph.types import Command, Checkpointer
 from langgraph.checkpoint.memory import MemorySaver
 
 import os
@@ -15,23 +14,12 @@ import pandas as pd
 from IPython.display import Markdown
 
 from ai_data_science_team.templates import(
-    node_func_execute_agent_code_on_data, 
-    node_func_human_review,
-    node_func_fix_agent_code, 
-    node_func_report_agent_outputs, 
-    create_coding_agent_graph,
     BaseAgent,
 )
-from ai_data_science_team.parsers.parsers import PythonOutputParser
 from ai_data_science_team.utils.regex import (
-    relocate_imports_inside_functions,
-    add_comments_to_top,
     format_agent_name,
-    format_recommended_steps,
     get_generic_summary,
 )
-from ai_data_science_team.tools.dataframe import get_dataframe_summary
-from ai_data_science_team.utils.logging import log_ai_function
 
 # Setup
 AGENT_NAME = "feature_engineering_agent"
@@ -204,50 +192,6 @@ class FeatureEngineeringAgent(BaseAgent):
         self._compiled_graph = self._make_compiled_graph()
 
     async def ainvoke_agent(
-            self,
-            data_raw: pd.DataFrame,
-            user_instructions: str = None,
-            target_variable: str = None,
-            max_retries = 3,
-            retry_count = 0,
-            **kwargs
-    ):
-        """
-        Asynchronously engineers features for the provided dataset.
-        The response is stored in the 'response' attribute.
-
-        Parameters:
-        -----------
-        data_raw: pd.DataFrame
-            The raw dataset to be processed.
-        user_instructions: str, optional
-            Instructions for feature engineering.
-        target_variable: str, optional
-            The name of the target variable (if any).
-        max_retries: int 
-            Maximum retry attempts.
-        retry_count:
-            Current retry attempt count
-        **kwargs
-            Additional keyword arguments to pass ainvoke().
-        
-        Returns:
-        ---------
-        None
-        """
-
-        response = await self._compiled_graph.ainvoke({
-            "user_instructions": user_instructions,
-            "data_raw": data_raw.to_dict(),
-            "target_variable": target_variable,
-            "max_retries": max_retries,
-            "retry_count": retry_count
-        }, **kwargs)
-
-        self.response = response
-        return None 
-    
-    def ainvoke_agent(
             self,
             data_raw: pd.DataFrame,
             user_instructions: str = None,
@@ -473,7 +417,6 @@ def make_feature_engineering_agent(
         The feature engineering agent as a state graph.
     """
 
-    llm = model
 
     if human_in_the_loop:
         if checkpointer is None:
@@ -521,7 +464,7 @@ def make_feature_engineering_agent(
         print("     * RECOMMEND FEATURE ENGINEERING STEPS")
 
         #* Prompt to recommended steps from the LLM
-        recommend_steps_prompt = PromptTemplate(
+        PromptTemplate(
             template="""
             You are a Feature Engineering Expert. Given the following information about the data,
             recommend a series of numbered steps to take to engineer features.

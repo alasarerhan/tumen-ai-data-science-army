@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """MLflow logging node.
 
 Provides :func:`make_node_mlflow_log` — a factory that returns a
@@ -9,21 +11,14 @@ remediation pass.  It uses dependency injection (rather than
 closures) so that the function is testable in isolation.
 """
 
-from __future__ import annotations
+import logging  # noqa: E402, F401
+from dataclasses import dataclass  # noqa: E402, F401
+from typing import Any, Callable  # noqa: E402, F401
 
-import logging
-from dataclasses import dataclass
-from typing import Any, Callable
+from langchain_core.messages import AIMessage  # noqa: E402, F401
 
-from langchain_core.messages import AIMessage
-
-from ai_data_science_team.multiagents.supervisor import (
-    SupervisorDSState,
-    ensure_df,
-    get_active_data,
-    is_empty_df,
-    tag_messages,
-)
+from ai_data_science_team.multiagents.supervisor import (  # noqa: E402, F401
+    SupervisorDSState)
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +37,7 @@ def make_node_mlflow_log(deps: MlflowLogNodeDeps) -> Callable[[SupervisorDSState
     """Build the ``node_mlflow_log`` state-graph node."""
 
     def node_mlflow_log(state: SupervisorDSState):
-        before_msgs = list(state.get("messages", []) or [])
+        list(state.get("messages", []) or [])
 
         # Pull config from the supervisor artifacts (optional).
         cfg: dict[str, Any] = {}
@@ -90,9 +85,9 @@ def make_node_mlflow_log(deps: MlflowLogNodeDeps) -> Callable[[SupervisorDSState
         message_lines: list[str] = []
 
         try:
-            import mlflow
-            import json
-            from pathlib import Path
+            import mlflow  # noqa: E402, F401
+            import json  # noqa: E402, F401
+            from pathlib import Path  # noqa: E402, F401
 
             if tracking_uri:
                 mlflow.set_tracking_uri(tracking_uri)
@@ -100,8 +95,8 @@ def make_node_mlflow_log(deps: MlflowLogNodeDeps) -> Callable[[SupervisorDSState
                 # Best-effort: if an artifact root is configured, ensure the experiment exists
                 # with that artifact location (applies only when creating new experiments).
                 try:
-                    from mlflow.tracking import MlflowClient
-                    import re
+                    from mlflow.tracking import MlflowClient  # noqa: E402, F401
+                    import re  # noqa: E402, F401
 
                     if isinstance(artifact_root, str) and artifact_root.strip():
                         root = Path(artifact_root).expanduser().resolve()
@@ -116,8 +111,7 @@ def make_node_mlflow_log(deps: MlflowLogNodeDeps) -> Callable[[SupervisorDSState
                         if exp is None:
                             client.create_experiment(
                                 name=str(experiment_name),
-                                artifact_location=artifact_location,
-                            )
+                                artifact_location=artifact_location)
                 except Exception:
                     pass
                 mlflow.set_experiment(experiment_name)
@@ -143,8 +137,7 @@ def make_node_mlflow_log(deps: MlflowLogNodeDeps) -> Callable[[SupervisorDSState
                     try:
                         mlflow.log_table(
                             active_df.head(200),
-                            artifact_file="tables/data_preview.json",
-                        )
+                            artifact_file="tables/data_preview.json")
                         logged["tables"].append("tables/data_preview.json")
                     except Exception:
                         pass
@@ -163,9 +156,8 @@ def make_node_mlflow_log(deps: MlflowLogNodeDeps) -> Callable[[SupervisorDSState
 
                 # Log pipeline (dataset lineage + reproduction script)
                 try:
-                    from ai_data_science_team.utils.pipeline import (
-                        build_pipeline_snapshot,
-                    )
+                    from ai_data_science_team.utils.pipeline import (  # noqa: E402, F401
+                        build_pipeline_snapshot)
 
                     ds = state.get("datasets")
                     ds = ds if isinstance(ds, dict) else {}
@@ -188,8 +180,7 @@ def make_node_mlflow_log(deps: MlflowLogNodeDeps) -> Callable[[SupervisorDSState
                             else:
                                 mlflow.log_dict(
                                     {"script": script},
-                                    artifact_file="pipeline/pipeline_repro.json",
-                                )
+                                    artifact_file="pipeline/pipeline_repro.json")
                                 logged["dicts"].append("pipeline/pipeline_repro.json")
                         try:
                             if pipe.get("pipeline_hash"):
@@ -209,7 +200,7 @@ def make_node_mlflow_log(deps: MlflowLogNodeDeps) -> Callable[[SupervisorDSState
                     except Exception:
                         pass
                     try:
-                        import plotly.io as pio
+                        import plotly.io as pio  # noqa: E402, F401
 
                         fig = pio.from_json(json.dumps(viz_graph))
                         mlflow.log_figure(fig, artifact_file="plots/viz.html")
@@ -222,8 +213,7 @@ def make_node_mlflow_log(deps: MlflowLogNodeDeps) -> Callable[[SupervisorDSState
                     try:
                         mlflow.log_dict(
                             eval_artifacts,
-                            artifact_file="evaluation/eval_artifacts.json",
-                        )
+                            artifact_file="evaluation/eval_artifacts.json")
                         logged["dicts"].append("evaluation/eval_artifacts.json")
                     except Exception:
                         pass
@@ -254,7 +244,7 @@ def make_node_mlflow_log(deps: MlflowLogNodeDeps) -> Callable[[SupervisorDSState
                     except Exception:
                         pass
                     try:
-                        import plotly.io as pio
+                        import plotly.io as pio  # noqa: E402, F401
 
                         fig = pio.from_json(json.dumps(eval_plot))
                         mlflow.log_figure(

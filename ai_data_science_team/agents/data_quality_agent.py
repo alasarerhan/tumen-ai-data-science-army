@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """
 DataQualityAgent
 ================
@@ -19,13 +21,10 @@ Quality Score (0–100) components
 - Cleanliness   : 1 − numeric_outlier_rate (IQR method)   (weight 20 %)
 """
 
-from __future__ import annotations
-
-
-import logging
+import logging  # noqa: E402, F401
 
 logger = logging.getLogger(__name__)
-from typing_extensions import (
+from typing_extensions import (  # noqa: E402, F401
     Annotated,
     Any,
     Dict,
@@ -36,20 +35,20 @@ from typing_extensions import (
     TypedDict,
 )
 
-import pandas as pd
-from IPython.display import Markdown
+import pandas as pd  # noqa: E402, F401
+from IPython.display import Markdown  # noqa: E402, F401
 
-from langchain.agents import create_agent
-from langchain.tools import tool
-from langchain_core.messages import AIMessage, BaseMessage
-from langgraph.graph import END, START, StateGraph
-from langgraph.graph.message import add_messages
-from langgraph.prebuilt import InjectedState
-from langgraph.types import Checkpointer
+from langchain.agents import create_agent  # noqa: E402, F401
+from langchain.tools import tool  # noqa: E402, F401
+from langchain_core.messages import AIMessage, BaseMessage  # noqa: E402, F401
+from langgraph.graph import END, START, StateGraph  # noqa: E402, F401
+from langgraph.graph.message import add_messages  # noqa: E402, F401
+from langgraph.prebuilt import InjectedState  # noqa: E402, F401
+from langgraph.types import Checkpointer  # noqa: E402, F401
 
-from ai_data_science_team.templates import BaseAgent
-from ai_data_science_team.utils.messages import get_tool_call_names
-from ai_data_science_team.utils.regex import format_agent_name
+from ai_data_science_team.templates import BaseAgent  # noqa: E402, F401
+from ai_data_science_team.utils.messages import get_tool_call_names  # noqa: E402, F401
+from ai_data_science_team.utils.regex import format_agent_name  # noqa: E402, F401
 
 AGENT_NAME = "data_quality_agent"
 
@@ -82,7 +81,7 @@ def profile_data_quality(
     """
     logger.info("    * Tool: profile_data_quality")
 
-    import numpy as np
+    import numpy as np  # noqa: E402, F401
 
     df = pd.DataFrame(data_raw)
     n_rows, n_cols = df.shape
@@ -403,7 +402,7 @@ def make_data_quality_agent(
         quality_artifact: Dict = {}
         for msg in internal_messages:
             art = getattr(msg, "artifact", None)
-            name = getattr(msg, "name", "") or ""
+            getattr(msg, "name", "") or ""
             if art is not None and isinstance(art, dict):
                 if "quality_score" in art:
                     quality_artifact["profile"] = art

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Agent result caching for cost optimization.
 
 Provides Redis-backed and in-memory caching for LangChain agent outputs.
@@ -7,7 +9,7 @@ Usage
 -----
 ::
 
-    from ai_data_science_team.utils.agent_cache import AgentCache, cached_agent_call
+    from ai_data_science_team.utils.agent_cache import AgentCache, cached_agent_call  # noqa: E402, F401
 
     # Initialize cache
     cache = AgentCache(redis_url="redis://localhost:6379/0", ttl_seconds=3600)
@@ -27,27 +29,25 @@ Usage
         return result
 """
 
-from __future__ import annotations
-
-import hashlib
-import json
-import logging
-import threading
-import time
-from functools import wraps
-from typing import Any, Callable, Dict, Optional
+import hashlib  # noqa: E402, F401
+import json  # noqa: E402, F401
+import logging  # noqa: E402, F401
+import threading  # noqa: E402, F401
+import time  # noqa: E402, F401
+from functools import wraps  # noqa: E402, F401
+from typing import Any, Callable, Dict, Optional  # noqa: E402, F401
 
 logger = logging.getLogger(__name__)
 
 try:
-    from platform_api.tenant_context import get_current_tenant_id
+    from platform_api.tenant_context import get_current_tenant_id  # noqa: E402, F401
 except ImportError:  # pragma: no cover - platform API may be unavailable in standalone use
     def get_current_tenant_id() -> Any:
         return None
 
 REDIS_AVAILABLE = False
 try:
-    import redis
+    import redis  # noqa: E402, F401
     REDIS_AVAILABLE = True
 except ImportError:
     pass
@@ -425,7 +425,7 @@ def reset_agent_cache() -> None:
     Usage in tests:
         @pytest.fixture(autouse=True)
         def reset_caches():
-            from ai_data_science_team.utils.agent_cache import reset_agent_cache
+            from ai_data_science_team.utils.agent_cache import reset_agent_cache  # noqa: E402, F401
             reset_agent_cache()
             yield
             reset_agent_cache()

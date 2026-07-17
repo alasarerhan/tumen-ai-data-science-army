@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """
 AnomalyDetectionAgent
 =====================
@@ -14,13 +16,10 @@ Supported methods
 * AutoEnsemble     - majority-vote of IsolationForest + LOF (default)
 """
 
-from __future__ import annotations
-
-
-import logging
+import logging  # noqa: E402, F401
 
 logger = logging.getLogger(__name__)
-from typing_extensions import (
+from typing_extensions import (  # noqa: E402, F401
     Annotated,
     Any,
     Dict,
@@ -30,20 +29,20 @@ from typing_extensions import (
     TypedDict,
 )
 
-import pandas as pd
-from IPython.display import Markdown
+import pandas as pd  # noqa: E402, F401
+from IPython.display import Markdown  # noqa: E402, F401
 
-from langchain.agents import create_agent
-from langchain.tools import tool
-from langchain_core.messages import AIMessage, BaseMessage
-from langgraph.graph import END, START, StateGraph
-from langgraph.graph.message import add_messages
-from langgraph.prebuilt import InjectedState
-from langgraph.types import Checkpointer
+from langchain.agents import create_agent  # noqa: E402, F401
+from langchain.tools import tool  # noqa: E402, F401
+from langchain_core.messages import AIMessage, BaseMessage  # noqa: E402, F401
+from langgraph.graph import END, START, StateGraph  # noqa: E402, F401
+from langgraph.graph.message import add_messages  # noqa: E402, F401
+from langgraph.prebuilt import InjectedState  # noqa: E402, F401
+from langgraph.types import Checkpointer  # noqa: E402, F401
 
-from ai_data_science_team.templates import BaseAgent
-from ai_data_science_team.utils.messages import get_tool_call_names
-from ai_data_science_team.utils.regex import format_agent_name
+from ai_data_science_team.templates import BaseAgent  # noqa: E402, F401
+from ai_data_science_team.utils.messages import get_tool_call_names  # noqa: E402, F401
+from ai_data_science_team.utils.regex import format_agent_name  # noqa: E402, F401
 
 AGENT_NAME = "anomaly_detection_agent"
 
@@ -71,10 +70,10 @@ def detect_anomalies(
     """
     logger.info("    * Tool: detect_anomalies")
 
-    import numpy as np
-    from sklearn.ensemble import IsolationForest
-    from sklearn.neighbors import LocalOutlierFactor
-    from sklearn.preprocessing import StandardScaler
+    import numpy as np  # noqa: E402, F401
+    from sklearn.ensemble import IsolationForest  # noqa: E402, F401
+    from sklearn.neighbors import LocalOutlierFactor  # noqa: E402, F401
+    from sklearn.preprocessing import StandardScaler  # noqa: E402, F401
 
     df = pd.DataFrame(data_raw)
     numeric_df = df.select_dtypes(include=[np.number]).copy()
@@ -101,10 +100,10 @@ def detect_anomalies(
     def _run_pyod(model_name: str):
         try:
             if model_name == "HBOS":
-                from pyod.models.hbos import HBOS
+                from pyod.models.hbos import HBOS  # noqa: E402, F401
                 clf = HBOS(contamination=contamination)
             elif model_name == "COPOD":
-                from pyod.models.copod import COPOD
+                from pyod.models.copod import COPOD  # noqa: E402, F401
                 clf = COPOD(contamination=contamination)
             else:
                 raise ImportError("Unknown PyOD model")

@@ -1,3 +1,4 @@
+
 from typing_extensions import TypedDict, Annotated, Sequence, Literal
 from typing import Optional
 import operator
@@ -20,7 +21,7 @@ from IPython.display import Markdown
 
 logger = logging.getLogger(__name__)
 
-from ai_data_science_team.templates import (
+from ai_data_science_team.templates import (  # noqa: E402, F401
     node_func_execute_agent_from_sql_connection,
     node_func_human_review,
     node_func_fix_agent_code,
@@ -28,16 +29,16 @@ from ai_data_science_team.templates import (
     create_coding_agent_graph,
     BaseAgent,
 )
-from ai_data_science_team.parsers.parsers import SQLOutputParser
-from ai_data_science_team.utils.regex import (
+from ai_data_science_team.parsers.parsers import SQLOutputParser  # noqa: E402, F401
+from ai_data_science_team.utils.regex import (  # noqa: E402, F401
     add_comments_to_top,
     format_agent_name,
     format_recommended_steps,
     get_generic_summary,
 )
-from ai_data_science_team.tools.sql import get_database_metadata
-from ai_data_science_team.utils.logging import log_ai_function, log_ai_error
-from ai_data_science_team.utils.messages import get_last_user_message_content
+from ai_data_science_team.tools.sql import get_database_metadata  # noqa: E402, F401
+from ai_data_science_team.utils.logging import log_ai_function, log_ai_error  # noqa: E402, F401
+from ai_data_science_team.utils.messages import get_last_user_message_content  # noqa: E402, F401
 
 # Setup
 AGENT_NAME = "sql_database_agent"
@@ -129,9 +130,9 @@ class SQLDatabaseAgent(BaseAgent):
     Examples
     --------
     ```python
-    import sqlalchemy as sql
-    from langchain_openai import ChatOpenAI
-    from ai_data_science_team.agents import SQLDatabaseAgent
+    import sqlalchemy as sql  # noqa: E402, F401
+    from langchain_openai import ChatOpenAI  # noqa: E402, F401
+    from ai_data_science_team.agents import SQLDatabaseAgent  # noqa: E402, F401
 
     # Create the engine/connection
     sql_engine = sql.create_engine("sqlite:///data/my_database.db")
@@ -499,9 +500,9 @@ def make_sql_database_agent(
     Examples
     --------
     ```python
-    from ai_data_science_team.agents import make_sql_database_agent
-    import sqlalchemy as sql
-    from langchain_openai import ChatOpenAI
+    from ai_data_science_team.agents import make_sql_database_agent  # noqa: E402, F401
+    import sqlalchemy as sql  # noqa: E402, F401
+    from langchain_openai import ChatOpenAI  # noqa: E402, F401
 
     sql_engine = sql.create_engine("sqlite:///data/leads_scored.db")
 
@@ -732,8 +733,8 @@ def make_sql_database_agent(
 
         response = """
 def {function_name}(connection):
-    import pandas as pd
-    import sqlalchemy as sql
+    import pandas as pd  # noqa: E402, F401
+    import sqlalchemy as sql  # noqa: E402, F401
     
     # Create a connection if needed
     is_engine = isinstance(connection, sql.engine.base.Engine)

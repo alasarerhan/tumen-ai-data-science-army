@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """
 Lightweight sandbox helpers for executing generated code in a separate process.
 
@@ -8,14 +10,12 @@ Goals:
 - Enforce a timeout from the parent; apply soft resource caps when available.
 """
 
-from __future__ import annotations
-
-import json
-import os
-import subprocess
-import sys
-from textwrap import dedent
-from typing import Any, Tuple
+import json  # noqa: E402, F401
+import os  # noqa: E402, F401
+import subprocess  # noqa: E402, F401
+import sys  # noqa: E402, F401
+from textwrap import dedent  # noqa: E402, F401
+from typing import Any, Tuple  # noqa: E402, F401
 
 
 def _build_runner_script() -> str:
@@ -29,17 +29,17 @@ def _build_runner_script() -> str:
 
     return dedent(
         r"""
-        import ast
-        import builtins
-        import json
-        import sys
+        import ast  # noqa: E402, F401
+        import builtins  # noqa: E402, F401
+        import json  # noqa: E402, F401
+        import sys  # noqa: E402, F401
 
         # Optional limits (POSIX-only; no-op on Windows)
         def _apply_resource_limits(memory_limit_mb: int | None):
             try:
-                import resource  # type: ignore
+                import resource  # type: ignore  # noqa: E402, F401
             except Exception:
-                import sys
+                import sys  # noqa: E402, F401
                 print("Warning: resource module not available (Windows). Memory limits not enforced.", file=sys.stderr)
                 return
             try:
@@ -48,7 +48,7 @@ def _build_runner_script() -> str:
                     resource.setrlimit(resource.RLIMIT_AS, (max_bytes, max_bytes))
                 resource.setrlimit(resource.RLIMIT_NOFILE, (32, 32))
             except Exception as e:
-                import sys
+                import sys  # noqa: E402, F401
                 print(f"Warning: Failed to set resource limits: {e}. Sandbox may exceed memory bounds.", file=sys.stderr)
                 return
 
@@ -233,9 +233,9 @@ def _build_runner_script() -> str:
 
         def _block_network():
             try:
-                import socket
+                import socket  # noqa: E402, F401
             except Exception:
-                import sys
+                import sys  # noqa: E402, F401
                 print("Warning: socket module not available. Network blocking not enforced.", file=sys.stderr)
                 return
 
@@ -252,7 +252,7 @@ def _build_runner_script() -> str:
 
                 socket.socket = NoNetSocket  # type: ignore
             except Exception as e:
-                import sys
+                import sys  # noqa: E402, F401
                 print(f"Warning: Failed to override socket class: {e}. Network blocking may be incomplete.", file=sys.stderr)
 
             socket.create_connection = _blocked  # type: ignore
@@ -261,7 +261,7 @@ def _build_runner_script() -> str:
 
         def _to_jsonable(obj):
             try:
-                import pandas as pd
+                import pandas as pd  # noqa: E402, F401
             except Exception:
                 pd = None
 
@@ -274,7 +274,7 @@ def _build_runner_script() -> str:
                 json.dumps(obj)
                 return obj
             except Exception:
-                import sys
+                import sys  # noqa: E402, F401
                 print(f"Warning: Object of type {type(obj).__name__} is not JSON-serializable, returning placeholder.", file=sys.stderr)
                 return f"<unserializable: {type(obj).__name__}>"
 
@@ -302,8 +302,8 @@ def _build_runner_script() -> str:
             _block_network()
 
             try:
-                import pandas as pd
-                import numpy as np
+                import pandas as pd  # noqa: E402, F401
+                import numpy as np  # noqa: E402, F401
             except Exception as exc:
                 sys.stdout.write(json.dumps({"result": None, "error": f"Sandbox missing dependency: {exc}"}))
                 return
@@ -345,8 +345,8 @@ def _build_runner_script() -> str:
                 sys.stdout.write(json.dumps({"result": result, "error": None}))
             except Exception as exc:
                 try:
-                    import traceback
-                    import re
+                    import traceback  # noqa: E402, F401
+                    import re  # noqa: E402, F401
                     tb = traceback.format_exc()
                     tb = re.sub(r'File "[^"]*"', 'File "<redacted>"', tb)
                     tb = re.sub(r'/home/[^/]+/', '/home/<user>/', tb)

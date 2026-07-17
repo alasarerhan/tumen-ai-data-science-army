@@ -14,10 +14,9 @@ Run with:
 """
 from __future__ import annotations
 
-import time
 import uuid
 from typing import Any, Dict
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -30,7 +29,7 @@ from ai_data_science_team.signals import (
     WorkflowSignal,
     get_signal_store,
 )
-from ai_data_science_team.agent_registry import AgentMetadata, AgentRegistry
+from ai_data_science_team.agent_registry import AgentRegistry
 from ai_data_science_team.context_store import ContextStore
 from ai_data_science_team.workflow_resolver import (
     WorkflowResolver,
@@ -38,7 +37,7 @@ from ai_data_science_team.workflow_resolver import (
     build_step,
     validate_spec,
 )
-from ai_data_science_team.runtime_engine import RunResult, RuntimeEngine, StepResult
+from ai_data_science_team.runtime_engine import RuntimeEngine
 
 
 # ===========================================================================
@@ -849,7 +848,6 @@ class TestOrchestratorAgent:
         from ai_data_science_team.agents.orchestrator_agent import OrchestratorAgent
         mock_model = self._make_mock_model()
         orch = OrchestratorAgent(model=mock_model)
-        old_graph = orch._compiled_graph
         orch.update_params(max_retries=5)
         assert orch._params["max_retries"] == 5
 

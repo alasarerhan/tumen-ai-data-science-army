@@ -42,7 +42,7 @@ def _make_stationary_series(n: int = 100, seed: int = 42) -> List[float]:
 
 
 def test_stationarity_test_stationary_series():
-    from ai_data_science_team.tools.time_series import stationarity_test
+    from ai_data_science_team.tools.e11_time_series import stationarity_test
 
     data = _make_stationary_series(120)
     text, result = stationarity_test.func(
@@ -57,7 +57,7 @@ def test_stationarity_test_stationary_series():
 
 
 def test_stationarity_test_trending_series():
-    from ai_data_science_team.tools.time_series import stationarity_test
+    from ai_data_science_team.tools.e11_time_series import stationarity_test
 
     # A random walk (canonical unit-root / non-stationary process)
     rng = random.Random(42)
@@ -70,7 +70,7 @@ def test_stationarity_test_trending_series():
 
 
 def test_stationarity_test_result_keys():
-    from ai_data_science_team.tools.time_series import stationarity_test
+    from ai_data_science_team.tools.e11_time_series import stationarity_test
 
     _, result = stationarity_test.func(data=_make_stationary_series())
     for key in ("adf", "kpss", "conclusion", "n_observations", "series_name"):
@@ -83,7 +83,7 @@ def test_stationarity_test_result_keys():
 
 
 def test_seasonal_decompose_returns_components():
-    from ai_data_science_team.tools.time_series import seasonal_decompose_ts
+    from ai_data_science_team.tools.e11_time_series import seasonal_decompose_ts
 
     data = _make_seasonal_series(120, period=12)
     text, result = seasonal_decompose_ts.func(
@@ -97,7 +97,7 @@ def test_seasonal_decompose_returns_components():
 
 
 def test_seasonal_decompose_seasonal_strength():
-    from ai_data_science_team.tools.time_series import seasonal_decompose_ts
+    from ai_data_science_team.tools.e11_time_series import seasonal_decompose_ts
 
     data = _make_seasonal_series(240, period=12)
     _, result = seasonal_decompose_ts.func(data=data, period=12)
@@ -106,7 +106,7 @@ def test_seasonal_decompose_seasonal_strength():
 
 
 def test_seasonal_decompose_insufficient_data():
-    from ai_data_science_team.tools.time_series import seasonal_decompose_ts
+    from ai_data_science_team.tools.e11_time_series import seasonal_decompose_ts
 
     text, result = seasonal_decompose_ts.func(data=[1.0, 2.0, 3.0], period=12)
     assert "insufficient_data" in str(result) or "Not enough" in text
@@ -118,7 +118,7 @@ def test_seasonal_decompose_insufficient_data():
 
 
 def test_autocorrelation_returns_lags():
-    from ai_data_science_team.tools.time_series import autocorrelation_analysis
+    from ai_data_science_team.tools.e11_time_series import autocorrelation_analysis
 
     data = _make_stationary_series(100)
     _, result = autocorrelation_analysis.func(data=data, nlags=10)
@@ -128,7 +128,7 @@ def test_autocorrelation_returns_lags():
 
 
 def test_autocorrelation_significant_lags_format():
-    from ai_data_science_team.tools.time_series import autocorrelation_analysis
+    from ai_data_science_team.tools.e11_time_series import autocorrelation_analysis
 
     _, result = autocorrelation_analysis.func(data=_make_seasonal_series(120), nlags=15)
     assert isinstance(result["significant_acf_lags"], list)
@@ -141,7 +141,7 @@ def test_autocorrelation_significant_lags_format():
 
 
 def test_train_arima_returns_aic_bic():
-    from ai_data_science_team.tools.time_series import train_arima
+    from ai_data_science_team.tools.e11_time_series import train_arima
 
     data = _make_stationary_series(80)
     _, result = train_arima.func(
@@ -153,7 +153,7 @@ def test_train_arima_returns_aic_bic():
 
 
 def test_train_arima_in_sample_metrics():
-    from ai_data_science_team.tools.time_series import train_arima
+    from ai_data_science_team.tools.e11_time_series import train_arima
 
     data = _make_trend_series(80)
     _, result = train_arima.func(data=data, order=[1, 1, 0])
@@ -162,7 +162,7 @@ def test_train_arima_in_sample_metrics():
 
 
 def test_train_arima_result_keys():
-    from ai_data_science_team.tools.time_series import train_arima
+    from ai_data_science_team.tools.e11_time_series import train_arima
 
     _, result = train_arima.func(data=_make_stationary_series(60))
     for k in ("model_type", "order", "aic", "bic", "in_sample_rmse", "in_sample_mae"):
@@ -175,7 +175,7 @@ def test_train_arima_result_keys():
 
 
 def test_evaluate_forecast_perfect_prediction():
-    from ai_data_science_team.tools.time_series import evaluate_forecast
+    from ai_data_science_team.tools.e11_time_series import evaluate_forecast
 
     vals = [float(i) for i in range(1, 21)]
     _, result = evaluate_forecast.func(actual=vals, predicted=vals)
@@ -186,7 +186,7 @@ def test_evaluate_forecast_perfect_prediction():
 
 
 def test_evaluate_forecast_known_offset():
-    from ai_data_science_team.tools.time_series import evaluate_forecast
+    from ai_data_science_team.tools.e11_time_series import evaluate_forecast
 
     actual = [10.0, 20.0, 30.0, 40.0]
     predicted = [12.0, 22.0, 32.0, 42.0]  # constant offset +2
@@ -196,14 +196,14 @@ def test_evaluate_forecast_known_offset():
 
 
 def test_evaluate_forecast_length_mismatch():
-    from ai_data_science_team.tools.time_series import evaluate_forecast
+    from ai_data_science_team.tools.e11_time_series import evaluate_forecast
 
     _, result = evaluate_forecast.func(actual=[1.0, 2.0], predicted=[1.0])
     assert "error" in result
 
 
 def test_evaluate_forecast_r2_negative_for_bad_model():
-    from ai_data_science_team.tools.time_series import evaluate_forecast
+    from ai_data_science_team.tools.e11_time_series import evaluate_forecast
 
     actual = [1.0, 2.0, 3.0, 4.0, 5.0]
     predicted = [5.0, 4.0, 3.0, 2.0, 1.0]  # inverted
@@ -212,7 +212,7 @@ def test_evaluate_forecast_r2_negative_for_bad_model():
 
 
 def test_evaluate_forecast_directional_accuracy():
-    from ai_data_science_team.tools.time_series import evaluate_forecast
+    from ai_data_science_team.tools.e11_time_series import evaluate_forecast
 
     actual = [1.0, 3.0, 2.0, 5.0, 4.0]
     predicted = [1.5, 2.5, 1.5, 4.5, 3.5]  # same direction each step
@@ -305,7 +305,7 @@ def test_forecast_evaluation_agent_accepts_lists():
 
 def test_auto_forecast_returns_leaderboard():
     """auto_forecast must return a sorted leaderboard with at least 2 entries."""
-    from ai_data_science_team.tools.time_series import auto_forecast
+    from ai_data_science_team.tools.e11_time_series import auto_forecast
 
     data = _make_seasonal_series(96, period=12)
     _, result = auto_forecast.func(
@@ -320,7 +320,7 @@ def test_auto_forecast_returns_leaderboard():
 
 def test_auto_forecast_best_model_key():
     """auto_forecast result must include best_model and forecast keys."""
-    from ai_data_science_team.tools.time_series import auto_forecast
+    from ai_data_science_team.tools.e11_time_series import auto_forecast
 
     data = _make_stationary_series(80)
     _, result = auto_forecast.func(
@@ -333,7 +333,7 @@ def test_auto_forecast_best_model_key():
 
 def test_auto_forecast_forecast_length():
     """Forecast list must have exactly periods_ahead elements."""
-    from ai_data_science_team.tools.time_series import auto_forecast
+    from ai_data_science_team.tools.e11_time_series import auto_forecast
 
     data = _make_trend_series(60)
     _, result = auto_forecast.func(
@@ -344,7 +344,7 @@ def test_auto_forecast_forecast_length():
 
 def test_auto_forecast_short_series_returns_error():
     """Series shorter than 10 observations must return an error dict."""
-    from ai_data_science_team.tools.time_series import auto_forecast
+    from ai_data_science_team.tools.e11_time_series import auto_forecast
 
     _, result = auto_forecast.func(
         data=[1.0, 2.0, 3.0], periods_ahead=3, freq="M", backend="statsmodels"
@@ -354,7 +354,7 @@ def test_auto_forecast_short_series_returns_error():
 
 def test_auto_forecast_backend_key():
     """Result must report which backend was used."""
-    from ai_data_science_team.tools.time_series import auto_forecast
+    from ai_data_science_team.tools.e11_time_series import auto_forecast
 
     data = _make_seasonal_series(72)
     _, result = auto_forecast.func(
@@ -365,7 +365,7 @@ def test_auto_forecast_backend_key():
 
 def test_auto_forecast_leaderboard_rmse_positive():
     """All leaderboard RMSE values must be non-negative finite numbers."""
-    from ai_data_science_team.tools.time_series import auto_forecast
+    from ai_data_science_team.tools.e11_time_series import auto_forecast
 
     data = _make_seasonal_series(60)
     _, result = auto_forecast.func(

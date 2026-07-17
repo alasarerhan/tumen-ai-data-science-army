@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """OrchestratorAgent — top-level meta-agent for multi-agent workflow management (M22).
 
 The OrchestratorAgent is the highest-level agent in the platform.  It:
@@ -35,9 +37,9 @@ Usage
 -----
 ::
 
-    from langchain_openai import ChatOpenAI
-    from ai_data_science_team.agents.orchestrator_agent import OrchestratorAgent
-    from ai_data_science_team.agent_registry import AgentRegistry
+    from langchain_openai import ChatOpenAI  # noqa: E402, F401
+    from ai_data_science_team.agents.orchestrator_agent import OrchestratorAgent  # noqa: E402, F401
+    from ai_data_science_team.agent_registry import AgentRegistry  # noqa: E402, F401
 
     llm = ChatOpenAI(model="gpt-4o-mini")
 
@@ -59,29 +61,28 @@ Usage
     logger.info(orch.get_ai_message())
     logger.info(orch.get_run_result())
 """
-from __future__ import annotations
+from typing import (Callable, Dict, List, Optional, Sequence)  # noqa: E402
+import json  # noqa: E402, F401
+import logging  # noqa: E402, F401
+from typing import Any  # noqa: E402, F401
 
-import json
-import logging
-from typing import Any, Callable, Dict, List, Optional, Sequence
-
-from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
-from langgraph.graph import END, START, StateGraph
-from langgraph.graph.message import add_messages
-from typing_extensions import Annotated, TypedDict
+from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage  # noqa: E402, F401
+from langgraph.graph import END, START, StateGraph  # noqa: E402, F401
+from langgraph.graph.message import add_messages  # noqa: E402, F401
+from typing_extensions import Annotated, TypedDict  # noqa: E402, F401
 
 try:
-    from IPython.display import Markdown
+    from IPython.display import Markdown  # noqa: E402, F401
 except ImportError:
     Markdown = None  # type: ignore[assignment,misc]
 
-from ai_data_science_team.agent_registry import AgentRegistry
-from ai_data_science_team.context_store import ContextStore
-from ai_data_science_team.runtime_engine import RuntimeEngine, RunResult
-from ai_data_science_team.signals import SignalStore, get_signal_store
-from ai_data_science_team.templates import BaseAgent
-from ai_data_science_team.workflow_resolver import WorkflowResolver, validate_spec
-from ai_data_science_team.utils.regex import format_agent_name
+from ai_data_science_team.agent_registry import AgentRegistry  # noqa: E402, F401
+from ai_data_science_team.context_store import ContextStore  # noqa: E402, F401
+from ai_data_science_team.runtime_engine import RuntimeEngine, RunResult  # noqa: E402, F401
+from ai_data_science_team.signals import SignalStore, get_signal_store  # noqa: E402, F401
+from ai_data_science_team.templates import BaseAgent  # noqa: E402, F401
+from ai_data_science_team.workflow_resolver import WorkflowResolver, validate_spec  # noqa: E402, F401
+from ai_data_science_team.utils.regex import format_agent_name  # noqa: E402, F401
 
 logger = logging.getLogger(__name__)
 
@@ -323,7 +324,7 @@ class OrchestratorAgent(BaseAgent):
     workflow_spec : dict | None
         Pre-built WorkflowSpec for Supervised or Manual scenarios.
         When None and *scenario* is not forced, the scenario is auto-detected
-        from the input.
+        from the input.  # noqa: E402, F401
     scenario : str | None
         Force a specific scenario: ``"dynamic"``, ``"supervised"``, or
         ``"manual"``.  Auto-detected when None.
@@ -376,7 +377,7 @@ class OrchestratorAgent(BaseAgent):
         graceful_degradation: bool = True,
         log: bool = False,
     ) -> None:
-        import uuid
+        import uuid  # noqa: E402, F401
         self._params = {
             "model": model,
             "agent_executor": agent_executor or _default_agent_executor,

@@ -18,13 +18,12 @@ Atlamak için:
 """
 from __future__ import annotations
 
+
+from _llm import make_chat_model  # noqa: F401
 import io
 import json
-import os
 import sqlite3
-import tempfile
 from pathlib import Path
-from typing import Any
 
 import pandas as pd
 import pytest
@@ -119,7 +118,7 @@ def test_langchain_tool_read_source_invoke(csv_dir: Path) -> None:
     assert "date" in result
     assert "revenue" in result
     # max_rows=2 → header + 2 data rows = 3 CSV lines
-    lines = [l for l in result.splitlines() if l.strip()]
+    lines = [line_ for line_ in result.splitlines() if line_.strip()]
     assert len(lines) == 3
 
 
@@ -132,7 +131,7 @@ def test_langchain_tool_read_source_default_max_rows(csv_dir: Path) -> None:
     tools = {t.name: t for t in conn.as_langchain_tools()}
 
     result = tools["local_file_read"].invoke({"source": "costs.csv"})
-    lines = [l for l in result.splitlines() if l.strip()]
+    lines = [line_ for line_ in result.splitlines() if line_.strip()]
     assert len(lines) == 4  # header + 3 data rows
 
 
@@ -337,10 +336,10 @@ def test_mcp_sql_io_loop(disk_sqlite: str) -> None:
     srv.run()
 
     out_stream.seek(0)
-    lines = [l for l in out_stream.read().splitlines() if l.strip()]
+    lines = [line_ for line_ in out_stream.read().splitlines() if line_.strip()]
     assert len(lines) == 3
 
-    responses = [json.loads(l) for l in lines]
+    responses = [json.loads(line_) for line_ in lines]
     assert responses[0]["id"] == 1
     assert responses[1]["id"] == 2
     assert responses[2]["id"] == 3

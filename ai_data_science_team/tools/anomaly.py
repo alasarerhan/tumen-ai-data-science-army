@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Anomaly detection tools for the AI Data Science Team.
 
 This module provides tools for detecting anomalies and outliers in data
@@ -13,14 +15,12 @@ Tools
 - ensemble_detect: Detect anomalies using ensemble voting
 """
 
-from __future__ import annotations
+from typing import List, Optional, Union  # noqa: E402, F401
 
-from typing import List, Optional, Union
+import numpy as np  # noqa: E402, F401
+import pandas as pd  # noqa: E402, F401
 
-import numpy as np
-import pandas as pd
-
-from ai_data_science_team.tool_registry import (
+from ai_data_science_team.tool_registry import (  # noqa: E402, F401
     ToolParameter,
     register_tool,
 )
@@ -64,8 +64,8 @@ def isolation_forest_detect(
     dict
         {anomaly_indices: list, scores: list, summary: str}
     """
-    from sklearn.ensemble import IsolationForest
-    from sklearn.preprocessing import StandardScaler
+    from sklearn.ensemble import IsolationForest  # noqa: E402, F401
+    from sklearn.preprocessing import StandardScaler  # noqa: E402, F401
 
     df = pd.DataFrame(data) if isinstance(data, dict) else data
 
@@ -132,8 +132,8 @@ def lof_detect(
     dict
         {anomaly_indices: list, scores: list, summary: str}
     """
-    from sklearn.neighbors import LocalOutlierFactor
-    from sklearn.preprocessing import StandardScaler
+    from sklearn.neighbors import LocalOutlierFactor  # noqa: E402, F401
+    from sklearn.preprocessing import StandardScaler  # noqa: E402, F401
 
     df = pd.DataFrame(data) if isinstance(data, dict) else data
 
@@ -199,7 +199,7 @@ def hbos_detect(
     dict
         {anomaly_indices: list, scores: list, summary: str}
     """
-    from sklearn.preprocessing import StandardScaler
+    from sklearn.preprocessing import StandardScaler  # noqa: E402, F401
 
     df = pd.DataFrame(data) if isinstance(data, dict) else data
 
@@ -211,7 +211,7 @@ def hbos_detect(
     X_scaled = StandardScaler().fit_transform(X)
 
     try:
-        from pyod.models.hbos import HBOS
+        from pyod.models.hbos import HBOS  # noqa: E402, F401
 
         model = HBOS(contamination=contamination, n_bins=n_bins)
         model.fit(X_scaled)
@@ -264,7 +264,7 @@ def copod_detect(
     dict
         {anomaly_indices: list, scores: list, summary: str}
     """
-    from sklearn.preprocessing import StandardScaler
+    from sklearn.preprocessing import StandardScaler  # noqa: E402, F401
 
     df = pd.DataFrame(data) if isinstance(data, dict) else data
 
@@ -276,7 +276,7 @@ def copod_detect(
     X_scaled = StandardScaler().fit_transform(X)
 
     try:
-        from pyod.models.copod import COPOD
+        from pyod.models.copod import COPOD  # noqa: E402, F401
 
         model = COPOD(contamination=contamination)
         model.fit(X_scaled)

@@ -5,24 +5,24 @@ from langchain_core.messages import BaseMessage, AIMessage, HumanMessage, System
 import logging
 
 logger = logging.getLogger(__name__)
-from langchain_core.prompts import PromptTemplate
-from langchain_core.output_parsers import JsonOutputParser
+from langchain_core.prompts import PromptTemplate  # noqa: E402, F401
+from langchain_core.output_parsers import JsonOutputParser  # noqa: E402, F401
 
-from langgraph.graph import START, END, StateGraph
-from langgraph.graph.state import CompiledStateGraph
-from langgraph.graph.message import add_messages
-from langgraph.types import Checkpointer
+from langgraph.graph import START, END, StateGraph  # noqa: E402, F401
+from langgraph.graph.state import CompiledStateGraph  # noqa: E402, F401
+from langgraph.graph.message import add_messages  # noqa: E402, F401
+from langgraph.types import Checkpointer  # noqa: E402, F401
 
-from typing_extensions import TypedDict, Annotated, Sequence
+from typing_extensions import TypedDict, Annotated, Sequence  # noqa: E402, F401
 
-import pandas as pd
-import json
-from IPython.display import Markdown
+import pandas as pd  # noqa: E402, F401
+import json  # noqa: E402, F401
+from IPython.display import Markdown  # noqa: E402, F401
 
-from ai_data_science_team.templates import BaseAgent
-from ai_data_science_team.agents import SQLDatabaseAgent, DataVisualizationAgent
-from ai_data_science_team.utils.plotly import plotly_from_dict
-from ai_data_science_team.utils.regex import (
+from ai_data_science_team.templates import BaseAgent  # noqa: E402, F401
+from ai_data_science_team.agents import SQLDatabaseAgent, DataVisualizationAgent  # noqa: E402, F401
+from ai_data_science_team.utils.plotly import plotly_from_dict  # noqa: E402, F401
+from ai_data_science_team.utils.regex import (  # noqa: E402, F401
     remove_consecutive_duplicates,
     get_generic_summary,
 )
@@ -123,10 +123,10 @@ class SQLDataAnalyst(BaseAgent):
         Example:
         --------
         ``` python
-        from langchain_openai import ChatOpenAI
-        import sqlalchemy as sql
-        from ai_data_science_team.multiagents import SQLDataAnalyst
-        from ai_data_science_team.agents import SQLDatabaseAgent, DataVisualizationAgent
+        from langchain_openai import ChatOpenAI  # noqa: E402, F401
+        import sqlalchemy as sql  # noqa: E402, F401
+        from ai_data_science_team.multiagents import SQLDataAnalyst  # noqa: E402, F401
+        from ai_data_science_team.agents import SQLDatabaseAgent, DataVisualizationAgent  # noqa: E402, F401
 
         llm = ChatOpenAI(model = "gpt-4o-mini")
 
@@ -196,10 +196,10 @@ class SQLDataAnalyst(BaseAgent):
         Example:
         --------
         ``` python
-        from langchain_openai import ChatOpenAI
-        import sqlalchemy as sql
-        from ai_data_science_team.multiagents import SQLDataAnalyst
-        from ai_data_science_team.agents import SQLDatabaseAgent, DataVisualizationAgent
+        from langchain_openai import ChatOpenAI  # noqa: E402, F401
+        import sqlalchemy as sql  # noqa: E402, F401
+        from ai_data_science_team.multiagents import SQLDataAnalyst  # noqa: E402, F401
+        from ai_data_science_team.agents import SQLDatabaseAgent, DataVisualizationAgent  # noqa: E402, F401
 
         llm = ChatOpenAI(model = "gpt-4o-mini")
 

@@ -610,7 +610,7 @@ def node_func_execute_agent_from_sql_connection(
     
     # Ensure the connection object is provided
     if connection is None:
-        raise ValueError(f"Connection object not found.")
+        raise ValueError("Connection object not found.")
     
     # Execute the code snippet to define the agent function
     local_vars = {}

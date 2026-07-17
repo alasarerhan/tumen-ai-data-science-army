@@ -1,5 +1,6 @@
 
 
+
 import logging
 
 logger = logging.getLogger(__name__)
@@ -9,42 +10,42 @@ logger = logging.getLogger(__name__)
 # * Agents: Data Cleaning Agent
 
 # Libraries
-from typing_extensions import TypedDict, Annotated, Sequence, Literal
-import operator
+from typing_extensions import TypedDict, Annotated, Sequence, Literal  # noqa: E402, F401
+import operator  # noqa: E402, F401
 
-from langchain_core.prompts import PromptTemplate
+from langchain_core.prompts import PromptTemplate  # noqa: E402, F401
 
-from langchain_core.messages import BaseMessage
+from langchain_core.messages import BaseMessage  # noqa: E402, F401
 
-from langgraph.types import Command
-from langgraph.checkpoint.memory import MemorySaver
-from langgraph.types import Checkpointer
+from langgraph.types import Command  # noqa: E402, F401
+from langgraph.checkpoint.memory import MemorySaver  # noqa: E402, F401
+from langgraph.types import Checkpointer  # noqa: E402, F401
 
-import os
-import json
-import pandas as pd
+import os  # noqa: E402, F401
+import json  # noqa: E402, F401
+import pandas as pd  # noqa: E402, F401
 
-from IPython.display import Markdown
+from IPython.display import Markdown  # noqa: E402, F401
 
-from ai_data_science_team.templates import (
+from ai_data_science_team.templates import (  # noqa: E402, F401
     node_func_human_review,
     node_func_fix_agent_code,
     node_func_report_agent_outputs,
     create_coding_agent_graph,
     BaseAgent,
 )
-from ai_data_science_team.parsers.parsers import PythonOutputParser
-from ai_data_science_team.utils.regex import (
+from ai_data_science_team.parsers.parsers import PythonOutputParser  # noqa: E402, F401
+from ai_data_science_team.utils.regex import (  # noqa: E402, F401
     relocate_imports_inside_function,
     add_comments_to_top,
     format_agent_name,
     format_recommended_steps,
     get_generic_summary,
 )
-from ai_data_science_team.tools.dataframe import get_dataframe_summary
-from ai_data_science_team.utils.logging import log_ai_function, log_ai_error
-from ai_data_science_team.utils.sandbox import run_code_sandboxed_subprocess
-from ai_data_science_team.utils.messages import get_last_user_message_content
+from ai_data_science_team.tools.dataframe import get_dataframe_summary  # noqa: E402, F401
+from ai_data_science_team.utils.logging import log_ai_function, log_ai_error  # noqa: E402, F401
+from ai_data_science_team.utils.sandbox import run_code_sandboxed_subprocess  # noqa: E402, F401
+from ai_data_science_team.utils.messages import get_last_user_message_content  # noqa: E402, F401
 
 # Setup
 AGENT_NAME = "data_cleaning_agent"
@@ -132,9 +133,9 @@ class DataCleaningAgent(BaseAgent):
     Examples
     --------
     ```python
-    import pandas as pd
-    from langchain_openai import ChatOpenAI
-    from ai_data_science_team.agents import DataCleaningAgent
+    import pandas as pd  # noqa: E402, F401
+    from langchain_openai import ChatOpenAI  # noqa: E402, F401
+    from ai_data_science_team.agents import DataCleaningAgent  # noqa: E402, F401
 
     llm = ChatOpenAI(model="gpt-4o-mini")
 
@@ -434,9 +435,9 @@ def make_data_cleaning_agent(
     Examples
     -------
     ``` python
-    import pandas as pd
-    from langchain_openai import ChatOpenAI
-    from ai_data_science_team.agents import data_cleaning_agent
+    import pandas as pd  # noqa: E402, F401
+    from langchain_openai import ChatOpenAI  # noqa: E402, F401
+    from ai_data_science_team.agents import data_cleaning_agent  # noqa: E402, F401
 
     llm = ChatOpenAI(model = "gpt-4o-mini")
 
@@ -638,8 +639,8 @@ def make_data_cleaning_agent(
             Return code to provide the data cleaning function:
 
             def {function_name}(data_raw):
-                import pandas as pd
-                import numpy as np
+                import pandas as pd  # noqa: E402, F401
+                import numpy as np  # noqa: E402, F401
                 ...
                 return data_cleaned
 

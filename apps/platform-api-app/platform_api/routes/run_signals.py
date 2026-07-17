@@ -140,7 +140,7 @@ async def stream_signals(
         max_total_events = 1000
 
         try:
-            yield f": heartbeat\\n\\n"
+            yield ": heartbeat\\n\\n"
 
             while idle_cycles < max_idle_polls and total_events_sent < max_total_events:
                 db.expire_all()
@@ -165,12 +165,12 @@ async def stream_signals(
                             "id": event_id,
                         }
                         yield f"id: {event_id}\\n"
-                        yield f"event: signal\\n"
+                        yield "event: signal\\n"
                         yield f"data: {json.dumps(payload)}\\n\\n"
                         total_events_sent += 1
                 else:
                     idle_cycles += 1
-                    yield f": ping\\n\\n"
+                    yield ": ping\\n\\n"
 
                 if items:
                     last_seen = str(items[-1].id)
@@ -181,10 +181,10 @@ async def stream_signals(
                 await asyncio.sleep(poll_seconds)
         except Exception as exc:
             logger.error("SSE stream error: run_id=%s, error=%s", run_id, exc)
-            yield f"event: error\\n"
+            yield "event: error\\n"
             yield f"data: {json.dumps({'type': 'error', 'error': str(exc)})}\\n\\n"
         finally:
-            yield f"event: done\\n"
+            yield "event: done\\n"
             yield f"data: {json.dumps({'type': 'done', 'events_sent': total_events_sent})}\\n\\n"
 
     return StreamingResponse(_events(), media_type="text/event-stream")

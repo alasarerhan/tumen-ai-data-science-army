@@ -26,6 +26,15 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
+from platform_api.db.base import Base
+from platform_api.db.models import (
+    Tenant,
+    User,
+    Workspace,
+    WorkspaceMembership,
+    WorkspaceRole,
+)
+
 REPO_ROOT = Path(__file__).resolve().parents[3]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
@@ -55,17 +64,6 @@ def tmp_path():
         yield path
     finally:
         shutil.rmtree(path, ignore_errors=True)
-
-from platform_api.db.base import Base
-from platform_api.db.models import (
-    Tenant,
-    TenantMembership,
-    TenantRole,
-    User,
-    Workspace,
-    WorkspaceMembership,
-    WorkspaceRole,
-)
 
 
 # ---------------------------------------------------------------------------

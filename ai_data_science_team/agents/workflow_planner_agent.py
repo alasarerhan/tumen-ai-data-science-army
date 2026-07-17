@@ -1,11 +1,14 @@
+from __future__ import annotations
+
+
 # BUSINESS SCIENCE UNIVERSITY
 # AI DATA SCIENCE TEAM
 # ***
 # * Agents: Workflow Planner Agent
 
-from __future__ import annotations
+from typing import Optional, Sequence, Dict
 
-from typing import Any, Optional, Sequence, Dict
+from typing import Any
 
 from langchain_core.messages import BaseMessage
 from langchain_core.prompts import ChatPromptTemplate
@@ -18,8 +21,8 @@ AGENT_NAME = "workflow_planner_agent"
 
 
 def _safe_json_loads(text: str) -> dict:
-    import json
-    import re
+    import json  # noqa: E402, F401
+    import re  # noqa: E402, F401
 
     if not text:
         return {}
@@ -110,7 +113,7 @@ class WorkflowPlannerAgent(BaseAgent):
         )
 
         prompt = ChatPromptTemplate.from_messages([("system", system), ("human", human)])
-        import json
+        import json  # noqa: E402, F401
 
         resp = (prompt | llm).invoke(
             {

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+
 from collections.abc import Mapping, Sequence
 from typing import Any
 
@@ -10,7 +11,7 @@ DATASET_SCHEMA_MAX_COLS = 200
 
 def ensure_df(data: Any):
     try:
-        import pandas as pd
+        import pandas as pd  # noqa: E402, F401
 
         if data is None:
             return None
@@ -25,7 +26,7 @@ def ensure_df(data: Any):
 
 def shape_of(obj: Any):
     try:
-        import pandas as pd
+        import pandas as pd  # noqa: E402, F401
 
         if isinstance(obj, pd.DataFrame):
             return obj.shape
@@ -54,8 +55,8 @@ def dataset_meta(
         columns = None
 
     try:
-        import hashlib
-        import pandas as pd
+        import hashlib  # noqa: E402, F401
+        import pandas as pd  # noqa: E402, F401
 
         if isinstance(df, pd.DataFrame):
             column_order = sorted([str(column) for column in list(df.columns)])
@@ -81,7 +82,7 @@ def dataset_meta(
                 .reset_index(drop=True)
             )
             try:
-                from pandas.util import hash_pandas_object
+                from pandas.util import hash_pandas_object  # noqa: E402, F401
 
                 row_hashes = hash_pandas_object(df_sample, index=False).values
                 fingerprint = hashlib.sha256(row_hashes.tobytes()).hexdigest()
@@ -106,7 +107,7 @@ def truncate_text(val: Any, max_chars: int) -> Any:
 
 def sha256_text(val: Any) -> str | None:
     try:
-        import hashlib
+        import hashlib  # noqa: E402, F401
 
         if not isinstance(val, str) or not val:
             return None
@@ -143,9 +144,9 @@ def ensure_dataset_registry(state: Mapping[str, Any]) -> tuple[dict[str, Any], s
     active_id = active_id if isinstance(active_id, str) else None
 
     if not datasets:
-        import time
-        import uuid
-        from datetime import datetime, timezone
+        import time  # noqa: E402, F401
+        import uuid  # noqa: E402, F401
+        from datetime import datetime, timezone  # noqa: E402, F401
 
         def add_dataset(stage: str, data_key: str):
             nonlocal datasets
@@ -237,9 +238,9 @@ def register_dataset(
     parent_ids: Sequence[str] | None = None,
     make_active: bool = True,
 ) -> tuple[dict[str, Any], str | None, str]:
-    import time
-    import uuid
-    from datetime import datetime, timezone
+    import time  # noqa: E402, F401
+    import uuid  # noqa: E402, F401
+    from datetime import datetime, timezone  # noqa: E402, F401
 
     datasets, current_active = ensure_dataset_registry(state)
     dataset_id = f"{stage}_{uuid.uuid4().hex[:8]}"

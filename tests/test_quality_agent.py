@@ -21,17 +21,11 @@ test accepts either a successful call or a documented exception
 from __future__ import annotations
 
 import sys
-from typing import Any, Dict, List, Optional, Sequence, Tuple
+from typing import Any, Dict
 
-import pytest
-from langchain_core.messages import AIMessage, BaseMessage, ToolMessage
-from typing_extensions import Annotated, TypedDict
-from langgraph.graph.message import add_messages
+from langchain_core.messages import AIMessage, ToolMessage
 
 from ai_data_science_team.agents.quality_agent import (
-    expectation_suite_from_template,
-    validate_against_suite,
-    summarise_suite_run,
     QualityAgent,
     make_quality_agent,
     AGENT_NAME,
@@ -129,7 +123,6 @@ class TestModuleSurface:
     def test_all_individual_tools_exported(self):
         # Verify each @tool wrapper has the StructuredTool interface
         # (name, invoke, func attrs).
-        import sys
         mod = sys.modules["ai_data_science_team.agents.quality_agent"]
         wrapper_names = ["b2_expectation_suite_from_template_wrapped", "b2_validate_against_suite_wrapped", "b2_summarise_suite_run_wrapped"]
         for wrapper_name in wrapper_names:
@@ -204,7 +197,6 @@ class TestSummariseSuiteRun:
 
 class TestMakeQualityAgent:
     def test_factory_returns_compiled_graph(self):
-        from langgraph.graph import StateGraph
         app = make_quality_agent(model=_StubModel())
         # The compiled graph has the underlying StateGraph structure
         assert hasattr(app, "nodes")

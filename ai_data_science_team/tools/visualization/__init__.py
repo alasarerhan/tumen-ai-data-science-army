@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Visualization tools for the AI Data Science Team.
 
 This module provides tools for creating various chart types using Plotly.
@@ -15,15 +17,13 @@ Tools
 - pie_chart: Create pie charts for proportions
 """
 
-from __future__ import annotations
+import json  # noqa: F401, E402
+import re  # noqa: F401, E402
+from typing import Any, Dict, List, Optional  # noqa: F401, E402
 
-import json
-import re
-from typing import Any, Dict, List, Optional
+import pandas as pd  # noqa: F401, E402
 
-import pandas as pd
-
-from ai_data_science_team.tool_registry import (
+from ai_data_science_team.tool_registry import (  # noqa: F401, E402
     ToolRegistry,
     ToolDefinition,
     ToolParameter,
@@ -108,8 +108,8 @@ def scatter_plot(
     dict
         Plotly figure as JSON dict.
     """
-    import plotly.express as px
-    import plotly.io as pio
+    import plotly.express as px  # noqa: F401, E402
+    import plotly.io as pio  # noqa: F401, E402
 
     df = pd.DataFrame(data) if isinstance(data, dict) else data
     columns = list(df.columns)
@@ -180,8 +180,8 @@ def bar_chart(
     dict
         Plotly figure as JSON dict.
     """
-    import plotly.express as px
-    import plotly.io as pio
+    import plotly.express as px  # noqa: F401, E402
+    import plotly.io as pio  # noqa: F401, E402
 
     df = pd.DataFrame(data) if isinstance(data, dict) else data
     columns = list(df.columns)
@@ -248,8 +248,8 @@ def line_chart(
     dict
         Plotly figure as JSON dict.
     """
-    import plotly.express as px
-    import plotly.io as pio
+    import plotly.express as px  # noqa: F401, E402
+    import plotly.io as pio  # noqa: F401, E402
 
     df = pd.DataFrame(data) if isinstance(data, dict) else data
     columns = list(df.columns)
@@ -315,8 +315,8 @@ def histogram(
     dict
         Plotly figure as JSON dict.
     """
-    import plotly.express as px
-    import plotly.io as pio
+    import plotly.express as px  # noqa: F401, E402
+    import plotly.io as pio  # noqa: F401, E402
 
     df = pd.DataFrame(data) if isinstance(data, dict) else data
     columns = list(df.columns)
@@ -379,8 +379,8 @@ def box_plot(
     dict
         Plotly figure as JSON dict.
     """
-    import plotly.express as px
-    import plotly.io as pio
+    import plotly.express as px  # noqa: F401, E402
+    import plotly.io as pio  # noqa: F401, E402
 
     df = pd.DataFrame(data) if isinstance(data, dict) else data
     columns = list(df.columns)
@@ -450,8 +450,8 @@ def violin_plot(
     dict
         Plotly figure as JSON dict.
     """
-    import plotly.express as px
-    import plotly.io as pio
+    import plotly.express as px  # noqa: F401, E402
+    import plotly.io as pio  # noqa: F401, E402
 
     df = pd.DataFrame(data) if isinstance(data, dict) else data
     columns = list(df.columns)
@@ -522,9 +522,9 @@ def heatmap(
     dict
         Plotly figure as JSON dict.
     """
-    import plotly.express as px
-    import plotly.graph_objects as go
-    import plotly.io as pio
+    import plotly.express as px  # noqa: F401, E402
+    import plotly.graph_objects as go  # noqa: F401, E402
+    import plotly.io as pio  # noqa: F401, E402
 
     df = pd.DataFrame(data) if isinstance(data, dict) else data
 
@@ -593,8 +593,8 @@ def pie_chart(
     dict
         Plotly figure as JSON dict.
     """
-    import plotly.express as px
-    import plotly.io as pio
+    import plotly.express as px  # noqa: F401, E402
+    import plotly.io as pio  # noqa: F401, E402
 
     df = pd.DataFrame(data) if isinstance(data, dict) else data
 

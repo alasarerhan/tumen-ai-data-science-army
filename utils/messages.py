@@ -19,6 +19,6 @@ def get_tool_call_names(messages):
         try:
             if "tool_call_id" in list(dict(message).keys()):
                 tool_calls.append(message.name)
-        except:
+        except Exception:
             pass
     return tool_calls

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """LocalFileConnector — DataConnector implementation for local file-system sources (M11).
 
 Supported formats: CSV, TSV, Excel (.xlsx/.xls), Parquet, JSON.
@@ -13,20 +15,16 @@ Example::
     df = conn.read("sales.csv", max_rows=500)
     logger.info(conn.health_check())
 """
-from __future__ import annotations
-
-
-
-import logging
+import logging  # noqa: E402, F401
 
 logger = logging.getLogger(__name__)
-import os
-from pathlib import Path
-from typing import Any, Dict, List, Optional
+import os  # noqa: E402, F401
+from pathlib import Path  # noqa: E402, F401
+from typing import Any, Dict, List, Optional  # noqa: E402, F401
 
-import pandas as pd
+import pandas as pd  # noqa: E402, F401
 
-from ai_data_science_team.connectors.base import DataConnector
+from ai_data_science_team.connectors.base import DataConnector  # noqa: E402, F401
 
 _SUPPORTED_EXTENSIONS = {".csv", ".tsv", ".xlsx", ".xls", ".parquet", ".json"}
 

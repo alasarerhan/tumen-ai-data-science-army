@@ -157,7 +157,6 @@ def test_kind_cluster_create_and_helm_install():
     This test is intentionally long-running and should only be executed in a
     dedicated CI environment. It cleans up the cluster regardless of outcome.
     """
-    import time
 
     cluster_name = "platform-tg3-smoke"
 

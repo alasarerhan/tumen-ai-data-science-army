@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Auto-generated cleaning node module.
 
 Extracted from the 3,400-line ``supervisor_ds_team.py`` monolith
@@ -5,25 +7,16 @@ during the L2 code-review remediation pass.  Uses dependency
 injection via the ``CleaningNodeDeps`` dataclass.
 """
 
-from __future__ import annotations
+import logging  # noqa: E402, F401
+from dataclasses import dataclass  # noqa: E402, F401
+from typing import Any, Callable  # noqa: E402, F401
 
-import logging
-from dataclasses import dataclass
-from typing import Any, Callable
+from langchain_core.messages import AIMessage  # noqa: E402, F401
 
-from langchain_core.messages import AIMessage
-
-from ai_data_science_team.multiagents.supervisor import (
+from ai_data_science_team.multiagents.supervisor import (  # noqa: E402, F401
     SupervisorDSState,
-    _get_last_human_text,
-    ensure_dataset_registry,
-    ensure_df,
-    format_result_with_llm,
-    get_active_data,
-    is_empty_df,
-    merge_messages,
-    tag_messages,
-)
+    append_agent_feedback,
+    register_python_transform_dataset)
 
 logger = logging.getLogger(__name__)
 
@@ -65,24 +58,21 @@ def make_node_cleaning(deps: CleaningNodeDeps) -> Callable[[SupervisorDSState], 
                     "data_sql",
                     "data_cleaned",
                     "feature_data",
-                ],
-            )
+                ])
         )
         if deps.is_empty_df(active_df):
             return {
                 "messages": [
                     AIMessage(
                         content="No dataset is available to clean. Load a file (or run a SQL query) first.",
-                        name="data_cleaning_agent",
-                    )
+                        name="data_cleaning_agent")
                 ],
                 "last_worker": "Data_Cleaning_Agent",
             }
         deps.data_cleaning_agent.invoke_messages(
             messages=before_msgs,
             user_instructions=last_human,
-            data_raw=active_df,
-        )
+            data_raw=active_df)
         response = deps.data_cleaning_agent.response or {}
         merged = deps.merge_messages(before_msgs, response)
         merged["messages"] = deps.tag_messages(
@@ -97,8 +87,7 @@ def make_node_cleaning(deps: CleaningNodeDeps) -> Callable[[SupervisorDSState], 
             extra_text="Cleaning/imputation completed.",
             error_text=response.get("data_cleaner_error"),
             error_log_path=response.get("data_cleaner_error_log_path"),
-            error_prefix="Data cleaning error",
-        )
+            error_prefix="Data cleaning error")
         data_cleaned = response.get("data_cleaned")
         if data_cleaned is not None:
             try:
@@ -116,8 +105,7 @@ def make_node_cleaning(deps: CleaningNodeDeps) -> Callable[[SupervisorDSState], 
                     parent_id=active_dataset_id,
                     error_text=response.get("data_cleaner_error"),
                     error_log_path=response.get("data_cleaner_error_log_path"),
-                    summary=response.get("data_cleaning_summary"),
-                )
+                    summary=response.get("data_cleaning_summary"))
             except Exception:
                 pass
         downstream_resets = (

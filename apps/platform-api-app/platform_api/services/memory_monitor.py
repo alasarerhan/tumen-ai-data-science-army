@@ -29,15 +29,15 @@ Usage
 from __future__ import annotations
 
 import gc
+import importlib.util
 import logging
 import os
-import sys
 import threading
 from dataclasses import dataclass
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from typing import Dict, List, Optional
 
-from prometheus_client import Gauge, Histogram
+from prometheus_client import Gauge
 
 logger = logging.getLogger(__name__)
 
@@ -123,12 +123,10 @@ class MemoryMonitor:
 
     def _check_psutil(self) -> bool:
         """Check if psutil is available."""
-        try:
-            import psutil
-            return True
-        except ImportError:
+        if importlib.util.find_spec("psutil") is None:
             logger.warning("psutil not available, memory monitoring will be limited")
             return False
+        return True
 
     def get_memory_stats(self) -> Dict:
         """Get current memory statistics.

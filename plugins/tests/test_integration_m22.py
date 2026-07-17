@@ -19,19 +19,15 @@ Atlamak için:
 """
 from __future__ import annotations
 
-import os
-import uuid
+
+from _llm import make_chat_model, skip_no_key
 from typing import Any, Dict
 
 import pytest
 
 pytestmark = pytest.mark.integration
 
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
-skip_no_key = pytest.mark.skipif(
-    not OPENAI_API_KEY,
-    reason="OPENAI_API_KEY is not set — skipping integration tests",
-)
+
 
 langchain_openai = pytest.importorskip(
     "langchain_openai",
@@ -79,8 +75,7 @@ def _fail_then_ok_executor():
 
 @pytest.fixture(scope="module")
 def llm():
-    from langchain_openai import ChatOpenAI
-    return ChatOpenAI(model="gpt-4o-mini", temperature=0, max_tokens=800)
+    return make_chat_model(temperature=0, max_tokens=800)
 
 
 @pytest.fixture(autouse=True)
@@ -451,7 +446,7 @@ def test_orchestrator_modify_signal_overrides_instruction(llm):
 @skip_no_key
 def test_orchestrator_registry_based_executor(llm):
     """Registry'den agent_class çeken bir executor ile tam çalıştırma."""
-    from ai_data_science_team.agent_registry import AgentRegistry, AgentMetadata
+    from ai_data_science_team.agent_registry import AgentRegistry
     from ai_data_science_team.agents.orchestrator_agent import OrchestratorAgent
     from ai_data_science_team.workflow_resolver import build_spec, build_step
 

@@ -336,7 +336,7 @@ def parse_llm_intents(
     """
     Parse user intent using an LLM for ambiguous cases.
     """
-    import json
+    import json  # noqa: E402, F401
     
     llm_intents: Dict[str, bool] = {}
     

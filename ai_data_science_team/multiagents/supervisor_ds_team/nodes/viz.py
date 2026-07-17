@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Auto-generated viz node module.
 
 Extracted from the 3,400-line ``supervisor_ds_team.py`` monolith
@@ -5,23 +7,14 @@ during the L2 code-review remediation pass.  Uses dependency
 injection via the ``VizNodeDeps`` dataclass.
 """
 
-from __future__ import annotations
+import logging  # noqa: E402, F401
+from dataclasses import dataclass  # noqa: E402, F401
+from typing import Any, Callable  # noqa: E402, F401
 
-import logging
-from dataclasses import dataclass
-from typing import Any, Callable
+from langchain_core.messages import AIMessage  # noqa: E402, F401
 
-from langchain_core.messages import AIMessage
-
-from ai_data_science_team.multiagents.supervisor import (
-    SupervisorDSState,
-    _get_last_human_text,
-    ensure_df,
-    get_active_data,
-    is_empty_df,
-    merge_messages,
-    tag_messages,
-)
+from ai_data_science_team.multiagents.supervisor import (  # noqa: E402, F401
+    SupervisorDSState)
 
 logger = logging.getLogger(__name__)
 
@@ -54,24 +47,21 @@ def make_node_viz(deps: VizNodeDeps) -> Callable[[SupervisorDSState], dict]:
                     "data_sql",
                     "data_raw",
                     "feature_data",
-                ],
-            )
+                ])
         )
         if deps.is_empty_df(active_df):
             return {
                 "messages": [
                     AIMessage(
                         content="No dataset is available to plot. Load a file (or run a SQL query) first.",
-                        name="data_visualization_agent",
-                    )
+                        name="data_visualization_agent")
                 ],
                 "last_worker": "Data_Visualization_Agent",
             }
         deps.data_visualization_agent.invoke_messages(
             messages=before_msgs,
             user_instructions=last_human,
-            data_raw=active_df,
-        )
+            data_raw=active_df)
         response = deps.data_visualization_agent.response or {}
         merged = deps.merge_messages(before_msgs, response)
         merged["messages"] = deps.tag_messages(
@@ -82,7 +72,7 @@ def make_node_viz(deps: VizNodeDeps) -> Callable[[SupervisorDSState], dict]:
         viz_error_path = response.get("data_visualization_error_log_path")
         viz_warning = response.get("data_visualization_warning")
         try:
-            from ai_data_science_team.utils.plotly import plotly_from_dict
+            from ai_data_science_team.utils.plotly import plotly_from_dict  # noqa: E402, F401
 
             fig = plotly_from_dict(plotly_graph) if plotly_graph else None
             trace_types = (
@@ -121,15 +111,13 @@ def make_node_viz(deps: VizNodeDeps) -> Callable[[SupervisorDSState], dict]:
             merged["messages"].append(
                 AIMessage(
                     content="Visualization error:\n" + "\n".join(err_bits),
-                    name="data_visualization_agent",
-                )
+                    name="data_visualization_agent")
             )
         if isinstance(viz_warning, str) and viz_warning:
             merged["messages"].append(
                 AIMessage(
                     content="Visualization warning:\n" + viz_warning,
-                    name="data_visualization_agent",
-                )
+                    name="data_visualization_agent")
             )
         return {
             **merged,

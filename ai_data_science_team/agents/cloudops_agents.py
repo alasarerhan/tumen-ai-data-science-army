@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """CloudOps Agent Ekibi — Infrastructure as Code, Containerization, CI/CD (M16).
 
 Three specialist agents backed by pure-Python code-generation tools:
@@ -19,8 +21,8 @@ Three specialist agents backed by pure-Python code-generation tools:
 
 Example usage::
 
-    from langchain_openai import ChatOpenAI
-    from ai_data_science_team.agents.cloudops_agents import IaCAgent
+    from langchain_openai import ChatOpenAI  # noqa: E402, F401
+    from ai_data_science_team.agents.cloudops_agents import IaCAgent  # noqa: E402, F401
 
     llm = ChatOpenAI(model="gpt-4o-mini")
     agent = IaCAgent(model=llm)
@@ -33,30 +35,26 @@ Example usage::
     logger.info(agent.get_ai_message())
     logger.info(agent.get_artifacts())
 """
-from __future__ import annotations
-
-
-
-import logging
+import logging  # noqa: E402, F401
 
 logger = logging.getLogger(__name__)
-from typing import Any, Dict, List, Optional, Sequence
+from typing import Any, Dict, List, Optional, Sequence  # noqa: E402, F401
 
-from langchain_core.messages import AIMessage, BaseMessage
-from langgraph.graph import END, START, StateGraph
-from langgraph.types import Checkpointer
-from typing_extensions import Annotated, TypedDict
+from langchain_core.messages import AIMessage, BaseMessage  # noqa: E402, F401
+from langgraph.graph import END, START, StateGraph  # noqa: E402, F401
+from langgraph.types import Checkpointer  # noqa: E402, F401
+from typing_extensions import Annotated, TypedDict  # noqa: E402, F401
 
 try:
-    from IPython.display import Markdown
+    from IPython.display import Markdown  # noqa: E402, F401
 except ImportError:
     Markdown = None  # type: ignore[assignment,misc]
 
-from langchain.agents import create_agent
-from langgraph.graph.message import add_messages
+from langchain.agents import create_agent  # noqa: E402, F401
+from langgraph.graph.message import add_messages  # noqa: E402, F401
 
-from ai_data_science_team.templates import BaseAgent
-from ai_data_science_team.tools.cloudops import (
+from ai_data_science_team.templates import BaseAgent  # noqa: E402, F401
+from ai_data_science_team.tools.cloudops import (  # noqa: E402, F401
     # IaC
     scaffold_terraform_resource,
     list_terraform_providers,
@@ -70,8 +68,8 @@ from ai_data_science_team.tools.cloudops import (
     generate_github_actions_workflow,
     generate_gitlab_ci_pipeline,
 )
-from ai_data_science_team.utils.messages import get_tool_call_names
-from ai_data_science_team.utils.regex import format_agent_name
+from ai_data_science_team.utils.messages import get_tool_call_names  # noqa: E402, F401
+from ai_data_science_team.utils.regex import format_agent_name  # noqa: E402, F401
 
 # ---------------------------------------------------------------------------
 # Tool groups

@@ -77,14 +77,14 @@ def train_h2o_automl(
         }
     """
 
-    import h2o
-    from h2o.automl import H2OAutoML
-    import pandas as pd
-    import json
+    import h2o  # noqa: E402, F401
+    from h2o.automl import H2OAutoML  # noqa: E402, F401
+    import pandas as pd  # noqa: E402, F401
+    import json  # noqa: E402, F401
 
     # Optional MLflow usage
     if enable_mlflow:
-        import mlflow
+        import mlflow  # noqa: E402, F401
 
         if mlflow_tracking_uri:
             mlflow.set_tracking_uri(mlflow_tracking_uri)
@@ -92,7 +92,7 @@ def train_h2o_automl(
         run_context = mlflow.start_run(run_name=run_name)
     else:
         # Dummy context manager to skip MLflow if not enabled
-        from contextlib import nullcontext
+        from contextlib import nullcontext  # noqa: E402, F401
 
         run_context = nullcontext()  # type: ignore[assignment]
 
@@ -106,7 +106,7 @@ def train_h2o_automl(
         run_id = None
         if enable_mlflow and run is not None:
             run_id = run.info.run_id
-            import mlflow
+            import mlflow  # noqa: E402, F401
 
             # Log user-specified parameters
             mlflow.log_params(
@@ -331,8 +331,8 @@ Training
 Here’s an example showing basic usage of the h2o.automl() function in R and the H2OAutoML class in Python. For demonstration purposes only, we explicitly specify the x argument, even though on this dataset, that’s not required. With this dataset, the set of predictors is all columns other than the response. Like other H2O algorithms, the default value of x is “all columns, excluding y”, so that will produce the same result.
 
 ``` python
-import h2o
-from h2o.automl import H2OAutoML
+import h2o  # noqa: E402, F401
+from h2o.automl import H2OAutoML  # noqa: E402, F401
 
 # Start the H2O cluster (locally)
 h2o.init()

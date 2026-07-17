@@ -6,10 +6,8 @@ from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
-from sqlalchemy.orm import Session
 
 from platform_api.authz.dependencies import require_workspace_admin, require_workspace_member
-from platform_api.db.session import get_db
 from platform_api.scheduler.job_queue import ScheduledJobQueue
 from platform_api.scheduler.schedule_parser import ScheduleParser
 

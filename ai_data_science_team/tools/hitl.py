@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Human-in-the-Loop (HITL) Tools — M17.
 
 Pure‐Python LangChain tools for managing approval workflows inside an
@@ -23,7 +25,7 @@ Tools
 
 Usage::
 
-    from ai_data_science_team.tools.hitl import (
+    from ai_data_science_team.tools.hitl import (  # noqa: E402, F401
         create_approval_request,
         format_approval_notification,
         check_approval_status,
@@ -41,19 +43,16 @@ Usage::
     logger.info(content)
     logger.info(artifact)
 """
-from __future__ import annotations
-
-
-import logging
+import logging  # noqa: E402, F401
 
 logger = logging.getLogger(__name__)
-import datetime
-import json
-import threading
-import uuid
-from typing import Dict, Optional, Tuple
+import datetime  # noqa: E402, F401
+import json  # noqa: E402, F401
+import threading  # noqa: E402, F401
+import uuid  # noqa: E402, F401
+from typing import Dict, Optional, Tuple  # noqa: E402, F401
 
-from langchain.tools import tool
+from langchain.tools import tool  # noqa: E402, F401
 
 _APPROVAL_STORE: Dict[str, Dict] = {}
 _DECISION_LOG: list = []

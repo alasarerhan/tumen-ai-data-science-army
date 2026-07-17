@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+
 import json
 from typing import Any, Optional
 
@@ -53,7 +54,7 @@ def format_dataset_with_llm(
         return None
 
     try:
-        import pandas as pd
+        import pandas as pd  # noqa: E402, F401
 
         df = pd.DataFrame(df_dict)
         table_md = df.iloc[:max_rows, :max_cols].to_markdown(index=False)
@@ -99,7 +100,7 @@ def format_result_with_llm(
         preview_md = ""
         shape = "unknown"
         if df_dict:
-            import pandas as pd
+            import pandas as pd  # noqa: E402, F401
 
             df = pd.DataFrame(df_dict)
             preview_md = df.iloc[:max_rows, :max_cols].to_markdown(index=False)

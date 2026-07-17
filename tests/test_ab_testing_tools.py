@@ -411,13 +411,13 @@ def test_agent_module_exports() -> None:
     assert AGENT_NAME == "ab_testing_agent"
     assert NODE_TYPE == "experiment.analyze"
     assert {t.name for t in AB_TESTING_TOOLS} >= {
-        "ab_check_srm",
-        "ab_analyze_continuous",
-        "ab_analyze_proportion",
-        "ab_apply_cuped",
-        "ab_correct_multiple",
-        "ab_detect_peeking",
-        "ab_recommend_decision",
+        "check_srm",
+        "analyze_continuous",
+        "analyze_proportion",
+        "apply_cuped",
+        "correct_multiple",
+        "detect_peeking",
+        "recommend_decision",
     }
 
 

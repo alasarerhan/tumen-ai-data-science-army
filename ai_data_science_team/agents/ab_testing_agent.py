@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """
 ABTestingAgent
 ==============
@@ -29,13 +31,10 @@ Node type
 ``experiment.analyze``  (matches the catalog spec)
 """
 
-from __future__ import annotations
-
-
-import logging
+import logging  # noqa: E402, F401
 
 logger = logging.getLogger(__name__)
-from typing_extensions import (
+from typing_extensions import (  # noqa: E402, F401
     Annotated,
     Any,
     Dict,
@@ -46,30 +45,22 @@ from typing_extensions import (
     TypedDict,
 )
 
-import pandas as pd
-from IPython.display import Markdown
+import pandas as pd  # noqa: E402, F401
+from IPython.display import Markdown  # noqa: E402, F401
 
-from langchain.agents import create_agent
-from langchain.tools import tool
-from langchain_core.messages import AIMessage, BaseMessage
-from langgraph.graph import END, START, StateGraph
-from langgraph.graph.message import add_messages
-from langgraph.prebuilt import InjectedState
-from langgraph.types import Checkpointer
+from langchain.agents import create_agent  # noqa: E402, F401
+from langchain.tools import tool  # noqa: E402, F401
+from langchain_core.messages import AIMessage, BaseMessage  # noqa: E402, F401
+from langgraph.graph import END, START, StateGraph  # noqa: E402, F401
+from langgraph.graph.message import add_messages  # noqa: E402, F401
+from langgraph.prebuilt import InjectedState  # noqa: E402, F401
+from langgraph.types import Checkpointer  # noqa: E402, F401
 
-from ai_data_science_team.templates import BaseAgent
-from ai_data_science_team.utils.messages import get_tool_call_names
-from ai_data_science_team.utils.regex import format_agent_name
+from ai_data_science_team.templates import BaseAgent  # noqa: E402, F401
+from ai_data_science_team.utils.messages import get_tool_call_names  # noqa: E402, F401
+from ai_data_science_team.utils.regex import format_agent_name  # noqa: E402, F401
 
-from ai_data_science_team.tools.ab_testing import (
-    analyze_continuous_metric,
-    analyze_proportion_metric,
-    apply_cuped,
-    apply_multiple_comparison_correction,
-    check_sample_ratio_mismatch,
-    detect_sequential_peeking,
-    recommend_decision,
-)
+from ai_data_science_team.tools import ab_testing as _ab  # noqa: E402, F401
 
 
 AGENT_NAME = "ab_testing_agent"
@@ -82,14 +73,14 @@ NODE_TYPE = "experiment.analyze"
 
 
 @tool(response_format="content_and_artifact")
-def ab_check_srm(
+def check_srm(
     data_raw: Annotated[dict, InjectedState("data_raw")],
     group_column: Annotated[str, InjectedState("group_column")],
     expected_split: Annotated[Optional[dict], InjectedState("expected_split")] = None,
     alpha: float = 0.001,
 ) -> Tuple[str, Dict]:
     """
-    Tool: ab_check_srm
+    Tool: check_srm
     Description:
         Runs Sample Ratio Mismatch detection on the experiment data.
         Returns counts per group, chi-square statistic, p-value and a
@@ -102,10 +93,10 @@ def ab_check_srm(
                           If None, equal split is assumed.
         alpha           : Significance level for SRM (default 0.001).
     """
-    logger.info("    * Tool: ab_check_srm")
+    logger.info("    * Tool: check_srm")
 
     df = pd.DataFrame(data_raw)
-    result = check_sample_ratio_mismatch(
+    result = _ab.check_sample_ratio_mismatch(
         df,
         group_column=group_column,
         expected_split=expected_split,
@@ -121,7 +112,7 @@ def ab_check_srm(
 
 
 @tool(response_format="content_and_artifact")
-def ab_analyze_continuous(
+def analyze_continuous(
     data_raw: Annotated[dict, InjectedState("data_raw")],
     group_column: Annotated[str, InjectedState("group_column")],
     metric_column: str,
@@ -129,7 +120,7 @@ def ab_analyze_continuous(
     alpha: float = 0.05,
 ) -> Tuple[str, Dict]:
     """
-    Tool: ab_analyze_continuous
+    Tool: analyze_continuous
     Description:
         Analyses a continuous metric between control and treatment with
         automatic normality-aware test selection (Welch t-test vs
@@ -143,10 +134,10 @@ def ab_analyze_continuous(
         control_name  : Label of the control variant (default 'control').
         alpha         : Significance level (default 0.05).
     """
-    logger.info("    * Tool: ab_analyze_continuous")
+    logger.info("    * Tool: analyze_continuous")
 
     df = pd.DataFrame(data_raw)
-    result = analyze_continuous_metric(
+    result = _ab.analyze_continuous_metric(
         df,
         group_column=group_column,
         metric_column=metric_column,
@@ -166,7 +157,7 @@ def ab_analyze_continuous(
 
 
 @tool(response_format="content_and_artifact")
-def ab_analyze_proportion(
+def analyze_proportion(
     data_raw: Annotated[dict, InjectedState("data_raw")],
     group_column: Annotated[str, InjectedState("group_column")],
     metric_column: str,
@@ -174,7 +165,7 @@ def ab_analyze_proportion(
     alpha: float = 0.05,
 ) -> Tuple[str, Dict]:
     """
-    Tool: ab_analyze_proportion
+    Tool: analyze_proportion
     Description:
         Analyses a binary (0/1) metric between control and treatment via a
         two-proportion z-test. Returns lift, Wilson CIs and p-value.
@@ -187,10 +178,10 @@ def ab_analyze_proportion(
         control_name  : Label of the control variant (default 'control').
         alpha         : Significance level (default 0.05).
     """
-    logger.info("    * Tool: ab_analyze_proportion")
+    logger.info("    * Tool: analyze_proportion")
 
     df = pd.DataFrame(data_raw)
-    result = analyze_proportion_metric(
+    result = _ab.analyze_proportion_metric(
         df,
         group_column=group_column,
         metric_column=metric_column,
@@ -206,7 +197,7 @@ def ab_analyze_proportion(
 
 
 @tool(response_format="content_and_artifact")
-def ab_apply_cuped(
+def apply_cuped(
     data_raw: Annotated[dict, InjectedState("data_raw")],
     group_column: Annotated[str, InjectedState("group_column")],
     metric_column: str,
@@ -214,15 +205,15 @@ def ab_apply_cuped(
     control_name: str = "control",
 ) -> Tuple[str, Dict]:
     """
-    Tool: ab_apply_cuped
+    Tool: apply_cuped
     Description:
         Applies CUPED variance reduction using a pre-experiment covariate.
         Returns theta, raw vs adjusted means and the % variance reduction.
     """
-    logger.info("    * Tool: ab_apply_cuped")
+    logger.info("    * Tool: apply_cuped")
 
     df = pd.DataFrame(data_raw)
-    result = apply_cuped(
+    result = _ab.apply_cuped(
         df,
         group_column=group_column,
         metric_column=metric_column,
@@ -238,13 +229,13 @@ def ab_apply_cuped(
 
 
 @tool(response_format="content_and_artifact")
-def ab_correct_multiple(
+def correct_multiple(
     p_values: List[float],
     method: str = "bh",
     alpha: float = 0.05,
 ) -> Tuple[str, Dict]:
     """
-    Tool: ab_correct_multiple
+    Tool: correct_multiple
     Description:
         Adjusts a list of raw p-values for multiple comparisons.
 
@@ -253,9 +244,9 @@ def ab_correct_multiple(
         method   : 'bonferroni', 'bh', or 'none'.
         alpha    : Family-wise / FDR level (default 0.05).
     """
-    logger.info("    * Tool: ab_correct_multiple")
+    logger.info("    * Tool: correct_multiple")
 
-    result = apply_multiple_comparison_correction(
+    result = _ab.apply_multiple_comparison_correction(
         p_values=p_values, method=method, alpha=alpha
     )
     content = (
@@ -267,12 +258,12 @@ def ab_correct_multiple(
 
 
 @tool(response_format="content_and_artifact")
-def ab_detect_peeking(
+def detect_peeking(
     sequential_p_values: List[float],
     alpha: float = 0.05,
 ) -> Tuple[str, Dict]:
     """
-    Tool: ab_detect_peeking
+    Tool: detect_peeking
     Description:
         Flags naive repeated significance testing (peeking). Provide the
         chronological list of p-values from interim looks.
@@ -281,21 +272,21 @@ def ab_detect_peeking(
         sequential_p_values : P-values ordered chronologically.
         alpha               : Target Type-I error (default 0.05).
     """
-    logger.info("    * Tool: ab_detect_peeking")
+    logger.info("    * Tool: detect_peeking")
 
-    result = detect_sequential_peeking(sequential_p_values, alpha=alpha)
+    result = _ab.detect_sequential_peeking(sequential_p_values, alpha=alpha)
     return result["peeking_warning"], result
 
 
 @tool(response_format="content_and_artifact")
-def ab_recommend_decision(
+def recommend_decision(
     metric_result: dict,
     min_detectable_lift: Optional[float] = None,
     power: Optional[float] = None,
     required_sample_ratio: float = 1.0,
 ) -> Tuple[str, Dict]:
     """
-    Tool: ab_recommend_decision
+    Tool: recommend_decision
     Description:
         Translates a per-metric analysis result into a ship / iterate /
         abort / watch recommendation with rationale.
@@ -306,9 +297,9 @@ def ab_recommend_decision(
         power                  : Achieved statistical power, if known.
         required_sample_ratio  : Observed/required sample ratio.
     """
-    logger.info("    * Tool: ab_recommend_decision")
+    logger.info("    * Tool: recommend_decision")
 
-    result = recommend_decision(
+    result = _ab.recommend_decision(
         metric_result=metric_result,
         min_detectable_lift=min_detectable_lift,
         power=power,
@@ -318,13 +309,13 @@ def ab_recommend_decision(
 
 
 AB_TESTING_TOOLS = [
-    ab_check_srm,
-    ab_analyze_continuous,
-    ab_analyze_proportion,
-    ab_apply_cuped,
-    ab_correct_multiple,
-    ab_detect_peeking,
-    ab_recommend_decision,
+    check_srm,
+    analyze_continuous,
+    analyze_proportion,
+    apply_cuped,
+    correct_multiple,
+    detect_peeking,
+    recommend_decision,
 ]
 
 
@@ -395,14 +386,14 @@ def make_ab_testing_agent(
         )
         system_hint = (
             "You are an A/B testing analyst. Follow this playbook:\n"
-            "1. Call ab_check_srm on the experiment data.\n"
-            "2. For each metric, call ab_analyze_continuous or "
-            "   ab_analyze_proportion as appropriate.\n"
-            "3. If multiple metrics were tested, call ab_correct_multiple.\n"
-            "4. If a covariate column is available, call ab_apply_cuped for "
+            "1. Call check_srm on the experiment data.\n"
+            "2. For each metric, call analyze_continuous or "
+            "   analyze_proportion as appropriate.\n"
+            "3. If multiple metrics were tested, call correct_multiple.\n"
+            "4. If a covariate column is available, call apply_cuped for "
             "   the primary metric.\n"
-            "5. If interim looks were performed, call ab_detect_peeking.\n"
-            "6. Call ab_recommend_decision for the primary metric and "
+            "5. If interim looks were performed, call detect_peeking.\n"
+            "6. Call recommend_decision for the primary metric and "
             "   summarise ship / iterate / abort with rationale.\n"
             "If SRM is detected, stop and warn the user."
         )

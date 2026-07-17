@@ -34,7 +34,7 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Callable, List
 
-from sqlalchemy import delete, select
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from platform_api.core.config import settings

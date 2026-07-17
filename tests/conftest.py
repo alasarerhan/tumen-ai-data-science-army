@@ -1,13 +1,45 @@
+"""pytest conftest for the top-level tests/ directory.
+
+Two responsibilities:
+  1. Force pytest to import the MODERNIZED ai_data_science_team package
+     (tools/bayesian.py, etc.) instead of the legacy top-level package
+     which has none of the renamed tool symbols.
+  2. Provide the original tmp_path / basetemp / ' 2.py' ignore fixtures.
+"""
 from __future__ import annotations
 
 import os
 import shutil
+import sys
+import types
 import uuid
 from pathlib import Path
 
 import pytest
 
+# ---------------------------------------------------------------------
+# Modernized-package stub (see ai_data_science_team/plugins/tests/conftest.py
+# for the equivalent logic).
+# ---------------------------------------------------------------------
+# tests/conftest.py -> tests -> ai_data_science_team
+_NESTED_PKG = Path(__file__).resolve().parents[1] / "ai_data_science_team"
 
+# Make the modernized package + repo root importable.
+sys.path.insert(0, str(_NESTED_PKG))
+sys.path.insert(0, str(_NESTED_PKG.parent))
+
+# Stub ai_data_science_team to the modernized nested dir so submodule
+# imports (e.g. ai_data_science_team.tools.bayesian) resolve to the
+# renamed tool files, not the legacy compat stubs.
+_pkg = types.ModuleType("ai_data_science_team")
+_pkg.__path__ = [str(_NESTED_PKG)]  # type: ignore[attr-defined]
+_pkg.__package__ = "ai_data_science_team"
+_pkg.__spec__ = None  # type: ignore[assignment]
+sys.modules["ai_data_science_team"] = _pkg
+
+# ---------------------------------------------------------------------
+# Original fixtures + ignore list.
+# ---------------------------------------------------------------------
 REPO_ROOT = Path(__file__).resolve().parents[1]
 PYTEST_TEMP_ROOT = REPO_ROOT / ".pytest-tmp"
 PYTEST_TEMP_ROOT.mkdir(parents=True, exist_ok=True)

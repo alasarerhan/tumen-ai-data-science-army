@@ -65,7 +65,7 @@ def main() -> None:
 
     # 2) Continuous metric
     rev = analyze_continuous_metric(df, "group", "revenue")
-    print(f"\n[2] Revenue (continuous):")
+    print("\n[2] Revenue (continuous):")
     print(f"    control={rev['control_mean']:.3f} → treatment={rev['treatment_mean']:.3f}")
     print(f"    lift={rev['relative_lift']:.2%}, "
           f"CI=[{rev['ci_low']:.3f}, {rev['ci_high']:.3f}], "
@@ -74,14 +74,14 @@ def main() -> None:
 
     # 3) Proportion metric
     conv = analyze_proportion_metric(df, "group", "converted")
-    print(f"\n[3] Conversion (proportion):")
+    print("\n[3] Conversion (proportion):")
     print(f"    control={conv['control_mean']:.3%} → treatment={conv['treatment_mean']:.3%}")
     print(f"    lift={conv['relative_lift']:.2%}, p={conv['p_value']:.4f}, "
           f"z={conv['z_stat']:.2f}")
 
     # 4) CUPED
     cuped = apply_cuped(df, "group", "revenue", "pre_metric")
-    print(f"\n[4] CUPED variance reduction:")
+    print("\n[4] CUPED variance reduction:")
     print(f"    theta={cuped['theta']:.3f}, "
           f"variance reduction={cuped['variance_reduction_pct']:.1f}%")
     print(f"    adjusted lift={cuped['absolute_lift_adjusted']:.3f}")
@@ -90,13 +90,13 @@ def main() -> None:
     mcc = apply_multiple_comparison_correction(
         [rev["p_value"], conv["p_value"]], method="bh"
     )
-    print(f"\n[5] BH correction across 2 metrics:")
+    print("\n[5] BH correction across 2 metrics:")
     print(f"    adjusted p = {mcc['adjusted']}, rejected = {mcc['rejected']}")
 
     # 6) Sequential peeking (simulated: 5 daily interim looks)
     seq_p = [0.30, 0.12, 0.08, 0.06, 0.045]  # analyst peeked daily
     peeking = detect_sequential_peeking(seq_p, alpha=0.05)
-    print(f"\n[6] Sequential peeking (5 interim looks):")
+    print("\n[6] Sequential peeking (5 interim looks):")
     print(f"    {peeking['peeking_warning']}")
 
     # 7) Decision
@@ -105,7 +105,7 @@ def main() -> None:
         min_detectable_lift=0.02,  # 2% MDE
         required_sample_ratio=1.0,
     )
-    print(f"\n[7] Final decision:")
+    print("\n[7] Final decision:")
     print(f"    {decision['decision'].upper()}: {decision['rationale']}")
     print()
 

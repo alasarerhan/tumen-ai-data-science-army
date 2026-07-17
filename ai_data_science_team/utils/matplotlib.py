@@ -8,12 +8,12 @@ Security measures:
 
 Reference: https://github.com/python-pillow/Pillow/blob/main/docs/references/security.rst
 """
-import base64
-from io import BytesIO
-from typing import Optional, Tuple, Any
+import base64  # noqa: E402, F401
+from io import BytesIO  # noqa: E402, F401
+from typing import Optional, Tuple, Any  # noqa: E402, F401
 
-import matplotlib.pyplot as plt
-from PIL import Image
+import matplotlib.pyplot as plt  # noqa: E402, F401
+from PIL import Image  # noqa: E402, F401
 
 Image.MAX_IMAGE_PIXELS = 100_000_000
 

@@ -5,7 +5,7 @@ import logging
 import uuid
 from typing import Literal
 
-from sqlalchemy import and_, func, or_, select, text, update
+from sqlalchemy import and_, func, or_, select, text
 from sqlalchemy.orm import Session
 
 from platform_api.authz.policy import can_admin_workspace

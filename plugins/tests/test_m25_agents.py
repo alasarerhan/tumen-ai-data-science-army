@@ -35,9 +35,7 @@ import tempfile
 import threading
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
-from typing import Any, Dict
 
-import numpy as np
 import pandas as pd
 import pytest
 
@@ -382,7 +380,7 @@ class TestModelServingToolUnit:
 
     def test_load_model_local_pkl(self, classification_model_path):
         """load_model loads a local pickle file and returns metadata."""
-        from ai_data_science_team.agents.model_serving_agent import load_model
+        from ai_data_science_team.agents.g3_model_serving_agent import load_model
 
         content, artifact = load_model.func(
             model_uri=classification_model_path,
@@ -394,7 +392,7 @@ class TestModelServingToolUnit:
 
     def test_load_model_missing_file(self):
         """load_model returns an error artifact for a non-existent file path."""
-        from ai_data_science_team.agents.model_serving_agent import load_model
+        from ai_data_science_team.agents.g3_model_serving_agent import load_model
 
         content, artifact = load_model.func(
             model_uri="/tmp/no_such_model_xyz.pkl",
@@ -404,7 +402,7 @@ class TestModelServingToolUnit:
 
     def test_load_model_empty_uri(self):
         """load_model returns error when model_uri is empty."""
-        from ai_data_science_team.agents.model_serving_agent import load_model
+        from ai_data_science_team.agents.g3_model_serving_agent import load_model
 
         content, artifact = load_model.func(
             model_uri="",
@@ -414,7 +412,7 @@ class TestModelServingToolUnit:
 
     def test_run_inference_after_load(self, classification_model_path, churn_df):
         """run_inference produces predictions after loading the model."""
-        from ai_data_science_team.agents.model_serving_agent import (
+        from ai_data_science_team.agents.g3_model_serving_agent import (
             load_model,
             run_inference,
         )
@@ -438,7 +436,7 @@ class TestModelServingToolUnit:
 
     def test_run_inference_empty_input(self, classification_model_path):
         """run_inference returns error gracefully on empty input."""
-        from ai_data_science_team.agents.model_serving_agent import run_inference
+        from ai_data_science_team.agents.g3_model_serving_agent import run_inference
 
         content, artifact = run_inference.func(
             model_uri=classification_model_path,
@@ -450,7 +448,7 @@ class TestModelServingToolUnit:
 
     def test_get_serving_params_summary(self, classification_model_path):
         """get_serving_params returns a config summary string."""
-        from ai_data_science_team.agents.model_serving_agent import get_serving_params
+        from ai_data_science_team.agents.g3_model_serving_agent import get_serving_params
 
         result = get_serving_params.func(
             model_uri=classification_model_path,
@@ -460,7 +458,7 @@ class TestModelServingToolUnit:
 
     def test_health_check_ready_after_load(self, classification_model_path):
         """health_check reports READY after the model has been loaded into the registry."""
-        from ai_data_science_team.agents.model_serving_agent import (
+        from ai_data_science_team.agents.g3_model_serving_agent import (
             health_check,
             load_model,
         )
@@ -481,7 +479,7 @@ class TestModelServingToolUnit:
 
     def test_health_check_fails_unloaded_model(self):
         """health_check reports FAILED when model was never loaded into registry."""
-        from ai_data_science_team.agents.model_serving_agent import health_check
+        from ai_data_science_team.agents.g3_model_serving_agent import health_check
 
         content, artifact = health_check.func(
             model_uri="/tmp/never_loaded_model.pkl",
@@ -637,7 +635,7 @@ class TestModelServingIntegration:
     @skip_no_key
     def test_load_and_infer_classification(self, llm, classification_model_path, churn_df):
         """Agent loads a local pkl classifier and runs inference."""
-        from ai_data_science_team.agents.model_serving_agent import ModelServingAgent
+        from ai_data_science_team.agents.g3_model_serving_agent import ModelServingAgent
 
         df = churn_df.copy()
         df["TotalCharges"] = pd.to_numeric(df["TotalCharges"], errors="coerce").fillna(0)
@@ -657,7 +655,7 @@ class TestModelServingIntegration:
     @skip_no_key
     def test_predictions_as_dataframe(self, llm, classification_model_path, churn_df):
         """Agent returns predictions as a structured DataFrame."""
-        from ai_data_science_team.agents.model_serving_agent import ModelServingAgent
+        from ai_data_science_team.agents.g3_model_serving_agent import ModelServingAgent
 
         df = churn_df.copy()
         df["TotalCharges"] = pd.to_numeric(df["TotalCharges"], errors="coerce").fillna(0)
@@ -678,7 +676,7 @@ class TestModelServingIntegration:
     @skip_no_key
     def test_pred_distribution(self, llm, classification_model_path, churn_df):
         """Agent returns prediction distribution for a classifier."""
-        from ai_data_science_team.agents.model_serving_agent import ModelServingAgent
+        from ai_data_science_team.agents.g3_model_serving_agent import ModelServingAgent
 
         df = churn_df.copy()
         df["TotalCharges"] = pd.to_numeric(df["TotalCharges"], errors="coerce").fillna(0)
@@ -698,7 +696,7 @@ class TestModelServingIntegration:
     @skip_no_key
     def test_ai_message_not_empty(self, llm, classification_model_path, churn_df):
         """Agent returns a non-empty AI summary message."""
-        from ai_data_science_team.agents.model_serving_agent import ModelServingAgent
+        from ai_data_science_team.agents.g3_model_serving_agent import ModelServingAgent
 
         df = churn_df.copy()
         df["TotalCharges"] = pd.to_numeric(df["TotalCharges"], errors="coerce").fillna(0)
@@ -746,7 +744,7 @@ class TestM25E2E:
         """All tool lists from the 3 M25 agent modules are importable."""
         from ai_data_science_team.agents.api_connector_agent import API_TOOLS
         from ai_data_science_team.agents.document_parser_agent import PARSER_TOOLS
-        from ai_data_science_team.agents.model_serving_agent import SERVING_TOOLS
+        from ai_data_science_team.agents.g3_model_serving_agent import SERVING_TOOLS
 
         assert len(API_TOOLS) >= 3
         assert len(PARSER_TOOLS) >= 3
@@ -755,7 +753,7 @@ class TestM25E2E:
     def test_parse_then_serve_pipeline(self, html_content, classification_model_path, churn_df):
         """Tool-level pipeline: parse HTML doc → save text → load model → run inference."""
         from ai_data_science_team.agents.document_parser_agent import parse_document
-        from ai_data_science_team.agents.model_serving_agent import (
+        from ai_data_science_team.agents.g3_model_serving_agent import (
             load_model,
             run_inference,
         )

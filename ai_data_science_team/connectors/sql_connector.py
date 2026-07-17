@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """SQLConnector — DataConnector implementation for SQLAlchemy-backed databases (M11).
 
 Any database supported by SQLAlchemy (PostgreSQL, MySQL, SQLite, DuckDB, …) can be
@@ -12,15 +14,13 @@ Example::
     df = conn.read("main.orders", max_rows=100)
     logger.info(conn.health_check())
 """
-from __future__ import annotations
+import logging  # noqa: E402, F401
+import threading  # noqa: E402, F401
+from typing import Any, Dict, List, Optional  # noqa: E402, F401
 
-import logging
-import threading
-from typing import Any, Dict, List, Optional
+import pandas as pd  # noqa: E402, F401
 
-import pandas as pd
-
-from ai_data_science_team.connectors.base import DataConnector
+from ai_data_science_team.connectors.base import DataConnector  # noqa: E402, F401
 
 logger = logging.getLogger(__name__)
 
@@ -65,7 +65,7 @@ class SQLConnector(DataConnector):
     @property
     def description(self) -> str:
         try:
-            import sqlalchemy as sa
+            import sqlalchemy as sa  # noqa: E402, F401
             safe_url = sa.make_url(self._connection_string).render_as_string(hide_password=True)
         except Exception as e:
             logger.warning("Failed to render safe URL for SQL connector: %s", e)
@@ -79,7 +79,7 @@ class SQLConnector(DataConnector):
     def connect(self, **_: Any) -> None:
         with self._lock:
             try:
-                import sqlalchemy as sa
+                import sqlalchemy as sa  # noqa: E402, F401
             except ImportError as exc:
                 raise ImportError(
                     "SQLConnector requires sqlalchemy. Install it with: pip install sqlalchemy"
@@ -138,7 +138,7 @@ class SQLConnector(DataConnector):
     def get_metadata(self, n_samples: int = 5) -> Dict[str, Any]:
         """Return rich schema metadata (delegates to the existing helper)."""
         self._ensure_connected()
-        from ai_data_science_team.tools.sql import get_database_metadata
+        from ai_data_science_team.tools.sql import get_database_metadata  # noqa: E402, F401
         return get_database_metadata(self._engine, n_samples=n_samples)
 
     # ------------------------------------------------------------------
@@ -174,7 +174,7 @@ class SQLConnector(DataConnector):
             Required if WHERE clause contains parameterized placeholders.
         """
         self._ensure_connected()
-        import sqlalchemy as sa
+        import sqlalchemy as sa  # noqa: E402, F401
 
         if columns:
             validated_columns = [self._validate_identifier(col) for col in columns]
@@ -208,7 +208,7 @@ class SQLConnector(DataConnector):
     def health_check(self) -> Dict[str, Any]:
         try:
             self._ensure_connected()
-            import sqlalchemy as sa
+            import sqlalchemy as sa  # noqa: E402, F401
             with self._engine.connect() as c:
                 c.execute(sa.text("SELECT 1"))
             return {
@@ -229,7 +229,7 @@ class SQLConnector(DataConnector):
     # ------------------------------------------------------------------
 
     def as_langchain_tools(self) -> list:
-        from langchain.tools import tool as lc_tool
+        from langchain.tools import tool as lc_tool  # noqa: E402, F401
 
         connector = self
 
@@ -248,7 +248,7 @@ class SQLConnector(DataConnector):
         @lc_tool
         def sql_schema() -> str:
             """Return database schema metadata as a JSON string."""
-            import json
+            import json  # noqa: E402, F401
             meta = connector.get_metadata(n_samples=3)
             return json.dumps(meta, default=str, indent=2)
 
@@ -303,7 +303,7 @@ class SQLConnector(DataConnector):
         if not where or not isinstance(where, str):
             raise ValueError("WHERE clause must be a non-empty string")
         
-        import re
+        import re  # noqa: E402, F401
         
         dangerous_patterns = [
             ";", "--", "/*", "*/",

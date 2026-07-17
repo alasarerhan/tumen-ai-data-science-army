@@ -23,7 +23,7 @@ class TestSqlInjection:
 
     def test_sql_injection_in_workflow_name(self, seeded_db: dict) -> None:
         db = seeded_db["db"]
-        tenant = seeded_db["tenant"]
+        seeded_db["tenant"]
         workspace = seeded_db["workspace"]
         user_id = seeded_db["user_admin"].id
 
@@ -133,7 +133,6 @@ class TestPathTraversal:
     """Tests for path traversal prevention in file uploads."""
 
     def test_path_traversal_in_upload_filename(self, seeded_db: dict, tmp_path, monkeypatch) -> None:
-        import shutil
 
         db = seeded_db["db"]
         tenant = seeded_db["tenant"]
@@ -264,7 +263,7 @@ class TestAuthBypass:
                         "client": ("127.0.0.1", 8000),
                     }
                 )
-                principal = asyncio.run(get_principal(
+                asyncio.run(get_principal(
                     request=request,
                     credentials=HTTPAuthorizationCredentials(scheme="Bearer", credentials=token),
                 ))

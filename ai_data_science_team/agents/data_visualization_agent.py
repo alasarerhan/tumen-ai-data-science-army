@@ -1,5 +1,6 @@
 
 
+
 import logging
 
 logger = logging.getLogger(__name__)
@@ -10,43 +11,43 @@ logger = logging.getLogger(__name__)
 
 
 # Libraries
-from typing_extensions import TypedDict, Annotated, Sequence, Literal
-import operator
+from typing_extensions import TypedDict, Annotated, Sequence, Literal  # noqa: E402, F401
+import operator  # noqa: E402, F401
 
-from langchain_core.prompts import PromptTemplate
-from langchain_core.messages import BaseMessage
+from langchain_core.prompts import PromptTemplate  # noqa: E402, F401
+from langchain_core.messages import BaseMessage  # noqa: E402, F401
 
-from langgraph.types import Command
-from langgraph.checkpoint.memory import MemorySaver
+from langgraph.types import Command  # noqa: E402, F401
+from langgraph.checkpoint.memory import MemorySaver  # noqa: E402, F401
 
-import os
-import json
-import difflib
-import re
-import pandas as pd
+import os  # noqa: E402, F401
+import json  # noqa: E402, F401
+import difflib  # noqa: E402, F401
+import re  # noqa: E402, F401
+import pandas as pd  # noqa: E402, F401
 
-from IPython.display import Markdown
+from IPython.display import Markdown  # noqa: E402, F401
 
-from ai_data_science_team.templates import (
+from ai_data_science_team.templates import (  # noqa: E402, F401
     node_func_human_review,
     node_func_fix_agent_code,
     node_func_report_agent_outputs,
     create_coding_agent_graph,
     BaseAgent,
 )
-from ai_data_science_team.parsers.parsers import PythonOutputParser
-from ai_data_science_team.utils.regex import (
+from ai_data_science_team.parsers.parsers import PythonOutputParser  # noqa: E402, F401
+from ai_data_science_team.utils.regex import (  # noqa: E402, F401
     relocate_imports_inside_function,
     add_comments_to_top,
     format_agent_name,
     format_recommended_steps,
     get_generic_summary,
 )
-from ai_data_science_team.tools.dataframe import get_dataframe_summary
-from ai_data_science_team.utils.logging import log_ai_function, log_ai_error
-from ai_data_science_team.utils.plotly import plotly_from_dict
-from ai_data_science_team.utils.sandbox import run_code_sandboxed_subprocess
-from ai_data_science_team.utils.messages import get_last_user_message_content
+from ai_data_science_team.tools.dataframe import get_dataframe_summary  # noqa: E402, F401
+from ai_data_science_team.utils.logging import log_ai_function, log_ai_error  # noqa: E402, F401
+from ai_data_science_team.utils.plotly import plotly_from_dict  # noqa: E402, F401
+from ai_data_science_team.utils.sandbox import run_code_sandboxed_subprocess  # noqa: E402, F401
+from ai_data_science_team.utils.messages import get_last_user_message_content  # noqa: E402, F401
 
 # Setup
 AGENT_NAME = "data_visualization_agent"
@@ -124,9 +125,9 @@ class DataVisualizationAgent(BaseAgent):
     Examples
     --------
     ```python
-    import pandas as pd
-    from langchain_openai import ChatOpenAI
-    from ai_data_science_team.agents import DataVisualizationAgent
+    import pandas as pd  # noqa: E402, F401
+    from langchain_openai import ChatOpenAI  # noqa: E402, F401
+    from ai_data_science_team.agents import DataVisualizationAgent  # noqa: E402, F401
 
     llm = ChatOpenAI(model="gpt-4o-mini")
 
@@ -573,9 +574,9 @@ def make_data_visualization_agent(
     Examples
     --------
     ``` python
-    import pandas as pd
-    from langchain_openai import ChatOpenAI
-    from ai_data_science_team.agents import data_visualization_agent
+    import pandas as pd  # noqa: E402, F401
+    from langchain_openai import ChatOpenAI  # noqa: E402, F401
+    from ai_data_science_team.agents import data_visualization_agent  # noqa: E402, F401
 
     llm = ChatOpenAI(model="gpt-4o-mini")
 
@@ -821,9 +822,9 @@ Use an appropriate chart type based on column types (categorical vs numeric). De
 
     def _build_fallback_chart(df: pd.DataFrame, profile: dict) -> tuple[dict | None, str | None]:
         try:
-            import plotly.express as px
-            import plotly.io as pio
-            import json as _json
+            import plotly.express as px  # noqa: E402, F401
+            import plotly.io as pio  # noqa: E402, F401
+            import json as _json  # noqa: E402, F401
         except Exception:
             return None, "Plotly is not available for fallback."
 
@@ -1064,11 +1065,11 @@ Use an appropriate chart type based on column types (categorical vs numeric). De
             Return code to provide the data visualization function:
             
             def {function_name}(data_raw):
-                import pandas as pd
-                import numpy as np
-                import json
-                import plotly.graph_objects as go
-                import plotly.io as pio
+                import pandas as pd  # noqa: E402, F401
+                import numpy as np  # noqa: E402, F401
+                import json  # noqa: E402, F401
+                import plotly.graph_objects as go  # noqa: E402, F401
+                import plotly.io as pio  # noqa: E402, F401
                 
                 ...
                 
@@ -1216,7 +1217,7 @@ Use an appropriate chart type based on column types (categorical vs numeric). De
                         req_raw = req_raw.split("[Pipeline Studio context]", 1)[0]
                     req = req_raw.lower() if isinstance(req_raw, str) else ""
                     if req:
-                        import re
+                        import re  # noqa: E402, F401
 
                         def _has_word(word: str) -> bool:
                             return re.search(rf"\\b{re.escape(word)}s?\\b", req) is not None

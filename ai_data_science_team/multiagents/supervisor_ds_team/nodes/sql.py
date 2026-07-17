@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Auto-generated sql node module.
 
 Extracted from the 3,400-line ``supervisor_ds_team.py`` monolith
@@ -5,26 +7,14 @@ during the L2 code-review remediation pass.  Uses dependency
 injection via the ``SqlNodeDeps`` dataclass.
 """
 
-from __future__ import annotations
+import logging  # noqa: E402, F401
+from dataclasses import dataclass  # noqa: E402, F401
+from typing import Any, Callable  # noqa: E402, F401
 
-import logging
-from dataclasses import dataclass
-from typing import Any, Callable
+from langchain_core.messages import AIMessage  # noqa: E402, F401
 
-from langchain_core.messages import AIMessage
-
-from ai_data_science_team.multiagents.supervisor import (
-    SupervisorDSState,
-    _get_last_human_text,
-    append_error_message,
-    ensure_dataset_registry,
-    format_result_with_llm,
-    merge_messages,
-    register_dataset,
-    sha256_text,
-    tag_messages,
-    truncate_text,
-)
+from ai_data_science_team.multiagents.supervisor import (  # noqa: E402, F401
+    SupervisorDSState)
 
 logger = logging.getLogger(__name__)
 
@@ -55,8 +45,7 @@ def make_node_sql(deps: SqlNodeDeps) -> Callable[[SupervisorDSState], dict]:
         datasets, active_dataset_id = deps.ensure_dataset_registry(state)
         deps.sql_database_agent.invoke_messages(
             messages=before_msgs,
-            user_instructions=last_human,
-        )
+            user_instructions=last_human)
         response = deps.sql_database_agent.response or {}
         merged = deps.merge_messages(before_msgs, response)
         merged["messages"] = deps.tag_messages(merged.get("messages"), "sql_database_agent")
@@ -64,8 +53,7 @@ def make_node_sql(deps: SqlNodeDeps) -> Callable[[SupervisorDSState], dict]:
             "sql_database_agent",
             response.get("data_sql"),
             deps._get_last_human_text(before_msgs),
-            extra_text=response.get("sql_query_code", ""),
-        )
+            extra_text=response.get("sql_query_code", ""))
         if summary_text:
             merged["messages"].append(
                 AIMessage(content=summary_text, name="sql_database_agent")
@@ -75,8 +63,7 @@ def make_node_sql(deps: SqlNodeDeps) -> Callable[[SupervisorDSState], dict]:
             "sql_database_agent",
             response.get("sql_database_error"),
             response.get("sql_database_error_log_path"),
-            prefix="SQL error",
-        )
+            prefix="SQL error")
         data_sql = response.get("data_sql")
         if data_sql is not None:
             try:
@@ -114,8 +101,7 @@ def make_node_sql(deps: SqlNodeDeps) -> Callable[[SupervisorDSState], dict]:
                         },
                     },
                     parent_id=None,
-                    make_active=True,
-                )
+                    make_active=True)
             except Exception:
                 pass
         return {

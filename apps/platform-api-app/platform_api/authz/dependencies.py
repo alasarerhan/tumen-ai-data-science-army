@@ -12,7 +12,7 @@ from platform_api.authz.policy import can_admin_tenant, can_admin_workspace
 from platform_api.db.models import TenantMembership, Workspace, WorkspaceMembership
 from platform_api.db.session import get_db
 from platform_api.services.identity_service import get_or_create_user
-from platform_api.tenant_context import set_tenant_context, clear_tenant_context
+from platform_api.tenant_context import set_tenant_context
 
 
 def _get_workspace_and_membership(

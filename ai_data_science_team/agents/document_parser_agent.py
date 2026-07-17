@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """
 DocumentParserAgent
 ===================
@@ -32,13 +34,10 @@ Scrapling fetcher modes (used when document_type='url')
 Set via ``scrape_mode`` state key (default 'http').
 """
 
-from __future__ import annotations
-
-
-import logging
+import logging  # noqa: E402, F401
 
 logger = logging.getLogger(__name__)
-from typing_extensions import (
+from typing_extensions import (  # noqa: E402, F401
     Annotated,
     Any,
     Dict,
@@ -49,20 +48,20 @@ from typing_extensions import (
     TypedDict,
 )
 
-import pandas as pd
-from IPython.display import Markdown
+import pandas as pd  # noqa: E402, F401
+from IPython.display import Markdown  # noqa: E402, F401
 
-from langchain.agents import create_agent
-from langchain.tools import tool
-from langchain_core.messages import AIMessage, BaseMessage
-from langgraph.graph import END, START, StateGraph
-from langgraph.graph.message import add_messages
-from langgraph.prebuilt import InjectedState
-from langgraph.types import Checkpointer
+from langchain.agents import create_agent  # noqa: E402, F401
+from langchain.tools import tool  # noqa: E402, F401
+from langchain_core.messages import AIMessage, BaseMessage  # noqa: E402, F401
+from langgraph.graph import END, START, StateGraph  # noqa: E402, F401
+from langgraph.graph.message import add_messages  # noqa: E402, F401
+from langgraph.prebuilt import InjectedState  # noqa: E402, F401
+from langgraph.types import Checkpointer  # noqa: E402, F401
 
-from ai_data_science_team.templates import BaseAgent
-from ai_data_science_team.utils.messages import get_tool_call_names
-from ai_data_science_team.utils.regex import format_agent_name
+from ai_data_science_team.templates import BaseAgent  # noqa: E402, F401
+from ai_data_science_team.utils.messages import get_tool_call_names  # noqa: E402, F401
+from ai_data_science_team.utils.regex import format_agent_name  # noqa: E402, F401
 
 AGENT_NAME = "document_parser_agent"
 
@@ -96,7 +95,7 @@ def parse_document(
     """
     logger.info("    * Tool: parse_document")
 
-    import os
+    import os  # noqa: E402, F401
 
     # Detect type if 'auto'
     dtype = (document_type or "auto").lower().strip()
@@ -124,7 +123,7 @@ def parse_document(
     # ---- PDF ----------------------------------------------------------------
     if dtype == "pd":
         try:
-            import pdfplumber  # type: ignore
+            import pdfplumber  # type: ignore  # noqa: E402, F401
 
             src = document_source or ""
             limit = max_pages if max_pages and max_pages > 0 else None
@@ -157,7 +156,7 @@ def parse_document(
     # ---- DOCX ---------------------------------------------------------------
     elif dtype == "docx":
         try:
-            import docx  # python-docx
+            import docx  # python-docx  # noqa: E402, F401
 
             src = document_source or ""
             doc = docx.Document(src)
@@ -180,7 +179,7 @@ def parse_document(
     # ---- URL (web scraping via Scrapling) -----------------------------------
     elif dtype == "url":
         try:
-            from scrapling.fetchers import Fetcher  # type: ignore
+            from scrapling.fetchers import Fetcher  # type: ignore  # noqa: E402, F401
 
             src = (document_source or "").strip()
             scrape_mode = "http"  # default
@@ -207,7 +206,7 @@ def parse_document(
             if not body_text_parts:
                 # Fallback to BeautifulSoup if scraping returns nothing
                 try:
-                    from bs4 import BeautifulSoup as _BS
+                    from bs4 import BeautifulSoup as _BS  # noqa: E402, F401
                     _soup = _BS(html_content, "html.parser")
                     for tag in _soup(["script", "style"]):
                         tag.decompose()
@@ -246,7 +245,7 @@ def parse_document(
                 except Exception:
                     # Fallback to BeautifulSoup4 for table extraction
                     try:
-                        from bs4 import BeautifulSoup as _BS
+                        from bs4 import BeautifulSoup as _BS  # noqa: E402, F401
                         _soup = _BS(html_content, "html.parser")
                         for tbl_tag in _soup.find_all("table"):
                             rows = []
@@ -270,7 +269,7 @@ def parse_document(
     # ---- HTML (local file or raw HTML string) -------------------------------
     elif dtype == "html":
         try:
-            from bs4 import BeautifulSoup  # type: ignore
+            from bs4 import BeautifulSoup  # type: ignore  # noqa: E402, F401
 
             src = document_source or ""
             # Accept file path or raw HTML string

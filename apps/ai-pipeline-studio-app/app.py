@@ -3865,7 +3865,7 @@ def _parse_db_connect_command(prompt: str) -> dict | None:
         return None
 
     p = prompt.strip()
-    low = p.lower()
+    p.lower()
 
     # Disconnect/reset
     if re.search(r"(?i)\b(disconnect|reset|clear)\b.*\b(db|database|sql)\b", p):
@@ -10396,7 +10396,7 @@ def _render_pipeline_studio() -> None:
                                 if isinstance(edited_summary, pd.DataFrame):
                                     if "Select" in edited_summary.columns:
                                         selected_rows = edited_summary[
-                                            edited_summary["Select"] == True
+                                            edited_summary["Select"]
                                         ]
                                     else:
                                         selected_rows = edited_summary.iloc[0:0]
@@ -13760,7 +13760,7 @@ def _render_pipeline_studio() -> None:
                                     st.session_state["pipeline_studio_manual_label"] = (
                                         label_default
                                     )
-                                label_new = st.text_input(
+                                st.text_input(
                                     "Label",
                                     key="pipeline_studio_manual_label",
                                     help="Human-friendly name shown in the pipeline.",

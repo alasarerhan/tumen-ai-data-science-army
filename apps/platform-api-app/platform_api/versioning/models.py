@@ -10,7 +10,7 @@ https://zylos.ai/research/2026-03-06-ai-agent-version-management-safe-upgrade-pa
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from sqlalchemy import JSON, DateTime, Float, ForeignKey, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship

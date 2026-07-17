@@ -3,13 +3,12 @@ from __future__ import annotations
 import hashlib
 import uuid
 from datetime import UTC, datetime, timedelta
-from unittest.mock import patch
 
 import pytest
 from fastapi import HTTPException
 from sqlalchemy import select
 
-from platform_api.db.models import Invite, InviteStatus, TenantMembership, TenantRole, User, WorkspaceMembership, WorkspaceRole
+from platform_api.db.models import InviteStatus, TenantMembership, TenantRole, User, WorkspaceMembership, WorkspaceRole
 from platform_api.services import provisioning_service
 
 

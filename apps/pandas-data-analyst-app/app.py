@@ -192,7 +192,7 @@ if question := st.chat_input("Enter your question here:", key="query_input"):
                 data_raw=df,
             )
             result = pandas_data_analyst.get_response()
-        except Exception as e:
+        except Exception:
             st.chat_message("ai").write(
                 "An error occurred while processing your query. Please try again."
             )

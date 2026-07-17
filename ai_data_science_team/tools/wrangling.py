@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Data wrangling tools for the AI Data Science Team.
 
 This module provides tools for data transformation, filtering, aggregation,
@@ -15,13 +17,11 @@ Tools
 - transform_column: Apply transformations to columns
 """
 
-from __future__ import annotations
+from typing import Any, Dict, List, Optional, Union  # noqa: E402, F401
 
-from typing import Any, Dict, List, Optional, Union
+import pandas as pd  # noqa: E402, F401
 
-import pandas as pd
-
-from ai_data_science_team.tool_registry import (
+from ai_data_science_team.tool_registry import (  # noqa: E402, F401
     ToolParameter,
     register_tool,
 )
@@ -389,7 +389,7 @@ def transform_column(
     dict
         Transformed DataFrame as dictionary.
     """
-    import numpy as np
+    import numpy as np  # noqa: E402, F401
 
     df = pd.DataFrame(data) if isinstance(data, dict) else data.copy()
 

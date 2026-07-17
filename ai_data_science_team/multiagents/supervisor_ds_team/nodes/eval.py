@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Auto-generated eval node module.
 
 Extracted from the 3,400-line ``supervisor_ds_team.py`` monolith
@@ -5,22 +7,14 @@ during the L2 code-review remediation pass.  Uses dependency
 injection via the ``EvalNodeDeps`` dataclass.
 """
 
-from __future__ import annotations
+import logging  # noqa: E402, F401
+from dataclasses import dataclass  # noqa: E402, F401
+from typing import Any, Callable  # noqa: E402, F401
 
-import logging
-from dataclasses import dataclass
-from typing import Any, Callable
+from langchain_core.messages import AIMessage  # noqa: E402, F401
 
-from langchain_core.messages import AIMessage
-
-from ai_data_science_team.multiagents.supervisor import (
-    SupervisorDSState,
-    ensure_df,
-    get_active_data,
-    is_empty_df,
-    merge_messages,
-    tag_messages,
-)
+from ai_data_science_team.multiagents.supervisor import (  # noqa: E402, F401
+    SupervisorDSState)
 
 logger = logging.getLogger(__name__)
 
@@ -57,8 +51,7 @@ def make_node_eval(deps: EvalNodeDeps) -> Callable[[SupervisorDSState], dict]:
                 "messages": [
                     AIMessage(
                         content="No dataset is available for evaluation. Load data and train a model first.",
-                        name="model_evaluation_agent",
-                    )
+                        name="model_evaluation_agent")
                 ],
                 "last_worker": "Model_Evaluation_Agent",
             }
@@ -68,8 +61,7 @@ def make_node_eval(deps: EvalNodeDeps) -> Callable[[SupervisorDSState], dict]:
             messages=before_msgs,
             data_raw=active_df,
             model_artifacts=model_artifacts,
-            target_variable=state.get("target_variable"),
-        )
+            target_variable=state.get("target_variable"))
         response = deps.model_evaluation_agent.response or {}
         merged = deps.merge_messages(before_msgs, response)
         merged["messages"] = deps.tag_messages(
@@ -81,8 +73,7 @@ def make_node_eval(deps: EvalNodeDeps) -> Callable[[SupervisorDSState], dict]:
             merged["messages"].append(
                 AIMessage(
                     content="Model evaluation error:\n" + str(eval_artifacts.get("error")),
-                    name="model_evaluation_agent",
-                )
+                    name="model_evaluation_agent")
             )
         return {
             **merged,

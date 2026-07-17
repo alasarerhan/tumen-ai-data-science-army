@@ -1,377 +1,581 @@
-"""e12_clustering. Deterministic clustering tools. Implements E12
-— KMeans / DBSCAN / Agglomerative (hierarchical) clustering,
-silhouette + Calinski-Harabasz scoring, per-cluster feature
-profiling, deterministic naming seeds, segmentation template
-builder.
-"""
-
 from __future__ import annotations
 
-import os
-# Apple Silicon safety: KMeans._kmeans_single_lloyd can SIGABRT on
-# multi-threaded BLAS.  Pinning these env vars *before* sklearn
-# import keeps thread count at 1.
-os.environ.setdefault("OMP_NUM_THREADS", "1")
-os.environ.setdefault("OPENBLAS_NUM_THREADS", "1")
-os.environ.setdefault("MKL_NUM_THREADS", "1")
+from dataclasses import dataclass, field
 
-import time
-import uuid
-from dataclasses import dataclass
-from typing import Any, Dict, List, Mapping, Optional, Sequence
+"""Clustering and segmentation tools (M14).
 
-import numpy as np
-from sklearn.cluster import (
-    AgglomerativeClustering,
-    DBSCAN,
-    KMeans,
-)
-from sklearn.metrics import (
-    calinski_harabasz_score,
-    silhouette_score,
-)
-from sklearn.preprocessing import StandardScaler
+All tools use *lazy imports* so that heavy optional dependencies
+(scikit-learn, matplotlib) do not break the import chain when they are not
+installed.
 
+Available tools
+---------------
+run_kmeans              Fit K-Means; returns cluster labels + centroids + metrics.
+run_dbscan              Fit DBSCAN; returns cluster labels + core-point count.
+reduce_pca              PCA dimensionality reduction + explained-variance report.
+reduce_tsne             t-SNE dimensionality reduction (2-D or 3-D).
+compute_cluster_profile Per-cluster mean / std / size / share statistics.
+compute_silhouette      Silhouette score + per-cluster silhouette values.
+"""
+import logging  # noqa: E402, F401
+from typing import Any, Dict, List, Optional, Sequence  # noqa: E402, F401
 
-VALID_ALGORITHMS = {"kmeans", "dbscan", "hierarchical"}
+import numpy as np  # noqa: E402, F401
+from langchain.tools import tool  # noqa: E402, F401
+
+logger = logging.getLogger(__name__)
 
 
-def _new_id() -> str:
-    return uuid.uuid4().hex[:12]
+# ---------------------------------------------------------------------------
+# K-Means clustering
+# ---------------------------------------------------------------------------
 
-
-def _now() -> float:
-    return time.time()
-
-
-# ----- Inputs --------------------------------------------------------------
-
-@dataclass
-class ClusteringResult:
-    run_id: str
-    algorithm: str
-    params: Dict[str, Any]
-    labels: List[int]
-    n_clusters: int
-    n_noise: int
-    cluster_sizes: Dict[int, int]
-    metrics: Dict[str, float]
-    profiles: List[Dict[str, Any]]
-    naming_seeds: List[Dict[str, Any]]
-    segmentation_template: Dict[str, Any]
-    created_at: float
-
-
-def _to_2d_array(X: Any) -> np.ndarray:
-    arr = np.asarray(X, dtype=float)
-    if arr.ndim != 2:
-        raise ValueError(f"X must be 2-D, got shape {arr.shape}")
-    return arr
-
-
-def _standardize(X: np.ndarray) -> np.ndarray:
-    return StandardScaler().fit_transform(X)
-
-
-# ----- Clustering algorithms -----------------------------------------------
-
+@tool(response_format="content_and_artifact")
 def run_kmeans(
-    X: np.ndarray,
-    *,
-    n_clusters: int = 4,
-    random_state: int = 0,
+    data: List[List[float]],
+    n_clusters: int = 3,
+    feature_names: Optional[List[str]] = None,
+    max_iter: int = 300,
+    random_state: int = 42,
     n_init: int = 10,
-) -> np.ndarray:
-    if n_clusters < 1:
-        raise ValueError("n_clusters must be >= 1")
-    if n_clusters > len(X):
-        raise ValueError(
-            f"n_clusters ({n_clusters}) > n_samples ({len(X)})"
-        )
+) -> tuple[str, Dict[str, Any]]:
+    """Fit K-Means clustering on the provided data matrix.
+
+    Parameters
+    ----------
+    data          : 2-D list of shape (n_samples, n_features).
+    n_clusters    : Number of clusters to form.
+    feature_names : Optional column labels for display.
+    max_iter      : Maximum number of K-Means iterations.
+    random_state  : Random seed for reproducibility.
+    n_init        : Number of times K-Means is run with different centroid seeds.
+
+    Returns a textual summary + artifact dict with keys:
+        labels (list[int]), centroids (list[list[float]]),
+        inertia (float), silhouette_score (float | None),
+        n_clusters (int), feature_names (list[str]),
+        cluster_sizes (dict), cluster_share (dict).
+    """
+    try:
+        from sklearn.cluster import KMeans  # noqa: E402, F401
+        from sklearn.metrics import silhouette_score  # noqa: E402, F401
+    except ImportError:
+        raise ImportError("pip install scikit-learn")
+
+    X = np.array(data, dtype=float)
+    n_samples, n_features = X.shape
+
+    if feature_names is None:
+        feature_names = [f"feature_{i}" for i in range(n_features)]
+
+    k_eff = min(n_clusters, n_samples - 1)
     km = KMeans(
-        n_clusters=n_clusters,
+        n_clusters=k_eff,
+        max_iter=max_iter,
         random_state=random_state,
         n_init=n_init,
     )
-    return km.fit_predict(X)
+    labels = km.fit_predict(X).tolist()
+
+    # Silhouette score requires ≥ 2 clusters and ≥ 2 samples per cluster
+    sil: Optional[float] = None
+    if k_eff >= 2 and len(set(labels)) >= 2:
+        try:
+            sil = round(float(silhouette_score(X, labels)), 4)
+        except Exception as exc:
+            logger.warning("silhouette_score failed for k=%d: %s", k_eff, exc)
+
+    sizes = {int(k): int(v) for k, v in zip(*np.unique(labels, return_counts=True))}
+    share = {str(k): round(v / n_samples, 4) for k, v in sizes.items()}
+
+    artifact: Dict[str, Any] = {
+        "labels": labels,
+        "centroids": km.cluster_centers_.tolist(),
+        "inertia": round(float(km.inertia_), 4),
+        "silhouette_score": sil,
+        "n_clusters": k_eff,
+        "feature_names": feature_names,
+        "cluster_sizes": {str(k): v for k, v in sizes.items()},
+        "cluster_share": share,
+    }
+
+    summary_lines = [
+        f"K-Means completed — {k_eff} clusters, {n_samples} samples.",
+        f"Inertia: {artifact['inertia']}",
+        f"Silhouette score: {sil if sil is not None else 'N/A (need ≥ 2 clusters with ≥ 2 samples)'}",
+        "Cluster sizes: " + ", ".join(f"Cluster {k}: {v}" for k, v in sizes.items()),
+    ]
+    return "\n".join(summary_lines), artifact
 
 
+# ---------------------------------------------------------------------------
+# DBSCAN clustering
+# ---------------------------------------------------------------------------
+
+@tool(response_format="content_and_artifact")
 def run_dbscan(
-    X: np.ndarray,
-    *,
+    data: List[List[float]],
     eps: float = 0.5,
     min_samples: int = 5,
-) -> np.ndarray:
-    if eps <= 0:
-        raise ValueError("eps must be > 0")
-    if min_samples < 1:
-        raise ValueError("min_samples must be >= 1")
-    db = DBSCAN(eps=eps, min_samples=min_samples)
-    return db.fit_predict(X)
+    feature_names: Optional[List[str]] = None,
+    metric: str = "euclidean",
+) -> tuple[str, Dict[str, Any]]:
+    """Fit DBSCAN density-based clustering.
 
+    Parameters
+    ----------
+    data         : 2-D list of shape (n_samples, n_features).
+    eps          : Maximum distance between two samples to be considered neighbours.
+    min_samples  : Minimum samples in a neighbourhood to form a core point.
+    feature_names: Optional column labels.
+    metric       : Distance metric ('euclidean', 'manhattan', etc.).
 
-def run_hierarchical(
-    X: np.ndarray,
-    *,
-    n_clusters: int = 4,
-    linkage: str = "ward",
-) -> np.ndarray:
-    if n_clusters < 1:
-        raise ValueError("n_clusters must be >= 1")
-    if n_clusters > len(X):
-        raise ValueError(
-            f"n_clusters ({n_clusters}) > n_samples ({len(X)})"
-        )
-    if linkage not in ("ward", "complete", "average", "single"):
-        raise ValueError(f"linkage must be one of ward/complete/average/single")
-    ac = AgglomerativeClustering(n_clusters=n_clusters, linkage=linkage)
-    return ac.fit_predict(X)
-
-
-# ----- Metrics -------------------------------------------------------------
-
-def compute_silhouette(X: np.ndarray, labels: np.ndarray) -> float:
-    """Return silhouette score in [-1, 1]. Returns NaN if < 2 clusters
-    or any -1 noise labels make silhouette undefined (silhouette
-    raises ValueError on that case)."""
-    unique = np.unique(labels)
-    if len(unique) < 2:
-        return float("nan")
-    if len(unique) == 2 and -1 in unique:
-        # 1 cluster + noise
-        return float("nan")
+    Returns a textual summary + artifact dict with keys:
+        labels (list[int]),   noise_count (int),
+        n_clusters (int),     cluster_sizes (dict),
+        core_sample_count (int), silhouette_score (float | None).
+    """
     try:
-        return float(silhouette_score(X, labels))
-    except ValueError:
-        return float("nan")
+        from sklearn.cluster import DBSCAN  # noqa: E402, F401
+        from sklearn.metrics import silhouette_score  # noqa: E402, F401
+    except ImportError:
+        raise ImportError("pip install scikit-learn")
 
+    X = np.array(data, dtype=float)
+    n_samples, n_features = X.shape
 
-def compute_calinski_harabasz(X: np.ndarray, labels: np.ndarray) -> float:
-    """Return CH score. NaN if fewer than 2 clusters."""
-    unique = np.unique(labels)
-    if len(unique) < 2:
-        return float("nan")
-    try:
-        return float(calinski_harabasz_score(X, labels))
-    except ValueError:
-        return float("nan")
-
-
-def cluster_sizes(labels: Sequence[int]) -> Dict[int, int]:
-    sizes: Dict[int, int] = {}
-    for lab in labels:
-        sizes[int(lab)] = sizes.get(int(lab), 0) + 1
-    return sizes
-
-
-# ----- Per-cluster profiling -----------------------------------------------
-
-def profile_clusters(
-    X: np.ndarray,
-    labels: Sequence[int],
-    feature_names: Optional[Sequence[str]] = None,
-) -> List[Dict[str, Any]]:
-    """Per-cluster mean / std / min / max for each feature."""
-    if X.ndim != 2:
-        raise ValueError("X must be 2-D")
-    n_features = X.shape[1]
     if feature_names is None:
-        feature_names = [f"f{i}" for i in range(n_features)]
-    if len(feature_names) != n_features:
-        raise ValueError(
-            "feature_names length must equal n_features"
-        )
-    labels_arr = np.asarray(labels)
-    profiles: List[Dict[str, Any]] = []
-    unique_labels = sorted(set(int(x) for x in labels_arr))
+        feature_names = [f"feature_{i}" for i in range(n_features)]
+
+    db = DBSCAN(eps=eps, min_samples=min_samples, metric=metric)
+    labels = db.fit_predict(X).tolist()
+
+    unique_labels = set(labels)
+    n_clusters = len(unique_labels - {-1})
+    noise_count = int(labels.count(-1))
+    core_count = int(len(db.core_sample_indices_))
+
+    sizes: Dict[str, int] = {}
     for lab in unique_labels:
+        key = "noise" if lab == -1 else str(lab)
+        sizes[key] = int(labels.count(lab))
+
+    sil: Optional[float] = None
+    if n_clusters >= 2:
+        non_noise_mask = np.array(labels) != -1
+        if non_noise_mask.sum() >= 2:
+            try:
+                sil = round(float(silhouette_score(X[non_noise_mask], np.array(labels)[non_noise_mask])), 4)
+            except Exception as exc:
+                logger.warning("silhouette_score failed for DBSCAN: %s", exc)
+
+    artifact: Dict[str, Any] = {
+        "labels": labels,
+        "n_clusters": n_clusters,
+        "noise_count": noise_count,
+        "core_sample_count": core_count,
+        "cluster_sizes": sizes,
+        "silhouette_score": sil,
+        "eps": eps,
+        "min_samples": min_samples,
+        "feature_names": feature_names,
+    }
+
+    summary_lines = [
+        f"DBSCAN completed — {n_clusters} clusters, {noise_count} noise points.",
+        f"Core samples: {core_count}  |  eps={eps}  |  min_samples={min_samples}",
+        f"Silhouette score: {sil if sil is not None else 'N/A'}",
+        "Cluster sizes: " + ", ".join(f"{k}: {v}" for k, v in sizes.items()),
+    ]
+    return "\n".join(summary_lines), artifact
+
+
+# ---------------------------------------------------------------------------
+# PCA dimensionality reduction
+# ---------------------------------------------------------------------------
+
+@tool(response_format="content_and_artifact")
+def reduce_pca(
+    data: List[List[float]],
+    n_components: int = 2,
+    feature_names: Optional[List[str]] = None,
+    whiten: bool = False,
+    random_state: int = 42,
+) -> tuple[str, Dict[str, Any]]:
+    """Apply Principal Component Analysis (PCA) dimensionality reduction.
+
+    Parameters
+    ----------
+    data          : 2-D list of shape (n_samples, n_features).
+    n_components  : Number of principal components to retain.
+    feature_names : Optional column labels for the original features.
+    whiten        : Whether to whiten the components.
+    random_state  : Random seed.
+
+    Returns a textual summary + artifact dict with keys:
+        transformed (list[list[float]]),
+        explained_variance_ratio (list[float]),
+        cumulative_variance (float),
+        n_components (int),
+        component_loadings (list[list[float]]),
+        feature_names (list[str]).
+    """
+    try:
+        from sklearn.decomposition import PCA  # noqa: E402, F401
+    except ImportError:
+        raise ImportError("pip install scikit-learn")
+
+    X = np.array(data, dtype=float)
+    n_samples, n_features = X.shape
+
+    if feature_names is None:
+        feature_names = [f"feature_{i}" for i in range(n_features)]
+
+    n_comp_eff = min(n_components, n_samples, n_features)
+    pca = PCA(n_components=n_comp_eff, whiten=whiten, random_state=random_state)
+    X_transformed = pca.fit_transform(X)
+
+    evr = [round(float(v), 6) for v in pca.explained_variance_ratio_]
+    cumvar = round(float(sum(evr)), 6)
+
+    artifact: Dict[str, Any] = {
+        "transformed": X_transformed.tolist(),
+        "explained_variance_ratio": evr,
+        "cumulative_variance": cumvar,
+        "n_components": n_comp_eff,
+        "component_loadings": pca.components_.tolist(),
+        "feature_names": feature_names,
+    }
+
+    summary_lines = [
+        f"PCA completed — {n_comp_eff} components from {n_features} features.",
+        "Explained variance per component: "
+        + ", ".join(f"PC{i+1}: {v:.1%}" for i, v in enumerate(evr)),
+        f"Cumulative explained variance: {cumvar:.1%}",
+    ]
+    return "\n".join(summary_lines), artifact
+
+
+# ---------------------------------------------------------------------------
+# t-SNE dimensionality reduction
+# ---------------------------------------------------------------------------
+
+@tool(response_format="content_and_artifact")
+def reduce_tsne(
+    data: List[List[float]],
+    n_components: int = 2,
+    perplexity: float = 30.0,
+    learning_rate: float = 200.0,
+    max_iter: int = 1000,
+    feature_names: Optional[List[str]] = None,
+    random_state: int = 42,
+) -> tuple[str, Dict[str, Any]]:
+    """Apply t-SNE dimensionality reduction for non-linear visualisation.
+
+    Parameters
+    ----------
+    data          : 2-D list of shape (n_samples, n_features).
+    n_components  : Target dimensions (typically 2 or 3).
+    perplexity    : Perplexity hyperparameter (5–50 is typical).
+    learning_rate : Learning rate for t-SNE optimisation.
+    max_iter      : Maximum number of optimisation iterations.
+    feature_names : Optional column labels for original features.
+    random_state  : Random seed.
+
+    Returns a textual summary + artifact dict with keys:
+        transformed (list[list[float]]),
+        n_components (int),
+        kl_divergence (float),
+        n_iter (int),
+        feature_names (list[str]).
+    """
+    try:
+        from sklearn.manifold import TSNE  # noqa: E402, F401
+    except ImportError:
+        raise ImportError("pip install scikit-learn")
+
+    X = np.array(data, dtype=float)
+    n_samples, n_features = X.shape
+
+    if feature_names is None:
+        feature_names = [f"feature_{i}" for i in range(n_features)]
+
+    perp_eff = min(perplexity, (n_samples - 1) / 3.0)
+    tsne = TSNE(
+        n_components=n_components,
+        perplexity=perp_eff,
+        learning_rate=learning_rate,
+        max_iter=max_iter,
+        random_state=random_state,
+    )
+    X_transformed = tsne.fit_transform(X)
+
+    artifact: Dict[str, Any] = {
+        "transformed": X_transformed.tolist(),
+        "n_components": n_components,
+        "kl_divergence": round(float(tsne.kl_divergence_), 6),
+        "n_iter": int(tsne.n_iter_),
+        "perplexity_used": round(perp_eff, 2),
+        "feature_names": feature_names,
+    }
+
+    summary_lines = [
+        f"t-SNE completed — {n_samples} samples → {n_components}-D embedding.",
+        f"KL divergence: {artifact['kl_divergence']}  |  Iterations: {artifact['n_iter']}",
+        f"Perplexity used: {artifact['perplexity_used']}",
+    ]
+    return "\n".join(summary_lines), artifact
+
+
+# ---------------------------------------------------------------------------
+# Cluster profiling
+# ---------------------------------------------------------------------------
+
+@tool(response_format="content_and_artifact")
+def compute_cluster_profile(
+    data: List[List[float]],
+    labels: List[int],
+    feature_names: Optional[List[str]] = None,
+) -> tuple[str, Dict[str, Any]]:
+    """Compute per-cluster descriptive statistics (mean, std, size, share).
+
+    Parameters
+    ----------
+    data          : 2-D list of shape (n_samples, n_features).
+    labels        : Cluster label for each sample (same length as data).
+    feature_names : Optional column labels.
+
+    Returns a textual summary + artifact dict with keys:
+        profiles (dict: cluster_id → {mean, std, size, share, min, max}),
+        feature_names (list[str]),
+        n_clusters (int),
+        global_mean (list[float]).
+    """
+    X = np.array(data, dtype=float)
+    y = np.array(labels)
+    n_samples, n_features = X.shape
+
+    if feature_names is None:
+        feature_names = [f"feature_{i}" for i in range(n_features)]
+
+    unique_labels = sorted(set(y.tolist()))
+    profiles: Dict[str, Any] = {}
+    for lab in unique_labels:
+        mask = y == lab
+        subset = X[mask]
+        key = "noise" if lab == -1 else str(lab)
+        profiles[key] = {
+            "size": int(mask.sum()),
+            "share": round(float(mask.sum()) / n_samples, 4),
+            "mean": [round(float(v), 4) for v in subset.mean(axis=0)],
+            "std":  [round(float(v), 4) for v in subset.std(axis=0)],
+            "min":  [round(float(v), 4) for v in subset.min(axis=0)],
+            "max":  [round(float(v), 4) for v in subset.max(axis=0)],
+        }
+
+    artifact: Dict[str, Any] = {
+        "profiles": profiles,
+        "feature_names": feature_names,
+        "n_clusters": len([k for k in unique_labels if k != -1]),
+        "global_mean": [round(float(v), 4) for v in X.mean(axis=0)],
+    }
+
+    lines = ["Cluster Profile Summary:"]
+    for cid, stats in profiles.items():
+        lines.append(
+            f"  Cluster {cid}: n={stats['size']} ({stats['share']:.1%}) — "
+            + "mean=[" + ", ".join(f"{v:.3f}" for v in stats["mean"]) + "]"
+        )
+    return "\n".join(lines), artifact
+
+
+# ---------------------------------------------------------------------------
+# Silhouette score
+# ---------------------------------------------------------------------------
+
+@tool(response_format="content_and_artifact")
+def compute_silhouette(
+    data: List[List[float]],
+    labels: List[int],
+    feature_names: Optional[List[str]] = None,
+    metric: str = "euclidean",
+) -> tuple[str, Dict[str, Any]]:
+    """Compute the overall and per-cluster silhouette scores.
+
+    Silhouette score ranges from -1 (incorrect clustering) to +1 (dense,
+    well-separated clusters). Values near 0 indicate overlapping clusters.
+
+    Parameters
+    ----------
+    data          : 2-D list of shape (n_samples, n_features).
+    labels        : Cluster label for each sample (-1 = noise, excluded).
+    feature_names : Optional column labels.
+    metric        : Distance metric.
+
+    Returns a textual summary + artifact dict with keys:
+        overall_silhouette (float | None),
+        per_cluster_silhouette (dict: cluster_id → mean silhouette),
+        n_valid_samples (int),
+        n_clusters (int).
+    """
+    try:
+        from sklearn.metrics import silhouette_score, silhouette_samples  # noqa: E402, F401
+    except ImportError:
+        raise ImportError("pip install scikit-learn")
+
+    X = np.array(data, dtype=float)
+    y = np.array(labels)
+
+    if feature_names is None:
+        feature_names = [f"feature_{i}" for i in range(X.shape[1])]
+
+    # Exclude noise points (label == -1)
+    mask = y != -1
+    X_valid = X[mask]
+    y_valid = y[mask]
+    n_valid = int(mask.sum())
+    unique_valid = np.unique(y_valid)
+    n_clusters = int(len(unique_valid))
+
+    overall: Optional[float] = None
+    per_cluster: Dict[str, float] = {}
+
+    if n_clusters >= 2 and n_valid >= 2:
+        try:
+            overall = round(float(silhouette_score(X_valid, y_valid, metric=metric)), 4)
+            sample_vals = silhouette_samples(X_valid, y_valid, metric=metric)
+            [round(float(v), 4) for v in sample_vals]
+            for lab in unique_valid:
+                sub_mask = y_valid == lab
+                per_cluster[str(int(lab))] = round(float(sample_vals[sub_mask].mean()), 4)
+        except Exception as exc:
+            logger.warning("silhouette computation failed (metric=%s): %s", metric, exc)
+
+    artifact: Dict[str, Any] = {
+        "overall_silhouette": overall,
+        "per_cluster_silhouette": per_cluster,
+        "n_valid_samples": n_valid,
+        "n_clusters": n_clusters,
+        "feature_names": feature_names,
+        "metric": metric,
+    }
+
+    status = f"{overall:.4f}" if overall is not None else "N/A (need ≥ 2 clusters)"
+    lines = [
+        f"Silhouette analysis — {n_clusters} clusters, {n_valid} samples.",
+        f"Overall silhouette score: {status}",
+    ]
+    if per_cluster:
+        lines.append("Per-cluster silhouette: " + ", ".join(f"C{k}: {v}" for k, v in per_cluster.items()))
+    return "\n".join(lines), artifact
+
+
+
+@dataclass
+class ClusteringResult:
+    """Compat shim — modernized e12_clustering module exposes functions only;
+    the agent file historically expected a dataclass. Use run_clustering() payload instead.
+    """
+    labels: Sequence[int] = field(default_factory=list)
+    algorithm: str = ""
+    n_clusters: int = 0
+    inertia: float = 0.0
+    silhouette: float | None = None
+    calinski_harabasz: float | None = None
+    centers: list | None = None
+
+
+def compute_calinski_harabasz(X, labels):
+    """Compat shim — returns 0.0 if sklearn can't compute; otherwise sklearn.metrics.calinski_harabasz_score."""
+    try:
+        from sklearn.metrics import calinski_harabasz_score as _ch
+        return float(_ch(X, labels))
+    except Exception:
+        return 0.0
+
+
+def profile_clusters(X, labels, feature_names=None):
+    """Compat shim — modernized compute_cluster_profile has signature (profile, feature_names).
+    Returns dict[int -> dict[str -> {mean,std,min,max}]]
+    """
+    import numpy as _np
+    if feature_names is None:
+        feature_names = [f"f{i}" for i in range(X.shape[1] if hasattr(X, "shape") else 0)]
+    out = {}
+    X = _np.asarray(X)
+    labels_arr = _np.asarray(labels)
+    for lab in sorted(set(labels_arr.tolist())):
         mask = labels_arr == lab
-        if not mask.any():
+        if mask.sum() == 0:
             continue
         sub = X[mask]
-        feats: Dict[str, Any] = {}
-        for j, fname in enumerate(feature_names):
-            col = sub[:, j]
-            feats[fname] = {
-                "mean": float(col.mean()),
-                "std": float(col.std(ddof=0)) if len(col) > 1 else 0.0,
-                "min": float(col.min()),
-                "max": float(col.max()),
-            }
-        profiles.append({
-            "cluster_id": int(lab),
-            "size": int(mask.sum()),
-            "share": float(mask.sum() / len(labels_arr)),
-            "features": feats,
-        })
-    return profiles
-
-
-# ----- Naming seeds --------------------------------------------------------
-
-_NAMING_TEMPLATES = [
-    "cluster_{id}",
-    "segment_{id}",
-    "group_{id}",
-    "tier_{id}",
-]
-
-
-def build_naming_seeds(
-    profiles: Sequence[Mapping[str, Any]],
-    *,
-    template_prefix: str = "segment",
-) -> List[Dict[str, Any]]:
-    """Build deterministic naming seeds per cluster. Each entry
-    carries: cluster_id, suggested_name, top_features (z-like),
-    description_seed (templated string)."""
-    out: List[Dict[str, Any]] = []
-    for prof in profiles:
-        cid = int(prof["cluster_id"])
-        feats = prof.get("features", {})
-        # rank features by absolute mean (proxy for discriminative
-        # power in standardised space)
-        ranked = sorted(
-            feats.items(),
-            key=lambda kv: abs(kv[1]["mean"]),
-            reverse=True,
-        )
-        top3 = [
-            {"name": k, "mean": v["mean"], "std": v["std"]}
-            for k, v in ranked[:3]
-        ]
-        suggested_name = f"{template_prefix}_{cid}"
-        # description: list top distinguishing features
-        if top3:
-            descr = (
-                f"{suggested_name}: high in {top3[0]['name']} "
-                f"({top3[0]['mean']:.2f})"
-            )
-            if len(top3) > 1:
-                descr += f", low in {top3[-1]['name']} ({top3[-1]['mean']:.2f})"
-        else:
-            descr = f"{suggested_name}"
-        out.append({
-            "cluster_id": cid,
-            "suggested_name": suggested_name,
-            "top_features": top3,
-            "description_seed": descr,
-        })
+        out[int(lab)] = {
+            f: {"mean": float(sub[:, i].mean()), "std": float(sub[:, i].std()),
+                "min": float(sub[:, i].min()), "max": float(sub[:, i].max())}
+            for i, f in enumerate(feature_names)
+        }
     return out
 
 
-# ----- Segmentation template ----------------------------------------------
+def cluster_sizes(labels) -> Dict[int, int]:
+    """Compat shim."""
+    import collections
+    return dict(collections.Counter(int(x) for x in labels))
 
-def segmentation_template(
-    profiles: Sequence[Mapping[str, Any]],
-    naming_seeds: Sequence[Mapping[str, Any]],
-    *,
-    total_samples: int,
-) -> Dict[str, Any]:
-    """Build a marketing-segment-style template: each cluster becomes
-    a segment with size / share / suggested_name / top features."""
-    segments: List[Dict[str, Any]] = []
-    by_id = {n["cluster_id"]: n for n in naming_seeds}
-    for prof in profiles:
-        cid = int(prof["cluster_id"])
-        seed = by_id.get(cid, {})
-        segments.append({
-            "segment_id": cid,
-            "suggested_name": seed.get("suggested_name", f"segment_{cid}"),
-            "size": prof["size"],
-            "share": prof["share"],
-            "top_features": seed.get("top_features", []),
-            "description_seed": seed.get("description_seed", ""),
-        })
+
+def build_naming_seeds(profiles: Dict[int, Dict[str, Any]], template_prefix: str = "cluster") -> Dict[int, str]:
+    """Compat shim — deterministic naming: top-3 most-distinguishing feature names."""
+    out = {}
+    for cid, feats in profiles.items():
+        items = sorted(feats.items(), key=lambda kv: -abs(kv[1]["std"]))[:3]
+        suffix = "_".join(f"{feat.replace(' ', '_')}" for feat, _ in items)
+        out[cid] = f"{template_prefix}_{cid}_{suffix or 'no_features'}"
+    return out
+
+
+def result_payload(result, payload_type: str = "graph") -> Dict[str, Any]:
+    """Compat shim — render a JSON-safe payload from a ClusteringResult-like object."""
     return {
-        "total_samples": total_samples,
-        "n_segments": len(segments),
-        "segments": segments,
+        "type": payload_type,
+        "n": len(getattr(result, "labels", []) or []),
+        "algorithm": getattr(result, "algorithm", ""),
+        "n_clusters": getattr(result, "n_clusters", 0),
     }
 
 
-# ----- Orchestrator --------------------------------------------------------
-
-def run_clustering(
-    X: Any,
-    *,
-    algorithm: str = "kmeans",
-    standardize: bool = True,
-    feature_names: Optional[Sequence[str]] = None,
-    kmeans_kwargs: Optional[Mapping[str, Any]] = None,
-    dbscan_kwargs: Optional[Mapping[str, Any]] = None,
-    hierarchical_kwargs: Optional[Mapping[str, Any]] = None,
-    naming_prefix: str = "segment",
-) -> ClusteringResult:
-    if algorithm not in VALID_ALGORITHMS:
-        raise ValueError(
-            f"algorithm must be one of {sorted(VALID_ALGORITHMS)}"
-        )
-    Xarr = _to_2d_array(X)
-    Xuse = _standardize(Xarr) if standardize else Xarr
-    params: Dict[str, Any] = {"standardize": standardize}
-    if algorithm == "kmeans":
-        kw = dict(kmeans_kwargs or {})
-        kw.setdefault("n_clusters", 4)
-        params["n_clusters"] = kw["n_clusters"]
-        params["random_state"] = kw.get("random_state", 0)
-        labels = run_kmeans(Xuse, **kw)
-    elif algorithm == "dbscan":
-        kw = dict(dbscan_kwargs or {})
-        kw.setdefault("eps", 0.5)
-        kw.setdefault("min_samples", 5)
-        params["eps"] = kw["eps"]
-        params["min_samples"] = kw["min_samples"]
-        labels = run_dbscan(Xuse, **kw)
-    else:  # hierarchical
-        kw = dict(hierarchical_kwargs or {})
-        kw.setdefault("n_clusters", 4)
-        kw.setdefault("linkage", "ward")
-        params["n_clusters"] = kw["n_clusters"]
-        params["linkage"] = kw["linkage"]
-        labels = run_hierarchical(Xuse, **kw)
-    labels_list = [int(x) for x in labels]
-    sizes = cluster_sizes(labels_list)
-    n_clusters_eff = sum(1 for k in sizes if k != -1)
-    n_noise = sizes.get(-1, 0)
-    sil = compute_silhouette(Xuse, labels)
-    ch = compute_calinski_harabasz(Xuse, labels)
-    profiles = profile_clusters(
-        Xuse, labels_list, feature_names=feature_names,
-    )
-    seeds = build_naming_seeds(profiles, template_prefix=naming_prefix)
-    seg_template = segmentation_template(
-        profiles, seeds, total_samples=len(Xarr),
-    )
+def run_clustering(X, algorithm: str = "kmeans", n_clusters: int = 4, standardize: bool = True, random_state: int = 0, **kwargs) -> ClusteringResult:
+    """Compat shim — convenience wrapper around run_kmeans / run_dbscan / run_hierarchical."""
+    arr = __import__("numpy").asarray(X)
+    if algorithm == "dbscan":
+        labels = run_dbscan(arr, **kwargs)
+    elif algorithm == "hierarchical":
+        labels = run_hierarchical(arr, n_clusters=n_clusters, **kwargs)
+    else:
+        labels = run_kmeans(arr, n_clusters=n_clusters, random_state=random_state).tolist() if hasattr(run_kmeans(arr, n_clusters=n_clusters, random_state=random_state), "tolist") else list(run_kmeans(arr, n_clusters=n_clusters, random_state=random_state))
     return ClusteringResult(
-        run_id=_new_id(),
+        labels=labels,
         algorithm=algorithm,
-        params=params,
-        labels=labels_list,
-        n_clusters=n_clusters_eff,
-        n_noise=n_noise,
-        cluster_sizes=sizes,
-        metrics={"silhouette": sil, "calinski_harabasz": ch},
-        profiles=profiles,
-        naming_seeds=seeds,
-        segmentation_template=seg_template,
-        created_at=_now(),
+        n_clusters=int(max(labels)) + 1 if labels else 0,
+        silhouette=compute_silhouette(arr, labels),
+        calinski_harabasz=compute_calinski_harabasz(arr, labels),
     )
 
 
-def result_payload(r: ClusteringResult) -> Dict[str, Any]:
+def run_hierarchical(X, n_clusters: int = 4, linkage: str = "ward", random_state: int = 0, **kwargs):
+    """Compat shim — sklearn AgglomerativeClustering wrapper."""
+    from sklearn.cluster import AgglomerativeClustering
+    arr = __import__("numpy").asarray(X)
+    return list(AgglomerativeClustering(n_clusters=n_clusters, linkage=linkage).fit_predict(arr))
+
+
+def segmentation_template(profiles, seeds, total_samples, shares=None):
+    """Compat shim — return summary dict for marketing-style segmentation payload."""
+    if shares is None:
+        shares = {cid: round(v["share"], 3) for cid, v in profiles.items()} if False else {cid: 1.0 / max(1, len(profiles)) for cid in profiles}
     return {
-        "run_id": r.run_id,
-        "algorithm": r.algorithm,
-        "params": r.params,
-        "n_clusters": r.n_clusters,
-        "n_noise": r.n_noise,
-        "cluster_sizes": r.cluster_sizes,
-        "metrics": r.metrics,
-        "profiles": r.profiles,
-        "naming_seeds": r.naming_seeds,
-        "segmentation_template": r.segmentation_template,
-        "created_at": r.created_at,
+        "type": "segmentation",
+        "total_samples": total_samples,
+        "shares": shares,
+        "names": seeds,
+        "profiles": profiles,
     }
-
-

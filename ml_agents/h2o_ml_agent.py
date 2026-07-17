@@ -5,6 +5,7 @@
 
 import os
 import json
+import importlib.util
 from typing import TypedDict, Annotated, Sequence, Literal, Optional
 import operator
 
@@ -380,16 +381,13 @@ def make_h2o_ml_agent(
             os.makedirs(log_path)
     
     # Check if H2O is installed
-    try:
-        import h2o
-        from h2o.automl import H2OAutoML
-    except ImportError as e:
+    if importlib.util.find_spec("h2o") is None:
         raise ImportError(
             "The 'h2o' library is not installed. Please install it using pip:\n\n"
             "    pip install h2o\n\n"
             "Visit https://docs.h2o.ai/h2o/latest-stable/h2o-docs/downloading.html for details."
-        ) from e
-        
+        )
+
     if human_in_the_loop:
         if checkpointer is None:
             print("Human in the loop is enabled. A checkpointer is required. Setting to MemorySaver().")

@@ -122,7 +122,7 @@ AGENT_BOOTSTRAP_SPECS: tuple[dict[str, Any], ...] = (
     },
     {
         "name": "ModelServingAgent",
-        "module": "ai_data_science_team.agents.model_serving_agent",
+        "module": "ai_data_science_team.agents.g3_model_serving_agent",
         "class_name": "ModelServingAgent",
         "description": "Packages model inference behavior for serving and prediction workflows.",
         "capabilities": ["model_serving", "inference", "deployment"],

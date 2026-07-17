@@ -10,8 +10,6 @@ from langgraph.types import Checkpointer
 from typing import TypedDict, Annotated, Sequence
 import operator
 
-from typing_extensions import TypedDict
-
 import pandas as pd
 import json
 from IPython.display import Markdown

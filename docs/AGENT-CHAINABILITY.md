@@ -195,6 +195,53 @@ Important: `EDA` and `Visualization` do not produce a new dataset slot, so chain
 | ContainerizationAgent | text instructions | container artifacts | No meaningful data-science chainability |
 | CICDAgent | text instructions | CI/CD artifacts | No meaningful data-science chainability |
 
+### Phase 4/5 Spec Agents (modernized — `ai_data_science_team/agents/`)
+
+| Agent | Real input contract | Real output contract | Safe next | Conditional next | Do not chain directly |
+|---|---|---|---|---|---|
+| DataProfilingAgent | `data_raw` dataframe | profile dict | DataQuality, EDA | Cleaning, Feature | H2O ML, Strategic agents |
+| SchemaInferenceAgent | `data_raw` dataframe | schema dict | DataQuality, EDA | Cleaning | H2O ML, Strategic agents |
+| PIIAnonymizationAgent | `data_raw` dataframe | anonymized dataframe | Cleaning, Feature, EDA | H2O ML | Strategic agents |
+| DataIngestionAgent | source + target config | ingest artifacts | DataLoader, DataQuality | EDA | H2O ML directly |
+| InsightMiningAgent | `data_raw` dataframe | insight artifacts | Narrative, Recommendation, ResultsSynthesizer | Dashboard, Reports | H2O ML |
+| DashboardComposerAgent | `data_raw` dataframe | dashboard config | Narrative, ResultsSynthesizer | MLflow logging | H2O ML, Cleaning |
+| KPIMetricsAgent | `data_raw` dataframe | KPI results | Narrative, Recommendation, ResultsSynthesizer | RootCause | H2O ML |
+| RootCauseAnalysisAgent | KPI results + data | RCA artifacts | Narrative, Recommendation | Investigation | H2O ML |
+| ReportGeneratorAgent | `data_raw` + template | report artifacts | Narrative, Recommendation | ApprovalGate | H2O ML |
+| FeatureSelectionAgent | `data_raw` + target | feature rankings | FeatureEngineering, H2O ML | EDA | Strategic agents |
+| FeatureStoreAgent | feature definitions | store artifacts | FeatureSelection, FeatureEngineering | H2O ML | Strategic agents |
+| DataBalancingAgent | `data_raw` + target | balanced dataset | FeatureEngineering, H2O ML | EDA | Strategic agents |
+| HPOAgent | `data_raw` + target + model | HPO results (best params) | ModelEvaluation | H2O ML, Narrative | Cleaning, Wrangling |
+| DeepLearningAgent | `data_raw` + task | trained model artifacts | ModelEvaluation, MLflow | Narrative | Cleaning, Wrangling |
+| TimeSeriesForecastAgent | time-series dataframe + date/value columns | forecast artifacts | Narrative, Recommendation, ResultsSynthesizer | ForecastEvaluation | Generic tabular H2O pipeline |
+| ClusteringAgent | `data: list[list[float]]` | cluster artifacts | ResultsSynthesizer, Narrative, Recommendation | Visualization | H2O ML directly |
+| EvaluationExtAgent | `data_raw` + predictions + target | eval metrics | Narrative, Recommendation, ResultsSynthesizer | MLflow, ApprovalGate | H2O ML |
+| ChampionChallengerAgent | model1 + model2 + eval data | comparison artifacts | Narrative, Recommendation, Promotion | MLflow | Cleaning, Wrangling |
+| FairnessAuditAgent | `data_raw` + sensitive attr + predictions | fairness report | ModelCard, Narrative, Recommendation | ApprovalGate | H2O ML |
+| ModelCardAgent | model metadata + eval results | model card | Narrative, Recommendation, Governance | ApprovalGate | H2O ML |
+| RobustnessTestAgent | model + test data | robustness report | Narrative, Recommendation, ModelCard | ApprovalGate | H2O ML |
+| LLMJudgeAgent | LLM input/output pairs | evaluation scores | Narrative, Recommendation, ExperimentTracker | ApprovalGate | H2O ML |
+| DriftDetectionAgent | reference + current data | drift report | Alerting, Monitoring, Narrative | RetrainOrchestrator | Cleaning, Wrangling |
+| RetrainOrchestratorAgent | drift report + model metadata | retrain trigger | H2O ML | Alerting, Narrative | Cleaning, Wrangling |
+| BatchScoringAgent | `data_raw` + model | scored predictions | EDA, Visualization (on predictions) | Monitoring | H2O ML directly |
+| ModelPromotionAgent | model version + stage | promotion record | ApprovalGate, MLflow | Narrative | Cleaning, Wrangling |
+| AlertingAgent | rule + incident | alert artifacts | Narrative, Monitoring | ApprovalGate | H2O ML, Cleaning |
+| SnowflakeSourceAgent | connection config + query | `data_sql` dataframe | Wrangling, Cleaning, EDA, Visualization | Feature, H2O ML | Strategic agents |
+| BigQuerySourceAgent | connection config + query | `data_sql` dataframe | Wrangling, Cleaning, EDA, Visualization | Feature, H2O ML | Strategic agents |
+| TableauSourceAgent | connection config | extract + metadata | EDA, Visualization | Wrangling | H2O ML directly |
+| PowerBISourceAgent | connection config | extract + metadata | EDA, Visualization | Wrangling | H2O ML directly |
+| SheetsSourceAgent | sheet ID + range | dataframe | Wrangling, Cleaning, EDA, Visualization | Feature, H2O ML | Strategic agents |
+| ObjectStorageAgent | bucket + path | file/dataframe | DataLoader, Wrangling | EDA | H2O ML directly |
+| RESTAPISourceAgent | URL + auth config | API response/dataframe | Wrangling, Cleaning, EDA | Feature, H2O ML | Strategic agents |
+| DataCatalogAgent | search query | catalog results | DataLoader, Insight | EDA | H2O ML |
+| ExperimentTrackerAgent | experiment metadata | leaderboard | Narrative, Recommendation | ModelCard | Cleaning, Wrangling |
+| InvestigationAgent | anomaly signal + data | investigation report | Narrative, Recommendation, RootCause | ApprovalGate | H2O ML |
+| ResponsibleAIAgent | model + data + audit config | compliance report | ModelCard, Governance, Narrative | ApprovalGate | H2O ML |
+| GovernanceAgent | model metadata + policy | governance score | Narrative, ApprovalGate | ModelCard | H2O ML |
+| ShadowCanaryAgent | model version + traffic config | deployment decision | Monitoring, Promotion | ApprovalGate | Cleaning, Wrangling |
+| LineageGraphAgent | run metadata | lineage DAG | Investigation, Governance | Catalog | H2O ML |
+| DataDiffAgent | old + new dataset | diff report | DataQuality, EDA | Narrative | H2O ML |
+
 ## Safe Previous Agents (inverse view)
 
 | Agent | Safe previous | Conditional previous | Unsafe previous |

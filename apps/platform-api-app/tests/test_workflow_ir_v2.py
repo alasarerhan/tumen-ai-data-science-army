@@ -386,8 +386,9 @@ def test_worker_records_failed_agent_trace_without_secret_leak(seeded_db):
 def test_worker_runs_real_data_cleaning_agent_with_openai(seeded_db, tmp_path, monkeypatch):
     import pandas as pd
 
-    api_key = os.environ.get("OPENAI_API_KEY") or settings.openai_api_key
-    assert api_key, "OPENAI_API_KEY must be set for the real LLM workflow executor test"
+    api_key = os.environ.get("OPENCODE_API_KEY") or os.environ.get("OPENAI_API_KEY") or settings.openai_api_key
+    if not api_key:
+        pytest.skip("No LLM API key (OPENCODE_API_KEY or OPENAI_API_KEY) set for real LLM test")
 
     db = seeded_db["db"]
     workspace = seeded_db["workspace"]

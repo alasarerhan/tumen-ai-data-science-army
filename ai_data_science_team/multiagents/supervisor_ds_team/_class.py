@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """``SupervisorDSTeam`` OO wrapper.
 
 This module contains only the ``SupervisorDSTeam`` class — an OO
@@ -9,15 +11,13 @@ Split out from the 3,400-line ``supervisor_ds_team.py`` monolith
 during the L2 code-review remediation pass.
 """
 
-from __future__ import annotations
+from typing import Any, Optional, Sequence  # noqa: E402, F401
 
-from typing import Any, Optional, Sequence
+from IPython.display import Markdown  # noqa: E402, F401
+from langchain_core.messages import AIMessage, BaseMessage, HumanMessage  # noqa: E402, F401
+from langgraph.types import Checkpointer  # noqa: E402, F401
 
-from IPython.display import Markdown
-from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
-from langgraph.types import Checkpointer
-
-from ai_data_science_team.multiagents.supervisor_ds_team import (
+from ai_data_science_team.multiagents.supervisor_ds_team import (  # noqa: E402, F401
     make_supervisor_ds_team,
 )
 
@@ -169,7 +169,7 @@ class SupervisorDSTeam:
         """Displays the supervisor team's state graph as a Mermaid
         diagram."""
         try:
-            from IPython.display import Image, display
+            from IPython.display import Image, display  # noqa: E402, F401
 
             display(
                 Image(self._compiled_graph.get_graph(xray=xray).draw_mermaid_png())

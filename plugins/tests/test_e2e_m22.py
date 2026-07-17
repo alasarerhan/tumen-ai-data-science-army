@@ -20,7 +20,8 @@ Atlamak için:
 """
 from __future__ import annotations
 
-import os
+
+from _llm import make_chat_model, skip_no_key
 from pathlib import Path
 from typing import Any, Dict
 
@@ -29,11 +30,7 @@ import pytest
 
 pytestmark = pytest.mark.e2e
 
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
-skip_no_key = pytest.mark.skipif(
-    not OPENAI_API_KEY,
-    reason="OPENAI_API_KEY is not set — skipping E2E tests",
-)
+
 
 langchain_openai = pytest.importorskip(
     "langchain_openai",
@@ -57,8 +54,7 @@ CHURN_CSV   = _DATA_DIR / "churn_data.csv"
 
 @pytest.fixture(scope="module")
 def llm():
-    from langchain_openai import ChatOpenAI
-    return ChatOpenAI(model="gpt-4o-mini", temperature=0, max_tokens=1500)
+    return make_chat_model(temperature=0, max_tokens=1500)
 
 
 @pytest.fixture(scope="module")
@@ -588,7 +584,7 @@ class TestOrchestratedPipelineE2E:
                        depends_on=["clean"]),
         ])
 
-        shared_context: Dict[str, Any] = {"_current_df": df_bike.head(500)}
+        {"_current_df": df_bike.head(500)}
         executor = _make_platform_executor(llm, df_bike.head(500))
 
         orch = OrchestratorAgent(

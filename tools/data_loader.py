@@ -1,10 +1,9 @@
 
 import os
-from typing import Annotated, Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import pandas as pd
 from langchain_core.tools import tool
-from langgraph.prebuilt import InjectedState
 
 
 @tool(response_format='content_and_artifact')
@@ -37,7 +36,6 @@ def load_directory(
     
     import os
 
-    import pandas as pd
     
     if directory_path is None:
         return "No directory path provided.", {}
@@ -384,7 +382,6 @@ def auto_load_file(file_path: str) -> pd.DataFrame:
     -------
     pd.DataFrame
     """
-    import pandas as pd
     try:
         ext = file_path.split(".")[-1].lower()
         if ext == "csv":

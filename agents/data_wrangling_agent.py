@@ -14,7 +14,7 @@ from IPython.display import Markdown
 from langchain_core.prompts import PromptTemplate
 from langchain_core.messages import BaseMessage
 from langgraph.checkpoint.memory import MemorySaver
-from langgraph.types import Checkpointer, Command
+from langgraph.types import Command
 
 from ai_data_science_team.parsers.parsers import PythonOutputParser
 from ai_data_science_team.templates import (

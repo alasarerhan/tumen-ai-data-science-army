@@ -10,7 +10,7 @@ https://harnessengineering.academy/blog/human-in-the-loop-agent-patterns-when-ag
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Any, Dict, Optional
 
 from platform_api.hitl.models import ApprovalRequest, SLAConfig

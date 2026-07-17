@@ -6,19 +6,19 @@ import pandas as pd
 import logging
 
 logger = logging.getLogger(__name__)
-from IPython.display import Markdown
+from IPython.display import Markdown  # noqa: E402, F401
 
-from langchain_core.messages import BaseMessage, AIMessage
+from langchain_core.messages import BaseMessage, AIMessage  # noqa: E402, F401
 
-from langchain.agents import create_agent
-from langgraph.graph.message import add_messages
-from langgraph.graph import START, END, StateGraph
-from langgraph.types import Checkpointer
+from langchain.agents import create_agent  # noqa: E402, F401
+from langgraph.graph.message import add_messages  # noqa: E402, F401
+from langgraph.graph import START, END, StateGraph  # noqa: E402, F401
+from langgraph.types import Checkpointer  # noqa: E402, F401
 
-from ai_data_science_team.templates import BaseAgent
-from ai_data_science_team.utils.regex import format_agent_name
+from ai_data_science_team.templates import BaseAgent  # noqa: E402, F401
+from ai_data_science_team.utils.regex import format_agent_name  # noqa: E402, F401
 
-from ai_data_science_team.tools.eda import (
+from ai_data_science_team.tools.eda import (  # noqa: E402, F401
     explain_data,
     describe_dataset,
     visualize_missing,
@@ -26,7 +26,7 @@ from ai_data_science_team.tools.eda import (
     generate_sweetviz_report,
     generate_dtale_report,
 )
-from ai_data_science_team.utils.messages import get_tool_call_names
+from ai_data_science_team.utils.messages import get_tool_call_names  # noqa: E402, F401
 
 
 AGENT_NAME = "exploratory_data_analyst_agent"

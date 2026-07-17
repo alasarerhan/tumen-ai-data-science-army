@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Auto-generated merge node module.
 
 Extracted from the 3,400-line ``supervisor_ds_team.py`` monolith
@@ -5,25 +7,17 @@ during the L2 code-review remediation pass.  Uses dependency
 injection via the ``MergeNodeDeps`` dataclass.
 """
 
-from __future__ import annotations
+import logging  # noqa: E402, F401
+from dataclasses import dataclass  # noqa: E402, F401
+from typing import Any, Callable  # noqa: E402, F401
 
-import logging
-from dataclasses import dataclass
-from typing import Any, Callable
+from langchain_core.messages import AIMessage  # noqa: E402, F401
 
-from langchain_core.messages import AIMessage
-
-from ai_data_science_team.multiagents.supervisor import (
+from ai_data_science_team.multiagents.supervisor import (  # noqa: E402, F401
     SupervisorDSState,
-    _get_last_human_text,
-    ensure_dataset_registry,
-    ensure_df,
-    is_empty_df,
-    register_dataset,
-    sha256_text,
-    tag_messages,
-    truncate_text,
-)
+    resolve_selected_dataset_ids,
+    available_datasets_lines,
+    execute_merge_plan)
 
 logger = logging.getLogger(__name__)
 
@@ -62,8 +56,7 @@ def make_node_merge(deps: MergeNodeDeps) -> Callable[[SupervisorDSState], dict]:
             datasets,
             active_dataset_id,
             merge_cfg,
-            last_human,
-        )
+            last_human)
 
         if len(selected_ids) < 2:
             available = available_datasets_lines(datasets)
@@ -85,8 +78,7 @@ def make_node_merge(deps: MergeNodeDeps) -> Callable[[SupervisorDSState], dict]:
                     "messages": [
                         AIMessage(
                             content=f"Dataset `{did}` is empty/unavailable; load it again before merging.",
-                            name="data_merge_agent",
-                        )
+                            name="data_merge_agent")
                     ],
                     "last_worker": "Data_Merge_Agent",
                 }
@@ -98,8 +90,7 @@ def make_node_merge(deps: MergeNodeDeps) -> Callable[[SupervisorDSState], dict]:
                 "messages": [
                     AIMessage(
                         content=str(merge_plan.get("error_message") or "Merge failed."),
-                        name="data_merge_agent",
-                    )
+                        name="data_merge_agent")
                 ],
                 "last_worker": "Data_Merge_Agent",
             }
@@ -115,7 +106,7 @@ def make_node_merge(deps: MergeNodeDeps) -> Callable[[SupervisorDSState], dict]:
 
         merged_data = merged_df
         try:
-            import pandas as pd
+            import pandas as pd  # noqa: E402, F401
 
             if isinstance(merged_df, pd.DataFrame):
                 merged_data = merged_df.to_dict()
@@ -139,8 +130,7 @@ def make_node_merge(deps: MergeNodeDeps) -> Callable[[SupervisorDSState], dict]:
                 },
             },
             parent_ids=selected_ids,
-            make_active=True,
-        )
+            make_active=True)
 
         msg_lines = [
             f"Merged {len(selected_ids)} datasets ({op}).",
@@ -151,8 +141,7 @@ def make_node_merge(deps: MergeNodeDeps) -> Callable[[SupervisorDSState], dict]:
             "messages": [
                 AIMessage(
                     content=" ".join([m for m in msg_lines if m]),
-                    name="data_merge_agent",
-                )
+                    name="data_merge_agent")
             ]
         }
         merged["messages"] = deps.tag_messages(merged.get("messages"), "data_merge_agent")

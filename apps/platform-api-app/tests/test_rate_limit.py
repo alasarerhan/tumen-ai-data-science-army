@@ -11,11 +11,8 @@ Tests cover:
 """
 from __future__ import annotations
 
-import time
-from unittest.mock import AsyncMock, MagicMock
 
-import pytest
-from fastapi import FastAPI, Request, Response
+from fastapi import FastAPI
 from starlette.testclient import TestClient
 
 from platform_api.core.rate_limit import RateLimitMiddleware

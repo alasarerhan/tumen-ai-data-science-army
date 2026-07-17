@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Model serving tools for the AI Data Science Team.
 
 This module provides tools for loading, running inference, and evaluating
@@ -11,15 +13,13 @@ Tools
 - evaluate_model: Calculate model metrics
 """
 
-from __future__ import annotations
+import os  # noqa: E402, F401
+from typing import Any, Union  # noqa: E402, F401
 
-import os
-from typing import Any, Union
+import numpy as np  # noqa: E402, F401
+import pandas as pd  # noqa: E402, F401
 
-import numpy as np
-import pandas as pd
-
-from ai_data_science_team.tool_registry import (
+from ai_data_science_team.tool_registry import (  # noqa: E402, F401
     ToolParameter,
     register_tool,
 )
@@ -55,7 +55,7 @@ def load_model(
     dict
         Model metadata including loaded model reference.
     """
-    import joblib
+    import joblib  # noqa: E402, F401
 
     model = None
     model_type = None
@@ -63,7 +63,7 @@ def load_model(
 
     if model_uri.startswith("runs:/") or model_uri.startswith("models:/"):
         try:
-            import mlflow
+            import mlflow  # noqa: E402, F401
             model = mlflow.sklearn.load_model(model_uri)
             framework = "sklearn"
             model_type = type(model).__name__
@@ -248,7 +248,7 @@ def evaluate_model(
     dict
         Evaluation metrics.
     """
-    from sklearn.metrics import (
+    from sklearn.metrics import (  # noqa: E402, F401
         accuracy_score,
         precision_score,
         recall_score,

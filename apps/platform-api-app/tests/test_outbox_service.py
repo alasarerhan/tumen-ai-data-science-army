@@ -20,11 +20,8 @@ import pytest
 
 from platform_api.db.models import OutboxDlq
 from platform_api.services.outbox import (
-    DEFAULT_BATCH_SIZE,
     MAX_PENDING_EVENTS_LIMIT,
-    MIN_PENDING_EVENTS_LIMIT,
     STUCK_PROCESSING_THRESHOLD_SECONDS,
-    OutboxEvent,
     OutboxEventStatus,
     OutboxService,
 )
@@ -419,8 +416,8 @@ class TestGetQueueStats:
         db = seeded_db["db"]
         service = OutboxService(db)
 
-        pending1 = service.add_event("test", "1", "test.event")
-        pending2 = service.add_event("test", "2", "test.event")
+        service.add_event("test", "1", "test.event")
+        service.add_event("test", "2", "test.event")
 
         processing = service.add_event("test", "3", "test.event")
         processing.status = OutboxEventStatus.processing
@@ -496,7 +493,7 @@ class TestProcessPendingEvents:
         db = seeded_db["db"]
         service = OutboxService(db)
 
-        event = service.add_event("test", "1", "test.event", max_retries=1)
+        service.add_event("test", "1", "test.event", max_retries=1)
         db.commit()
 
         async def fail_publisher(e):

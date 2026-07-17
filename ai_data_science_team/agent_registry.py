@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """AgentRegistry — central catalog of all platform agents (M22).
 
 Every agent that wants to be discoverable by the OrchestratorAgent or the
@@ -16,8 +18,8 @@ Usage
 -----
 ::
 
-    from ai_data_science_team.agent_registry import AgentRegistry
-    from ai_data_science_team.agents import DataCleaningAgent
+    from ai_data_science_team.agent_registry import AgentRegistry  # noqa: E402, F401
+    from ai_data_science_team.agents import DataCleaningAgent  # noqa: E402, F401
 
     AgentRegistry.register(
         name="DataCleaningAgent",
@@ -35,11 +37,9 @@ Usage
     catalog = AgentRegistry.to_catalog()
 """
 
-from __future__ import annotations
-
-import threading
-from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Type
+import threading  # noqa: E402, F401
+from dataclasses import dataclass, field  # noqa: E402, F401
+from typing import Any, Dict, List, Optional, Type  # noqa: E402, F401
 
 
 # ---------------------------------------------------------------------------

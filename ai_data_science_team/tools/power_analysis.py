@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """
 power_analysis
 ==============
@@ -24,17 +26,15 @@ The tools here are pure-Python; only ``numpy``, ``pandas`` and ``statsmodels``
 are required so they can be reused outside the LangGraph runtime.
 """
 
-from __future__ import annotations
+import math  # noqa: E402, F401
+from typing import Any, Dict, List, Optional, Sequence  # noqa: E402, F401
 
-import math
-from typing import Any, Dict, List, Optional, Sequence
-
-import pandas as pd
-from statsmodels.stats.power import (
+import pandas as pd  # noqa: E402, F401
+from statsmodels.stats.power import (  # noqa: E402, F401
     NormalIndPower,
     TTestIndPower,
 )
-from statsmodels.stats.proportion import (
+from statsmodels.stats.proportion import (  # noqa: E402, F401
     proportion_effectsize,
 )
 
@@ -329,7 +329,7 @@ def minimum_detectable_effect(
         if baseline_rate is None:
             raise ValueError("baseline_rate required for proportion MDE")
         # Approximate inversion via numerical search.
-        from scipy.optimize import brentq
+        from scipy.optimize import brentq  # noqa: E402, F401
 
         def f(p2: float) -> float:
             return _cohens_h(baseline_rate, p2) - effect_size
@@ -457,7 +457,7 @@ def suggest_stratification(
     -------
     dict with ``recommendations``: list of {column, score, reason}.
     """
-    from scipy import stats as scipy_stats
+    from scipy import stats as scipy_stats  # noqa: E402, F401
 
     cols = list(candidate_columns) if candidate_columns else list(data.columns)
     if group_column and group_column in cols:

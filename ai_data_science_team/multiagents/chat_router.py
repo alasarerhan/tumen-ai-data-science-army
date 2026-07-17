@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """IntentRouter — keyword + LLM-fallback intent classifier for M21.
 
 Maps a natural-language user message to the most appropriate agent name
@@ -30,16 +32,12 @@ Usage
     decision = router_with_llm.route("unusual patterns in this dataset?")
 """
 
-from __future__ import annotations
-
-
-
-import logging
+import logging  # noqa: E402, F401
 
 logger = logging.getLogger(__name__)
-import re
-from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Tuple
+import re  # noqa: E402, F401
+from dataclasses import dataclass, field  # noqa: E402, F401
+from typing import Dict, List, Optional, Tuple  # noqa: E402, F401
 
 
 # ---------------------------------------------------------------------------

@@ -5,20 +5,20 @@ from typing_extensions import Any, Optional, Annotated, Sequence, Dict, TypedDic
 import logging
 
 logger = logging.getLogger(__name__)
-import pandas as pd
+import pandas as pd  # noqa: E402, F401
 
-from IPython.display import Markdown
+from IPython.display import Markdown  # noqa: E402, F401
 
-from langchain_core.messages import BaseMessage, AIMessage
+from langchain_core.messages import BaseMessage, AIMessage  # noqa: E402, F401
 
-from langchain.agents import create_agent
-from langgraph.graph.message import add_messages
-from langgraph.types import Checkpointer
-from langgraph.graph import START, END, StateGraph
+from langchain.agents import create_agent  # noqa: E402, F401
+from langgraph.graph.message import add_messages  # noqa: E402, F401
+from langgraph.types import Checkpointer  # noqa: E402, F401
+from langgraph.graph import START, END, StateGraph  # noqa: E402, F401
 
-from ai_data_science_team.templates import BaseAgent
-from ai_data_science_team.utils.regex import format_agent_name
-from ai_data_science_team.tools.mlflow import (
+from ai_data_science_team.templates import BaseAgent  # noqa: E402, F401
+from ai_data_science_team.utils.regex import format_agent_name  # noqa: E402, F401
+from ai_data_science_team.tools.mlflow import (  # noqa: E402, F401
     mlflow_search_experiments,
     mlflow_search_runs,
     mlflow_create_experiment,
@@ -42,7 +42,7 @@ from ai_data_science_team.tools.mlflow import (
     mlflow_tracking_info,
     mlflow_ui_status,
 )
-from ai_data_science_team.utils.messages import get_tool_call_names
+from ai_data_science_team.utils.messages import get_tool_call_names  # noqa: E402, F401
 
 AGENT_NAME = "mlflow_tools_agent"
 
@@ -118,7 +118,7 @@ class MLflowToolsAgent(BaseAgent):
     Examples:
     --------
     ```python
-    from ai_data_science_team.ml_agents import MLflowToolsAgent
+    from ai_data_science_team.ml_agents import MLflowToolsAgent  # noqa: E402, F401
 
     mlflow_agent = MLflowToolsAgent(llm)
 
@@ -380,7 +380,7 @@ def make_mlflow_tools_agent(
     """
 
     try:
-        import mlflow
+        import mlflow  # noqa: E402, F401
     except ImportError:
         raise ImportError(
             "MLflow is not installed. Please install it by running: pip install mlflow"

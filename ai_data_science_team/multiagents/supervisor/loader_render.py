@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+
 import os
 from typing import Any, Callable, Optional
 
@@ -12,7 +13,7 @@ def summarize_multi_loaded_datasets(
     data_raw: Any,
 ) -> AIMessage:
     try:
-        import pandas as pd
+        import pandas as pd  # noqa: E402, F401
 
         lines = []
         for filename, data in multiple_loaded_datasets:
@@ -150,7 +151,7 @@ def summarize_directory_listing(
         msg_text = "Found files: " + ", ".join(names) if names else "Found directory contents."
         table_text = ""
         if rows:
-            import pandas as pd
+            import pandas as pd  # noqa: E402, F401
 
             df_listing = pd.DataFrame(rows)
             table_cols = [
@@ -182,7 +183,7 @@ def summarize_loaded_dataset(
     format_result_with_llm: Callable[[str, Optional[dict], str], Optional[str]],
 ) -> AIMessage:
     try:
-        import pandas as pd
+        import pandas as pd  # noqa: E402, F401
 
         df = pd.DataFrame(data_raw)
         wants_preview_rows = any(

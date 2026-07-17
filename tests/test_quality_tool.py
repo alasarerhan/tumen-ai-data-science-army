@@ -1,5 +1,5 @@
 """
-Tests for ``ai_data_science_team.tools.b2_quality`` (B2 tool layer).
+Tests for ``ai_data_science_team.tools.quality`` (B2 tool layer).
 """
 
 from __future__ import annotations
@@ -223,7 +223,7 @@ class TestSummariseSuiteRun:
         assert summary["status"] == "warning"
 
     def test_skipped_summary(self):
-        df = pd.DataFrame({"a": [1]})
+        pd.DataFrame({"a": [1]})
         result = {"passed": 0, "failed": 0, "warning": 0, "skipped": 1, "errors": 0, "dataset_shape": [1, 1]}
         summary = summarise_suite_run(result)
         assert summary["status"] == "skipped"

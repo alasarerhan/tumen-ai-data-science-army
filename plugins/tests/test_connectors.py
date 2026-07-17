@@ -372,9 +372,9 @@ def test_mcp_server_io_loop(tmp_csv_dir: Path):
     srv.run()
 
     output_stream.seek(0)
-    lines = [l for l in output_stream.readlines() if l.strip()]
+    lines = [line_ for line_ in output_stream.readlines() if line_.strip()]
     assert len(lines) == 2
-    responses = [json.loads(l) for l in lines]
+    responses = [json.loads(line_) for line_ in lines]
     assert responses[0]["id"] == 1
     assert responses[1]["id"] == 2
     assert "tools" in responses[1]["result"]

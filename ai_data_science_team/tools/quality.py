@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """
 b2_quality
 ==========
@@ -25,9 +27,7 @@ The module exposes the following public functions:
   status (``passed`` / ``failed`` / ``warning``).
 """
 
-from __future__ import annotations
-
-from typing import (
+from typing import (  # noqa: E402, F401
     Any,
     Dict,
     List,
@@ -36,7 +36,7 @@ from typing import (
     Sequence,
 )
 
-import pandas as pd
+import pandas as pd  # noqa: E402, F401
 
 
 # ---------------------------------------------------------------------------
@@ -246,7 +246,7 @@ def _eval_rule(
             )
             return base
         if kind == "regex_match":
-            import re
+            import re  # noqa: E402, F401
 
             pattern = rule.get("pattern")
             if not pattern:

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """DataConnector — abstract base interface for all data source connectors (M11).
 
 Every connector must implement five core methods:
@@ -25,12 +27,10 @@ Usage example::
     conn.connect()
     df = conn.read("table_a")
 """
-from __future__ import annotations
+from abc import ABC, abstractmethod  # noqa: E402, F401
+from typing import Any, Dict, List, Optional  # noqa: E402, F401
 
-from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional
-
-import pandas as pd
+import pandas as pd  # noqa: E402, F401
 
 
 class DataConnector(ABC):
@@ -140,7 +140,7 @@ class DataConnector(ABC):
         ``{name}_list_sources`` and ``{name}_read``.
         Override to provide richer docstrings or additional tools.
         """
-        from langchain.tools import tool as lc_tool
+        from langchain.tools import tool as lc_tool  # noqa: E402, F401
 
         connector = self  # capture for closures
 

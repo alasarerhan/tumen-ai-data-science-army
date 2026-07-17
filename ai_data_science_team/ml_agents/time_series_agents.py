@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Time-Series Agent Ekibi — M13.
 
 Üç ajan:
@@ -10,8 +12,8 @@ Her ajan `BaseAgent` temelinde, `EDAToolsAgent` ile özdeş mimariyle inşa edil
 
 Kullanım örneği::
 
-    from langchain_openai import ChatOpenAI
-    from ai_data_science_team.ml_agents.time_series_agents import TimeSeriesEDAAgent
+    from langchain_openai import ChatOpenAI  # noqa: E402, F401
+    from ai_data_science_team.ml_agents.time_series_agents import TimeSeriesEDAAgent  # noqa: E402, F401
 
     llm    = ChatOpenAI(model="gpt-4o-mini")
     agent  = TimeSeriesEDAAgent(model=llm)
@@ -24,31 +26,27 @@ Kullanım örneği::
     logger.info(agent.get_ai_message())
     logger.info(agent.get_artifacts())
 """
-from __future__ import annotations
-
-
-
-import logging
+import logging  # noqa: E402, F401
 
 logger = logging.getLogger(__name__)
-from typing import Any, Dict, Optional, Sequence
+from typing import Any, Dict, Optional, Sequence  # noqa: E402, F401
 
-import pandas as pd
-from langchain_core.messages import AIMessage, BaseMessage
+import pandas as pd  # noqa: E402, F401
+from langchain_core.messages import AIMessage, BaseMessage  # noqa: E402, F401
 
 try:
-    from IPython.display import Markdown  # optional — only needed in notebook contexts
+    from IPython.display import Markdown  # optional — only needed in notebook contexts  # noqa: E402, F401
 except ImportError:
     Markdown = None  # type: ignore[assignment,misc]
 
-from langchain.agents import create_agent
-from langgraph.graph.message import add_messages
-from langgraph.graph import END, START, StateGraph
-from langgraph.types import Checkpointer
-from typing_extensions import Annotated, TypedDict
+from langchain.agents import create_agent  # noqa: E402, F401
+from langgraph.graph.message import add_messages  # noqa: E402, F401
+from langgraph.graph import END, START, StateGraph  # noqa: E402, F401
+from langgraph.types import Checkpointer  # noqa: E402, F401
+from typing_extensions import Annotated, TypedDict  # noqa: E402, F401
 
-from ai_data_science_team.templates import BaseAgent
-from ai_data_science_team.tools.time_series import (
+from ai_data_science_team.templates import BaseAgent  # noqa: E402, F401
+from ai_data_science_team.tools.e11_time_series import (  # noqa: E402, F401
     autocorrelation_analysis,
     auto_forecast,
     evaluate_forecast,
@@ -57,8 +55,8 @@ from ai_data_science_team.tools.time_series import (
     train_arima,
     train_prophet,
 )
-from ai_data_science_team.utils.messages import get_tool_call_names
-from ai_data_science_team.utils.regex import format_agent_name
+from ai_data_science_team.utils.messages import get_tool_call_names  # noqa: E402, F401
+from ai_data_science_team.utils.regex import format_agent_name  # noqa: E402, F401
 
 # ---------------------------------------------------------------------------
 # Tool sets
@@ -715,8 +713,8 @@ class AutoForecastAgent(_TimeSeriesAgentMixin, BaseAgent):
     -----------
     .. code-block:: python
 
-        from langchain_openai import ChatOpenAI
-        from ai_data_science_team.ml_agents import AutoForecastAgent
+        from langchain_openai import ChatOpenAI  # noqa: E402, F401
+        from ai_data_science_team.ml_agents import AutoForecastAgent  # noqa: E402, F401
 
         llm   = ChatOpenAI(model="gpt-4o-mini")
         agent = AutoForecastAgent(model=llm)

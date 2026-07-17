@@ -4,7 +4,7 @@
 import logging
 
 logger = logging.getLogger(__name__)
-import os
+import os  # noqa: E402, F401
 
 def log_ai_function(response: str, file_name: str, log: bool = True, log_path: str = './logs/', overwrite: bool = True):
     """

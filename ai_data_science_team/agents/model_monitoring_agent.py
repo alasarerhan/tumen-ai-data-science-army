@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """
 ModelMonitoringAgent
 ====================
@@ -19,13 +21,10 @@ Drift severity thresholds (PSI)
 - PSI > 0.25  : significant drift (action required)
 """
 
-from __future__ import annotations
-
-
-import logging
+import logging  # noqa: E402, F401
 
 logger = logging.getLogger(__name__)
-from typing_extensions import (
+from typing_extensions import (  # noqa: E402, F401
     Annotated,
     Any,
     Dict,
@@ -36,20 +35,20 @@ from typing_extensions import (
     TypedDict,
 )
 
-import pandas as pd
-from IPython.display import Markdown
+import pandas as pd  # noqa: E402, F401
+from IPython.display import Markdown  # noqa: E402, F401
 
-from langchain.agents import create_agent
-from langchain.tools import tool
-from langchain_core.messages import AIMessage, BaseMessage
-from langgraph.graph import END, START, StateGraph
-from langgraph.graph.message import add_messages
-from langgraph.prebuilt import InjectedState
-from langgraph.types import Checkpointer
+from langchain.agents import create_agent  # noqa: E402, F401
+from langchain.tools import tool  # noqa: E402, F401
+from langchain_core.messages import AIMessage, BaseMessage  # noqa: E402, F401
+from langgraph.graph import END, START, StateGraph  # noqa: E402, F401
+from langgraph.graph.message import add_messages  # noqa: E402, F401
+from langgraph.prebuilt import InjectedState  # noqa: E402, F401
+from langgraph.types import Checkpointer  # noqa: E402, F401
 
-from ai_data_science_team.templates import BaseAgent
-from ai_data_science_team.utils.messages import get_tool_call_names
-from ai_data_science_team.utils.regex import format_agent_name
+from ai_data_science_team.templates import BaseAgent  # noqa: E402, F401
+from ai_data_science_team.utils.messages import get_tool_call_names  # noqa: E402, F401
+from ai_data_science_team.utils.regex import format_agent_name  # noqa: E402, F401
 
 AGENT_NAME = "model_monitoring_agent"
 
@@ -61,7 +60,7 @@ AGENT_NAME = "model_monitoring_agent"
 
 def _psi(expected: "pd.Series", actual: "pd.Series", n_bins: int = 10) -> float:
     """Compute Population Stability Index between two continuous series."""
-    import numpy as np
+    import numpy as np  # noqa: E402, F401
 
     expected = expected.dropna()
     actual = actual.dropna()
@@ -84,7 +83,7 @@ def _psi(expected: "pd.Series", actual: "pd.Series", n_bins: int = 10) -> float:
     exp_pct = exp_pct.clip(lower=eps)
     act_pct = act_pct.clip(lower=eps)
 
-    import numpy as np
+    import numpy as np  # noqa: E402, F401
 
     psi_value = float(np.sum((act_pct.values - exp_pct.values) * np.log(act_pct.values / exp_pct.values)))
     return round(abs(psi_value), 6)
@@ -92,7 +91,7 @@ def _psi(expected: "pd.Series", actual: "pd.Series", n_bins: int = 10) -> float:
 
 def _psi_categorical(expected: "pd.Series", actual: "pd.Series") -> float:
     """Compute PSI for categorical columns."""
-    import numpy as np
+    import numpy as np  # noqa: E402, F401
 
     expected = expected.dropna().astype(str)
     actual = actual.dropna().astype(str)
@@ -109,7 +108,7 @@ def _psi_categorical(expected: "pd.Series", actual: "pd.Series") -> float:
 
 def _ks_test(reference: "pd.Series", current: "pd.Series") -> Tuple[float, float]:
     """KS two-sample test; returns (statistic, p_value)."""
-    from scipy import stats  # type: ignore
+    from scipy import stats  # type: ignore  # noqa: E402, F401
 
     ref = reference.dropna()
     cur = current.dropna()
@@ -157,7 +156,7 @@ def detect_drift(
     """
     logger.info("    * Tool: detect_drift")
 
-    import numpy as np
+    import numpy as np  # noqa: E402, F401
 
     ref_df = pd.DataFrame(reference_data_raw)
     cur_df = pd.DataFrame(current_data_raw)
@@ -267,7 +266,7 @@ def compute_performance(
     """
     logger.info("    * Tool: compute_performance")
 
-    import numpy as np
+    import numpy as np  # noqa: E402, F401
     from sklearn import metrics as skm  # noqa
 
     y_true_df = pd.DataFrame(y_true_raw)
@@ -288,7 +287,7 @@ def compute_performance(
         except Exception:
             pass
         try:
-            computed["f1_weighted"] = round(
+            computed["weighted"] = round(
                 float(skm.f1_score(y_true, y_pred, average="weighted", zero_division=0)), 6
             )
         except Exception:

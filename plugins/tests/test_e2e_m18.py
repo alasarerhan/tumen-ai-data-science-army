@@ -16,17 +16,14 @@ Atlamak icin:
 """
 from __future__ import annotations
 
-import os
 
+
+from _llm import make_chat_model, skip_no_key
 import pytest
 
 pytestmark = pytest.mark.integration
 
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
-skip_no_key = pytest.mark.skipif(
-    not OPENAI_API_KEY,
-    reason="OPENAI_API_KEY is not set — skipping integration tests",
-)
+
 
 langchain_openai = pytest.importorskip(
     "langchain_openai",
@@ -70,8 +67,7 @@ def _inv(agent, **kw):
 
 @pytest.fixture(scope="module")
 def llm():
-    from langchain_openai import ChatOpenAI
-    return ChatOpenAI(model="gpt-4o-mini", temperature=0, max_tokens=600)
+    return make_chat_model(temperature=0, max_tokens=600)
 
 
 # ---------------------------------------------------------------------------

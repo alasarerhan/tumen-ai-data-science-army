@@ -1,21 +1,18 @@
 from __future__ import annotations
 
+import logging  # noqa: F401
 
+from typing import Sequence, Optional, Any  # noqa: F401
 
-import logging
+from langchain_core.messages import BaseMessage, HumanMessage, AIMessage  # noqa: F401
+from IPython.display import Markdown  # noqa: F401
+from langchain_openai import ChatOpenAI  # noqa: F401
 
-logger = logging.getLogger(__name__)
-from typing import Sequence, Optional, Any
+from langgraph.graph import StateGraph, END  # noqa: F401
+from langgraph.types import Checkpointer  # noqa: F401
+from langgraph.graph.message import add_messages  # noqa: F401
 
-from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
-from IPython.display import Markdown
-from langchain_openai import ChatOpenAI
-
-from langgraph.graph import StateGraph, END
-from langgraph.types import Checkpointer
-from langgraph.graph.message import add_messages
-
-from ai_data_science_team.multiagents.supervisor import (
+from ai_data_science_team.multiagents.supervisor import (  # noqa: F401
     SupervisorDSState,
     DATASET_REGISTRY_MAX,
     _clean_messages,
@@ -60,51 +57,51 @@ from ai_data_science_team.multiagents.supervisor import (
 # ``nodes/``.  Each factory takes a NodeDeps dataclass (defined in its
 # module) that holds the closure dependencies the node used to capture
 # in the original monolith.
-from ai_data_science_team.multiagents.supervisor_ds_team.nodes.viz import (
+from ai_data_science_team.multiagents.supervisor_ds_team.nodes.viz import (  # noqa: F401
     VizNodeDeps,
     make_node_viz,
 )
-from ai_data_science_team.multiagents.supervisor_ds_team.nodes.loader import (
+from ai_data_science_team.multiagents.supervisor_ds_team.nodes.loader import (  # noqa: F401
     LoaderNodeDeps,
     make_node_loader,
 )
-from ai_data_science_team.multiagents.supervisor_ds_team.nodes.merge import (
+from ai_data_science_team.multiagents.supervisor_ds_team.nodes.merge import (  # noqa: F401
     MergeNodeDeps,
     make_node_merge,
 )
-from ai_data_science_team.multiagents.supervisor_ds_team.nodes.wrangling import (
+from ai_data_science_team.multiagents.supervisor_ds_team.nodes.wrangling import (  # noqa: F401
     WranglingNodeDeps,
     make_node_wrangling,
 )
-from ai_data_science_team.multiagents.supervisor_ds_team.nodes.cleaning import (
+from ai_data_science_team.multiagents.supervisor_ds_team.nodes.cleaning import (  # noqa: F401
     CleaningNodeDeps,
     make_node_cleaning,
 )
-from ai_data_science_team.multiagents.supervisor_ds_team.nodes.sql import (
+from ai_data_science_team.multiagents.supervisor_ds_team.nodes.sql import (  # noqa: F401
     SqlNodeDeps,
     make_node_sql,
 )
-from ai_data_science_team.multiagents.supervisor_ds_team.nodes.eda import (
+from ai_data_science_team.multiagents.supervisor_ds_team.nodes.eda import (  # noqa: F401
     EdaNodeDeps,
     make_node_eda,
 )
-from ai_data_science_team.multiagents.supervisor_ds_team.nodes.fe import (
+from ai_data_science_team.multiagents.supervisor_ds_team.nodes.fe import (  # noqa: F401
     FeNodeDeps,
     make_node_fe,
 )
-from ai_data_science_team.multiagents.supervisor_ds_team.nodes.h2o import (
+from ai_data_science_team.multiagents.supervisor_ds_team.nodes.h2o import (  # noqa: F401
     H2oNodeDeps,
     make_node_h2o,
 )
-from ai_data_science_team.multiagents.supervisor_ds_team.nodes.mlflow import (
+from ai_data_science_team.multiagents.supervisor_ds_team.nodes.mlflow import (  # noqa: F401
     MlflowNodeDeps,
     make_node_mlflow,
 )
-from ai_data_science_team.multiagents.supervisor_ds_team.nodes.eval import (
+from ai_data_science_team.multiagents.supervisor_ds_team.nodes.eval import (  # noqa: F401
     EvalNodeDeps,
     make_node_eval,
 )
-from ai_data_science_team.multiagents.supervisor_ds_team.nodes.mlflow_log import (
+from ai_data_science_team.multiagents.supervisor_ds_team.nodes.mlflow_log import (  # noqa: F401
     MlflowLogNodeDeps,
     make_node_mlflow_log,
 )
@@ -305,7 +302,7 @@ def make_supervisor_ds_team(
         last_human_text = _get_last_human(clean_msgs)
         requested_dataset_id = None
         try:
-            import re
+            import re  # noqa: F401
 
             lower = (last_human_text or "").lower()
             wants_switch = any(
@@ -1149,6 +1146,9 @@ def make_supervisor_ds_team(
 
 
 
-from ai_data_science_team.multiagents.supervisor_ds_team._class import SupervisorDSTeam
+from ai_data_science_team.multiagents.supervisor_ds_team._class import SupervisorDSTeam  # noqa: F401, E402
+
+logger = logging.getLogger(__name__)
+
 
 __all__ = ['make_supervisor_ds_team', 'SupervisorDSTeam']

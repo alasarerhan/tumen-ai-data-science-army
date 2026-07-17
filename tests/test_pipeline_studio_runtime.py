@@ -6,7 +6,7 @@ APP_DIR = Path(__file__).resolve().parents[1] / "apps" / "ai-pipeline-studio-app
 if str(APP_DIR) not in sys.path:
     sys.path.insert(0, str(APP_DIR))
 
-from pipeline_studio_runtime import (
+from pipeline_studio_runtime import (  # noqa: E402
     _apply_branch_ui_action,
     _build_children_index,
     _build_pipeline_semantic_graph,

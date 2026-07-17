@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Redis-backed stores for distributed deployments.
 
 This module provides Redis-backed implementations of ContextStore, SignalStore,
@@ -15,7 +17,7 @@ Usage
 -----
 ::
 
-    from ai_data_science_team.redis_stores import RedisContextStore, RedisSignalStore
+    from ai_data_science_team.redis_stores import RedisContextStore, RedisSignalStore  # noqa: E402, F401
 
     # For production with Redis
     context_store = RedisContextStore(redis_url="redis://localhost:6379/0")
@@ -31,20 +33,18 @@ For Redis mode, install: pip install redis
 For Valkey (open-source alternative): pip install valkey-py
 """
 
-from __future__ import annotations
-
-import json
-import logging
-import threading
-import uuid
-from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Union
+import json  # noqa: E402, F401
+import logging  # noqa: E402, F401
+import threading  # noqa: E402, F401
+import uuid  # noqa: E402, F401
+from datetime import datetime, timezone  # noqa: E402, F401
+from typing import Any, Dict, List, Optional, Union  # noqa: E402, F401
 
 logger = logging.getLogger(__name__)
 
 REDIS_AVAILABLE = False
 try:
-    import redis
+    import redis  # noqa: E402, F401
     REDIS_AVAILABLE = True
 except ImportError:
     pass
@@ -110,10 +110,10 @@ class RedisContextStore:
         elif redis_url and not REDIS_AVAILABLE:
             if require_redis:
                 raise RuntimeError(
-                    f"Redis is required (require_redis=True) but not available. "
-                    f"Install with: pip install redis. "
-                    f"This is a production deployment - in-memory fallback is disabled "
-                    f"to prevent state divergence across replicas."
+                    "Redis is required (require_redis=True) but not available. "
+                    "Install with: pip install redis. "
+                    "This is a production deployment - in-memory fallback is disabled "
+                    "to prevent state divergence across replicas."
                 )
             self._redis = None
             self._in_memory_fallback = {}
@@ -376,8 +376,8 @@ class RedisSignalStore:
     --------
     ::
 
-        from ai_data_science_team.redis_stores import RedisSignalStore
-        from ai_data_science_team.signals import WorkflowSignal, SignalType
+        from ai_data_science_team.redis_stores import RedisSignalStore  # noqa: E402, F401
+        from ai_data_science_team.signals import WorkflowSignal, SignalType  # noqa: E402, F401
 
         store = RedisSignalStore(redis_url="redis://localhost:6379/0")
         store.emit(WorkflowSignal(type=SignalType.SKIP, session_id="s1", step_id="step1"))
@@ -406,9 +406,9 @@ class RedisSignalStore:
         elif redis_url and not REDIS_AVAILABLE:
             if require_redis:
                 raise RuntimeError(
-                    f"Redis is required (require_redis=True) but not available. "
-                    f"Install with: pip install redis. "
-                    f"This is a production deployment - in-memory fallback is disabled."
+                    "Redis is required (require_redis=True) but not available. "
+                    "Install with: pip install redis. "
+                    "This is a production deployment - in-memory fallback is disabled."
                 )
             self._redis = None
             self._in_memory_fallback = {}
@@ -449,7 +449,7 @@ class RedisSignalStore:
         return signal
 
     def pop_pending(self, session_id: str) -> List:
-        from ai_data_science_team.signals import WorkflowSignal
+        from ai_data_science_team.signals import WorkflowSignal  # noqa: E402, F401
 
         if self._redis:
             signals_raw = self._redis.lrange(self._signals_key(session_id), 0, -1)
@@ -479,7 +479,7 @@ class RedisSignalStore:
                 return pending
 
     def list_all(self, session_id: str) -> List:
-        from ai_data_science_team.signals import WorkflowSignal
+        from ai_data_science_team.signals import WorkflowSignal  # noqa: E402, F401
 
         if self._redis:
             signals_raw = self._redis.lrange(self._signals_key(session_id), 0, -1)
@@ -567,7 +567,7 @@ class RedisChatSessionStore:
         session_id: Optional[str] = None,
         metadata: Optional[Dict[str, Any]] = None,
     ):
-        from ai_data_science_team.multiagents.chat_session import ChatSession
+        from ai_data_science_team.multiagents.chat_session import ChatSession  # noqa: E402, F401
 
         sid = session_id or str(uuid.uuid4())
         now = datetime.now(timezone.utc)
@@ -597,7 +597,7 @@ class RedisChatSessionStore:
         return ChatSession(session_id=sid, metadata=metadata or {}, created_at=now)
 
     def get(self, session_id: str):
-        from ai_data_science_team.multiagents.chat_session import ChatSession, ChatMessage
+        from ai_data_science_team.multiagents.chat_session import ChatSession, ChatMessage  # noqa: E402, F401
 
         if self._redis:
             session_data = self._redis.hgetall(self._session_key(session_id))
@@ -630,7 +630,7 @@ class RedisChatSessionStore:
                 data = self._in_memory_fallback.get(session_id)
                 if not data:
                     return None
-                from ai_data_science_team.multiagents.chat_session import ChatSession
+                from ai_data_science_team.multiagents.chat_session import ChatSession  # noqa: E402, F401
                 return ChatSession(
                     session_id=data["session_id"],
                     messages=data.get("messages", []),
@@ -730,7 +730,7 @@ class RedisChatSessionStore:
                 self._in_memory_fallback[session_id]["messages"].append(message)
 
     def get_history(self, session_id: str) -> List:
-        from ai_data_science_team.multiagents.chat_session import ChatMessage
+        from ai_data_science_team.multiagents.chat_session import ChatMessage  # noqa: E402, F401
 
         if self._redis:
             messages_raw = self._redis.lrange(self._messages_key(session_id), 0, -1)

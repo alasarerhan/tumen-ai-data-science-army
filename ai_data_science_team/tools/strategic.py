@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Strategic Insights tools — M18.
 
 Pure-Python tools for the four Strategic Supervisor agents:
@@ -27,12 +29,10 @@ All tools use ``response_format="content_and_artifact"`` and return
 ``Tuple[str, Dict[str, Any]]`` so they work seamlessly in ReAct tool-calling
 loops without needing an external API.
 """
-from __future__ import annotations
+import json  # noqa: E402, F401
+from typing import Any, Dict, List, Tuple  # noqa: E402, F401
 
-import json
-from typing import Any, Dict, List, Tuple
-
-from langchain_core.tools import tool
+from langchain_core.tools import tool  # noqa: E402, F401
 
 # ===========================================================================
 # ResultsSynthesizer group
@@ -194,7 +194,7 @@ def compare_results(
             pct = (delta / float(b_val) * 100) if float(b_val) != 0 else 0.0
             k_low = k.lower()
             is_hib = any(h in k_low for h in hib)
-            is_lib = any(l in k_low for l in lib)
+            is_lib = any(label in k_low for label in lib)
             if is_hib:
                 good = delta > 0
             elif is_lib:
@@ -452,7 +452,7 @@ def extract_business_entities(
     artifact : dict
         ``{entities: {type: [values]}, total: int}``
     """
-    import re
+    import re  # noqa: E402, F401
 
     requested_types = {t.strip().lower() for t in entity_types.split(",") if t.strip()}
 
@@ -865,7 +865,7 @@ def design_ab_test(
     artifact : dict
         Full test plan dict.
     """
-    import math
+    import math  # noqa: E402, F401
 
     # Simple sample size estimate (rule of thumb: ~16 * σ² / δ²; assume σ≈baseline)
     alpha = 1.0 - confidence_level

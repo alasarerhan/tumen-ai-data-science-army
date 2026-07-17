@@ -281,9 +281,9 @@ class SchedulerService:
         result = self._db.execute(
             update(ScheduledJob)
             .where(
-                (ScheduledJob.enabled == True),
+                (ScheduledJob.enabled),
                 (
-                    (ScheduledJob.leader_id == None) |
+                    (ScheduledJob.leader_id is None) |
                     (ScheduledJob.leader_id == self._leader_id) |
                     (ScheduledJob.leader_expires_at < now)
                 )
@@ -481,10 +481,10 @@ class SchedulerService:
                         for row in self._db.execute(
                             select(ScheduledJob.id)
                             .where(
-                                ScheduledJob.enabled == True,
+                                ScheduledJob.enabled,
                                 ScheduledJob.next_run_at <= now,
                                 or_(
-                                    ScheduledJob.last_run_status == None,
+                                    ScheduledJob.last_run_status is None,
                                     ScheduledJob.last_run_status != "running",
                                 ),
                             )

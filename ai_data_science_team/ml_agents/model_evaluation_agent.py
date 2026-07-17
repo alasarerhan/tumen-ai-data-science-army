@@ -1,9 +1,10 @@
+from __future__ import annotations
+
+
 # BUSINESS SCIENCE UNIVERSITY
 # AI DATA SCIENCE TEAM
 # ***
 # * Agents: Model Evaluation Agent
-
-from __future__ import annotations
 
 from typing import Any, Optional, Sequence, Dict
 
@@ -136,7 +137,7 @@ class ModelEvaluationAgent(BaseAgent):
 
         # Load/resolve the H2O model.
         try:
-            import h2o
+            import h2o  # noqa: E402, F401
 
             h2o.init()
             h2o_model = None
@@ -193,7 +194,7 @@ class ModelEvaluationAgent(BaseAgent):
         if preds is None:
             eval_source = "random_split_in_sample"
             try:
-                from sklearn.model_selection import train_test_split
+                from sklearn.model_selection import train_test_split  # noqa: E402, F401
 
                 stratify = None
                 if task_type == "classification":
@@ -206,7 +207,7 @@ class ModelEvaluationAgent(BaseAgent):
                     stratify=stratify,
                 )
                 test_df = pd.concat([X_test, y_test], axis=1)
-                import h2o
+                import h2o  # noqa: E402, F401
 
                 test_h2o = h2o.H2OFrame(test_df)
                 preds_h2o = h2o_model.predict(test_h2o)
@@ -238,7 +239,7 @@ class ModelEvaluationAgent(BaseAgent):
 
         if task_type == "classification":
             try:
-                from sklearn.metrics import (
+                from sklearn.metrics import (  # noqa: E402, F401
                     accuracy_score,
                     precision_score,
                     recall_score,
@@ -247,7 +248,7 @@ class ModelEvaluationAgent(BaseAgent):
                     confusion_matrix,
                     roc_curve,
                 )
-                import plotly.graph_objects as go
+                import plotly.graph_objects as go  # noqa: E402, F401
 
                 y_true = y_true.astype(str)
                 y_pred = preds.get("predict")
@@ -298,7 +299,7 @@ class ModelEvaluationAgent(BaseAgent):
                     metrics["auc"] = auc
 
                 cm = confusion_matrix(y_true, y_pred, labels=labels)
-                cm_df = pd.DataFrame(cm, index=[f"true:{l}" for l in labels], columns=[f"pred:{l}" for l in labels])
+                cm_df = pd.DataFrame(cm, index=[f"true:{label}" for label in labels], columns=[f"pred:{label}" for label in labels])
 
                 cm_fig = go.Figure(
                     data=go.Heatmap(
@@ -338,9 +339,9 @@ class ModelEvaluationAgent(BaseAgent):
                 summary_lines.append(f"Evaluation failed: {e}")
         else:
             try:
-                from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
-                import numpy as np
-                import plotly.express as px
+                from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score  # noqa: E402, F401
+                import numpy as np  # noqa: E402, F401
+                import plotly.express as px  # noqa: E402, F401
 
                 y_true = y_true.astype(float)
                 y_pred = preds.get("predict")

@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 """B2 Agent.
 
 Phase-5 agent wrapper for spec B2.  Wraps the deterministic
-tool layer (``ai_data_science_team.tools.b2_quality``) with
+tool layer (``ai_data_science_team.tools.quality``) with
 LangChain ``@tool`` decorators and exposes the standard
 ``make_quality_agent`` factory + ``QualityAgent`` OO
 wrapper, following the same pattern as ABTestingAgent and
@@ -10,26 +12,24 @@ PowerAnalysisAgent.
 Node type: ``data.validate``
 """
 
-from __future__ import annotations
+from typing import (Dict, Optional, Tuple)  # noqa: E402
+import logging  # noqa: E402, F401
+from typing import Any  # noqa: E402, F401
 
-import logging
-from typing import Any, Dict, Optional, Tuple
+from langchain.tools import tool  # noqa: E402, F401
+from langchain_core.messages import AIMessage, BaseMessage  # noqa: E402, F401
+from langgraph.graph import END, START, StateGraph  # noqa: E402, F401
+from langgraph.graph.message import add_messages  # noqa: E402, F401
+from langgraph.types import Checkpointer  # noqa: E402, F401
+from typing_extensions import Annotated, Sequence, TypedDict  # noqa: E402, F401
 
-from langchain.tools import tool
-from langchain_core.messages import AIMessage, BaseMessage
-from langgraph.graph import END, START, StateGraph
-from langgraph.graph.message import add_messages
-from langgraph.types import Checkpointer
-from typing_extensions import Annotated, Sequence, TypedDict
+from ai_data_science_team.templates import BaseAgent  # noqa: E402, F401
+from ai_data_science_team.utils.regex import format_agent_name  # noqa: E402, F401
 
-from ai_data_science_team.templates import BaseAgent
-from ai_data_science_team.utils.regex import format_agent_name
+import pandas as pd  # noqa: E402, F401
+from typing import Mapping  # noqa: E402
 
-import pandas as pd
-from typing import List, Dict, Optional, Sequence, Mapping
-
-from ai_data_science_team.tools.quality import (
-    TEMPLATES,
+from ai_data_science_team.tools.quality import (  # noqa: E402, F401
     expectation_suite_from_template,
     summarise_suite_run,
     validate_against_suite,
@@ -155,7 +155,7 @@ def make_quality_agent(
     if invoke_react_agent_kwargs is None:
         invoke_react_agent_kwargs = {}
 
-    from langchain.agents import create_agent
+    from langchain.agents import create_agent  # noqa: E402, F401
 
     class GraphState(TypedDict):
         messages: Annotated[Sequence[BaseMessage], add_messages]
@@ -266,7 +266,7 @@ class QualityAgent(BaseAgent):
     def get_ai_message(self, markdown: bool = False):
         if not self.response or "messages" not in self.response:
             return None
-        from IPython.display import Markdown as _Markdown
+        from IPython.display import Markdown as _Markdown  # noqa: E402, F401
         for msg in reversed(self.response.get("messages", [])):
             content = getattr(msg, "content", "")
             if content:

@@ -84,7 +84,6 @@ def paginate_query(query, model, cursor: Optional[str], limit: int, cursor_colum
     ValueError
         If limit is less than 1.
     """
-    from sqlalchemy import select
 
     if limit < 1:
         raise ValueError(f"limit must be at least 1, got {limit}")

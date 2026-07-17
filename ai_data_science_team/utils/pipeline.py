@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+
 from typing import Any, Dict, List, Optional, Sequence
 
 SCRIPT_HEADER_LINES = [
@@ -163,8 +164,8 @@ def compute_pipeline_hash(datasets: Dict[str, Any], lineage_ids: List[str]) -> O
     """
     if not lineage_ids or not isinstance(datasets, dict):
         return None
-    import hashlib
-    import json
+    import hashlib  # noqa: E402, F401
+    import json  # noqa: E402, F401
 
     def _dataset_key(did: str) -> str:
         """
@@ -222,7 +223,7 @@ def compute_pipeline_hash(datasets: Dict[str, Any], lineage_ids: List[str]) -> O
 
 
 def _infer_function_name(code: str) -> Optional[str]:
-    import re
+    import re  # noqa: E402, F401
 
     if not isinstance(code, str) or not code:
         return None
@@ -232,7 +233,7 @@ def _infer_function_name(code: str) -> Optional[str]:
 
 def _read_text_file(path: Any, *, max_bytes: int = 500_000) -> Optional[str]:
     try:
-        import os
+        import os  # noqa: E402, F401
 
         if not isinstance(path, str) or not path:
             return None

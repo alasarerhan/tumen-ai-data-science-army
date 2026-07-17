@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Human-in-the-Loop (HITL) Approval Gate Agent — M17.
 
 ``ApprovalGateAgent``
@@ -32,9 +34,9 @@ Example usage
 
 ::
 
-    from langchain_openai import ChatOpenAI
-    from langgraph.checkpoint.memory import MemorySaver
-    from ai_data_science_team.agents.hitl_agent import ApprovalGateAgent
+    from langchain_openai import ChatOpenAI  # noqa: E402, F401
+    from langgraph.checkpoint.memory import MemorySaver  # noqa: E402, F401
+    from ai_data_science_team.agents.hitl_agent import ApprovalGateAgent  # noqa: E402, F401
 
     llm = ChatOpenAI(model="gpt-4o-mini")
 
@@ -60,39 +62,37 @@ Example usage
     logger.info(agent.get_ai_message())
     logger.info(agent.get_artifacts())
 """
-from __future__ import annotations
-
-
-import logging
+from typing import (Dict, List, Optional, Sequence)  # noqa: E402
+import logging  # noqa: E402, F401
 
 logger = logging.getLogger(__name__)
-import json
-from typing import Any, Dict, List, Optional, Sequence
+import json  # noqa: E402, F401
+from typing import Any  # noqa: E402, F401
 
-from langchain_core.messages import AIMessage, BaseMessage
-from langgraph.checkpoint.memory import MemorySaver
-from langgraph.graph import END, START, StateGraph
-from langgraph.types import Checkpointer, Command, interrupt
-from typing_extensions import Annotated, TypedDict
+from langchain_core.messages import AIMessage, BaseMessage  # noqa: E402, F401
+from langgraph.checkpoint.memory import MemorySaver  # noqa: E402, F401
+from langgraph.graph import END, START, StateGraph  # noqa: E402, F401
+from langgraph.types import Checkpointer, Command, interrupt  # noqa: E402, F401
+from typing_extensions import Annotated, TypedDict  # noqa: E402, F401
 
 try:
-    from IPython.display import Markdown
+    from IPython.display import Markdown  # noqa: E402, F401
 except ImportError:
     Markdown = None  # type: ignore[assignment,misc]
 
-from langchain.agents import create_agent
-from langgraph.graph.message import add_messages
+from langchain.agents import create_agent  # noqa: E402, F401
+from langgraph.graph.message import add_messages  # noqa: E402, F401
 
-from ai_data_science_team.templates import BaseAgent
-from ai_data_science_team.tools.hitl import (
+from ai_data_science_team.templates import BaseAgent  # noqa: E402, F401
+from ai_data_science_team.tools.hitl import (  # noqa: E402, F401
     check_approval_status,
     create_approval_request,
     format_approval_notification,
     log_approval_decision,
     summarize_for_approval,
 )
-from ai_data_science_team.utils.messages import get_tool_call_names
-from ai_data_science_team.utils.regex import format_agent_name
+from ai_data_science_team.utils.messages import get_tool_call_names  # noqa: E402, F401
+from ai_data_science_team.utils.regex import format_agent_name  # noqa: E402, F401
 
 # ---------------------------------------------------------------------------
 # Default tool list

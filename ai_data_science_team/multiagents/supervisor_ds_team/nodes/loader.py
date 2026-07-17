@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Auto-generated loader node module.
 
 Extracted from the 3,400-line ``supervisor_ds_team.py`` monolith
@@ -5,24 +7,24 @@ during the L2 code-review remediation pass.  Uses dependency
 injection via the ``LoaderNodeDeps`` dataclass.
 """
 
-from __future__ import annotations
+import logging  # noqa: E402, F401
+from dataclasses import dataclass  # noqa: E402, F401
+from typing import Any, Callable, Optional  # noqa: E402, F401
 
-import logging
-from dataclasses import dataclass
-from typing import Any, Callable
+from langchain_core.messages import AIMessage  # noqa: E402, F401
 
-from langchain_core.messages import AIMessage
-
-from ai_data_science_team.multiagents.supervisor import (
+from ai_data_science_team.multiagents.supervisor import (  # noqa: E402, F401
     SupervisorDSState,
-    _get_last_human_text,
-    ensure_dataset_registry,
-    format_listing_with_llm,
-    format_result_with_llm,
-    merge_messages,
-    register_dataset,
-    tag_messages,
-)
+    normalize_loader_artifacts,
+    extract_loader_artifact_results,
+    infer_requested_load_labels,
+    DATASET_REGISTRY_MAX,
+    summarize_multi_loaded_datasets,
+    summarize_multiple_loaded_files,
+    summarize_directory_listing,
+    summarize_loaded_dataset,
+    summarize_loader_failure,
+    collect_loader_errors)
 
 logger = logging.getLogger(__name__)
 
@@ -96,15 +98,14 @@ def make_node_loader(deps: LoaderNodeDeps) -> Callable[[SupervisorDSState], dict
             loaded_dataset_label,
             multiple_loaded_files,
             multiple_loaded_datasets,
-            load_file_ok_items,
-        ) = extract_loader_artifact_results(artifacts_map)
+            load_file_ok_items) = extract_loader_artifact_results(artifacts_map)
 
         if debug:
             try:
                 logger.info(f"  loader load_file_ok_items={len(load_file_ok_items)}")
                 for name, data in load_file_ok_items[:3]:
                     logger.info(
-                        f"    - ok {name}: data_type={type(data)} shape={_shape(data)}"
+                        f"    - ok {name}: data_type={type(data)} shape={getattr(data, 'shape', ())}"
                     )
             except Exception:
                 pass
@@ -118,13 +119,12 @@ def make_node_loader(deps: LoaderNodeDeps) -> Callable[[SupervisorDSState], dict
             and last_human.strip()
         ):
             try:
-                import re
-                import pandas as pd
+                import re  # noqa: E402, F401
+                import pandas as pd  # noqa: E402, F401
 
-                from ai_data_science_team.tools.data_loader import (
+                from ai_data_science_team.tools.data_loader import (  # noqa: E402, F401
                     auto_load_file,
-                    DEFAULT_MAX_ROWS,
-                )
+                    DEFAULT_MAX_ROWS)
 
                 last_human_lower = last_human.lower()
                 if any(
@@ -133,8 +133,7 @@ def make_node_loader(deps: LoaderNodeDeps) -> Callable[[SupervisorDSState], dict
                     requested = re.findall(
                         r"(?:`|\"|')?([^\s'\"`]+\.(?:csv|tsv|parquet|xlsx?|jsonl|ndjson|json)(?:\.gz)?)",
                         last_human,
-                        flags=re.IGNORECASE,
-                    )
+                        flags=re.IGNORECASE)
                     requested = [r.strip() for r in requested if str(r).strip()]
                     seen_req: set[str] = set()
                     requested_unique: list[str] = []
@@ -210,15 +209,14 @@ def make_node_loader(deps: LoaderNodeDeps) -> Callable[[SupervisorDSState], dict
         # attempt to load it deterministically (avoids "listing loop" regressions across turns).
         if loaded_dataset is None and dir_listing is not None:
             try:
-                import re
-                import os
-                from pathlib import Path
-                import pandas as pd
+                import re  # noqa: E402, F401
+                import os  # noqa: E402, F401
+                from pathlib import Path  # noqa: E402, F401
+                import pandas as pd  # noqa: E402, F401
 
-                from ai_data_science_team.tools.data_loader import (
+                from ai_data_science_team.tools.data_loader import (  # noqa: E402, F401
                     auto_load_file,
-                    DEFAULT_MAX_ROWS,
-                )
+                    DEFAULT_MAX_ROWS)
 
                 last_human_text = deps._get_last_human_text(before_msgs) or ""
                 last_human_lower = last_human_text.lower()
@@ -229,8 +227,7 @@ def make_node_loader(deps: LoaderNodeDeps) -> Callable[[SupervisorDSState], dict
                     m = re.search(
                         r"(?:`|\"|')?([^\s'\"`]+\.(?:csv|tsv|parquet|xlsx?|jsonl|ndjson|json)(?:\.gz)?)",
                         last_human_text,
-                        flags=re.IGNORECASE,
-                    )
+                        flags=re.IGNORECASE)
                     requested_single: str = (m.group(1) if m else "").strip()
                     if requested_single:
                         p = Path(requested_single).expanduser()
@@ -319,17 +316,16 @@ def make_node_loader(deps: LoaderNodeDeps) -> Callable[[SupervisorDSState], dict
                     loader_artifacts = {"load_file_fallback": marker}
 
         logger.info(
-            f"  loader data_raw shape={_shape(data_raw)} active_data_key={active_data_key}"
+            f"  loader data_raw shape={getattr(data_raw, 'shape', ())} active_data_key={active_data_key}"
         )
 
         datasets, active_dataset_id = deps.ensure_dataset_registry(state)
         # Register newly loaded datasets in the dataset registry.
         if multi_file_load and multiple_loaded_datasets:
             try:
-                import os
-                from ai_data_science_team.tools.data_loader import (
-                    resolve_existing_file_path,
-                )
+                import os  # noqa: E402, F401
+                from ai_data_science_team.tools.data_loader import (  # noqa: E402, F401
+                    resolve_existing_file_path)
 
                 state_for_register = {
                     **state,
@@ -363,8 +359,7 @@ def make_node_loader(deps: LoaderNodeDeps) -> Callable[[SupervisorDSState], dict
                         created_by="Data_Loader_Tools_Agent",
                         provenance=provenance,
                         parent_id=None,
-                        make_active=make_active,
-                    )
+                        make_active=make_active)
                     state_for_register = {
                         **state_for_register,
                         "datasets": datasets,
@@ -375,15 +370,14 @@ def make_node_loader(deps: LoaderNodeDeps) -> Callable[[SupervisorDSState], dict
                 pass
         elif loaded_dataset is not None:
             try:
-                import os
+                import os  # noqa: E402, F401
 
                 # Best-effort: capture the file path from the user request for reproducibility.
                 source = loaded_dataset_label
                 try:
-                    import re
-                    from ai_data_science_team.tools.data_loader import (
-                        resolve_existing_file_path,
-                    )
+                    import re  # noqa: E402, F401
+                    from ai_data_science_team.tools.data_loader import (  # noqa: E402, F401
+                        resolve_existing_file_path)
 
                     if not (
                         isinstance(source, str)
@@ -392,8 +386,7 @@ def make_node_loader(deps: LoaderNodeDeps) -> Callable[[SupervisorDSState], dict
                         m = re.search(
                             r"(?:`|\"|')?([^\s'\"`]+\.(?:csv|tsv|parquet|xlsx?|jsonl|ndjson|json)(?:\.gz)?)",
                             last_human or "",
-                            flags=re.IGNORECASE,
-                        )
+                            flags=re.IGNORECASE)
                         requested_src: str = (m.group(1) if m else "").strip()
                         if requested_src:
                             resolved_path, _matches = resolve_existing_file_path(
@@ -436,8 +429,7 @@ def make_node_loader(deps: LoaderNodeDeps) -> Callable[[SupervisorDSState], dict
                     created_by="Data_Loader_Tools_Agent",
                     provenance=provenance,
                     parent_id=None,
-                    make_active=True,
-                )
+                    make_active=True)
             except Exception:
                 # Never fail the load step due to registry bookkeeping.
                 pass
@@ -465,8 +457,7 @@ def make_node_loader(deps: LoaderNodeDeps) -> Callable[[SupervisorDSState], dict
                             "user_request": last_human,
                         },
                         parent_id=None,
-                        make_active=False,
-                    )
+                        make_active=False)
                     state_for_register = {
                         **state_for_register,
                         "datasets": datasets,
@@ -479,8 +470,8 @@ def make_node_loader(deps: LoaderNodeDeps) -> Callable[[SupervisorDSState], dict
         summary_msg = None
         if multi_file_load and multiple_loaded_datasets:
             try:
-                import os
-                import pandas as pd
+                import os  # noqa: E402, F401
+                import pandas as pd  # noqa: E402, F401
 
                 lines = []
                 for fname, data in multiple_loaded_datasets:
@@ -525,21 +516,18 @@ def make_node_loader(deps: LoaderNodeDeps) -> Callable[[SupervisorDSState], dict
                         + preview_txt
                         + "\n\nUse the sidebar dataset selector to switch the active dataset, or use Pipeline Studio to merge them."
                     ),
-                    name="data_loader_agent",
-                )
+                    name="data_loader_agent")
             except Exception:
                 summary_msg = AIMessage(
                     content=(
                         f"Loaded {len(multiple_loaded_datasets)} datasets. "
                         "Use the sidebar dataset selector to switch the active dataset, or use Pipeline Studio to merge them."
                     ),
-                    name="data_loader_agent",
-                )
+                    name="data_loader_agent")
             summary_msg = summarize_multi_loaded_datasets(
                 multiple_loaded_datasets,
                 loaded_dataset_label,
-                data_raw,
-            )
+                data_raw)
         elif multiple_loaded_files:
             summary_msg = summarize_multiple_loaded_files(multiple_loaded_files)
         elif dir_listing is not None:
@@ -563,7 +551,7 @@ def make_node_loader(deps: LoaderNodeDeps) -> Callable[[SupervisorDSState], dict
                                 continue
                             if "file_path" in item:
                                 fp = item.get("file_path")
-                                import os
+                                import os  # noqa: E402, F401
 
                                 fn = (
                                     os.path.basename(fp)
@@ -577,7 +565,7 @@ def make_node_loader(deps: LoaderNodeDeps) -> Callable[[SupervisorDSState], dict
                                 continue
                             if "absolute_path" in item or "name" in item:
                                 ap = item.get("absolute_path")
-                                import os
+                                import os  # noqa: E402, F401
 
                                 fn = item.get("name") or (
                                     os.path.basename(ap)
@@ -611,7 +599,7 @@ def make_node_loader(deps: LoaderNodeDeps) -> Callable[[SupervisorDSState], dict
                                 )
                             elif "file_path" in v:
                                 fp = v.get("file_path")
-                                import os
+                                import os  # noqa: E402, F401
 
                                 fn = (
                                     os.path.basename(fp)
@@ -624,7 +612,7 @@ def make_node_loader(deps: LoaderNodeDeps) -> Callable[[SupervisorDSState], dict
                                 )
                             elif "absolute_path" in v or "name" in v:
                                 ap = v.get("absolute_path")
-                                import os
+                                import os  # noqa: E402, F401
 
                                 fn = v.get("name") or (
                                     os.path.basename(ap)
@@ -656,8 +644,7 @@ def make_node_loader(deps: LoaderNodeDeps) -> Callable[[SupervisorDSState], dict
                     if not rows:
                         summary_msg = AIMessage(
                             content="No CSV files found in that directory.",
-                            name="data_loader_agent",
-                        )
+                            name="data_loader_agent")
                         dir_listing = None
 
                 if summary_msg is None:
@@ -668,7 +655,7 @@ def make_node_loader(deps: LoaderNodeDeps) -> Callable[[SupervisorDSState], dict
                     )
                     table_text = ""
                     if rows:
-                        import pandas as pd
+                        import pandas as pd  # noqa: E402, F401
 
                         df_listing = pd.DataFrame(rows)
                         table_cols = [
@@ -688,8 +675,7 @@ def make_node_loader(deps: LoaderNodeDeps) -> Callable[[SupervisorDSState], dict
                     elif table_text:
                         summary_msg = AIMessage(
                             content=f"{msg_text}\n\n{table_text}",
-                            name="data_loader_agent",
-                        )
+                            name="data_loader_agent")
                     else:
                         summary_msg = AIMessage(
                             content=msg_text, name="data_loader_agent"
@@ -701,14 +687,12 @@ def make_node_loader(deps: LoaderNodeDeps) -> Callable[[SupervisorDSState], dict
             summary_msg, dir_listing = summarize_directory_listing(
                 dir_listing,
                 (deps._get_last_human_text(before_msgs) or "").lower(),
-                deps.format_listing_with_llm,
-            )
+                deps.format_listing_with_llm)
         elif loaded_dataset is not None and isinstance(data_raw, dict):
             summary_msg = summarize_loaded_dataset(
                 data_raw,
                 (deps._get_last_human_text(before_msgs) or "").lower(),
-                deps.format_result_with_llm,
-            )
+                deps.format_result_with_llm)
         elif loader_artifacts is not None:
             summary_msg = summarize_loader_failure(loader_artifacts)
 
@@ -720,8 +704,7 @@ def make_node_loader(deps: LoaderNodeDeps) -> Callable[[SupervisorDSState], dict
             merged["messages"] = merged.get("messages", []) + [
                 AIMessage(
                     content="Data loading error(s):\n" + "\n".join(loader_errors),
-                    name="data_loader_agent",
-                )
+                    name="data_loader_agent")
             ]
 
         merged["messages"] = deps.tag_messages(merged.get("messages"), "data_loader_agent")

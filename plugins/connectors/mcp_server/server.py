@@ -174,27 +174,26 @@ class MCPServer:
         # Notifications (no id) — process but don't respond
         is_notification = req_id is None
 
-        match method:
-            case "initialize":
-                result = self._handle_initialize(params)
-            case "initialized":
-                return None  # notification, no response
-            case "ping":
-                result = {}
-            case "tools/list":
-                result = {"tools": _ALL_TOOLS}
-            case "tools/call":
-                result = self._handle_tool_call(params)
-            case "resources/list":
-                result = self._handle_resources_list()
-            case "resources/read":
-                result = self._handle_resources_read(params)
-            case _:
-                if is_notification:
-                    return None
-                return self._error_response(
-                    req_id, code=-32601, message=f"Method not found: {method}"
-                )
+        if method == "initialize":
+            result = self._handle_initialize(params)
+        elif method == "initialized":
+            return None  # notification, no response
+        elif method == "ping":
+            result = {}
+        elif method == "tools/list":
+            result = {"tools": _ALL_TOOLS}
+        elif method == "tools/call":
+            result = self._handle_tool_call(params)
+        elif method == "resources/list":
+            result = self._handle_resources_list()
+        elif method == "resources/read":
+            result = self._handle_resources_read(params)
+        else:
+            if is_notification:
+                return None
+            return self._error_response(
+                req_id, code=-32601, message=f"Method not found: {method}"
+            )
 
         if is_notification:
             return None

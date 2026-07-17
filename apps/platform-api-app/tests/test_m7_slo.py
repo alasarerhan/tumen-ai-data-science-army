@@ -34,10 +34,8 @@ from prometheus_client import (
 from platform_api.core.observability import (
     SLO_ERROR_RATE_BUDGET,
     SLO_LATENCY_P99_MS,
-    _JsonFormatter,
     _REGISTRY,
     _normalise_path,
-    configure_logging,
     setup_observability,
 )
 
@@ -126,7 +124,7 @@ def test_in_flight_gauge_increments_to_one_during_request():
     client = TestClient(app)
     client.get("/ping")
     # After completion the gauge is 0; the counter incremented once.
-    samples = {s.name: s.value for s in reg.collect() for s in s.samples if s.name == "iso_in_flight_requests"}
+    {s.name: s.value for s in reg.collect() for s in s.samples if s.name == "iso_in_flight_requests"}
     # just ensure it has not drifted negative
     in_flight_value = refs["in_flight"]._value.get()
     assert in_flight_value == 0.0

@@ -62,8 +62,8 @@ def load_directory(
     """
     logger.info(f"    * Tool: load_directory | {directory_path}")
 
-    import os
-    import pandas as pd
+    import os  # noqa: E402, F401
+    import pandas as pd  # noqa: E402, F401
 
     if directory_path is None:
         return "No directory path provided.", {}
@@ -189,7 +189,7 @@ def list_directory_contents(
               This structure can be easily converted to a pandas DataFrame.
     """
     logger.info(f"    * Tool: list_directory_contents | {directory_path}")
-    import os
+    import os  # noqa: E402, F401
 
     if directory_path is None:
         return "No directory path provided.", []
@@ -262,7 +262,7 @@ def list_directory_recursive(
     # We'll store two things as we recurse:
     # 1) lines for building the "tree" string
     # 2) records in a list of dicts for easy DataFrame creation
-    import os
+    import os  # noqa: E402, F401
 
     if directory_path is None:
         return "No directory path provided.", []
@@ -380,8 +380,8 @@ def get_file_info(file_path: str) -> Tuple[str, List[Dict]]:
     logger.info(f"    * Tool: get_file_info | {file_path}")
 
     # Ensure the file exists
-    import os
-    import time
+    import os  # noqa: E402, F401
+    import time  # noqa: E402, F401
 
     if not os.path.isfile(file_path):
         return f"{file_path} is not a valid file.", [
@@ -439,8 +439,8 @@ def search_files_by_pattern(
     """
     logger.info(f"    * Tool: search_files_by_pattern | {directory_path}")
 
-    import os
-    import fnmatch
+    import os  # noqa: E402, F401
+    import fnmatch  # noqa: E402, F401
 
     try:
         base_path = Path(directory_path).expanduser().resolve()
@@ -659,7 +659,7 @@ def load_csv(file_path: str, sep: str = ",", nrows: Optional[int] = None) -> pd.
     Returns:
       pd.DataFrame
     """
-    import pandas as pd
+    import pandas as pd  # noqa: E402, F401
 
     return pd.read_csv(file_path, sep=sep, nrows=nrows)
 
@@ -669,7 +669,7 @@ def load_excel(file_path: str, sheet_name=None, nrows: Optional[int] = None) -> 
     Tool: load_excel
     Description: Loads an Excel file into a pandas DataFrame.
     """
-    import pandas as pd
+    import pandas as pd  # noqa: E402, F401
 
     return pd.read_excel(file_path, sheet_name=sheet_name, nrows=nrows)
 
@@ -679,7 +679,7 @@ def load_json(file_path: str, lines: bool = False, nrows: Optional[int] = None) 
     Tool: load_json
     Description: Loads a JSON file or NDJSON into a pandas DataFrame.
     """
-    import pandas as pd
+    import pandas as pd  # noqa: E402, F401
 
     # For simple JSON arrays or line-delimited JSON
     return pd.read_json(file_path, orient="records", lines=lines, nrows=nrows)
@@ -690,7 +690,7 @@ def load_parquet(file_path: str, max_rows: Optional[int] = None) -> pd.DataFrame
     Tool: load_parquet
     Description: Loads a Parquet file into a pandas DataFrame.
     """
-    import pandas as pd
+    import pandas as pd  # noqa: E402, F401
 
     df = pd.read_parquet(file_path)
     if max_rows is not None and len(df) > max_rows:
@@ -707,7 +707,7 @@ def load_pickle(file_path: str) -> pd.DataFrame:
     disabled by default and requires explicit opt-in via the environment
     variable ALLOW_UNSAFE_PICKLE=1. Only enable this for trusted data sources.
     """
-    import pandas as pd
+    import pandas as pd  # noqa: E402, F401
 
     if not _pickle_loading_allowed():
         raise ValueError(

@@ -1,5 +1,5 @@
 
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 from langchain_core.tools import tool
 

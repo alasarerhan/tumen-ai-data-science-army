@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """RuntimeEngine — resilient step-by-step workflow executor (M22).
 
 Resilience patterns
@@ -26,7 +28,7 @@ Usage
 -----
 ::
 
-    from ai_data_science_team.runtime_engine import RuntimeEngine, RunResult
+    from ai_data_science_team.runtime_engine import RuntimeEngine, RunResult  # noqa: E402, F401
 
     def my_executor(agent_name: str, instruction: str, context: dict):
         # Instantiate and invoke the agent; raise on failure
@@ -44,14 +46,12 @@ Usage
     logger.info(run_result.success_count)   # steps that succeeded
 """
 
-from __future__ import annotations
+import logging  # noqa: E402, F401
+import time  # noqa: E402, F401
+from dataclasses import dataclass, field  # noqa: E402, F401
+from typing import Any, Callable, Dict, List, Optional  # noqa: E402, F401
 
-import logging
-import time
-from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, List, Optional
-
-from ai_data_science_team.signals import SignalStore, SignalType, get_signal_store
+from ai_data_science_team.signals import SignalStore, SignalType, get_signal_store  # noqa: E402, F401
 
 logger = logging.getLogger(__name__)
 

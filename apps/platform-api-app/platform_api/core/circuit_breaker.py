@@ -23,6 +23,16 @@ from typing import Optional
 
 logger = logging.getLogger(__name__)
 
+def _normalize_redis_url(url):
+    """Prepend the default redis scheme if a URL has only host:port/db."""
+    if not url:
+        return url
+    for prefix in ('redis://', 'rediss://', 'unix://'):
+        if url.startswith(prefix):
+            return url
+    return 'redis://' + url
+
+
 REDIS_AVAILABLE = False
 try:
     import redis
@@ -101,7 +111,7 @@ class DistributedCircuitBreaker:
         self._half_open_calls: int = 0
 
         if redis_url and REDIS_AVAILABLE:
-            self._redis: Optional[redis.Redis] = redis.from_url(redis_url)
+            self._redis: Optional[redis.Redis] = redis.from_url(_normalize_redis_url(redis_url))
             logger.info(
                 "DistributedCircuitBreaker '%s' connected to Redis",
                 config.name

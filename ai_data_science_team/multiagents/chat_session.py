@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """ChatSession — per-session state for the AI Workspace (M21).
 
 Manages chat message history and uploaded DataFrames for a conversation
@@ -48,15 +50,13 @@ Design notes
   all session state; downstream agents must **not** hold direct references.
 """
 
-from __future__ import annotations
+import threading  # noqa: E402, F401
+import uuid  # noqa: E402, F401
+from dataclasses import dataclass, field  # noqa: E402, F401
+from datetime import datetime, timezone  # noqa: E402, F401
+from typing import Any, Dict, List, Literal, Optional  # noqa: E402, F401
 
-import threading
-import uuid
-from dataclasses import dataclass, field
-from datetime import datetime, timezone
-from typing import Any, Dict, List, Literal, Optional
-
-import pandas as pd
+import pandas as pd  # noqa: E402, F401
 
 
 # ---------------------------------------------------------------------------
@@ -309,7 +309,7 @@ class MongoChatSessionStore:
         history = store.get_history(session.session_id)
 
         # Unit-test with mongomock (no real MongoDB needed):
-        import mongomock
+        import mongomock  # noqa: E402, F401
         store = MongoChatSessionStore("mongodb://localhost", _client=mongomock.MongoClient())
     """
 
@@ -324,7 +324,7 @@ class MongoChatSessionStore:
         if _client is not None:
             self._client = _client
         else:
-            import pymongo  # lazy import — only needed when this class is used
+            import pymongo  # lazy import — only needed when this class is used  # noqa: E402, F401
 
             self._client = pymongo.MongoClient(mongo_uri)
 
@@ -389,7 +389,7 @@ class MongoChatSessionStore:
     def _expires_at(self) -> Optional[datetime]:
         if self._session_ttl_seconds is None:
             return None
-        from datetime import timedelta
+        from datetime import timedelta  # noqa: E402, F401
 
         return datetime.now(timezone.utc) + timedelta(seconds=self._session_ttl_seconds)
 

@@ -1,5 +1,6 @@
 import os
 import tempfile
+import importlib.util
 from typing import Annotated, Dict, Tuple, Union
 
 from langchain_core.tools import tool
@@ -187,9 +188,7 @@ def generate_correlation_funnel(
         The name to use for infrequent levels. Default is '-OTHER'.
     """
     print("    * Tool: generate_correlation_funnel")
-    try:
-        import pytimetk as tk
-    except ImportError:
+    if importlib.util.find_spec("pytimetk") is None:
         raise ImportError(
             "Please install the 'pytimetk' package to use this tool. pip install pytimetk"
         )

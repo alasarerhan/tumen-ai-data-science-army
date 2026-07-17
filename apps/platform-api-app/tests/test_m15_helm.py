@@ -6,7 +6,6 @@ files with correct structure, without needing the ``helm`` CLI installed.
 from __future__ import annotations
 
 import yaml
-import os
 from pathlib import Path
 
 import pytest

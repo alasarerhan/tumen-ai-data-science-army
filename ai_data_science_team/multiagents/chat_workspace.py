@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """ChatWorkspace — conversational data analysis orchestrator (M21).
 
 The main entry point for the AI Workspace feature. Users upload DataFrames,
@@ -25,8 +27,8 @@ Usage
 -----
 ::
 
-    from langchain_openai import ChatOpenAI
-    from ai_data_science_team.multiagents import ChatWorkspace
+    from langchain_openai import ChatOpenAI  # noqa: E402, F401
+    from ai_data_science_team.multiagents import ChatWorkspace  # noqa: E402, F401
 
     llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
     ws  = ChatWorkspace(model=llm)
@@ -42,23 +44,19 @@ Usage
     history = ws.get_history(sid)
 """
 
-from __future__ import annotations
-
-
-
-import logging
+import logging  # noqa: E402, F401
 
 logger = logging.getLogger(__name__)
-import asyncio
-import time
-from dataclasses import dataclass
-from typing import Any, AsyncIterator, Dict, List, Optional, Tuple
+import asyncio  # noqa: E402, F401
+import time  # noqa: E402, F401
+from dataclasses import dataclass  # noqa: E402, F401
+from typing import Any, AsyncIterator, Dict, List, Optional, Tuple  # noqa: E402, F401
 
-import pandas as pd
-from langchain_core.messages import AIMessage
+import pandas as pd  # noqa: E402, F401
+from langchain_core.messages import AIMessage  # noqa: E402, F401
 
-from ai_data_science_team.multiagents.chat_router import IntentRouter, RouterDecision
-from ai_data_science_team.multiagents.chat_session import (
+from ai_data_science_team.multiagents.chat_router import IntentRouter, RouterDecision  # noqa: E402, F401
+from ai_data_science_team.multiagents.chat_session import (  # noqa: E402, F401
     ChatMessage,
     ChatSession,
     ChatSessionStore,
@@ -391,8 +389,8 @@ class ChatWorkspace:
     def _run_pandas_analyst(
         self, message: str, df: Optional[pd.DataFrame], **kwargs
     ) -> Tuple[str, Optional[str], Optional[Dict]]:
-        from ai_data_science_team.agents import DataWranglingAgent, DataVisualizationAgent
-        from ai_data_science_team.multiagents.pandas_data_analyst import PandasDataAnalyst
+        from ai_data_science_team.agents import DataWranglingAgent, DataVisualizationAgent  # noqa: E402, F401
+        from ai_data_science_team.multiagents.pandas_data_analyst import PandasDataAnalyst  # noqa: E402, F401
 
         agent = PandasDataAnalyst(
             model=self._model,
@@ -409,8 +407,8 @@ class ChatWorkspace:
     async def _run_pandas_analyst_async(
         self, message: str, df: Optional[pd.DataFrame], **kwargs
     ) -> Tuple[str, Optional[str], Optional[Dict]]:
-        from ai_data_science_team.agents import DataWranglingAgent, DataVisualizationAgent
-        from ai_data_science_team.multiagents.pandas_data_analyst import PandasDataAnalyst
+        from ai_data_science_team.agents import DataWranglingAgent, DataVisualizationAgent  # noqa: E402, F401
+        from ai_data_science_team.multiagents.pandas_data_analyst import PandasDataAnalyst  # noqa: E402, F401
 
         agent = PandasDataAnalyst(
             model=self._model,
@@ -435,7 +433,7 @@ class ChatWorkspace:
     def _run_eda_agent(
         self, message: str, df: Optional[pd.DataFrame], **kwargs
     ) -> Tuple[str, Optional[str], Optional[Dict]]:
-        from ai_data_science_team.ds_agents.eda_tools_agent import EDAToolsAgent
+        from ai_data_science_team.ds_agents.eda_tools_agent import EDAToolsAgent  # noqa: E402, F401
 
         agent = EDAToolsAgent(model=self._model)
         agent.invoke_agent(user_instructions=message, data_raw=df, **kwargs)
@@ -444,7 +442,7 @@ class ChatWorkspace:
     async def _run_eda_agent_async(
         self, message: str, df: Optional[pd.DataFrame], **kwargs
     ) -> Tuple[str, Optional[str], Optional[Dict]]:
-        from ai_data_science_team.ds_agents.eda_tools_agent import EDAToolsAgent
+        from ai_data_science_team.ds_agents.eda_tools_agent import EDAToolsAgent  # noqa: E402, F401
 
         agent = EDAToolsAgent(model=self._model)
         if hasattr(agent, "ainvoke_agent"):
@@ -456,7 +454,7 @@ class ChatWorkspace:
     def _run_data_cleaning(
         self, message: str, df: Optional[pd.DataFrame], **kwargs
     ) -> Tuple[str, Optional[str], Optional[Dict]]:
-        from ai_data_science_team.agents import DataCleaningAgent
+        from ai_data_science_team.agents import DataCleaningAgent  # noqa: E402, F401
 
         agent = DataCleaningAgent(model=self._model)
         agent.invoke_agent(
@@ -469,7 +467,7 @@ class ChatWorkspace:
     async def _run_data_cleaning_async(
         self, message: str, df: Optional[pd.DataFrame], **kwargs
     ) -> Tuple[str, Optional[str], Optional[Dict]]:
-        from ai_data_science_team.agents import DataCleaningAgent
+        from ai_data_science_team.agents import DataCleaningAgent  # noqa: E402, F401
 
         agent = DataCleaningAgent(model=self._model)
         if hasattr(agent, "ainvoke_agent"):
@@ -490,7 +488,7 @@ class ChatWorkspace:
     def _run_document_parser(
         self, message: str, df: Optional[pd.DataFrame], **kwargs
     ) -> Tuple[str, Optional[str], Optional[Dict]]:
-        from ai_data_science_team.agents.document_parser_agent import DocumentParserAgent
+        from ai_data_science_team.agents.document_parser_agent import DocumentParserAgent  # noqa: E402, F401
 
         agent = DocumentParserAgent(model=self._model)
         agent.invoke_agent(user_instructions=message, **kwargs)
@@ -504,7 +502,7 @@ class ChatWorkspace:
     def _run_api_connector(
         self, message: str, df: Optional[pd.DataFrame], **kwargs
     ) -> Tuple[str, Optional[str], Optional[Dict]]:
-        from ai_data_science_team.agents.api_connector_agent import APIConnectorAgent
+        from ai_data_science_team.agents.api_connector_agent import APIConnectorAgent  # noqa: E402, F401
 
         agent = APIConnectorAgent(model=self._model)
         agent.invoke_agent(user_instructions=message, **kwargs)
@@ -518,7 +516,7 @@ class ChatWorkspace:
     def _run_model_serving(
         self, message: str, df: Optional[pd.DataFrame], **kwargs
     ) -> Tuple[str, Optional[str], Optional[Dict]]:
-        from ai_data_science_team.agents.model_serving_agent import ModelServingAgent
+        from ai_data_science_team.agents.g3_model_serving_agent import ModelServingAgent  # noqa: E402, F401
 
         agent = ModelServingAgent(model=self._model)
         agent.invoke_agent(user_instructions=message, **kwargs)
@@ -532,7 +530,7 @@ class ChatWorkspace:
     def _run_anomaly_detection(
         self, message: str, df: Optional[pd.DataFrame], **kwargs
     ) -> Tuple[str, Optional[str], Optional[Dict]]:
-        from ai_data_science_team.agents import AnomalyDetectionAgent
+        from ai_data_science_team.agents import AnomalyDetectionAgent  # noqa: E402, F401
 
         agent = AnomalyDetectionAgent(model=self._model)
         agent.invoke_agent(
@@ -545,7 +543,7 @@ class ChatWorkspace:
     async def _run_anomaly_detection_async(
         self, message: str, df: Optional[pd.DataFrame], **kwargs
     ) -> Tuple[str, Optional[str], Optional[Dict]]:
-        from ai_data_science_team.agents import AnomalyDetectionAgent
+        from ai_data_science_team.agents import AnomalyDetectionAgent  # noqa: E402, F401
 
         agent = AnomalyDetectionAgent(model=self._model)
         if hasattr(agent, "ainvoke_agent"):

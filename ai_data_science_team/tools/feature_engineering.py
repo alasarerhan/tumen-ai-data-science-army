@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Feature engineering tools for the AI Data Science Team.
 
 This module provides tools for feature engineering operations including
@@ -14,14 +16,12 @@ Tools
 - select_features: Select features based on importance
 """
 
-from __future__ import annotations
+from typing import List, Optional, Union  # noqa: E402, F401
 
-from typing import List, Optional, Union
+import numpy as np  # noqa: E402, F401
+import pandas as pd  # noqa: E402, F401
 
-import numpy as np
-import pandas as pd
-
-from ai_data_science_team.tool_registry import (
+from ai_data_science_team.tool_registry import (  # noqa: E402, F401
     ToolParameter,
     register_tool,
 )
@@ -101,7 +101,7 @@ def label_encode(
     dict
         DataFrame with encoded columns as dictionary.
     """
-    from sklearn.preprocessing import LabelEncoder
+    from sklearn.preprocessing import LabelEncoder  # noqa: E402, F401
 
     df = pd.DataFrame(data) if isinstance(data, dict) else data.copy()
 
@@ -212,7 +212,7 @@ def scale_features(
     dict
         DataFrame with scaled columns as dictionary.
     """
-    from sklearn.preprocessing import StandardScaler, MinMaxScaler
+    from sklearn.preprocessing import StandardScaler, MinMaxScaler  # noqa: E402, F401
 
     df = pd.DataFrame(data) if isinstance(data, dict) else data.copy()
 
@@ -271,7 +271,7 @@ def create_polynomial_features(
     dict
         DataFrame with polynomial features as dictionary.
     """
-    from sklearn.preprocessing import PolynomialFeatures
+    from sklearn.preprocessing import PolynomialFeatures  # noqa: E402, F401
 
     df = pd.DataFrame(data) if isinstance(data, dict) else data.copy()
 
@@ -390,7 +390,7 @@ def select_features(
     numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
 
     if method == "variance":
-        from sklearn.feature_selection import VarianceThreshold
+        from sklearn.feature_selection import VarianceThreshold  # noqa: E402, F401
 
         selector = VarianceThreshold(threshold=threshold)
         selector.fit(df[numeric_cols].fillna(0))

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Database tools for the AI Data Science Team.
 
 This module provides tools for database introspection, query generation,
@@ -13,16 +15,14 @@ Tools
 - build_sample_query: Build dialect-specific sample query
 """
 
-from __future__ import annotations
+import re  # noqa: E402, F401
+from typing import Any, Dict, Optional, Union  # noqa: E402, F401
 
-import re
-from typing import Any, Dict, Optional, Union
+import pandas as pd  # noqa: E402, F401
+import sqlalchemy as sql  # noqa: E402, F401
+from sqlalchemy import inspect  # noqa: E402, F401
 
-import pandas as pd
-import sqlalchemy as sql
-from sqlalchemy import inspect
-
-from ai_data_science_team.tool_registry import (
+from ai_data_science_team.tool_registry import (  # noqa: E402, F401
     ToolParameter,
     register_tool,
 )

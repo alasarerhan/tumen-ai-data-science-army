@@ -41,7 +41,7 @@ class TestAgentDiscoveryService:
                 {"name": "ModelTrainingAgent", "category": "machine_learning"},
             ]
 
-            results = await service.search(
+            await service.search(
                 "train model",
                 filters={"category": "machine_learning"},
             )

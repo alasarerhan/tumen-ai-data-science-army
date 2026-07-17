@@ -13,8 +13,7 @@ from __future__ import annotations
 
 import json
 import uuid
-from types import SimpleNamespace
-from unittest.mock import MagicMock, call, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from fastapi import HTTPException
@@ -118,7 +117,6 @@ def test_validate_spec_rejects_blocked_chain():
 
 
 from platform_api.services.workflow_service import (  # noqa: E402
-    _auto_archive_published,
     archive_workflow_spec,
     publish_workflow_spec,
 )

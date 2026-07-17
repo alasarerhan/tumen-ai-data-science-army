@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """
 ab_testing
 ==========
@@ -19,14 +21,12 @@ The tools here are pure-Python and depend only on ``numpy``, ``scipy`` and
 LangGraph agent (e.g. inside the workflow runtime engine or batch scoring).
 """
 
-from __future__ import annotations
+import math  # noqa: E402, F401
+from typing import Any, Dict, Iterable, Optional, Sequence, Tuple  # noqa: E402, F401
 
-import math
-from typing import Any, Dict, Iterable, Optional, Sequence, Tuple
-
-import numpy as np
-import pandas as pd
-from scipy import stats
+import numpy as np  # noqa: E402, F401
+import pandas as pd  # noqa: E402, F401
+from scipy import stats  # noqa: E402, F401
 
 
 # ---------------------------------------------------------------------------

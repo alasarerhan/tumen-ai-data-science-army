@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 import pytest
-from unittest.mock import MagicMock, AsyncMock, patch
+from unittest.mock import MagicMock, AsyncMock
 
 from platform_api.versioning.version_manager import WorkflowVersionManager
-from platform_api.versioning.models import WorkflowVersion, CanaryDeployment
 
 
 class TestWorkflowVersionManager:

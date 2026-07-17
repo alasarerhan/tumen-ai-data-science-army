@@ -11,7 +11,7 @@ def _ms_to_iso(ms: int | None) -> str | None:
     if ms is None:
         return None
     try:
-        from datetime import datetime, timezone
+        from datetime import datetime, timezone  # noqa: E402, F401
 
         return datetime.fromtimestamp(ms / 1000.0, tz=timezone.utc).isoformat()
     except Exception:
@@ -51,8 +51,8 @@ def _resolve_active_run(
     - If a matching active run exists, reuse it.
     - If a different active run exists, end it and start/resume the requested run.
     """
-    import mlflow
-    from contextlib import nullcontext
+    import mlflow  # noqa: E402, F401
+    from contextlib import nullcontext  # noqa: E402, F401
 
     if tracking_uri:
         mlflow.set_tracking_uri(tracking_uri)
@@ -88,7 +88,7 @@ def mlflow_set_tags(
     or starts a new run under experiment_name.
     """
     logger.info("    * Tool: mlflow_set_tags")
-    import mlflow
+    import mlflow  # noqa: E402, F401
 
     with _resolve_active_run(
         run_id=run_id,
@@ -114,7 +114,7 @@ def mlflow_log_params(
     or starts a new run under experiment_name.
     """
     logger.info("    * Tool: mlflow_log_params")
-    import mlflow
+    import mlflow  # noqa: E402, F401
 
     with _resolve_active_run(
         run_id=run_id,
@@ -141,7 +141,7 @@ def mlflow_log_metrics(
     or starts a new run under experiment_name.
     """
     logger.info("    * Tool: mlflow_log_metrics")
-    import mlflow
+    import mlflow  # noqa: E402, F401
 
     # Ensure metrics are numeric where possible
     safe_metrics: Dict[str, float] = {}
@@ -182,8 +182,8 @@ def mlflow_log_table(
         Destination artifact path, e.g. "tables/preview.json".
     """
     logger.info("    * Tool: mlflow_log_table")
-    import mlflow
-    import pandas as pd
+    import mlflow  # noqa: E402, F401
+    import pandas as pd  # noqa: E402, F401
 
     df = None
     try:
@@ -218,7 +218,7 @@ def mlflow_log_dict(
     Log a JSON-serializable dict to MLflow (using mlflow.log_dict).
     """
     logger.info("    * Tool: mlflow_log_dict")
-    import mlflow
+    import mlflow  # noqa: E402, F401
 
     with _resolve_active_run(
         run_id=run_id,
@@ -251,9 +251,9 @@ def mlflow_log_figure(
         Destination artifact file path, e.g. "plots/viz.html" or "plots/viz.json".
     """
     logger.info("    * Tool: mlflow_log_figure")
-    import mlflow
-    import json
-    import plotly.io as pio
+    import mlflow  # noqa: E402, F401
+    import json  # noqa: E402, F401
+    import plotly.io as pio  # noqa: E402, F401
 
     fig = None
     try:
@@ -289,8 +289,8 @@ def mlflow_log_artifact(
     Log a local file or directory to MLflow (using mlflow.log_artifact(s)).
     """
     logger.info("    * Tool: mlflow_log_artifact")
-    import mlflow
-    import os
+    import mlflow  # noqa: E402, F401
+    import os  # noqa: E402, F401
 
     with _resolve_active_run(
         run_id=run_id,
@@ -339,7 +339,7 @@ def mlflow_search_experiments(
         - Artifact dict with `experiments` as a list of records.
     """
     logger.info("    * Tool: mlflow_search_experiments")
-    from mlflow.tracking import MlflowClient
+    from mlflow.tracking import MlflowClient  # noqa: E402, F401
 
     client = MlflowClient(tracking_uri=tracking_uri, registry_uri=registry_uri)
     experiments = client.search_experiments(filter_string=filter_string)
@@ -416,7 +416,7 @@ def mlflow_search_runs(
         - Artifact dict with `runs` as a list of records.
     """
     logger.info("    * Tool: mlflow_search_runs")
-    from mlflow.tracking import MlflowClient
+    from mlflow.tracking import MlflowClient  # noqa: E402, F401
 
     client = MlflowClient(tracking_uri=tracking_uri, registry_uri=registry_uri)
 
@@ -541,7 +541,7 @@ def mlflow_create_experiment(experiment_name: str) -> str:
         The experiment ID or an error message if creation failed.
     """
     logger.info("    * Tool: mlflow_create_experiment")
-    from mlflow.tracking import MlflowClient
+    from mlflow.tracking import MlflowClient  # noqa: E402, F401
 
     client = MlflowClient()
     exp_id = client.create_experiment(experiment_name)
@@ -572,9 +572,9 @@ def mlflow_predict_from_run_id(
         (user_facing_message, artifact_dict)
     """
     logger.info("    * Tool: mlflow_predict_from_run_id")
-    import mlflow
-    import mlflow.pyfunc
-    import pandas as pd
+    import mlflow  # noqa: E402, F401
+    import mlflow.pyfunc  # noqa: E402, F401
+    import pandas as pd  # noqa: E402, F401
 
     # 1. Check if data is loaded
     if not data_raw:
@@ -645,7 +645,7 @@ def mlflow_launch_ui(
         Confirmation message.
     """
     logger.info("    * Tool: mlflow_launch_ui")
-    import subprocess
+    import subprocess  # noqa: E402, F401
 
     # Try binding to the user-specified port first
     allocated_port = _find_free_port(start_port=port, host=host)
@@ -663,7 +663,7 @@ def _find_free_port(start_port: int, host: str) -> int:
     Find a free port >= start_port on the specified host.
     If the start_port is free, returns start_port, else tries subsequent ports.
     """
-    import socket
+    import socket  # noqa: E402, F401
 
     for port_candidate in range(start_port, start_port + 1000):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
@@ -692,7 +692,7 @@ def mlflow_stop_ui(port: int = 5000) -> str:
         The port on which the UI is running.
     """
     logger.info("    * Tool: mlflow_stop_ui")
-    import psutil
+    import psutil  # noqa: E402, F401
 
     # Attempt to find processes listening on port; on macOS this may require elevated perms.
     try:
@@ -747,7 +747,7 @@ def mlflow_list_artifacts(
         (summary_message, artifact_listing)
     """
     logger.info("    * Tool: mlflow_list_artifacts")
-    from mlflow.tracking import MlflowClient
+    from mlflow.tracking import MlflowClient  # noqa: E402, F401
 
     client = MlflowClient(tracking_uri=tracking_uri)
     # If path is None, list the root folder
@@ -794,8 +794,8 @@ def mlflow_download_artifacts(
         (summary_message, artifact_dict)
     """
     logger.info("    * Tool: mlflow_download_artifacts")
-    from mlflow.tracking import MlflowClient
-    import os
+    from mlflow.tracking import MlflowClient  # noqa: E402, F401
+    import os  # noqa: E402, F401
 
     client = MlflowClient(tracking_uri=tracking_uri)
     local_path = client.download_artifacts(run_id, path or "", dst_path)
@@ -836,7 +836,7 @@ def mlflow_list_registered_models(
         (summary_message, model_list)
     """
     logger.info("    * Tool: mlflow_list_registered_models")
-    from mlflow.tracking import MlflowClient
+    from mlflow.tracking import MlflowClient  # noqa: E402, F401
 
     client = MlflowClient(tracking_uri=tracking_uri, registry_uri=registry_uri)
     # The list_registered_models() call can be paginated; for simplicity, we just pass max_results
@@ -889,7 +889,7 @@ def mlflow_search_registered_models(
         (summary_message, model_dict_list)
     """
     logger.info("    * Tool: mlflow_search_registered_models")
-    from mlflow.tracking import MlflowClient
+    from mlflow.tracking import MlflowClient  # noqa: E402, F401
 
     client = MlflowClient(tracking_uri=tracking_uri, registry_uri=registry_uri)
     models = client.search_registered_models(
@@ -946,7 +946,7 @@ def mlflow_get_model_version_details(
         (summary_message, version_data_dict)
     """
     logger.info("    * Tool: mlflow_get_model_version_details")
-    from mlflow.tracking import MlflowClient
+    from mlflow.tracking import MlflowClient  # noqa: E402, F401
 
     client = MlflowClient(tracking_uri=tracking_uri, registry_uri=registry_uri)
     version_details = client.get_model_version(name, version)
@@ -974,8 +974,8 @@ def mlflow_get_run_details(
     Retrieve run info, params, metrics, tags, and a shallow artifact listing.
     """
     logger.info("    * Tool: mlflow_get_run_details")
-    from mlflow.tracking import MlflowClient
-    import pandas as pd
+    from mlflow.tracking import MlflowClient  # noqa: E402, F401
+    import pandas as pd  # noqa: E402, F401
 
     client = MlflowClient(tracking_uri=tracking_uri, registry_uri=registry_uri)
     run = client.get_run(run_id)
@@ -1019,7 +1019,7 @@ def mlflow_transition_model_version_stage(
     Transition a registered model version to a new stage (e.g., Staging, Production, Archived).
     """
     logger.info("    * Tool: mlflow_transition_model_version_stage")
-    from mlflow.tracking import MlflowClient
+    from mlflow.tracking import MlflowClient  # noqa: E402, F401
 
     client = MlflowClient(tracking_uri=tracking_uri, registry_uri=registry_uri)
     client.transition_model_version_stage(
@@ -1040,7 +1040,7 @@ def mlflow_tracking_info() -> tuple:
     Return current tracking URI, registry URI, and active run info (if any).
     """
     logger.info("    * Tool: mlflow_tracking_info")
-    import mlflow
+    import mlflow  # noqa: E402, F401
 
     tracking_uri = mlflow.get_tracking_uri()
     registry_uri = mlflow.get_registry_uri()

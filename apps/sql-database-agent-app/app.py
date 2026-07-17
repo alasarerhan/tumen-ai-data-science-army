@@ -11,7 +11,6 @@ from openai import OpenAI
 
 import streamlit as st
 import sqlalchemy as sql
-import pandas as pd
 import asyncio
 
 from langchain_community.chat_message_histories import StreamlitChatMessageHistory

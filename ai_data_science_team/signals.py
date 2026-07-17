@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """WorkflowSignal — non-blocking, optional user intervention channel (M22).
 
 Design philosophy
@@ -16,7 +18,7 @@ Typical usage
 -------------
 ::
 
-    from ai_data_science_team.signals import SignalStore, WorkflowSignal, SignalType
+    from ai_data_science_team.signals import SignalStore, WorkflowSignal, SignalType  # noqa: E402, F401
 
     store = SignalStore()
 
@@ -34,14 +36,12 @@ Typical usage
         ...
 """
 
-from __future__ import annotations
-
-import threading
-import uuid
-from dataclasses import dataclass, field
-from datetime import datetime, timezone
-from enum import Enum
-from typing import Any, Dict, List, Optional
+import threading  # noqa: E402, F401
+import uuid  # noqa: E402, F401
+from dataclasses import dataclass, field  # noqa: E402, F401
+from datetime import datetime, timezone  # noqa: E402, F401
+from enum import Enum  # noqa: E402, F401
+from typing import Any, Dict, List, Optional  # noqa: E402, F401
 
 
 DEFAULT_MAX_SIGNALS_PER_SESSION = 1000
@@ -300,7 +300,7 @@ def reset_signal_store() -> None:
     Usage in tests:
         @pytest.fixture(autouse=True)
         def reset_stores():
-            from ai_data_science_team.signals import reset_signal_store
+            from ai_data_science_team.signals import reset_signal_store  # noqa: E402, F401
             reset_signal_store()
             yield
             reset_signal_store()

@@ -32,34 +32,13 @@ TG2 only:
 from __future__ import annotations
 
 import os
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Any, Dict
 from unittest.mock import MagicMock
 
 import pandas as pd
 import pytest
 from langchain_core.messages import AIMessage
-
-# ---------------------------------------------------------------------------
-# Markers / skip helpers
-# ---------------------------------------------------------------------------
-
-pytestmark = pytest.mark.m21
-
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
-skip_no_key = pytest.mark.skipif(
-    not OPENAI_API_KEY,
-    reason="OPENAI_API_KEY is not set — skipping LLM-dependent test",
-)
-
-langchain_openai = pytest.importorskip(
-    "langchain_openai",
-    reason="langchain_openai is not installed",
-)
-
-# ---------------------------------------------------------------------------
-# Imports under test
-# ---------------------------------------------------------------------------
 
 from ai_data_science_team.multiagents.chat_session import (
     ChatMessage,
@@ -77,6 +56,23 @@ from ai_data_science_team.multiagents.chat_workspace import (
     ChatResponse,
     ChatWorkspace,
     _extract_response,
+)
+
+# ---------------------------------------------------------------------------
+# Markers / skip helpers
+# ---------------------------------------------------------------------------
+
+pytestmark = pytest.mark.m21
+
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
+skip_no_key = pytest.mark.skipif(
+    not OPENAI_API_KEY,
+    reason="OPENAI_API_KEY is not set — skipping LLM-dependent test",
+)
+
+langchain_openai = pytest.importorskip(
+    "langchain_openai",
+    reason="langchain_openai is not installed",
 )
 
 
@@ -582,15 +578,10 @@ class TestM21E2E:
     def test_all_m21_symbols_importable(self):
         """All public M21 symbols should be importable from multiagents."""
         from ai_data_science_team.multiagents import (
-            ChatMessage,
-            ChatResponse,
-            ChatSession,
-            ChatSessionStore,
             MongoChatSessionStore,
             ChatWorkspace,
             INTENT_MAP,
             IntentRouter,
-            RouterDecision,
         )
 
         assert ChatWorkspace is not None

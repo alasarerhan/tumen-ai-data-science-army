@@ -516,7 +516,7 @@ class ChatWorkspace:
     def _run_model_serving(
         self, message: str, df: Optional[pd.DataFrame], **kwargs
     ) -> Tuple[str, Optional[str], Optional[Dict]]:
-        from ai_data_science_team.agents.g3_model_serving_agent import ModelServingAgent  # noqa: E402, F401
+        from ai_data_science_team.agents.model_serving_agent import ModelServingAgent  # noqa: E402, F401
 
         agent = ModelServingAgent(model=self._model)
         agent.invoke_agent(user_instructions=message, **kwargs)

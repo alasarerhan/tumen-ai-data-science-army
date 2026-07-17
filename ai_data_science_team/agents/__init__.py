@@ -217,7 +217,7 @@ from ai_data_science_team.agents.features_agent import (
     FEATURE_SELECTION_TOOLS,  # noqa: F401
 )  # noqa: F401
 
-from ai_data_science_team.agents.g3_model_serving_agent import (
+from ai_data_science_team.agents.model_serving_agent import (
     ModelServingAgent,  # noqa: F401
     make_model_serving_agent,  # noqa: F401
     AGENT_NAME as G3_MODEL_SERVING_AGENT_AGENT_NAME,  # noqa: F401

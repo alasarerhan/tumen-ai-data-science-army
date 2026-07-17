@@ -25,7 +25,7 @@ from typing import Any, Dict
 
 from langchain_core.messages import AIMessage, ToolMessage
 
-from ai_data_science_team.agents.g3_model_serving_agent import (
+from ai_data_science_team.agents.model_serving_agent import (
     G3Agent,
     make_model_serving_agent,
     AGENT_NAME,
@@ -116,7 +116,7 @@ class TestModuleSurface:
     def test_all_individual_tools_exported(self):
         # Verify each @tool wrapper has the StructuredTool interface
         # (name, invoke, func attrs).
-        mod = sys.modules["ai_data_science_team.agents.g3_model_serving_agent"]
+        mod = sys.modules["ai_data_science_team.agents.model_serving_agent"]
         # ModelServingAgent tools use descriptive names (load_model, run_inference...),
         # not the _wrapped convention. Only verify the module has them.
         actual_tools = {t.name for t in SERVING_TOOLS}

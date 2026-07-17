@@ -72,6 +72,9 @@ def llm():
 
 def _make_real_team(llm):
     """Construct a supervisor_ds_team with real agent instances."""
+    from ai_data_science_team.multiagents.supervisor_ds_team import (
+        make_supervisor_ds_team,
+    )
     from ai_data_science_team.agents import (
         DataLoaderToolsAgent,
         DataWranglingAgent,

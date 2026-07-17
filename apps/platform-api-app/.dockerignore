@@ -1,0 +1,55 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# Environment
+.env
+.env.*
+*.env
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project-specific
+.pytest-tmp/
+.pytest-work/
+.tmp-tests/
+.pytest_cache/
+.chat_uploads/
+.artifacts/
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Node / frontend (not needed in API image)
+node_modules/
+frontend/
+
+# Docs / images (not needed in API image)
+docs/
+img/
+
+# Containers
+*.log
+outputs/

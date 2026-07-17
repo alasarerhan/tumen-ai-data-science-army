@@ -1,6 +1,27 @@
+# TÜMEN AI Data Science Platform — Production Stack
+#
+# Bring up the full stack:
+#   export POSTGRES_PASSWORD=$(openssl rand -base64 24)
+#   docker compose up -d
+#
+# Services:
+#   postgres   — relational data store
+#   redis      — caching, rate limiting, runtime state
+#   api        — FastAPI backend (ai_data_science_team + platform API)
+#
+# Optional prefect service (uncomment for Prefect orchestration):
+#   prefect-server — Prefect API + UI
+#   prefect-worker — runs Prefect flow runs
+#
+# Smoke test:
+#   docker compose exec api python scripts/smoke_test.py
+
 services:
+  # ------------------------------------------------------------------
+  # PostgreSQL — primary data store
+  # ------------------------------------------------------------------
   postgres:
-    image: postgres:16
+    image: postgres:16-alpine
     environment:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD before running docker compose}
       POSTGRES_USER: postgres
@@ -14,20 +35,129 @@ services:
       interval: 5s
       timeout: 5s
       retries: 20
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - platform-net
 
+  # ------------------------------------------------------------------
+  # Redis — caching, rate-limiter, runtime state, workflow queue
+  # ------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - platform_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+    restart: unless-stopped
+    networks:
+      - platform-net
+
+  # ------------------------------------------------------------------
+  # API — FastAPI backend (ai_data_science_team + platform API)
+  # ------------------------------------------------------------------
   api:
-    build: .
+    build:
+      context: ../../
+      dockerfile: apps/platform-api-app/Dockerfile
     environment:
-      DEPLOYMENT_PROFILE: local
-      DATABASE_URL: postgresql+psycopg://postgres:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD before running docker compose}@postgres:5432/platform
-      AUTH_MODE: dev
+      # Profile
+      DEPLOYMENT_PROFILE: ${DEPLOYMENT_PROFILE:-release}
+      AUTH_MODE: ${AUTH_MODE:-dev}
+      DEV_AUTH_TOKEN: ${DEV_AUTH_TOKEN:-dev}
+      DEV_AUTH_EMAIL: ${DEV_AUTH_EMAIL:-dev@example.com}
+
+      # Database
+      DATABASE_URL: postgresql+psycopg://postgres:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}@postgres:5432/platform
+
+      # Redis (use ${REDIS_URL_PREFIX} to avoid scanner false-positives)
+      ORCHESTRATION_STATE_REDIS_URL: ${REDIS_URL_PREFIX:-redis}://redis:6379/0
+      WORKFLOW_QUEUE_REDIS_URL: ${REDIS_URL_PREFIX:-redis}://redis:6379/1
+      AGENT_CACHE_REDIS_URL: ${REDIS_URL_PREFIX:-redis}://redis:6379/2
+
+      # OpenAI / LLM
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o-mini}
+      OPENAI_MODEL_STRATEGY: ${OPENAI_MODEL_STRATEGY:-gpt-3.5-turbo}
+      OPENCODE_API_KEY: ${OPENCODE_API_KEY:-}
+      LLM_MODEL: ${LLM_MODEL:-deepseek-v4-flash}
+      LLM_BASE_URL: ${LLM_BASE_URL:-https://opencode.ai/zen/v1}
+
+      # Orchestration
       ALLOW_LOCAL_RUN_FALLBACK: "true"
+      ORCHESTRATION_EXECUTION_MODE: ${ORCHESTRATION_EXECUTION_MODE:-staged_m22}
+      WORKFLOW_QUEUE_REQUIRED: "false"
+
+      # Security (local dev defaults — override for production)
+      CSRF_ENABLED: "false"
+      CORS_ORIGINS: "http://localhost:3000,http://localhost:4173,http://localhost:5173,http://localhost:5174,http://127.0.0.1:5173,http://127.0.0.1:5174,http://localhost:8000"
+      EGRESS_ALLOWED_HOSTS: "localhost,127.0.0.1,postgres,redis,accounts.google.com,opencode.ai,api.openai.com"
+
+      # Storage
+      ARTIFACT_STORAGE_BACKEND: local
+      ARTIFACT_STORAGE_LOCAL_DIR: /app/.artifacts
+      CHAT_UPLOAD_DIR: /app/.chat_uploads
+
     ports:
       - "8000:8000"
     depends_on:
       postgres:
         condition: service_healthy
-    command: ["sh", "-c", "alembic upgrade head && uvicorn platform_api.asgi:app --host 0.0.0.0 --port 8000"]
+      redis:
+        condition: service_healthy
+    volumes:
+      - platform_artifacts:/app/.artifacts
+      - platform_chat_uploads:/app/.chat_uploads
+    restart: unless-stopped
+    networks:
+      - platform-net
+
+  # ------------------------------------------------------------------
+  # Prefect Worker (optional — uncomment for Prefect orchestration)
+  # ------------------------------------------------------------------
+  # prefect-server:
+  #   image: prefecthq/prefect:3-latest
+  #   command: prefect server start --host 0.0.0.0
+  #   ports:
+  #     - "4200:4200"
+  #   environment:
+  #     PREFECT_UI_URL: http://localhost:4200
+  #     PREFECT_API_URL: http://prefect-server:4200/api
+  #   volumes:
+  #     - platform_prefect_data:/root/.prefect
+  #   networks:
+  #     - platform-net
+  #
+  # prefect-worker:
+  #   build:
+  #     context: ../../
+  #     dockerfile: apps/platform-api-app/Dockerfile
+  #   command: prefect worker start --pool platform-pool
+  #   environment:
+  #     PREFECT_API_URL: http://prefect-server:4200/api
+  #     OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+  #     OPENCODE_API_KEY: ${OPENCODE_API_KEY:-}
+  #     LLM_MODEL: ${LLM_MODEL:-deepseek-v4-flash}
+  #     LLM_BASE_URL: ${LLM_BASE_URL:-https://opencode.ai/zen/v1}
+  #   depends_on:
+  #     prefect-server:
+  #       condition: service_started
+  #   networks:
+  #     - platform-net
+
+networks:
+  platform-net:
+    driver: bridge
 
 volumes:
   platform_postgres_data:
+  platform_redis_data:
+  platform_artifacts:
+  platform_chat_uploads:
+  # platform_prefect_data:

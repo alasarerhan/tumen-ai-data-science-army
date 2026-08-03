@@ -88,6 +88,7 @@ markers = [
     "thread_safe: tests that verify thread safety of concurrent operations",
     "real: tests using real fixtures (CSV/SQL/JSON/PDF/XLSX under tests/fixtures/real/)",
     "ml: tests requiring ML stack (sklearn/xgboost/lightgbm/prophet/h2o/shap)",
+    "llm: gerçek LLM API testleri (OPENAI_API_KEY + OPENAI_MODEL gerekir; mock/stub yok)",
 ]
 
 [tool.ruff]

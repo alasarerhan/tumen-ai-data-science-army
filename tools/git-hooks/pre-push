@@ -193,8 +193,12 @@ blue "==> [3/4] lint (flake8, project config — informational only)"
 blue "==> [4/4] type check (mypy, non-fatal in this iteration)"
 (
     cd "$REPO_ROOT"
-    "$MYPY" "${PY_FILES[@]}" --ignore-missing-imports --no-incremental \
-        --follow-imports=silent 2>&1 | tail -40
+    # --no-incremental removed: rebuilt the whole cache every push and hung
+    # 20+ min on 3 files (pathological with pandas/langchain stubs).
+    # --follow-imports=skip: still type-checks the changed files' own bodies
+    # without descending into (huge) dependency stubs. Gate is informational.
+    "$MYPY" "${PY_FILES[@]}" --ignore-missing-imports \
+        --follow-imports=skip 2>&1 | tail -40
 ) || true
 green "    (mypy output above is informational only — does NOT block push)"
 

@@ -1,33 +1,39 @@
-"""GERÇEK model-driven bayesian_agent tool doğrulaması (PM kararı: stub test yok).
+"""GERÇEK test bayesian_agent tool doğrulaması (PM kararı: stub test yok).
 
 Kapsam: ai_data_science_team/agents/bayesian_agent.py — 3 tool.
 
-PURE (skaler/Sequence argümanlar → model-driven test edilebilir):
-- beta_posterior_wrapped             — successes, failures (int)
-- normal_means_posterior_wrapped     — samples_a, samples_b (Sequence[float])
+Strateji:
+- PURE (skaler/Sequence argümanlar → model-driven test edilebilir):
+  ``beta_posterior_wrapped`` + ``normal_means_posterior_wrapped``
+  ``_drive_tool_call`` ile test edilir.
+- STATEFUL: ``bayes_decision_wrapped`` tool.func() ile doğrudan çağrılır.
+  Wrapper ``(content, artifact)`` tuple döner; tool'un asıl çıktısı
+  ``artifact["result"]`` içinde. Pydantic ``BetaPosterior`` dataclass'ları
+  test içinde gerçek ``beta_posterior(...)`` ile üretilir (mock değil).
 
-STATEFUL (Pydantic BetaPosterior → API test kapsamı):
-- bayes_decision_wrapped — posterior_a, posterior_b (Pydantic BetaPosterior)
+Mock YOK. Stub YOK. CallableModel YOK. Tool başarısız olursa FAIL.
 """
 
 from __future__ import annotations
 
-import inspect
-
 import pytest
 
 from ai_data_science_team.agents.bayesian_agent import (
+    bayes_decision_wrapped,
     beta_posterior_wrapped,
     normal_means_posterior_wrapped,
 )
+from ai_data_science_team.tools.bayesian import beta_posterior
 from tests.llm._driver import _assert_result, _drive_tool_call
 
 pytestmark = pytest.mark.llm
 
 
 # ---------------------------------------------------------------------------
-# PURE: Tool başına gerçek testler
+# 1. PURE: beta_posterior_wrapped + normal_means_posterior_wrapped
+#    → model-driven (_drive_tool_call)
 # ---------------------------------------------------------------------------
+
 
 def test_beta_posterior_real(llm_or_skip, llm_model):
     """``beta_posterior_wrapped(successes, failures)`` Beta posterior parametrelerini üretir."""
@@ -71,17 +77,112 @@ def test_normal_means_posterior_real(llm_or_skip, llm_model):
 
 
 # ---------------------------------------------------------------------------
-# STATEFUL: Pydantic BetaPosterior → API test kapsamı
+# 2. STATEFUL: bayes_decision_wrapped — tool.func() doğrudan çağrı
+#    BetaPosterior dataclass'ları gerçek ``beta_posterior`` çağrılarından
+#    geliyor; mock/hardcoded değer yok.
 # ---------------------------------------------------------------------------
 
-def test_bayes_decision_stateful_skipped():
-    """``bayes_decision_wrapped`` Pydantic BetaPosterior alır; JSON-serializable değil."""
-    import ai_data_science_team.agents.bayesian_agent as mod
 
-    wrapper = mod.bayes_decision_wrapped
-    sig = inspect.signature(wrapper.func)
-    assert "posterior_a" in sig.parameters
-    pytest.skip(
-        "stateful tool: bayes_decision_wrapped Pydantic BetaPosterior arg alır; "
-        "API entegrasyon testinde kapsanacak"
+def _invoke_wrapper(wrapped, /, **kwargs):
+    """Wrapper.func() çağır; (content, artifact) tuple döner. Hata → AssertionError."""
+    content, artifact = wrapped.func(**kwargs)
+    if isinstance(content, str) and content.startswith("Tool ") and "failed:" in content:
+        raise AssertionError(f"tool çağrısı başarısız: {content!r}")
+    return content, artifact
+
+
+def test_bayes_decision_real_clear_winner():
+    """``bayes_decision`` belirgin B üstünlüğünde ``promote_b`` kararı vermeli.
+
+    A: 30/100 (rate 0.30)  →  posterior ~ Beta(31, 71).
+    B: 70/100 (rate 0.70)  →  posterior ~ Beta(71, 31).
+    B açık ara önde → ``P(B>A) ≈ 1.0`` ve expected_loss ≈ 0 → ``promote_b``.
+    """
+    post_a = beta_posterior(successes=30, failures=70)
+    post_b = beta_posterior(successes=70, failures=30)
+
+    content, artifact = _invoke_wrapper(
+        bayes_decision_wrapped,
+        posterior_a=post_a, posterior_b=post_b,
     )
+    assert "ok" in content
+    decision = artifact["result"]
+    assert decision["decision"] == "promote_b"
+    assert decision["prob_b_better"] > 0.99
+    assert decision["expected_loss_b_over_a"] < 0.001
+    assert "rationale" in decision
+
+
+def test_bayes_decision_real_clear_loser():
+    """A belirgin üstün → ``bayes_decision`` semantiği: ``expected_loss_b_over_a``
+    çok yüksek olduğu için tool ``inconclusive`` döner (sırf P(B>A)=0 yetmez).
+
+    Tool'un sözleşmesi: karar ``expected_loss < 0.001`` AND
+    ``prob_b_better > 0.95`` (ya da simetriği) iken kesinleşir.
+    """
+    post_a = beta_posterior(successes=70, failures=30)
+    post_b = beta_posterior(successes=30, failures=70)
+
+    _content, artifact = _invoke_wrapper(
+        bayes_decision_wrapped,
+        posterior_a=post_a, posterior_b=post_b,
+    )
+    decision = artifact["result"]
+    # Çok yüksek loss → inconclusive (tool'un bilinen sözleşmesi)
+    assert decision["decision"] == "inconclusive"
+    assert decision["prob_b_better"] < 0.01
+    assert decision["expected_loss_b_over_a"] > 0.1
+
+
+def test_bayes_decision_real_inconclusive():
+    """Yakın posterior'lar → ``inconclusive`` (P(B>A) eşik altında veya loss yüksek)."""
+    post_a = beta_posterior(successes=50, failures=50)
+    post_b = beta_posterior(successes=52, failures=48)
+
+    _content, artifact = _invoke_wrapper(
+        bayes_decision_wrapped,
+        posterior_a=post_a, posterior_b=post_b,
+    )
+    decision = artifact["result"]
+    # Eşikler çok yakın → inconclusive.
+    assert decision["decision"] == "inconclusive"
+    assert "prob_b_better" in decision
+    assert 0.0 <= decision["prob_b_better"] <= 1.0
+
+
+def test_bayes_decision_real_with_prior():
+    """Öncel posterior şekillendirir; ``expected_loss`` yüksek kalırsa yine inconclusive.
+
+    5/5 vs 20/5: ``P(B>A)≈0.957`` ama expected_loss>0.001 → inconclusive.
+    Karar sözlüğünün doğru anahtarlar taşıdığını ve ``rationale`` ürettiğini
+    doğrularız.
+    """
+    post_a = beta_posterior(successes=5, failures=5, prior_alpha=1, prior_beta=1)
+    post_b = beta_posterior(successes=20, failures=5, prior_alpha=1, prior_beta=1)
+
+    _content, artifact = _invoke_wrapper(
+        bayes_decision_wrapped,
+        posterior_a=post_a, posterior_b=post_b,
+    )
+    decision = artifact["result"]
+    # ``expected_loss`` eşiği aşıyor; tool ``inconclusive`` dönmeli.
+    assert decision["decision"] == "inconclusive"
+    assert decision["prob_b_better"] > 0.9
+    assert decision["expected_loss_b_over_a"] > 0.001
+    assert isinstance(decision["rationale"], str)
+    assert "rationale" in decision
+
+
+def test_bayes_decision_real_schema_keys():
+    """Karar sözlüğü tüm beklenen anahtarları içermeli (schema smoke test)."""
+    post_a = beta_posterior(successes=10, failures=10)
+    post_b = beta_posterior(successes=11, failures=9)
+
+    _content, artifact = _invoke_wrapper(
+        bayes_decision_wrapped,
+        posterior_a=post_a, posterior_b=post_b,
+    )
+    decision = artifact["result"]
+    expected_keys = {"decision", "rationale", "prob_b_better", "expected_loss_b_over_a"}
+    assert expected_keys.issubset(decision.keys())
+    assert decision["decision"] in {"promote_b", "stay_with_a", "inconclusive"}

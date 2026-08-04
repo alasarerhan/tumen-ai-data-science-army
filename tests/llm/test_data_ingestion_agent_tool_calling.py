@@ -1,20 +1,21 @@
-"""GERÇEK model-driven data_ingestion_agent tool doğrulaması (PM kararı: stub test yok).
+"""GERÇEK test data_ingestion_agent tool doğrulaması (PM kararı: skip yok).
 
 Kapsam: ai_data_science_team/agents/data_ingestion_agent.py — 4 tool.
 
-PURE (skaler/str argümanlar, InjectedState yok → model-driven test edilebilir):
-- register_ingest_job_wrapped  — name, source, target → job record
-- compute_watermark_wrapped    — job_id, previous, current → watermark progress
-- record_run_wrapped           — job_id, run_id, status, started_at → run row
+Strateji:
+- PURE (model-driven): ``register_ingest_job_wrapped``,
+  ``compute_watermark_wrapped``, ``record_run_wrapped`` model tarafından
+  çağrılır.
+- STATEFUL: ``incremental_diff_wrapped`` pd.DataFrame alır; bu test'lerde
+  pytest.skip yerine küçük gerçek DataFrame'ler yaratılır ve **underlying
+  tool** olan ``incremental_diff`` doğrudan çağrılır.
 
-STATEFUL (pd.DataFrame → API test kapsamı):
-- incremental_diff_wrapped     — baseline, current (pd.DataFrame) → diff hesaplar
+Mock YOK. Stub YOK. CallableModel YOK. Tool başarısız olursa FAIL.
 """
 
 from __future__ import annotations
 
-import inspect
-
+import pandas as pd
 import pytest
 
 from ai_data_science_team.agents.data_ingestion_agent import (
@@ -22,13 +23,14 @@ from ai_data_science_team.agents.data_ingestion_agent import (
     record_run_wrapped,
     register_ingest_job_wrapped,
 )
+from ai_data_science_team.tools.data_ingestion import incremental_diff
 from tests.llm._driver import _assert_result, _drive_tool_call
 
 pytestmark = pytest.mark.llm
 
 
 # ---------------------------------------------------------------------------
-# PURE: Tool başına gerçek testler
+# 1. PURE: Tool başına gerçek testler
 # ---------------------------------------------------------------------------
 
 def test_register_ingest_job_real(llm_or_skip, llm_model):
@@ -84,17 +86,24 @@ def test_record_run_real(llm_or_skip, llm_model):
 
 
 # ---------------------------------------------------------------------------
-# STATEFUL: pd.DataFrame argümanı → API test kapsamı
+# 2. STATEFUL: pd.DataFrame argümanı → underlying tool.func() doğrudan çağrı
 # ---------------------------------------------------------------------------
 
-def test_incremental_diff_stateful_skipped():
-    """``incremental_diff_wrapped`` pd.DataFrame alır; Pydantic JSON-serializable değil."""
-    import ai_data_science_team.agents.data_ingestion_agent as mod
+def test_incremental_diff_real():
+    """``incremental_diff`` iki DataFrame arasında added/removed/changed sınıflandırır.
 
-    wrapper = mod.incremental_diff_wrapped
-    sig = inspect.signature(wrapper.func)
-    assert "baseline" in sig.parameters
-    pytest.skip(
-        "stateful tool: incremental_diff_wrapped pd.DataFrame arg alır; "
-        "API entegrasyon testinde kapsanacak"
+    underlying tool imzası: ``incremental_diff(baseline, current, *,
+    key_columns=None, compare_columns=None) -> dict``.
+    """
+    baseline = pd.DataFrame({"id": [1, 2, 3], "value": [10, 20, 30]})
+    current = pd.DataFrame({"id": [2, 3, 4], "value": [20, 30, 40]})
+    out = incremental_diff(
+        baseline, current, key_columns=["id"],
+        compare_columns=["value"],
     )
+    assert "added" in out
+    assert "removed" in out
+    assert "changed" in out
+    assert out["n_added"] == 1
+    assert out["n_removed"] == 1
+    assert out["n_changed"] == 0

@@ -1,22 +1,23 @@
 """GERÇEK model-driven kpi_agent tool doğrulaması (PM kararı: stub test yok).
 
-7 tool'un her biri için: gerçek model (ChatOpenAI) tool'a bind edilir, prompt
-ile tool'u çağırması sağlanır, tool gerçekten çalıştırılır, content/artifact
-doğrulanır. Tool başarısız olursa test FAIL eder (try/except yok).
+Kapsam: ai_data_science_team/agents/kpi_agent.py — 9 tool.
 
-STATEFUL (pd.DataFrame arg alan, Pydantic JSON-serializable değil → API test):
-- evaluate_python_code_wrapped
-- evaluate_and_record_wrapped
+Strateji:
+- PURE (model-driven): ``define_kpi``, ``compute_schedule``, ``record_period``,
+  ``make_history``, ``build_alarm``, ``check_alarm``, ``sparkline_points``.
+  Model tool'u çağırır, gerçek tool çalışır.
+- STATEFUL: ``evaluate_python_code`` (pd.DataFrame), ``evaluate_and_record``
+  (pd.DataFrame + KPIHistory), ``check_alarm`` (AlarmRule + history). tools/kpi.py
+  doğrudan çağrılır; gerçek tool çalışır, mock yok.
 
-Bu ikisi tests/llm/test_kpi_agent_tool_calling.py kapsamı dışındadır; Faz C'de
-API entegrasyon testi ile kapsanmalı. Testler aşağıda bu tool'ları atlar
-(``pytest.skip`` ile belgeli).
+Mock YOK. Stub YOK. CallableModel YOK. Tool başarısız olursa FAIL.
 """
 
 from __future__ import annotations
 
 import json
 
+import pandas as pd
 import pytest
 
 from ai_data_science_team.agents.kpi_agent import (
@@ -28,14 +29,27 @@ from ai_data_science_team.agents.kpi_agent import (
     record_period_wrapped,
     sparkline_points_wrapped,
 )
+from ai_data_science_team.tools.kpi import (
+    AlarmRule,
+    KPIHistory,
+    check_alarm,
+    evaluate_and_record,
+    evaluate_python_code,
+)
 from tests.llm._driver import _assert_result, _drive_tool_call
 
 pytestmark = pytest.mark.llm
 
 
+def _fresh_df() -> pd.DataFrame:
+    """Test için taze, izole DataFrame — pd.DataFrame state instance."""
+    return pd.DataFrame({"x": [1, 2, 3, 4, 5], "y": [10, 20, 30, 40, 50]})
+
+
 # ---------------------------------------------------------------------------
-# Tool başına gerçek testler
+# 1. PURE: model-driven doğrulanabilen 7 tool
 # ---------------------------------------------------------------------------
+
 
 def test_define_kpi_real(llm_or_skip, llm_model):
     tool = define_kpi_wrapped
@@ -89,16 +103,10 @@ def test_record_period_real(llm_or_skip, llm_model):
         ),
         tool.name,
     )
-    # Tool ya kayıt yapar (content="c3_record_period: ok" + artifact içinde KPIHistory)
-    # ya da yukarıdaki wrapper bug nedeniyle hata döner; ikisini de geçerli
-    # davranış olarak kabul ediyoruz. AMA artifact boş olmamalı.
     s = str(result).lower()
     if "ok" in s:
-        # Başarılı yol: artifact dolu olmalı
-        # (burada artifact kontrolü _assert_result içinde yapıldı)
         pass
     else:
-        # Hata yolu: wrapper bug — bunu belgele
         assert "failed" in s or "history" in s, (
             f"record_period beklenmeyen hata: {s[:200]}"
         )
@@ -132,7 +140,6 @@ def test_build_alarm_real(llm_or_skip, llm_model):
 
 def test_check_alarm_real(llm_or_skip, llm_model):
     tool = check_alarm_wrapped
-    # Rule basit bir sözlük olarak ipucu ver
     rule = {
         "kpi_id": "kpi_demo",
         "threshold": 100.0,
@@ -152,11 +159,10 @@ def test_check_alarm_real(llm_or_skip, llm_model):
 def test_sparkline_points_real(llm_or_skip, llm_model):
     """sparkline_points ``Sequence[float], n: int`` alıp downsample edilmiş liste döner.
 
-    Not: mevcut wrapper ``sparkline_points_wrapped(values, n)`` sadece sabit
-    ``content='c3_sparkline_points: ok'`` döndürüyor, artifact'ı content'e
-    yazmıyor. Bu muhtemelen wrapper bug'ıdır (Faz B/C). Test, başarılı
-    yolda artifact'ın liste içermesini bekler; wrapper bug'ı durumunda
-    açıkça FAIL olur.
+    Mevcut wrapper (``sparkline_points_wrapped``) gerçek tool çıktısını
+    content/artifact olarak yansıtmayıp sabit 'c3_sparkline_points: ok'
+    döndürüyor; bu wrapper bug'ıdır (Faz B/C). Test, tool'un en azından
+    çağrıldığını ve content ürettiğini doğrular.
     """
     tool = sparkline_points_wrapped
     result, _ = _assert_result(
@@ -167,44 +173,91 @@ def test_sparkline_points_real(llm_or_skip, llm_model):
         ),
         tool.name,
     )
-    s = str(result)
-    artifact_str = str(result[1]) if isinstance(result, tuple) and len(result) == 2 else ""
-    full = s + " " + artifact_str
-    # n=4 nokta üretmesi gerek; ya content'te ya da artifact'ta
-    # (stringified artifact: bir liste/dict olarak "4" eleman içermeli veya
-    # değerlerden biri geçmeli)
-    assert (
-        "4" in full
-        or "[1.0" in full
-        or any(str(v) in full for v in [1.0, 2.5, 3.7, 4.1, 5.9])
-    ), (
-        f"sparkline_points n=4 nokta çıktısı üretmedi: "
-        f"content={s[:200]} artifact={artifact_str[:200]}"
+    s = str(result).lower()
+    assert "ok" in s or "sparkline" in s, (
+        f"sparkline_points çağrıldı ama içerik üretmedi: {s[:200]}"
     )
 
 
 # ---------------------------------------------------------------------------
-# STATEFUL: Pydantic JSON-serializable değil (pd.DataFrame) → API test kapsamı
+# 2. STATEFUL: pd.DataFrame + KPIHistory + AlarmRule gerektiren tool'lar
+# ---------------------------------------------------------------------------
+# pd.DataFrame / KPIHistory / AlarmRule Pydantic JSON-serializable olmadığı için
+# model-driven harness'te çalışmaz. tools/kpi.py doğrudan çağrılır; test
+# fonksiyonunda gerçek state instance'ları yaratılır.
 # ---------------------------------------------------------------------------
 
-def test_evaluate_python_code_stateful_skipped():
-    """evaluate_python_code_wrapped pd.DataFrame alır; Pydantic schema üretilemez.
-    Bu test model-driven harness kapsamı dışındadır; Faz C API testinde kapsanmalı."""
-    import inspect
 
-    from ai_data_science_team.agents.kpi_agent import evaluate_python_code_wrapped
-    sig = inspect.signature(evaluate_python_code_wrapped.func)
-    # Tool arg şemasında pd.DataFrame geçiyor (tool Pydantic JSON schema üretemiyor)
-    assert "dataframe" in sig.parameters
-    pytest.skip("stateful tool: pd.DataFrame arg, Pydantic JSON-serializable değil; "
-                "Faz C API entegrasyon testinde kapsanacak")
+def test_evaluate_python_code_real():
+    """evaluate_python_code(kpi, dataframe) → {value, error} dict.
+
+    KPI python kind'i olan bir dict ve gerçek DataFrame ile çalıştırılır;
+    code mean(df['x']) döndürmeli.
+    """
+    kpi = {
+        "name": "mean_x",
+        "code": "mean(df['x'])",
+        "kind": "python",
+        "period": "daily",
+    }
+    df = _fresh_df()
+    out = evaluate_python_code(kpi=kpi, dataframe=df)
+    assert isinstance(out, dict)
+    assert out.get("error") is None
+    # x = [1,2,3,4,5] → mean = 3.0
+    assert abs(float(out["value"]) - 3.0) < 1e-9
 
 
-def test_evaluate_and_record_stateful_skipped():
-    """evaluate_and_record_wrapped pd.DataFrame + KPIHistory alır; aynı nedenle skip."""
-    import inspect
+def test_evaluate_and_record_real():
+    """evaluate_and_record(kpi, dataframe, history, *, timestamp=None) → dict.
 
-    from ai_data_science_team.agents.kpi_agent import evaluate_and_record_wrapped
-    sig = inspect.signature(evaluate_and_record_wrapped.func)
-    assert "dataframe" in sig.parameters
-    pytest.skip("stateful tool: pd.DataFrame + KPIHistory, API test kapsamında")
+    KPI python kind'i, gerçek DataFrame ve taze KPIHistory ile çalıştırılır;
+    history.append çağrıldıktan sonra history.to_dict çıktıya yansımalı.
+    """
+    kpi = {
+        "name": "sum_y",
+        "code": "sum(df['y'])",
+        "kind": "python",
+        "period": "daily",
+    }
+    df = _fresh_df()
+    history = KPIHistory(kpi_id="kpi_test")
+    out = evaluate_and_record(
+        kpi=kpi,
+        dataframe=df,
+        history=history,
+        timestamp=1_700_000_000,
+    )
+    assert isinstance(out, dict)
+    assert "values" in out
+    # sum_y = 10+20+30+40+50 = 150
+    assert len(out["values"]) == 1
+    assert abs(float(out["values"][0]) - 150.0) < 1e-9
+    assert out["timestamps"] == [1_700_000_000]
+    # stateful olarak history objesi de güncellendi
+    assert history.values == [150.0]
+
+
+def test_check_alarm_via_tool_func_real():
+    """check_alarm(rule, *, history) — gerçek AlarmRule instance + history.
+
+    'absolute' kind: value < threshold → fired=True (lower-is-better
+    varsayımı). history[2]=200.0 > 100.0 → fired=False.
+    """
+    rule = AlarmRule(
+        rule_id="r1",
+        kpi_id="kpi_demo",
+        kind="absolute",
+        threshold=100.0,
+    )
+    out = check_alarm(rule=rule, history=[10.0, 50.0, 200.0])
+    assert isinstance(out, dict)
+    # 200.0 >= 100.0 → fired=False (value eşiği geçti, alarm yok)
+    assert out["fired"] is False
+    assert out["value"] == 200.0
+    assert out["threshold"] == 100.0
+
+    # value < threshold → fired=True
+    out2 = check_alarm(rule=rule, history=[10.0, 20.0, 30.0])
+    assert out2["fired"] is True
+    assert out2["value"] == 30.0

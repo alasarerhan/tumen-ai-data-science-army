@@ -128,6 +128,9 @@ def visualize_missing(
     # Create the DataFrame and sample if n_sample is provided.
     df = pd.DataFrame(data_raw)
     if n_sample is not None:
+        # Clamp to population size — missingno internally also samples, and
+        # df.sample(n=k, replace=False) raises when k > len(df).
+        n_sample = max(1, min(int(n_sample), len(df)))
         df = df.sample(n=n_sample, random_state=42)
 
     # Dictionary to store the base64 encoded images for each plot.
@@ -334,6 +337,16 @@ def generate_sweetviz_report(
 
     # Convert injected raw data to a DataFrame.
     df = pd.DataFrame(data_raw)
+
+    # Sweetviz (2.3.x) internally calls pd.melt(value_name="value"); any user
+    # column literally named "value" (e.g. our sample fixture) collides and
+    # raises ValueError. Rename the literal to avoid the collision.
+    rename_map = {c: f"col_{i}" for i, c in enumerate(df.columns) if c == "value"}
+    if rename_map:
+        df = df.rename(columns=rename_map)
+        if target == "value":
+            target = "col_0"
+        logger.info("    * Renamed 'value' columns to avoid Sweetviz pd.melt collision")
 
     # If no directory is specified, use a temporary directory.
     if not report_directory:

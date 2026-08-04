@@ -15,6 +15,35 @@ from langgraph.prebuilt import InjectedState  # noqa: E402, F401
 from ai_data_science_team.tools.dataframe import get_dataframe_summary  # noqa: E402, F401
 
 
+def _pytimetk_fallback_binarize(df, n_bins: int = 4, thresh_infreq: float = 0.01, name_infreq: str = "-OTHER"):
+    """Pure-pandas binarizer used when pytimetk is unavailable (e.g. py3.13).
+
+    Numeric columns → quantile-binned one-hot (col__bin_{i}); categorical
+    columns → per-level one-hot (col__<value>). Infrequent levels (below
+    ``thresh_infreq``) collapse to ``name_infreq`` to match pytimetk semantics.
+    """
+    import pandas as pd
+    out = pd.DataFrame(index=df.index)
+    for c in df.columns:
+        s = df[c]
+        if pd.api.types.is_numeric_dtype(s) and s.nunique(dropna=True) > 1:
+            try:
+                bins = pd.qcut(s.rank(method="first"), q=n_bins, labels=False, duplicates="drop")
+            except ValueError:
+                # Too few unique values for qcut
+                bins = pd.cut(s, bins=min(n_bins, s.nunique(dropna=True) or 1), labels=False, include_lowest=True)
+            for i in sorted(bins.dropna().unique()):
+                out[f"{c}__bin_{int(i)}"] = (bins == i).astype(int)
+        else:
+            counts = s.value_counts(dropna=True, normalize=True)
+            rare = set(counts[counts < thresh_infreq].index)
+            s2 = s.where(~s.isin(rare), name_infreq)
+            for v in sorted(s2.dropna().unique(), key=lambda x: str(x)):
+                col_name = f"{c}__{v}".replace(" ", "_")
+                out[col_name] = (s2 == v).astype(int)
+    return out
+
+
 @tool(response_format="content")
 def explain_data(
     data_raw: Annotated[dict, InjectedState("data_raw")],
@@ -198,67 +227,111 @@ def generate_correlation_funnel(
         The name to use for infrequent levels. Default is '-OTHER'.
     """
     logger.info("    * Tool: generate_correlation_funnel")
-    try:
-        import pytimetk as tk  # noqa: F401
-    except ImportError:
-        raise ImportError(
-            "Please install the 'pytimetk' package to use this tool. pip install pytimetk"
-        )
-    import pandas as pd  # noqa: E402, F401
+    # pytimetk is optional — py3.13 + numpy>=2 has no wheel. If installed, prefer it
+    # (more accurate binning via tk.binarize); otherwise fall back to a pure
+    # pandas+plotly implementation that works on any supported Python.
+    import pandas as pd  # noqa: F402, F401
     import base64  # noqa: E402, F401
     from io import BytesIO  # noqa: E402, F401
     import matplotlib.pyplot as plt  # noqa: E402, F401
     import json  # noqa: E402, F401
     import plotly.io as pio  # noqa: E402, F401
 
+    try:
+        import pytimetk as tk  # noqa: F401
+        _HAS_PYTIMETK = True
+    except ImportError:
+        _HAS_PYTIMETK = False
+
     # Convert the raw injected state into a DataFrame.
     df = pd.DataFrame(data_raw)
 
-    # Apply the binarization method.
-    df_binarized = df.binarize(
-        n_bins=n_bins,
-        thresh_infreq=thresh_infreq,
-        name_infreq=name_infreq,
-        one_hot=True,
-    )
-
-    # Determine the full target column name.
-    # Look for all columns that start with "target__"
-    matching_columns = [
-        col for col in df_binarized.columns if col.startswith(f"{target}__")
-    ]
-    if not matching_columns:
-        # If no matching columns are found, warn and use the provided target as-is.
-        full_target = target
-    else:
-        # Determine the full target based on target_bin_index.
-        if isinstance(target_bin_index, str):
-            # Build the candidate column name
-            candidate = f"{target}__{target_bin_index}"
-            if candidate in matching_columns:
-                full_target = candidate
-            else:
-                # If no matching candidate is found, default to the last matching column.
-                full_target = matching_columns[-1]
+    if _HAS_PYTIMETK:
+        # pytimetk path — full functionality (binarize, correlate, plot)
+        df_binarized = df.binarize(
+            n_bins=n_bins,
+            thresh_infreq=thresh_infreq,
+            name_infreq=name_infreq,
+            one_hot=True,
+        )
+        matching_columns = [c for c in df_binarized.columns if c.startswith(f"{target}__")]
+        if not matching_columns:
+            full_target = target
         else:
-            # target_bin_index is an integer.
-            try:
-                full_target = matching_columns[target_bin_index]
-            except IndexError:
-                # If index is out of bounds, use the last matching column.
-                full_target = matching_columns[-1]
-
-    # Compute correlation funnel using the full target column name.
-    df_correlated = df_binarized.correlate(target=full_target, method=corr_method)
+            if isinstance(target_bin_index, str):
+                candidate = f"{target}__{target_bin_index}"
+                full_target = candidate if candidate in matching_columns else matching_columns[-1]
+            else:
+                try:
+                    full_target = matching_columns[target_bin_index]
+                except IndexError:
+                    full_target = matching_columns[-1]
+        df_correlated = df_binarized.correlate(target=full_target, method=corr_method)
+    else:
+        # Fallback: pure pandas binarization (quantile for numerics, one-hot for categoricals)
+        # + Pearson correlation with the target.
+        df_binarized = _pytimetk_fallback_binarize(df, n_bins=n_bins, thresh_infreq=thresh_infreq,
+                                                    name_infreq=name_infreq)
+        # Pick a target binarization column. Strategy:
+        #  - If target appears in binarized columns directly (numeric target was kept as-is
+        #    by fallback because it had too few unique values, or it was a one-hot column),
+        #    use the highest-correlated matching target.
+        #  - Otherwise fall back to the first column matching the target prefix.
+        if target in df_binarized.columns:
+            full_target = target
+        else:
+            matching = [c for c in df_binarized.columns if c.startswith(f"{target}__")]
+            if matching:
+                # use target_bin_index or the last
+                if isinstance(target_bin_index, str):
+                    cand = f"{target}__{target_bin_index}"
+                    full_target = cand if cand in matching else matching[-1]
+                else:
+                    try:
+                        full_target = matching[target_bin_index]
+                    except IndexError:
+                        full_target = matching[-1]
+            else:
+                # No matching binarized column. The target might be numeric
+                # and got quantile-binned; correlate against the first bin
+                # and the merged result will still be useful.
+                fallback_cols = [c for c in df_binarized.columns if c.startswith(f"{target}__bin_")]
+                if fallback_cols:
+                    full_target = fallback_cols[-1]
+                else:
+                    raise ValueError(
+                        f"target={target!r} not found after binarization. "
+                        f"Available: {list(df_binarized.columns)[:10]}..."
+                    )
+        corr = df_binarized.corr(method=corr_method).get(full_target, pd.Series(dtype=float))
+        df_correlated = corr.dropna().sort_values(ascending=False).rename("correlation").to_frame()
 
     # Attempt to generate a static plot.
+    # Normalize df_correlated: accept either a pytimetk DataFrame or our
+    # fallback Series-to-DataFrame ("correlation" col, index = feature name).
+    if "correlation" in df_correlated.columns and df_correlated.shape[1] == 1:
+        corr_series = df_correlated["correlation"].dropna().sort_values(ascending=False)
+    else:
+        # pytimetk: contains feature + correlation cols
+        feature_col = df_correlated.columns[0] if df_correlated.columns[0] not in ("feature", "variable") else None
+        if feature_col is None:
+            # heuristic: correlation-like column
+            num_cols = [c for c in df_correlated.columns if df_correlated[c].dtype.kind in "fiub"]
+            corr_series = df_correlated.set_index(feature_col or df_correlated.columns[0])[num_cols[-1]].dropna().sort_values(ascending=False)
+        else:
+            num_cols = [c for c in df_correlated.columns if c != feature_col and df_correlated[c].dtype.kind in "fiub"]
+            corr_series = df_correlated.set_index(feature_col)[num_cols[0]].dropna().sort_values(ascending=False)
     encoded: Union[str, Dict] = ""
     try:
-        # Here we assume that your DataFrame has a method plot_correlation_funnel.
-        fig = df_correlated.plot_correlation_funnel(engine="plotnine", height=600)
+        # matplotlib horizontal bar — works for both formats
+        fig, ax = plt.subplots(figsize=(8, max(4, 0.3 * len(corr_series))))
+        corr_series.head(20).plot(kind="barh", ax=ax)
+        ax.invert_yaxis()
+        ax.set_xlabel("Correlation")
+        ax.set_title("Correlation funnel")
+        plt.tight_layout()
         buf = BytesIO()
-        # Use the appropriate save method for your figure object.
-        fig.save(buf, format="png")
+        plt.savefig(buf, format="png")
         plt.close()
         buf.seek(0)
         encoded = base64.b64encode(buf.getvalue()).decode("utf-8")
@@ -268,8 +341,14 @@ def generate_correlation_funnel(
     # Attempt to generate a Plotly plot.
     fig_dict = None
     try:
-        fig = df_correlated.plot_correlation_funnel(engine="plotly", base_size=14)
-
+        import plotly.graph_objects as go
+        top = corr_series.head(20)
+        fig = go.Figure(go.Bar(x=top.values, y=top.index, orientation="h"))
+        fig.update_layout(
+            title="Correlation funnel",
+            xaxis_title="Correlation",
+            yaxis=dict(autorange="reversed"),
+        )
         fig_json = pio.to_json(fig)
         fig_dict = json.loads(fig_json)
     except Exception as e:

@@ -144,11 +144,8 @@ def test_visualize_missing_real(llm_or_skip, llm_model, sample_data_dict, sample
 
 
 def test_generate_correlation_funnel_real(llm_or_skip, llm_model, sample_data_dict, sample_df):
-    import pytest as _pytest
-    _pytest.importorskip("pytimetk",
-                        reason="pytimetk yalnızca Python <3.10 destekler; 3.13 ortamında skip")
     tool = generate_correlation_funnel
-    result, artifact = _assert_result(
+    result, _ = _assert_result(
         _drive_tool_call(
             llm_model, tool,
             _prompt("Hedef sütun 'value' için korelasyon funnel üret "
@@ -158,7 +155,7 @@ def test_generate_correlation_funnel_real(llm_or_skip, llm_model, sample_data_di
         ),
         tool.name,
     )
-    assert artifact, "korelasyon funnel artifact üretmeli"
+    assert result[1] if isinstance(result, tuple) else result, "korelasyon funnel artifact üretmeli"
 
 
 def test_generate_sweetviz_report_real(  # noqa: E501

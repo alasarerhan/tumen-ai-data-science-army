@@ -7,9 +7,9 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from platform_api.authz.policy import can_admin_tenant, can_admin_workspace
-from platform_api.core.service_errors import ForbiddenError
-from platform_api.db.models import TenantMembership, Workspace, WorkspaceMembership, User
 from platform_api.control_plane.schemas import PlatformResourceDescriptor
+from platform_api.core.service_errors import ForbiddenError
+from platform_api.db.models import TenantMembership, User, Workspace, WorkspaceMembership
 
 
 @dataclass(frozen=True)

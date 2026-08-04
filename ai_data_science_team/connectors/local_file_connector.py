@@ -65,10 +65,7 @@ class LocalFileConnector(DataConnector):
 
     @property
     def description(self) -> str:
-        return (
-            f"LocalFileConnector reading from {self._base_dir} "
-            f"(recursive={self._recursive})"
-        )
+        return f"LocalFileConnector reading from {self._base_dir} (recursive={self._recursive})"
 
     # ------------------------------------------------------------------
     # Lifecycle
@@ -76,9 +73,7 @@ class LocalFileConnector(DataConnector):
 
     def connect(self, **_: Any) -> None:
         if not self._base_dir.is_dir():
-            raise ConnectionError(
-                f"LocalFileConnector: base_dir does not exist: {self._base_dir}"
-            )
+            raise ConnectionError(f"LocalFileConnector: base_dir does not exist: {self._base_dir}")
         self._connected = True
 
     def close(self) -> None:

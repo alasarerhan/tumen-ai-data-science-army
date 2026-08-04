@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-
 import logging
-from typing import Sequence, Optional, Dict, Any, List
+from typing import Any, Dict, List, Optional, Sequence
 
 from langchain_core.messages import BaseMessage
 
@@ -12,12 +11,12 @@ logger = logging.getLogger(__name__)
 def get_tool_call_names(messages: Sequence[BaseMessage]) -> List[str]:
     """
     Extract tool call names from a list of LangChain messages.
-    
+
     Parameters:
     ----------
     messages : Sequence[BaseMessage]
         A list of LangChain messages.
-        
+
     Returns:
     -------
     List[str]
@@ -48,14 +47,14 @@ def get_last_user_message_content(messages: Sequence[BaseMessage]) -> str:
 def extract_artifact_from_message(msg: BaseMessage) -> Optional[Dict[str, Any]]:
     """
     Extract artifact dictionary from a message if present.
-    
+
     This is a common pattern repeated across multiple agent files.
-    
+
     Parameters:
     ----------
     msg : BaseMessage
         A LangChain message that may contain an artifact attribute.
-        
+
     Returns:
     -------
     Optional[Dict[str, Any]]

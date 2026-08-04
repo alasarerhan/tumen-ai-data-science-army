@@ -20,6 +20,7 @@ Yapı:
 Kullanım:
     from tests.llm._driver import _drive_tool_call, _assert_result
 """
+
 from __future__ import annotations
 
 from langchain_core.messages import HumanMessage
@@ -49,12 +50,14 @@ def _drive_tool_call(model, tool, prompt: str, injected: dict | None = None):
     if injected:
         # InjectedState — model şemasında yok, platform state'inden enjekte edilir
         args.setdefault("data_raw", injected)
-    return tool.invoke({
-        "name": call["name"],
-        "args": args,
-        "id": call.get("id", "1"),
-        "type": "tool_call",
-    })
+    return tool.invoke(
+        {
+            "name": call["name"],
+            "args": args,
+            "id": call.get("id", "1"),
+            "type": "tool_call",
+        }
+    )
 
 
 def _assert_result(result, name: str):

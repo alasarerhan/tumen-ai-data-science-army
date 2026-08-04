@@ -7,11 +7,11 @@ This module provides:
 - Version history tracking
 """
 
-from platform_api.versioning.models import WorkflowVersion, CanaryDeployment
+from platform_api.versioning.models import CanaryDeployment, WorkflowVersion
 from platform_api.versioning.version_manager import WorkflowVersionManager
 
 __all__ = [
-    "WorkflowVersion",
     "CanaryDeployment",
+    "WorkflowVersion",
     "WorkflowVersionManager",
 ]

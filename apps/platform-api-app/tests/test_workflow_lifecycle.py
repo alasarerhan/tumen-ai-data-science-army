@@ -9,6 +9,7 @@ required.  They exercise the business-logic rules defined in workflow_service.py
   - Explicit archive guard (already archived → 409)
   - Status parameter filter forwarded to query
 """
+
 from __future__ import annotations
 
 import json
@@ -53,7 +54,7 @@ def _make_spec_record(
 # ── _validate_spec ────────────────────────────────────────────────────────────
 
 
-from platform_api.services.workflow_service import _validate_spec  # noqa: E402
+from platform_api.services.workflow_service import _validate_spec
 
 
 def test_validate_spec_ok():
@@ -79,7 +80,10 @@ def test_validate_spec_missing_steps():
     with pytest.raises(HTTPException) as exc_info:
         _validate_spec({"name": "Broken"})
     assert exc_info.value.status_code == 400
-    assert "graph.nodes" in exc_info.value.detail.lower() or "steps array" in exc_info.value.detail.lower()
+    assert (
+        "graph.nodes" in exc_info.value.detail.lower()
+        or "steps array" in exc_info.value.detail.lower()
+    )
 
 
 def test_validate_spec_empty_steps():
@@ -92,7 +96,10 @@ def test_validate_spec_step_missing_tool():
     with pytest.raises(HTTPException) as exc_info:
         _validate_spec({"name": "Broken", "steps": [{"id": "s1"}]})
     assert exc_info.value.status_code == 400
-    assert "known agent" in exc_info.value.detail.lower() or "graph.nodes" in exc_info.value.detail.lower()
+    assert (
+        "known agent" in exc_info.value.detail.lower()
+        or "graph.nodes" in exc_info.value.detail.lower()
+    )
 
 
 def test_validate_spec_rejects_blocked_chain():
@@ -116,7 +123,7 @@ def test_validate_spec_rejects_blocked_chain():
 # ── publish lifecycle ─────────────────────────────────────────────────────────
 
 
-from platform_api.services.workflow_service import (  # noqa: E402
+from platform_api.services.workflow_service import (
     archive_workflow_spec,
     publish_workflow_spec,
 )
@@ -133,9 +140,7 @@ def _patch_helpers(workspace, membership, record):
         "platform_api.services.workflow_service.get_workflow_spec_for_workspace",
         return_value=record,
     )
-    patcher_quota = patch(
-        "platform_api.services.workflow_service.enforce_tenant_write_quota"
-    )
+    patcher_quota = patch("platform_api.services.workflow_service.enforce_tenant_write_quota")
     return patcher_ws, patcher_get, patcher_quota
 
 
@@ -145,22 +150,24 @@ def test_publish_non_admin_raises_403():
     record = _make_spec_record(status="draft", workspace_id=ws.id)
     db = MagicMock()
 
-    with patch(
-        "platform_api.services.workflow_service._authorized_workspace",
-        return_value=(ws, membership),
-    ), patch(
-        "platform_api.services.workflow_service.get_workflow_spec_for_workspace",
-        return_value=record,
-    ), patch(
-        "platform_api.services.workflow_service.enforce_tenant_write_quota"
+    with (
+        patch(
+            "platform_api.services.workflow_service._authorized_workspace",
+            return_value=(ws, membership),
+        ),
+        patch(
+            "platform_api.services.workflow_service.get_workflow_spec_for_workspace",
+            return_value=record,
+        ),
+        patch("platform_api.services.workflow_service.enforce_tenant_write_quota"),
+        pytest.raises(HTTPException) as exc_info,
     ):
-        with pytest.raises(HTTPException) as exc_info:
-            publish_workflow_spec(
-                db,
-                workflow_id=str(record.id),
-                workspace_id=str(ws.id),
-                user_id=uuid.uuid4(),
-            )
+        publish_workflow_spec(
+            db,
+            workflow_id=str(record.id),
+            workspace_id=str(ws.id),
+            user_id=uuid.uuid4(),
+        )
     assert exc_info.value.status_code == 403
 
 
@@ -170,22 +177,24 @@ def test_publish_archived_spec_raises_409():
     record = _make_spec_record(status="archived", workspace_id=ws.id)
     db = MagicMock()
 
-    with patch(
-        "platform_api.services.workflow_service._authorized_workspace",
-        return_value=(ws, membership),
-    ), patch(
-        "platform_api.services.workflow_service.get_workflow_spec_for_workspace",
-        return_value=record,
-    ), patch(
-        "platform_api.services.workflow_service.enforce_tenant_write_quota"
+    with (
+        patch(
+            "platform_api.services.workflow_service._authorized_workspace",
+            return_value=(ws, membership),
+        ),
+        patch(
+            "platform_api.services.workflow_service.get_workflow_spec_for_workspace",
+            return_value=record,
+        ),
+        patch("platform_api.services.workflow_service.enforce_tenant_write_quota"),
+        pytest.raises(HTTPException) as exc_info,
     ):
-        with pytest.raises(HTTPException) as exc_info:
-            publish_workflow_spec(
-                db,
-                workflow_id=str(record.id),
-                workspace_id=str(ws.id),
-                user_id=uuid.uuid4(),
-            )
+        publish_workflow_spec(
+            db,
+            workflow_id=str(record.id),
+            workspace_id=str(ws.id),
+            user_id=uuid.uuid4(),
+        )
     assert exc_info.value.status_code == 409
 
 
@@ -206,14 +215,16 @@ def test_publish_sets_status_published_and_archives_old(monkeypatch):
         fake_auto_archive,
     )
 
-    with patch(
-        "platform_api.services.workflow_service._authorized_workspace",
-        return_value=(ws, membership),
-    ), patch(
-        "platform_api.services.workflow_service.get_workflow_spec_for_workspace",
-        return_value=record,
-    ), patch(
-        "platform_api.services.workflow_service.enforce_tenant_write_quota"
+    with (
+        patch(
+            "platform_api.services.workflow_service._authorized_workspace",
+            return_value=(ws, membership),
+        ),
+        patch(
+            "platform_api.services.workflow_service.get_workflow_spec_for_workspace",
+            return_value=record,
+        ),
+        patch("platform_api.services.workflow_service.enforce_tenant_write_quota"),
     ):
         result = publish_workflow_spec(
             db,
@@ -239,20 +250,23 @@ def test_archive_already_archived_raises_409():
     record = _make_spec_record(status="archived", workspace_id=ws.id)
     db = MagicMock()
 
-    with patch(
-        "platform_api.services.workflow_service._authorized_workspace",
-        return_value=(ws, membership),
-    ), patch(
-        "platform_api.services.workflow_service.get_workflow_spec_for_workspace",
-        return_value=record,
+    with (
+        patch(
+            "platform_api.services.workflow_service._authorized_workspace",
+            return_value=(ws, membership),
+        ),
+        patch(
+            "platform_api.services.workflow_service.get_workflow_spec_for_workspace",
+            return_value=record,
+        ),
+        pytest.raises(HTTPException) as exc_info,
     ):
-        with pytest.raises(HTTPException) as exc_info:
-            archive_workflow_spec(
-                db,
-                workflow_id=str(record.id),
-                workspace_id=str(ws.id),
-                user_id=uuid.uuid4(),
-            )
+        archive_workflow_spec(
+            db,
+            workflow_id=str(record.id),
+            workspace_id=str(ws.id),
+            user_id=uuid.uuid4(),
+        )
     assert exc_info.value.status_code == 409
 
 
@@ -262,12 +276,15 @@ def test_archive_draft_succeeds():
     record = _make_spec_record(status="draft", workspace_id=ws.id)
     db = MagicMock()
 
-    with patch(
-        "platform_api.services.workflow_service._authorized_workspace",
-        return_value=(ws, membership),
-    ), patch(
-        "platform_api.services.workflow_service.get_workflow_spec_for_workspace",
-        return_value=record,
+    with (
+        patch(
+            "platform_api.services.workflow_service._authorized_workspace",
+            return_value=(ws, membership),
+        ),
+        patch(
+            "platform_api.services.workflow_service.get_workflow_spec_for_workspace",
+            return_value=record,
+        ),
     ):
         result = archive_workflow_spec(
             db,
@@ -287,24 +304,26 @@ def test_archive_non_admin_raises_403():
     record = _make_spec_record(status="draft", workspace_id=ws.id)
     db = MagicMock()
 
-    with patch(
-        "platform_api.services.workflow_service._authorized_workspace",
-        return_value=(ws, membership),
+    with (
+        patch(
+            "platform_api.services.workflow_service._authorized_workspace",
+            return_value=(ws, membership),
+        ),
+        pytest.raises(HTTPException) as exc_info,
     ):
-        with pytest.raises(HTTPException) as exc_info:
-            archive_workflow_spec(
-                db,
-                workflow_id=str(record.id),
-                workspace_id=str(ws.id),
-                user_id=uuid.uuid4(),
-            )
+        archive_workflow_spec(
+            db,
+            workflow_id=str(record.id),
+            workspace_id=str(ws.id),
+            user_id=uuid.uuid4(),
+        )
     assert exc_info.value.status_code == 403
 
 
 # ── list_workflow_specs status filter ─────────────────────────────────────────
 
 
-from platform_api.services.workflow_service import list_workflow_specs  # noqa: E402
+from platform_api.services.workflow_service import list_workflow_specs
 
 
 def test_list_invalid_status_raises_400():
@@ -312,16 +331,18 @@ def test_list_invalid_status_raises_400():
     membership = _make_membership(role="member")
     db = MagicMock()
 
-    with patch(
-        "platform_api.services.workflow_service._authorized_workspace",
-        return_value=(ws, membership),
+    with (
+        patch(
+            "platform_api.services.workflow_service._authorized_workspace",
+            return_value=(ws, membership),
+        ),
+        pytest.raises(HTTPException) as exc_info,
     ):
-        with pytest.raises(HTTPException) as exc_info:
-            list_workflow_specs(
-                db,
-                workspace_id=str(ws.id),
-                user_id=uuid.uuid4(),
-                name=None,
-                status="invalid_status",
-            )
+        list_workflow_specs(
+            db,
+            workspace_id=str(ws.id),
+            user_id=uuid.uuid4(),
+            name=None,
+            status="invalid_status",
+        )
     assert exc_info.value.status_code == 400

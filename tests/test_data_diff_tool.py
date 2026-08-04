@@ -1,4 +1,5 @@
 """Tests for J13 Data Diff tool."""
+
 from __future__ import annotations
 
 import math
@@ -11,12 +12,14 @@ import ai_data_science_team.tools.data_diff as j13
 
 @pytest.fixture
 def left_df():
-    return pd.DataFrame({
-        "id": [1, 2, 3, 4, 5],
-        "feature_a": [0.1, 0.2, 0.3, 0.4, 0.5],
-        "feature_b": [10.0, 20.0, 30.0, 40.0, 50.0],
-        "country": ["TR", "US", "DE", "TR", "FR"],
-    })
+    return pd.DataFrame(
+        {
+            "id": [1, 2, 3, 4, 5],
+            "feature_a": [0.1, 0.2, 0.3, 0.4, 0.5],
+            "feature_b": [10.0, 20.0, 30.0, 40.0, 50.0],
+            "country": ["TR", "US", "DE", "TR", "FR"],
+        }
+    )
 
 
 @pytest.fixture
@@ -24,12 +27,14 @@ def right_df():
     """Schema drift: feature_a kept, feature_b removed, country kept,
     region added. Numeric drift on feature_a (mean 0.3 -> 0.6).
     id 5 removed, 6 added."""
-    return pd.DataFrame({
-        "id": [1, 2, 3, 4, 6],
-        "feature_a": [0.2, 0.4, 0.6, 0.8, 1.0],
-        "country": ["TR", "US", "DE", "TR", "FR"],
-        "region": ["EU", "NA", "EU", "EU", "NA"],
-    })
+    return pd.DataFrame(
+        {
+            "id": [1, 2, 3, 4, 6],
+            "feature_a": [0.2, 0.4, 0.6, 0.8, 1.0],
+            "country": ["TR", "US", "DE", "TR", "FR"],
+            "region": ["EU", "NA", "EU", "EU", "NA"],
+        }
+    )
 
 
 class TestProfileColumns:
@@ -95,8 +100,7 @@ class TestDiffSummary:
         assert s.rows_removed == 1  # id=5
 
     def test_drift_detection(self, left_df, right_df):
-        s = j13.diff_summary(left_df, right_df, key="id",
-                             drift_threshold=0.10)
+        s = j13.diff_summary(left_df, right_df, key="id", drift_threshold=0.10)
         # feature_a mean shift = 0.3 (left mean=0.3, right mean=0.6)
         assert "feature_a" in s.drift_columns
 
@@ -129,6 +133,6 @@ class TestDiffPayload:
 
     def test_payload_serializable(self, left_df, right_df):
         import json
+
         p = j13.diff_payload(left_df, right_df, key="id")
         json.dumps(p)  # should not raise
-

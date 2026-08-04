@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-
 from collections.abc import Mapping
 from typing import Any
 
@@ -38,11 +37,7 @@ def resolve_dataset_ids_from_text(
         if not isinstance(entry, dict):
             continue
         label = str(entry.get("label") or "").lower()
-        provenance = (
-            entry.get("provenance")
-            if isinstance(entry.get("provenance"), dict)
-            else {}
-        )
+        provenance = entry.get("provenance") if isinstance(entry.get("provenance"), dict) else {}
         original = str(provenance.get("original_name") or "").lower()
         source = str(provenance.get("source") or "").lower()
         if dataset_id.lower() in lowered:
@@ -77,9 +72,9 @@ def resolve_selected_dataset_ids(
         selected_ids = [active_dataset_id]
         ordered = sorted(
             datasets.items(),
-            key=lambda item: float(item[1].get("created_ts") or 0.0)
-            if isinstance(item[1], dict)
-            else 0.0,
+            key=lambda item: (
+                float(item[1].get("created_ts") or 0.0) if isinstance(item[1], dict) else 0.0
+            ),
             reverse=True,
         )
         for dataset_id, _entry in ordered:
@@ -94,9 +89,9 @@ def available_datasets_lines(datasets: Mapping[str, Any], limit: int = 10) -> li
     available: list[str] = []
     ordered = sorted(
         datasets.items(),
-        key=lambda item: float(item[1].get("created_ts") or 0.0)
-        if isinstance(item[1], dict)
-        else 0.0,
+        key=lambda item: (
+            float(item[1].get("created_ts") or 0.0) if isinstance(item[1], dict) else 0.0
+        ),
         reverse=True,
     )
     for dataset_id, entry in ordered[:limit]:

@@ -1,4 +1,5 @@
 """Tests for J4 Model Evaluation Store tool."""
+
 from __future__ import annotations
 
 import math
@@ -22,15 +23,18 @@ def populated_store():
                 s,
                 model_id=m_id,
                 dataset_id=ds,
-                metrics={"auc": 0.7 + 0.05 * m_idx,
-                         "f1": 0.5 + 0.03 * m_idx},
+                metrics={"auc": 0.7 + 0.05 * m_idx, "f1": 0.5 + 0.03 * m_idx},
                 slices=[
-                    {"slice_name": "gender=M",
-                     "metrics": {"auc": 0.71 + 0.02 * m_idx},
-                     "sample_size": 1000},
-                    {"slice_name": "gender=F",
-                     "metrics": {"auc": 0.69 + 0.01 * m_idx},
-                     "sample_size": 1100},
+                    {
+                        "slice_name": "gender=M",
+                        "metrics": {"auc": 0.71 + 0.02 * m_idx},
+                        "sample_size": 1000,
+                    },
+                    {
+                        "slice_name": "gender=F",
+                        "metrics": {"auc": 0.69 + 0.01 * m_idx},
+                        "sample_size": 1100,
+                    },
                 ],
                 created_at=100.0 + ds_idx * 10 + m_idx,
             )
@@ -40,7 +44,9 @@ def populated_store():
 class TestRecordEvaluation:
     def test_returns_dataclass(self, store):
         rec = j4.record_evaluation(
-            store, model_id="m", dataset_id="d",
+            store,
+            model_id="m",
+            dataset_id="d",
             metrics={"auc": 0.8},
         )
         assert isinstance(rec, j4.EvalRecord)
@@ -50,10 +56,11 @@ class TestRecordEvaluation:
 
     def test_slices_parsed(self, store):
         rec = j4.record_evaluation(
-            store, model_id="m", dataset_id="d",
+            store,
+            model_id="m",
+            dataset_id="d",
             metrics={"auc": 0.8},
-            slices=[{"slice_name": "x", "metrics": {"auc": 0.7},
-                     "sample_size": 50}],
+            slices=[{"slice_name": "x", "metrics": {"auc": 0.7}, "sample_size": 50}],
         )
         assert len(rec.slices) == 1
         assert rec.slices[0].slice_name == "x"
@@ -61,8 +68,11 @@ class TestRecordEvaluation:
 
     def test_custom_eval_id(self, store):
         rec = j4.record_evaluation(
-            store, model_id="m", dataset_id="d",
-            metrics={"auc": 0.8}, eval_id="my-id",
+            store,
+            model_id="m",
+            dataset_id="d",
+            metrics={"auc": 0.8},
+            eval_id="my-id",
         )
         assert rec.eval_id == "my-id"
 
@@ -107,7 +117,10 @@ class TestQueryEvaluations:
 class TestCompareModels:
     def test_compare_two_models(self, populated_store):
         cmp = j4.compare_models(
-            populated_store, ["rf", "xgb"], "train", ["auc", "f1"],
+            populated_store,
+            ["rf", "xgb"],
+            "train",
+            ["auc", "f1"],
         )
         assert "rf" in cmp and "xgb" in cmp
         assert pytest.approx(cmp["rf"]["auc"], abs=1e-9) == 0.7
@@ -120,7 +133,10 @@ class TestCompareModels:
     def test_compare_max_four(self, populated_store):
         with pytest.raises(ValueError):
             j4.compare_models(
-                populated_store, ["a", "b", "c", "d", "e"], "train", ["auc"],
+                populated_store,
+                ["a", "b", "c", "d", "e"],
+                "train",
+                ["auc"],
             )
 
 
@@ -142,7 +158,9 @@ class TestSummariseOverDatasets:
 class TestSliceByFeature:
     def test_aggregates_per_slice(self, populated_store):
         slices = j4.slice_by_feature(
-            populated_store, model_id="xgb", dataset_id="train",
+            populated_store,
+            model_id="xgb",
+            dataset_id="train",
         )
         assert "gender=M" in slices
         assert "gender=F" in slices
@@ -151,7 +169,9 @@ class TestSliceByFeature:
 
     def test_filter_slice_name(self, populated_store):
         slices = j4.slice_by_feature(
-            populated_store, model_id="xgb", dataset_id="train",
+            populated_store,
+            model_id="xgb",
+            dataset_id="train",
             slice_name="gender=M",
         )
         assert "gender=M" in slices
@@ -159,8 +179,9 @@ class TestSliceByFeature:
 
     def test_no_match_returns_empty(self, populated_store):
         slices = j4.slice_by_feature(
-            populated_store, model_id="rf", dataset_id="train",
+            populated_store,
+            model_id="rf",
+            dataset_id="train",
             slice_name="age=young",
         )
         assert slices == {}
-

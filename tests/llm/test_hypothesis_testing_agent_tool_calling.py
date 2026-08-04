@@ -28,26 +28,22 @@ pytestmark = pytest.mark.llm
 # PURE: Tüm 3 tool için gerçek test
 # ---------------------------------------------------------------------------
 
+
 def test_recommend_test_real(llm_or_skip, llm_model):
     """``recommend_test_wrapped(values)`` veri şekline göre uygun hipotez testi önerir."""
     tool = recommend_test_wrapped
     values = [1.2, 1.4, 1.1, 1.5, 1.3, 1.6, 1.2, 1.4, 1.3, 1.1]
     result, _ = _assert_result(
         _drive_tool_call(
-            llm_model, tool,
-            "recommend_test tool'unu TEK çağrı ile çağır. "
-            f"values={values}.",
+            llm_model,
+            tool,
+            f"recommend_test tool'unu TEK çağrı ile çağır. values={values}.",
         ),
         tool.name,
     )
     s = str(result).lower()
     assert (
-        "ttest" in s
-        or "t-test" in s
-        or "mann" in s
-        or "shapiro" in s
-        or "test" in s
-        or "ok" in s
+        "ttest" in s or "t-test" in s or "mann" in s or "shapiro" in s or "test" in s or "ok" in s
     ), f"recommend_test beklenen test önerisi vermedi: {s[:200]}"
 
 
@@ -57,20 +53,16 @@ def test_run_test_real(llm_or_skip, llm_model):
     values = [1.2, 1.4, 1.1, 1.5, 1.3, 1.6, 1.2, 1.4, 1.3, 1.1]
     result, _ = _assert_result(
         _drive_tool_call(
-            llm_model, tool,
-            "run_test tool'unu TEK çağrı ile çağır. "
-            f"values={values}.",
+            llm_model,
+            tool,
+            f"run_test tool'unu TEK çağrı ile çağır. values={values}.",
         ),
         tool.name,
     )
     s = str(result).lower()
-    assert (
-        "p_value" in s
-        or "p-value" in s
-        or "statistic" in s
-        or "test" in s
-        or "ok" in s
-    ), f"run_test beklenen test sonucu üretmedi: {s[:200]}"
+    assert "p_value" in s or "p-value" in s or "statistic" in s or "test" in s or "ok" in s, (
+        f"run_test beklenen test sonucu üretmedi: {s[:200]}"
+    )
 
 
 def test_interpret_result_real(llm_or_skip, llm_model):
@@ -78,9 +70,9 @@ def test_interpret_result_real(llm_or_skip, llm_model):
     tool = interpret_result_wrapped
     result, _ = _assert_result(
         _drive_tool_call(
-            llm_model, tool,
-            "interpret_result tool'unu TEK çağrı ile çağır. "
-            "p_value=0.023, effect_size=0.42.",
+            llm_model,
+            tool,
+            "interpret_result tool'unu TEK çağrı ile çağır. p_value=0.023, effect_size=0.42.",
         ),
         tool.name,
     )

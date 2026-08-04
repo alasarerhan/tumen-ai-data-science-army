@@ -7,7 +7,9 @@ import pytest
 from platform_api.db.models import DataSourceSecret
 from platform_api.routes.data_sources import _ds_to_dict
 from platform_api.services.data_source_service import create_data_source
-from platform_api.services.data_source_service import test_data_source_connection as run_connection_test
+from platform_api.services.data_source_service import (
+    test_data_source_connection as run_connection_test,
+)
 
 
 def test_sql_server_data_source_masks_secret_metadata(seeded_db):
@@ -41,7 +43,12 @@ def test_sql_server_data_source_masks_secret_metadata(seeded_db):
     assert "secret_ref" not in payload["metadata"]
     assert payload["metadata"]["has_secret"] is True
     assert stored_metadata["secret_ref"].startswith("data-source-secret-")
-    assert db.query(DataSourceSecret).filter(DataSourceSecret.workspace_id == seeded_db["workspace"].id).count() == 1
+    assert (
+        db.query(DataSourceSecret)
+        .filter(DataSourceSecret.workspace_id == seeded_db["workspace"].id)
+        .count()
+        == 1
+    )
     assert "super-secret-password" not in db.query(DataSourceSecret).one().encrypted_value
 
 
@@ -110,7 +117,9 @@ def test_sql_server_connection_failure_sanitizes_secret_and_username(seeded_db, 
     def fail_with_secret(uri: str) -> dict:
         raise RuntimeError(f"failed for reader using {uri} and temporary-secret")
 
-    monkeypatch.setattr("platform_api.services.data_source_service._test_sqlalchemy_connection", fail_with_secret)
+    monkeypatch.setattr(
+        "platform_api.services.data_source_service._test_sqlalchemy_connection", fail_with_secret
+    )
 
     result = run_connection_test(db, ds=ds)
 
@@ -147,7 +156,9 @@ def test_sql_server_connection_smoke_uses_durable_secret(seeded_db, monkeypatch)
         captured["uri"] = uri
         return {"message": "SQL Server connection succeeded.", "details": {"driver": "pymssql"}}
 
-    monkeypatch.setattr("platform_api.services.data_source_service._test_sqlalchemy_connection", succeed)
+    monkeypatch.setattr(
+        "platform_api.services.data_source_service._test_sqlalchemy_connection", succeed
+    )
 
     result = run_connection_test(db, ds=ds)
     payload = _ds_to_dict(ds)

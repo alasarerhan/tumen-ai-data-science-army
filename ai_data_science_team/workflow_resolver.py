@@ -56,7 +56,6 @@ from typing import Any, Dict, List, Optional  # noqa: E402, F401
 
 from langchain_core.messages import HumanMessage  # noqa: E402, F401
 
-
 # ---------------------------------------------------------------------------
 # WorkflowSpec helpers
 # ---------------------------------------------------------------------------
@@ -140,9 +139,7 @@ def validate_spec(spec: Dict[str, Any]) -> List[str]:
         sid = step.get("id", "?")
         for dep in step.get("depends_on", []):
             if dep not in ids_set:
-                errors.append(
-                    f"Step '{sid}': depends_on references unknown step id '{dep}'."
-                )
+                errors.append(f"Step '{sid}': depends_on references unknown step id '{dep}'.")
 
     return errors
 
@@ -351,7 +348,8 @@ class WorkflowResolver:
                 build_step(
                     step_id="analyze",
                     agent=agent_name,
-                    instruction=user_goal or "Analyze the supplied dataset and summarize key findings.",
+                    instruction=user_goal
+                    or "Analyze the supplied dataset and summarize key findings.",
                 )
             ],
         )

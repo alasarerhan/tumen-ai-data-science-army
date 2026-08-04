@@ -16,7 +16,6 @@ from ai_data_science_team.tools.kpi import (
     sparkline_points,
 )
 
-
 # ---------------------------------------------------------------------------
 # define_kpi / evaluate_python_code
 # ---------------------------------------------------------------------------
@@ -170,9 +169,7 @@ class TestAlarm:
             build_alarm("k", kind="anomaly", window=1)
 
     def test_alarm_serialise_roundtrip(self):
-        rule = build_alarm(
-            "k", kind="relative", relative_threshold=-0.05
-        )
+        rule = build_alarm("k", kind="relative", relative_threshold=-0.05)
         d = rule.to_dict()
         assert d["kind"] == "relative"
         assert d["relative_threshold"] == -0.05

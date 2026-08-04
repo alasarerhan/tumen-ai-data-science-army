@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-
 import json
 from typing import Any, Optional
 
@@ -34,9 +33,7 @@ def format_listing_with_llm(llm: Any, rows: list, last_human: str):
             ]
         )
         rows_json = json.dumps(limited)
-        response = (prompt | llm).invoke(
-            {"last_human": last_human, "rows_json": rows_json}
-        )
+        response = (prompt | llm).invoke({"last_human": last_human, "rows_json": rows_json})
         return getattr(response, "content", None) or str(response)
     except Exception:
         return None

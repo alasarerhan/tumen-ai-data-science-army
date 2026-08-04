@@ -40,17 +40,17 @@ import pandas as pd
 import pytest
 from langchain_core.messages import AIMessage
 
+from ai_data_science_team.multiagents.chat_router import (
+    _DEFAULT_AGENT,
+    INTENT_MAP,
+    IntentRouter,
+    RouterDecision,
+)
 from ai_data_science_team.multiagents.chat_session import (
     ChatMessage,
     ChatSession,
     ChatSessionStore,
     MongoChatSessionStore,
-)
-from ai_data_science_team.multiagents.chat_router import (
-    INTENT_MAP,
-    IntentRouter,
-    RouterDecision,
-    _DEFAULT_AGENT,
 )
 from ai_data_science_team.multiagents.chat_workspace import (
     ChatResponse,
@@ -203,7 +203,9 @@ class TestChatSessionStore:
         assert "sales" in datasets
         assert len(datasets["sales"]) == 3
 
-    def test_upload_dataset_unknown_session_raises(self, store: ChatSessionStore, small_df: pd.DataFrame):
+    def test_upload_dataset_unknown_session_raises(
+        self, store: ChatSessionStore, small_df: pd.DataFrame
+    ):
         with pytest.raises(KeyError, match="not found"):
             store.upload_dataset("no-such-session", "df", small_df)
 
@@ -290,14 +292,18 @@ class TestMongoChatSessionStore:
         mongo_store.clear()
         assert len(mongo_store) == 0
 
-    def test_upload_dataset_success(self, mongo_store: MongoChatSessionStore, small_df: pd.DataFrame):
+    def test_upload_dataset_success(
+        self, mongo_store: MongoChatSessionStore, small_df: pd.DataFrame
+    ):
         s = mongo_store.create()
         mongo_store.upload_dataset(s.session_id, "sales", small_df)
         datasets = mongo_store.get_datasets(s.session_id)
         assert "sales" in datasets
         assert len(datasets["sales"]) == 3
 
-    def test_upload_dataset_unknown_session_raises(self, mongo_store: MongoChatSessionStore, small_df: pd.DataFrame):
+    def test_upload_dataset_unknown_session_raises(
+        self, mongo_store: MongoChatSessionStore, small_df: pd.DataFrame
+    ):
         with pytest.raises(KeyError, match="not found"):
             mongo_store.upload_dataset("no-such-session", "df", small_df)
 
@@ -331,7 +337,9 @@ class TestMongoChatSessionStore:
         assert "sales" in datasets
         assert "churn" in datasets
 
-    def test_datasets_cleared_on_delete(self, mongo_store: MongoChatSessionStore, small_df: pd.DataFrame):
+    def test_datasets_cleared_on_delete(
+        self, mongo_store: MongoChatSessionStore, small_df: pd.DataFrame
+    ):
         s = mongo_store.create()
         mongo_store.upload_dataset(s.session_id, "sales", small_df)
         mongo_store.delete(s.session_id)
@@ -446,9 +454,7 @@ class TestExtractResponse:
         return mock
 
     def test_extracts_text_from_ai_message(self):
-        agent = self._make_mock_agent(
-            {"messages": [AIMessage(content="Here is your analysis.")]}
-        )
+        agent = self._make_mock_agent({"messages": [AIMessage(content="Here is your analysis.")]})
         text, art_type, art_data = _extract_response(agent)
         assert "analysis" in text
         assert art_type is None
@@ -550,9 +556,7 @@ class TestChatWorkspaceIntegration:
             "data_cleaning_agent",
         )
 
-    def test_history_populated_after_chat(
-        self, workspace: ChatWorkspace, sales_df: pd.DataFrame
-    ):
+    def test_history_populated_after_chat(self, workspace: ChatWorkspace, sales_df: pd.DataFrame):
         sid = workspace.create_session()
         workspace.upload_dataset(sid, "sales", sales_df)
         workspace.chat(sid, "what is this data about?")
@@ -578,10 +582,10 @@ class TestM21E2E:
     def test_all_m21_symbols_importable(self):
         """All public M21 symbols should be importable from multiagents."""
         from ai_data_science_team.multiagents import (
-            MongoChatSessionStore,
-            ChatWorkspace,
             INTENT_MAP,
+            ChatWorkspace,
             IntentRouter,
+            MongoChatSessionStore,
         )
 
         assert ChatWorkspace is not None
@@ -600,8 +604,7 @@ class TestM21E2E:
             from ai_data_science_team.templates import BaseAgent
 
             assert not issubclass(ChatWorkspace, BaseAgent), (
-                "ChatWorkspace must NOT extend BaseAgent — it is a plain Python "
-                "orchestrator class."
+                "ChatWorkspace must NOT extend BaseAgent — it is a plain Python orchestrator class."
             )
         except ImportError:
             pass  # BaseAgent unavailable in stripped env — skip check

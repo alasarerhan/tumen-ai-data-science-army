@@ -40,6 +40,7 @@ pytestmark = pytest.mark.llm
 # 1. PURE: yalnızca skaler/str argümanlar, model-driven
 # ---------------------------------------------------------------------------
 
+
 def test_class_distribution_real(llm_or_skip, llm_model):
     tool = class_distribution_wrapped
     _content, _ = _assert_result(
@@ -58,8 +59,7 @@ def test_undersample_indices_real(llm_or_skip, llm_model):
         _drive_tool_call(
             llm_model,
             tool,
-            "undersample_indices_wrapped tool'unu TEK çağrı ile çağır; "
-            "y=['a','a','b','b'] ver.",
+            "undersample_indices_wrapped tool'unu TEK çağrı ile çağır; y=['a','a','b','b'] ver.",
         ),
         tool.name,
     )
@@ -93,6 +93,7 @@ def test_apply_strategy_real(llm_or_skip, llm_model):
 # ---------------------------------------------------------------------------
 # 2. STATEFUL: ClassDistribution gerektiren tool'lar
 # ---------------------------------------------------------------------------
+
 
 def _imbalanced_dist() -> ClassDistribution:
     """Orta seviye dengesizlik: 8 'a', 2 'b' → IR=4.0."""

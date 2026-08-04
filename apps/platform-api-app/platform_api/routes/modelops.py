@@ -91,7 +91,9 @@ async def modelops_register_model(
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     except Exception as exc:
         db.rollback()
-        raise HTTPException(status_code=409, detail="Model registry entry could not be created") from exc
+        raise HTTPException(
+            status_code=409, detail="Model registry entry could not be created"
+        ) from exc
     return {"model_id": str(entry.id), "status": "registered"}
 
 

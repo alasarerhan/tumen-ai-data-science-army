@@ -51,7 +51,11 @@ import time  # noqa: E402, F401
 from dataclasses import dataclass, field  # noqa: E402, F401
 from typing import Any, Callable, Dict, List, Optional  # noqa: E402, F401
 
-from ai_data_science_team.signals import SignalStore, SignalType, get_signal_store  # noqa: E402, F401
+from ai_data_science_team.signals import (  # noqa: E402, F401
+    SignalStore,
+    SignalType,
+    get_signal_store,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -305,7 +309,8 @@ class RuntimeEngine:
                 run_result.step_results.append(sr)
                 logger.warning(
                     "Circuit breaker open for %s; step %s skipped.",
-                    primary_agent, step_id,
+                    primary_agent,
+                    step_id,
                 )
                 continue
 
@@ -338,7 +343,8 @@ class RuntimeEngine:
                         logger.warning(
                             "Context store persistence failed for step %s: %s. "
                             "Checkpoint may be incomplete on restart.",
-                            step_id, ctx_err,
+                            step_id,
+                            ctx_err,
                         )
             else:
                 self._increment_cb(session_id, primary_agent)
@@ -451,10 +457,12 @@ class RuntimeEngine:
                         last_error,
                     )
                     if attempt < self.max_retries:
-                        sleep_s = self.backoff_base * (2 ** attempt)
+                        sleep_s = self.backoff_base * (2**attempt)
                         logger.debug(
                             "Back-off %.2fs before retry (step=%s, agent=%s).",
-                            sleep_s, step["id"], agent_name,
+                            sleep_s,
+                            step["id"],
+                            agent_name,
                         )
                         time.sleep(sleep_s)
 
@@ -469,11 +477,7 @@ class RuntimeEngine:
     # ------------------------------------------------------------------ circuit breaker
 
     def _is_open(self, session_id: str, agent_name: str) -> bool:
-        return (
-            self._cb_counters
-            .get(session_id, {})
-            .get(agent_name, 0) >= self.cb_threshold
-        )
+        return self._cb_counters.get(session_id, {}).get(agent_name, 0) >= self.cb_threshold
 
     def _increment_cb(self, session_id: str, agent_name: str) -> None:
         self._cb_counters.setdefault(session_id, {})
@@ -507,13 +511,12 @@ class RuntimeEngine:
             logger.warning(
                 "Failed to load checkpoint for session %s: %s. "
                 "Workflow will restart from beginning.",
-                session_id, ckpt_err,
+                session_id,
+                ckpt_err,
             )
         return completed
 
-    def _save_checkpoint(
-        self, session_id: str, step_id: str, output: Any
-    ) -> None:
+    def _save_checkpoint(self, session_id: str, step_id: str, output: Any) -> None:
         """Persist a completed step to the context_store checkpoint."""
         if self._context_store is None:
             return
@@ -525,7 +528,9 @@ class RuntimeEngine:
             logger.warning(
                 "Failed to save checkpoint for step %s in session %s: %s. "
                 "Resume may re-execute this step.",
-                step_id, session_id, ckpt_err,
+                step_id,
+                session_id,
+                ckpt_err,
             )
 
 

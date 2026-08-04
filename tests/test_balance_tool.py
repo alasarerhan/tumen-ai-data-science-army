@@ -1,4 +1,5 @@
 """Tests for D4 Imbalanced Data tool."""
+
 from __future__ import annotations
 
 import math
@@ -92,8 +93,7 @@ class TestSelectStrategy:
         s = d4.select_strategy(d)
         # both class_weight and undersampling plausible; primary
         # should be one of the candidates
-        assert s["primary"] in ("class_weight", "threshold_tuning",
-                                "smote", "undersampling")
+        assert s["primary"] in ("class_weight", "threshold_tuning", "smote", "undersampling")
 
     def test_interpretability_preference(self):
         d = d4.class_distribution([0] * 990 + [1] * 10)
@@ -157,16 +157,14 @@ class TestRecommendMetrics:
 class TestUndersampleIndices:
     def test_balances_to_ratio(self):
         y = [0] * 80 + [1] * 20
-        idx = d4.undersample_indices(y, target_ratio=1.0,
-                                       random_state=0)
+        idx = d4.undersample_indices(y, target_ratio=1.0, random_state=0)
         kept = [y[i] for i in idx]
         assert len(idx) == 40  # 20 majority + 20 minority
         assert kept.count(0) == kept.count(1) == 20
 
     def test_target_ratio_2(self):
         y = [0] * 80 + [1] * 20
-        idx = d4.undersample_indices(y, target_ratio=2.0,
-                                       random_state=0)
+        idx = d4.undersample_indices(y, target_ratio=2.0, random_state=0)
         kept = [y[i] for i in idx]
         # 40 majority + 20 minority = 60
         assert len(idx) == 60
@@ -242,7 +240,7 @@ class TestBalancePayload:
 
     def test_payload_json_safe(self):
         import json
+
         d = d4.class_distribution([0] * 990 + [1] * 10)
         p = d4.balance_payload(d)
         json.dumps(p)  # must not raise
-

@@ -43,6 +43,7 @@ pytestmark = pytest.mark.llm
 # 1. PURE: channel_template — model-driven, parametresiz JSON verir
 # ---------------------------------------------------------------------------
 
+
 def test_channel_template_real(llm_or_skip, llm_model):
     tool = channel_template_wrapped
     content, _ = _assert_result(
@@ -60,6 +61,7 @@ def test_channel_template_real(llm_or_skip, llm_model):
 # ---------------------------------------------------------------------------
 # 2. STATEFUL: AlertStore / AlertRule / Incident / IncidentStore
 # ---------------------------------------------------------------------------
+
 
 def _fresh_store() -> AlertStore:
     return AlertStore()
@@ -110,8 +112,12 @@ def test_evaluate_rule_real():
     store = _fresh_store()
     define_rule(
         store,
-        name="r", metric="m", comparator=">", threshold=10.0,
-        severity="info", channels=["slack"],
+        name="r",
+        metric="m",
+        comparator=">",
+        threshold=10.0,
+        severity="info",
+        channels=["slack"],
     )
     rule = store.rules[0]
     assert evaluate_rule(rule, metric_value=20.0) is True
@@ -123,8 +129,12 @@ def test_raise_incident_real():
     store = _fresh_store()
     define_rule(
         store,
-        name="r", metric="m", comparator=">", threshold=10.0,
-        severity="warning", channels=["slack"],
+        name="r",
+        metric="m",
+        comparator=">",
+        threshold=10.0,
+        severity="warning",
+        channels=["slack"],
     )
     inc = raise_incident(store, rule_id=store.rules[0].rule_id, metric_value=20.0)
     assert inc.status == "open"
@@ -140,8 +150,12 @@ def test_acknowledge_incident_real():
     inc_store = IncidentStore()
     define_rule(
         rule_store,
-        name="r", metric="m", comparator=">", threshold=10.0,
-        severity="warning", channels=["slack"],
+        name="r",
+        metric="m",
+        comparator=">",
+        threshold=10.0,
+        severity="warning",
+        channels=["slack"],
     )
     inc = raise_incident(rule_store, rule_id=rule_store.rules[0].rule_id, metric_value=20.0)
     inc_store.add(inc)
@@ -155,8 +169,12 @@ def test_resolve_incident_real():
     rule_store = _fresh_store()
     define_rule(
         rule_store,
-        name="r", metric="m", comparator=">", threshold=10.0,
-        severity="warning", channels=["slack"],
+        name="r",
+        metric="m",
+        comparator=">",
+        threshold=10.0,
+        severity="warning",
+        channels=["slack"],
     )
     inc = raise_incident(rule_store, rule_id=rule_store.rules[0].rule_id, metric_value=20.0)
     resolve_incident(inc, note="mitigated")
@@ -170,8 +188,12 @@ def test_tick_escalation_real():
     rule_store = _fresh_store()
     define_rule(
         rule_store,
-        name="r", metric="m", comparator=">", threshold=10.0,
-        severity="critical", channels=["slack"],
+        name="r",
+        metric="m",
+        comparator=">",
+        threshold=10.0,
+        severity="critical",
+        channels=["slack"],
     )
     inc = raise_incident(
         rule_store,
@@ -192,8 +214,12 @@ def test_route_to_channels_real():
     rule_store = _fresh_store()
     define_rule(
         rule_store,
-        name="r", metric="m", comparator=">", threshold=10.0,
-        severity="warning", channels=["slack", "email"],
+        name="r",
+        metric="m",
+        comparator=">",
+        threshold=10.0,
+        severity="warning",
+        channels=["slack", "email"],
     )
     inc = raise_incident(rule_store, rule_id=rule_store.rules[0].rule_id, metric_value=20.0)
     out = route_to_channels(inc)
@@ -207,8 +233,12 @@ def test_summarise_real():
     rule_store = _fresh_store()
     define_rule(
         rule_store,
-        name="r", metric="m", comparator=">", threshold=10.0,
-        severity="warning", channels=["slack"],
+        name="r",
+        metric="m",
+        comparator=">",
+        threshold=10.0,
+        severity="warning",
+        channels=["slack"],
     )
     inc_store = IncidentStore()
     inc1 = raise_incident(rule_store, rule_id=rule_store.rules[0].rule_id, metric_value=20.0)

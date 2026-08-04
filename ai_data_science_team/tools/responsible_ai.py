@@ -15,6 +15,7 @@ from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple  # noqa: 
 @dataclass
 class FairnessSlice:
     """Per-group fairness numbers (selection rate, tpr, fpr)."""
+
     group: str
     n: int
     selection_rate: float
@@ -67,6 +68,7 @@ class ResponsibleAIDashboard:
 
 # ----- Fairness ------------------------------------------------------------
 
+
 def compute_fairness(
     *,
     protected_attribute: str,
@@ -92,10 +94,15 @@ def compute_fairness(
         tn = sum(1 for i, t in enumerate(ts) if t == 0 and ps[i] == 0)
         tpr = tp / (tp + fn) if (tp + fn) else float("nan")
         fpr = fp / (fp + tn) if (fp + tn) else float("nan")
-        slices.append(FairnessSlice(
-            group=g, n=n, selection_rate=sel,
-            true_positive_rate=tpr, false_positive_rate=fpr,
-        ))
+        slices.append(
+            FairnessSlice(
+                group=g,
+                n=n,
+                selection_rate=sel,
+                true_positive_rate=tpr,
+                false_positive_rate=fpr,
+            )
+        )
     sel_rates = [s.selection_rate for s in slices if not math.isnan(s.selection_rate)]
     dp_diff = (max(sel_rates) - min(sel_rates)) if len(sel_rates) >= 2 else 0.0
     tprs = [s.true_positive_rate for s in slices if not math.isnan(s.true_positive_rate)]
@@ -105,13 +112,9 @@ def compute_fairness(
     eo_diff = max(eo_tpr, eo_fpr)
     violations: List[str] = []
     if dp_diff > threshold:
-        violations.append(
-            f"demographic_parity_diff {dp_diff:.3f} > {threshold:.3f}"
-        )
+        violations.append(f"demographic_parity_diff {dp_diff:.3f} > {threshold:.3f}")
     if eo_diff > threshold:
-        violations.append(
-            f"equalized_odds_diff {eo_diff:.3f} > {threshold:.3f}"
-        )
+        violations.append(f"equalized_odds_diff {eo_diff:.3f} > {threshold:.3f}")
     return FairnessReport(
         protected_attribute=protected_attribute,
         slices=slices,
@@ -124,6 +127,7 @@ def compute_fairness(
 
 # ----- Explainability ------------------------------------------------------
 
+
 def compute_explainability(
     *,
     feature_names: Sequence[str],
@@ -135,7 +139,8 @@ def compute_explainability(
         raise ValueError("feature_names and shap_abs_means must align")
     pairs = sorted(
         zip(feature_names, shap_abs_means),
-        key=lambda x: x[1], reverse=True,
+        key=lambda x: x[1],
+        reverse=True,
     )
     contribs = [
         FeatureContribution(
@@ -146,11 +151,14 @@ def compute_explainability(
         for rank, (name, val) in enumerate(pairs[:top_k], start=1)
     ]
     return ExplainabilityReport(
-        method=method, contributions=contribs, top_k=top_k,
+        method=method,
+        contributions=contribs,
+        top_k=top_k,
     )
 
 
 # ----- Error slicing -------------------------------------------------------
+
 
 def discover_error_slices(
     *,
@@ -181,21 +189,27 @@ def discover_error_slices(
             if len(errs) < min_slice_n:
                 continue
             rate = sum(errs) / len(errs)
-            lift = (rate - baseline_error_rate) / baseline_error_rate \
-                if baseline_error_rate > 0 else 0.0
+            lift = (
+                (rate - baseline_error_rate) / baseline_error_rate
+                if baseline_error_rate > 0
+                else 0.0
+            )
             if lift > 0:
-                out.append(ErrorSlice(
-                    slice_expr=f"{feat}={v!r}",
-                    n=len(errs),
-                    error_rate=rate,
-                    baseline_error_rate=baseline_error_rate,
-                    lift=lift,
-                ))
+                out.append(
+                    ErrorSlice(
+                        slice_expr=f"{feat}={v!r}",
+                        n=len(errs),
+                        error_rate=rate,
+                        baseline_error_rate=baseline_error_rate,
+                        lift=lift,
+                    )
+                )
     out.sort(key=lambda s: s.lift, reverse=True)
     return out[:top_k]
 
 
 # ----- Mitigations ---------------------------------------------------------
+
 
 def suggest_mitigations(
     fairness: Optional[FairnessReport],
@@ -207,24 +221,23 @@ def suggest_mitigations(
             "Apply reweighing or reject-option classification on the "
             f"protected attribute '{fairness.protected_attribute}'."
         )
-        out.append(
-            "Collect more representative training data for "
-            "underperforming groups."
-        )
+        out.append("Collect more representative training data for underperforming groups.")
     if error_slices:
         worst = error_slices[0]
         out.append(
             f"Investigate slice '{worst.slice_expr}' "
             f"(error_rate={worst.error_rate:.3f}, lift={worst.lift:.2f})."
         )
-        out.append("Consider sample-weighting or feature-engineering for "
-                    "the worst-performing slice.")
+        out.append(
+            "Consider sample-weighting or feature-engineering for the worst-performing slice."
+        )
     if not out:
         out.append("No mitigations required.")
     return out
 
 
 # ----- Dashboard -----------------------------------------------------------
+
 
 def build_dashboard(
     *,
@@ -255,26 +268,30 @@ def dashboard_payload(d: ResponsibleAIDashboard) -> Dict[str, Any]:
     return {
         "model_id": d.model_id,
         "fairness": (
-            None if d.fairness is None else
-            {
+            None
+            if d.fairness is None
+            else {
                 "protected_attribute": d.fairness.protected_attribute,
                 "demographic_parity_diff": d.fairness.demographic_parity_diff,
                 "equalized_odds_diff": d.fairness.equalized_odds_diff,
                 "threshold": d.fairness.threshold,
                 "slices": [
                     {
-                        "group": s.group, "n": s.n,
+                        "group": s.group,
+                        "n": s.n,
                         "selection_rate": s.selection_rate,
                         "true_positive_rate": s.true_positive_rate,
                         "false_positive_rate": s.false_positive_rate,
-                    } for s in d.fairness.slices
+                    }
+                    for s in d.fairness.slices
                 ],
                 "violations": d.fairness.violations,
             }
         ),
         "explainability": (
-            None if d.explainability is None else
-            {
+            None
+            if d.explainability is None
+            else {
                 "method": d.explainability.method,
                 "top_k": d.explainability.top_k,
                 "contributions": [
@@ -282,20 +299,21 @@ def dashboard_payload(d: ResponsibleAIDashboard) -> Dict[str, Any]:
                         "feature": c.feature,
                         "mean_abs_shap": c.mean_abs_shap,
                         "rank": c.global_importance_rank,
-                    } for c in d.explainability.contributions
+                    }
+                    for c in d.explainability.contributions
                 ],
             }
         ),
         "error_slices": [
             {
-                "slice_expr": e.slice_expr, "n": e.n,
+                "slice_expr": e.slice_expr,
+                "n": e.n,
                 "error_rate": e.error_rate,
                 "baseline_error_rate": e.baseline_error_rate,
                 "lift": e.lift,
-            } for e in d.error_slices
+            }
+            for e in d.error_slices
         ],
         "violations": d.violations,
         "mitigations": d.mitigations,
     }
-
-

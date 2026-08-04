@@ -9,6 +9,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from platform_api.authz.policy import can_admin_tenant
+from platform_api.core.service_errors import ForbiddenError, NotFoundError, ValidationError
 from platform_api.db.models import (
     Invite,
     InviteStatus,
@@ -20,7 +21,6 @@ from platform_api.db.models import (
     WorkspaceMembership,
     WorkspaceRole,
 )
-from platform_api.core.service_errors import ForbiddenError, NotFoundError, ValidationError
 from platform_api.services.identity_service import normalize_email
 
 
@@ -35,7 +35,9 @@ def _parse_uuid(value: str, label: str) -> uuid.UUID:
         raise ValidationError(f"Invalid {label}") from exc
 
 
-def _get_tenant_membership(db: Session, *, tenant_id: uuid.UUID, user_id: uuid.UUID) -> TenantMembership | None:
+def _get_tenant_membership(
+    db: Session, *, tenant_id: uuid.UUID, user_id: uuid.UUID
+) -> TenantMembership | None:
     return db.execute(
         select(TenantMembership).where(
             TenantMembership.tenant_id == tenant_id,
@@ -74,7 +76,9 @@ def create_tenant_with_owner(db: Session, *, name: str, owner_user_id: uuid.UUID
     return tenant
 
 
-def create_workspace(db: Session, *, tenant_id: str, name: str, actor_user_id: uuid.UUID) -> Workspace:
+def create_workspace(
+    db: Session, *, tenant_id: str, name: str, actor_user_id: uuid.UUID
+) -> Workspace:
     tenant_uuid = _parse_uuid(tenant_id, "tenant_id")
     require_tenant_admin(db, tenant_id=tenant_uuid, user_id=actor_user_id)
 
@@ -123,7 +127,9 @@ def create_invite(
     workspace_uuid: uuid.UUID | None = None
     if workspace_id:
         workspace_uuid = _parse_uuid(workspace_id, "workspace_id")
-        workspace = db.execute(select(Workspace).where(Workspace.id == workspace_uuid)).scalar_one_or_none()
+        workspace = db.execute(
+            select(Workspace).where(Workspace.id == workspace_uuid)
+        ).scalar_one_or_none()
         if workspace is None or workspace.tenant_id != tenant_uuid:
             raise ValidationError("Workspace does not belong to tenant")
 
@@ -160,7 +166,9 @@ def create_invite(
     return invite, raw_token
 
 
-def _ensure_tenant_membership(db: Session, *, tenant_id: uuid.UUID, user_id: uuid.UUID, role: TenantRole) -> None:
+def _ensure_tenant_membership(
+    db: Session, *, tenant_id: uuid.UUID, user_id: uuid.UUID, role: TenantRole
+) -> None:
     existing = _get_tenant_membership(db, tenant_id=tenant_id, user_id=user_id)
     if existing is None:
         db.add(TenantMembership(tenant_id=tenant_id, user_id=user_id, role=role))
@@ -229,7 +237,11 @@ def accept_invite(db: Session, *, token: str, user: User) -> Invite:
 
     if invite.workspace_id is not None:
         workspace_role = WorkspaceRole.member
-        if role_str in {WorkspaceRole.owner.value, WorkspaceRole.admin.value, WorkspaceRole.member.value}:
+        if role_str in {
+            WorkspaceRole.owner.value,
+            WorkspaceRole.admin.value,
+            WorkspaceRole.member.value,
+        }:
             workspace_role = WorkspaceRole(role_str)
         _ensure_workspace_membership(
             db,

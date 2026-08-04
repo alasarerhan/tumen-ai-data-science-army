@@ -37,7 +37,9 @@ def test_external_artifact_redirect_blocked_when_not_in_allowlist(monkeypatch):
     def _db():
         yield SimpleNamespace()
 
-    monkeypatch.setattr(artifacts_module, "get_artifact_for_workspace", lambda *args, **kwargs: fake_artifact)
+    monkeypatch.setattr(
+        artifacts_module, "get_artifact_for_workspace", lambda *args, **kwargs: fake_artifact
+    )
     app.dependency_overrides[artifacts_module.require_workspace_member] = _ctx
     app.dependency_overrides[artifacts_module.get_db] = _db
 
@@ -72,7 +74,9 @@ def test_external_artifact_redirect_allowed_when_host_is_allowlisted(monkeypatch
     def _db():
         yield SimpleNamespace()
 
-    monkeypatch.setattr(artifacts_module, "get_artifact_for_workspace", lambda *args, **kwargs: fake_artifact)
+    monkeypatch.setattr(
+        artifacts_module, "get_artifact_for_workspace", lambda *args, **kwargs: fake_artifact
+    )
     app.dependency_overrides[artifacts_module.require_workspace_member] = _ctx
     app.dependency_overrides[artifacts_module.get_db] = _db
 
@@ -84,4 +88,3 @@ def test_external_artifact_redirect_allowed_when_host_is_allowlisted(monkeypatch
     finally:
         settings.artifact_redirect_allowed_hosts = previous_hosts
         settings.artifact_redirect_strict_mode = previous_strict
-

@@ -8,11 +8,13 @@ Adds:
 - workflow_versions: Version history for workflow specifications
 - canary_deployments: Canary deployment tracking with staged rollout
 """
+
 from __future__ import annotations
 
 import sqlalchemy as sa
-from alembic import op
 from sqlalchemy.dialects import postgresql
+
+from alembic import op
 
 revision = "0011_add_versioning"
 down_revision = "0010_add_dlq_and_scheduler"
@@ -29,7 +31,9 @@ def upgrade() -> None:
         sa.Column("spec", postgresql.JSON, nullable=False),
         sa.Column("changelog", sa.Text, nullable=True),
         sa.Column("status", sa.String(20), default="draft", nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
         sa.Column("published_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("created_by", sa.String(36), nullable=True),
     )
@@ -51,7 +55,9 @@ def upgrade() -> None:
         sa.Column("status", sa.String(20), default="pending", nullable=False),
         sa.Column("stages", postgresql.JSON, nullable=False),
         sa.Column("rollback_triggers", postgresql.JSON, nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
         sa.Column("started_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("completed_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("rolled_back_at", sa.DateTime(timezone=True), nullable=True),

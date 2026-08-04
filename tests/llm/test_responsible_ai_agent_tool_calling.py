@@ -32,6 +32,7 @@ pytestmark = pytest.mark.llm
 # PURE (model-driven): parametresiz tool'lar
 # ---------------------------------------------------------------------------
 
+
 def test_compute_fairness_real(llm_or_skip, llm_model):
     tool = compute_fairness_wrapped
     content, artifact = _assert_result(
@@ -92,6 +93,7 @@ def test_build_dashboard_real(llm_or_skip, llm_model):
 # STATEFUL: Pydantic objesi gerektiren tool'lar — tool.func() doğrudan çağrı
 # ---------------------------------------------------------------------------
 
+
 def test_suggest_mitigations_real():
     """``suggest_mitigations_wrapped`` FairnessReport + ErrorSlice listesi alır.
 
@@ -139,9 +141,6 @@ def test_dashboard_payload_real():
     d = build_dashboard(model_id="m1")
     out = dashboard_payload_wrapped.func(d=d)
     s = str(out).lower()
-    assert (
-        "model_id" in s
-        or "m1" in s
-        or "ok" in s
-        or "fairness" in s
-    ), f"dashboard_payload beklenen dict üretmedi: {s[:300]}"
+    assert "model_id" in s or "m1" in s or "ok" in s or "fairness" in s, (
+        f"dashboard_payload beklenen dict üretmedi: {s[:300]}"
+    )

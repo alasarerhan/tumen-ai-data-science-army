@@ -1,14 +1,12 @@
-
-
 def get_tool_call_names(messages):
     """
     Method to extract the tool name from a list of Langchain messages
-    
+
     Parameters
     -----------
     messages: list
         A list of Langchain messages
-    
+
     Returns
     --------
     tool_calls: list

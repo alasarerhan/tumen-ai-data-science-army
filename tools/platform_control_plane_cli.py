@@ -7,7 +7,6 @@ import sys
 from typing import Any
 from urllib import error, request
 
-
 DEFAULT_API_URL = "http://127.0.0.1:8010"
 
 
@@ -56,7 +55,9 @@ def _dispatch(args: argparse.Namespace) -> Any:
             body["resource_keys"] = args.resource_keys
         if args.limit is not None:
             body["limit"] = args.limit
-        return _call(args.api_url, "/v1/control-plane/query", method="POST", body=body, token=args.token)
+        return _call(
+            args.api_url, "/v1/control-plane/query", method="POST", body=body, token=args.token
+        )
     if args.command == "plan-action":
         body = {
             "workspace_id": args.workspace_id,
@@ -64,7 +65,13 @@ def _dispatch(args: argparse.Namespace) -> Any:
             "action_name": args.action_name,
             "arguments": _loads_object(args.arguments_json),
         }
-        return _call(args.api_url, "/v1/control-plane/actions/plan", method="POST", body=body, token=args.token)
+        return _call(
+            args.api_url,
+            "/v1/control-plane/actions/plan",
+            method="POST",
+            body=body,
+            token=args.token,
+        )
     if args.command == "execute-action":
         body = {
             "workspace_id": args.workspace_id,
@@ -72,7 +79,13 @@ def _dispatch(args: argparse.Namespace) -> Any:
             "arguments": _loads_object(args.arguments_json),
             "confirmed": bool(args.confirmed),
         }
-        return _call(args.api_url, "/v1/control-plane/actions/execute", method="POST", body=body, token=args.token)
+        return _call(
+            args.api_url,
+            "/v1/control-plane/actions/execute",
+            method="POST",
+            body=body,
+            token=args.token,
+        )
     raise RuntimeError(f"Unsupported command: {args.command}")
 
 

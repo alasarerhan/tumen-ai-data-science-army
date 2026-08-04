@@ -9,8 +9,8 @@ Tests cover:
   - Sliding window expiration
   - Client ID extraction
 """
-from __future__ import annotations
 
+from __future__ import annotations
 
 from fastapi import FastAPI
 from starlette.testclient import TestClient

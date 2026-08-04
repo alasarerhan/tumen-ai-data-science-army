@@ -8,6 +8,7 @@ Tests cover:
   - Auth bypass with invalid tokens
   - IDOR cross-workspace access
 """
+
 from __future__ import annotations
 
 import uuid
@@ -31,7 +32,7 @@ class TestSqlInjection:
             "'; DROP TABLE workflow_specs; --",
             "test' OR '1'='1",
             "test'; INSERT INTO users VALUES (...); --",
-            "test\" OR \"1\"=\"1",
+            'test" OR "1"="1',
         ]
 
         for name in malicious_names:
@@ -132,7 +133,9 @@ class TestXssInChat:
 class TestPathTraversal:
     """Tests for path traversal prevention in file uploads."""
 
-    def test_path_traversal_in_upload_filename(self, seeded_db: dict, tmp_path, monkeypatch) -> None:
+    def test_path_traversal_in_upload_filename(
+        self, seeded_db: dict, tmp_path, monkeypatch
+    ) -> None:
 
         db = seeded_db["db"]
         tenant = seeded_db["tenant"]
@@ -171,7 +174,9 @@ class TestPathTraversal:
             assert ".." not in upload.filename
             assert upload.filename != filename
 
-    def test_path_traversal_sanitized_to_safe_name(self, seeded_db: dict, tmp_path, monkeypatch) -> None:
+    def test_path_traversal_sanitized_to_safe_name(
+        self, seeded_db: dict, tmp_path, monkeypatch
+    ) -> None:
         db = seeded_db["db"]
         tenant = seeded_db["tenant"]
         workspace = seeded_db["workspace"]
@@ -230,6 +235,7 @@ class TestCommandInjection:
 
         assert record.id is not None
         import json
+
         stored = json.loads(record.parameters_json)
         assert stored["command"] == "; rm -rf /"
 
@@ -238,9 +244,10 @@ class TestAuthBypass:
     """Tests for authentication bypass prevention."""
 
     def test_auth_bypass_invalid_token(self, seeded_db: dict) -> None:
-        from platform_api.auth.dependencies import get_principal
         from fastapi.security import HTTPAuthorizationCredentials
         from starlette.requests import Request
+
+        from platform_api.auth.dependencies import get_principal
 
         invalid_tokens = [
             "invalid-token",
@@ -254,6 +261,7 @@ class TestAuthBypass:
         for token in invalid_tokens:
             try:
                 import asyncio
+
                 request = Request(
                     {
                         "type": "http",
@@ -263,10 +271,14 @@ class TestAuthBypass:
                         "client": ("127.0.0.1", 8000),
                     }
                 )
-                asyncio.run(get_principal(
-                    request=request,
-                    credentials=HTTPAuthorizationCredentials(scheme="Bearer", credentials=token),
-                ))
+                asyncio.run(
+                    get_principal(
+                        request=request,
+                        credentials=HTTPAuthorizationCredentials(
+                            scheme="Bearer", credentials=token
+                        ),
+                    )
+                )
             except HTTPException as e:
                 assert e.status_code in (401, 403, 503)
 

@@ -13,8 +13,7 @@ from typing import Any, Callable  # noqa: E402, F401
 
 from langchain_core.messages import AIMessage  # noqa: E402, F401
 
-from ai_data_science_team.multiagents.supervisor import (  # noqa: E402, F401
-    SupervisorDSState)
+from ai_data_science_team.multiagents.supervisor import SupervisorDSState  # noqa: E402, F401
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +21,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class MlflowNodeDeps:
     """Dependencies for the mlflow node."""
+
     mlflow_tools_agent: Any
     ensure_df: Any  # was _ensure_df
     format_result_with_llm: Any  # was _format_result_with_llm
@@ -39,8 +39,7 @@ def make_node_mlflow(deps: MlflowNodeDeps) -> Callable[[SupervisorDSState], dict
     def node_mlflow(state: SupervisorDSState):
         logger.info("---MLFLOW TOOLS---")
         before_msgs = list(state.get("messages", []) or [])
-        deps.mlflow_tools_agent.invoke_messages(
-            messages=before_msgs)
+        deps.mlflow_tools_agent.invoke_messages(messages=before_msgs)
         response = deps.mlflow_tools_agent.response or {}
         merged = deps.merge_messages(before_msgs, response)
         merged["messages"] = deps.tag_messages(merged.get("messages"), "mlflow_tools_agent")
@@ -48,11 +47,10 @@ def make_node_mlflow(deps: MlflowNodeDeps) -> Callable[[SupervisorDSState], dict
             "mlflow_tools_agent",
             response.get("mlflow_artifacts"),
             deps._get_last_human_text(before_msgs),
-            extra_text="MLflow artifacts.")
+            extra_text="MLflow artifacts.",
+        )
         if summary_text:
-            merged["messages"].append(
-                AIMessage(content=summary_text, name="mlflow_tools_agent")
-            )
+            merged["messages"].append(AIMessage(content=summary_text, name="mlflow_tools_agent"))
         mlflow_artifacts = response.get("mlflow_artifacts")
         return {
             **merged,
@@ -64,9 +62,7 @@ def make_node_mlflow(deps: MlflowNodeDeps) -> Callable[[SupervisorDSState], dict
             "last_worker": "MLflow_Tools_Agent",
         }
 
-
     return node_mlflow
-
 
 
 __all__ = ["MlflowNodeDeps", "make_node_mlflow"]

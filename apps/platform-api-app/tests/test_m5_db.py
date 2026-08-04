@@ -12,6 +12,7 @@ Coverage:
   - archive_workflow_spec: idempotent archive guard
   - Spec validation (missing fields) from the service layer
 """
+
 from __future__ import annotations
 
 import json

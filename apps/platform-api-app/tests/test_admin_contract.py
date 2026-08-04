@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import pytest
-from fastapi.testclient import TestClient
 from fastapi.routing import APIRoute
+from fastapi.testclient import TestClient
 
 from platform_api.auth.dependencies import get_principal
 from platform_api.auth.models import Principal
@@ -77,7 +77,9 @@ def test_admin_and_finops_routes_require_tenant_admin(app):
     missing = [
         route.path
         for route in protected_routes
-        if not any(dependency.call is require_tenant_admin for dependency in route.dependant.dependencies)
+        if not any(
+            dependency.call is require_tenant_admin for dependency in route.dependant.dependencies
+        )
     ]
 
     assert missing == []

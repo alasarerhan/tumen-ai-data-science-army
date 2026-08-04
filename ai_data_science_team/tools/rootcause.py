@@ -35,15 +35,12 @@ from typing import Any, Dict, List, Mapping  # noqa: E402, F401
 
 import pandas as pd  # noqa: E402, F401
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
 
 
-def _filter_window(
-    df: pd.DataFrame, *, dimension: str, value: Any
-) -> pd.DataFrame:
+def _filter_window(df: pd.DataFrame, *, dimension: str, value: Any) -> pd.DataFrame:
     if value is None:
         return df
     if dimension not in df.columns:
@@ -51,9 +48,7 @@ def _filter_window(
     return df[df[dimension] == value]
 
 
-def _aggregate(
-    df: pd.DataFrame, *, metric_col: str, agg: str
-) -> float:
+def _aggregate(df: pd.DataFrame, *, metric_col: str, agg: str) -> float:
     if metric_col not in df.columns or df.empty:
         return float("nan")
     series = pd.to_numeric(df[metric_col], errors="coerce").dropna()
@@ -271,9 +266,7 @@ def drill_down(
     delta.  Top-N by absolute delta.
     """
     if dimension not in df.columns or child_dimension not in df.columns:
-        raise ValueError(
-            "both dimension and child_dimension must be in DataFrame"
-        )
+        raise ValueError("both dimension and child_dimension must be in DataFrame")
     base_q = str(baseline_window.get("query", "")).strip()
     cur_q = str(current_window.get("query", "")).strip()
     base_df = df.query(base_q) if base_q else df.copy()
@@ -285,9 +278,7 @@ def drill_down(
     slices: List[DrillSlice] = []
     for child_val, grp in cur_parents.groupby(child_dimension, dropna=False):
         cur_val = _aggregate(grp, metric_col=metric_col, agg=agg)
-        base_child = _filter_window(
-            base_parents, dimension=child_dimension, value=child_val
-        )
+        base_child = _filter_window(base_parents, dimension=child_dimension, value=child_val)
         base_val = _aggregate(base_child, metric_col=metric_col, agg=agg)
         delta = cur_val - base_val
         slices.append(
@@ -302,9 +293,7 @@ def drill_down(
             )
         )
 
-    sorted_by_delta = sorted(
-        slices, key=lambda x: abs(x.delta), reverse=True
-    )[:top_n]
+    sorted_by_delta = sorted(slices, key=lambda x: abs(x.delta), reverse=True)[:top_n]
     return DrillDownResult(
         parent_dimension=dimension,
         child_dimension=child_dimension,
@@ -331,7 +320,8 @@ def render_narrative(
     """
     direction = "increased" if result.total_delta > 0 else "decreased"
     magnitude = (
-        "significantly" if abs(result.total_delta) > 0.05 * abs(result.baseline_total or 1.0)
+        "significantly"
+        if abs(result.total_delta) > 0.05 * abs(result.baseline_total or 1.0)
         else "slightly"
     )
     if result.top_drivers:
@@ -364,5 +354,3 @@ __all__ = [
     "drill_down",
     "render_narrative",
 ]
-
-

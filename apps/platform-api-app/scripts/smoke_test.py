@@ -4,11 +4,12 @@ import json
 import urllib.error
 import urllib.request
 
-
 BASE_URL = "http://localhost:8000"
 
 
-def request(path: str, method: str = "GET", body: dict | None = None, token: str | None = None) -> dict:
+def request(
+    path: str, method: str = "GET", body: dict | None = None, token: str | None = None
+) -> dict:
     data = None
     headers = {}
     if body is not None:
@@ -118,7 +119,9 @@ def main() -> int:
             token="dev",
         )
         workflow_id = workflow["id"]
-        print("workflow-created:", {"name": workflow.get("name"), "version": workflow.get("version")})
+        print(
+            "workflow-created:", {"name": workflow.get("name"), "version": workflow.get("version")}
+        )
 
         workflows = request(
             f"/v1/workflows?workspace_id={workspace_id}&name=smoke-workflow",

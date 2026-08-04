@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 import secrets
-from typing import Iterable
+from collections.abc import Iterable
 
 from fastapi import HTTPException, Request, Response
 from fastapi.responses import JSONResponse

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-
 import re
 from typing import Any, Sequence
 
@@ -150,6 +149,9 @@ def build_supervisor_chain(llm: Any, route_options: Sequence[str], subagent_name
             | llm.bind(functions=[function_def], function_call={"name": "route"})
             | JsonOutputFunctionsParser()
         )
-    return prompt | llm | StrOutputParser() | RunnableLambda(
-        lambda text: parse_router_output(text, route_options)
+    return (
+        prompt
+        | llm
+        | StrOutputParser()
+        | RunnableLambda(lambda text: parse_router_output(text, route_options))
     )

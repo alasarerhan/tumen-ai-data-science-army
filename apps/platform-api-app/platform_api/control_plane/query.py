@@ -3,23 +3,28 @@ from __future__ import annotations
 import json
 import re
 import uuid
+from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 from urllib.parse import urlparse
 
 from sqlalchemy import func, select
 
-from platform_api.control_plane.catalog import catalog_resource_keys, get_descriptor, get_platform_catalog
+from platform_api.control_plane.catalog import (
+    catalog_resource_keys,
+    get_descriptor,
+    get_platform_catalog,
+)
 from platform_api.control_plane.policies import ControlPlaneContext, policy_engine
 from platform_api.control_plane.schemas import (
-    PlatformEntityRef,
-    PlatformRelationship,
     PlatformActionPlan,
+    PlatformEntityRef,
     PlatformProvenance,
     PlatformQueryPlan,
     PlatformQueryResult,
     PlatformQuerySection,
+    PlatformRelationship,
 )
 from platform_api.core.config import settings
 from platform_api.db.models import (
@@ -33,16 +38,15 @@ from platform_api.db.models import (
     OutboxDlq,
     ScheduledJob,
     User,
-    Workspace,
-    WorkspaceMembership,
     WorkflowNodeExecution,
     WorkflowRun,
     WorkflowSignalEvent,
     WorkflowSpec,
+    Workspace,
+    WorkspaceMembership,
 )
-from platform_api.services.workflow_service import build_workflow_validation_summary
 from platform_api.services.modelops_service import get_modelops_summary
-
+from platform_api.services.workflow_service import build_workflow_validation_summary
 
 Resolver = Callable[[ControlPlaneContext, PlatformQueryPlan, str], PlatformQuerySection]
 
@@ -82,7 +86,9 @@ def plan_query_from_text(
 ) -> PlatformQueryPlan:
     if resource_keys:
         selected = [key for key in resource_keys if key in catalog_resource_keys()]
-        return PlatformQueryPlan(query=query, resource_keys=selected, filters=filters or {}, limit=limit)
+        return PlatformQueryPlan(
+            query=query, resource_keys=selected, filters=filters or {}, limit=limit
+        )
 
     normalized = _normalize(query)
     if any(term in normalized for term in ANALYTIC_CREATION_TERMS):
@@ -108,11 +114,21 @@ def plan_query_from_text(
     scored: list[tuple[int, str]] = []
     for descriptor in get_platform_catalog():
         score = 0
-        searchable = [descriptor.resource_key, descriptor.label, *descriptor.tags, *descriptor.queryable_fields]
+        searchable = [
+            descriptor.resource_key,
+            descriptor.label,
+            *descriptor.tags,
+            *descriptor.queryable_fields,
+        ]
         for token in searchable:
             normalized_token = _normalize(token)
             if normalized_token and normalized_token in normalized:
-                score += 3 if "." in descriptor.resource_key and normalized_token == descriptor.resource_key else 1
+                score += (
+                    3
+                    if "." in descriptor.resource_key
+                    and normalized_token == descriptor.resource_key
+                    else 1
+                )
         for part in descriptor.resource_key.split("."):
             if part and part in normalized:
                 score += 1
@@ -121,7 +137,9 @@ def plan_query_from_text(
 
     scored.sort(key=lambda item: (-item[0], item[1]))
     selected = [key for _score, key in scored[:6]]
-    return PlatformQueryPlan(query=query, resource_keys=selected, filters=filters or {}, limit=limit)
+    return PlatformQueryPlan(
+        query=query, resource_keys=selected, filters=filters or {}, limit=limit
+    )
 
 
 def should_route_to_control_plane(query: str) -> bool:
@@ -129,7 +147,9 @@ def should_route_to_control_plane(query: str) -> bool:
     return bool(plan.resource_keys)
 
 
-def execute_platform_query(ctx: ControlPlaneContext, plan: PlatformQueryPlan) -> PlatformQueryResult:
+def execute_platform_query(
+    ctx: ControlPlaneContext, plan: PlatformQueryPlan
+) -> PlatformQueryResult:
     sections: list[PlatformQuerySection] = []
     for resource_key in plan.resource_keys:
         descriptor = get_descriptor(resource_key)
@@ -156,7 +176,8 @@ def execute_platform_query(ctx: ControlPlaneContext, plan: PlatformQueryPlan) ->
                     resource_key=resource_key,
                     label=descriptor.label,
                     status="not_configured",
-                    message=descriptor.not_exposed_reason or "No resolver is configured for this resource yet.",
+                    message=descriptor.not_exposed_reason
+                    or "No resolver is configured for this resource yet.",
                     resolver="none",
                     redactions=descriptor.redacted_fields,
                     filters=plan.filters,
@@ -204,7 +225,9 @@ def execute_platform_query(ctx: ControlPlaneContext, plan: PlatformQueryPlan) ->
     return PlatformQueryResult(summary=summary, query=plan.query, plan=plan, sections=sections)
 
 
-def attach_action_plan(result: PlatformQueryResult, action_plan: PlatformActionPlan | None) -> PlatformQueryResult:
+def attach_action_plan(
+    result: PlatformQueryResult, action_plan: PlatformActionPlan | None
+) -> PlatformQueryResult:
     if action_plan is None:
         return result
     result.action_plan = action_plan
@@ -217,7 +240,10 @@ def _normalize(value: str) -> str:
 
 
 def _is_broad_platform_query(normalized: str) -> bool:
-    if any(term in normalized for term in ["her sey", "herseyi", "tum", "tumu", "everything", "all platform"]):
+    if any(
+        term in normalized
+        for term in ["her sey", "herseyi", "tum", "tumu", "everything", "all platform"]
+    ):
         return True
     return any(term in normalized for term in PLATFORM_TERMS) and any(
         term in normalized for term in ["status", "durum", "state", "summary", "ozet", "overview"]
@@ -304,14 +330,46 @@ def _safe_data_source_metadata(metadata: dict[str, Any]) -> dict[str, Any]:
     return safe
 
 
-def _resolve_overview(ctx: ControlPlaneContext, plan: PlatformQueryPlan, resource_key: str) -> PlatformQuerySection:
+def _resolve_overview(
+    ctx: ControlPlaneContext, plan: PlatformQueryPlan, resource_key: str
+) -> PlatformQuerySection:
     metrics = {
-        "workflows": ctx.db.execute(select(func.count()).select_from(WorkflowSpec).where(WorkflowSpec.workspace_id == ctx.workspace.id)).scalar() or 0,
-        "runs": ctx.db.execute(select(func.count()).select_from(WorkflowRun).where(WorkflowRun.workspace_id == ctx.workspace.id)).scalar() or 0,
-        "artifacts": ctx.db.execute(select(func.count()).select_from(Artifact).where(Artifact.workspace_id == ctx.workspace.id)).scalar() or 0,
-        "data_sources": ctx.db.execute(select(func.count()).select_from(DataSource).where(DataSource.workspace_id == ctx.workspace.id)).scalar() or 0,
-        "uploads": ctx.db.execute(select(func.count()).select_from(ChatUpload).where(ChatUpload.workspace_id == ctx.workspace.id)).scalar() or 0,
-        "approvals": ctx.db.execute(select(func.count()).select_from(HitlApproval).where(HitlApproval.workspace_id == ctx.workspace.id)).scalar() or 0,
+        "workflows": ctx.db.execute(
+            select(func.count())
+            .select_from(WorkflowSpec)
+            .where(WorkflowSpec.workspace_id == ctx.workspace.id)
+        ).scalar()
+        or 0,
+        "runs": ctx.db.execute(
+            select(func.count())
+            .select_from(WorkflowRun)
+            .where(WorkflowRun.workspace_id == ctx.workspace.id)
+        ).scalar()
+        or 0,
+        "artifacts": ctx.db.execute(
+            select(func.count())
+            .select_from(Artifact)
+            .where(Artifact.workspace_id == ctx.workspace.id)
+        ).scalar()
+        or 0,
+        "data_sources": ctx.db.execute(
+            select(func.count())
+            .select_from(DataSource)
+            .where(DataSource.workspace_id == ctx.workspace.id)
+        ).scalar()
+        or 0,
+        "uploads": ctx.db.execute(
+            select(func.count())
+            .select_from(ChatUpload)
+            .where(ChatUpload.workspace_id == ctx.workspace.id)
+        ).scalar()
+        or 0,
+        "approvals": ctx.db.execute(
+            select(func.count())
+            .select_from(HitlApproval)
+            .where(HitlApproval.workspace_id == ctx.workspace.id)
+        ).scalar()
+        or 0,
     }
     return _section(
         resource_key=resource_key,
@@ -319,14 +377,18 @@ def _resolve_overview(ctx: ControlPlaneContext, plan: PlatformQueryPlan, resourc
         status="ok",
         resolver="overview",
         metrics=metrics,
-        records=[{"workspace_id": str(ctx.workspace.id), "workspace_name": ctx.workspace.name, **metrics}],
+        records=[
+            {"workspace_id": str(ctx.workspace.id), "workspace_name": ctx.workspace.name, **metrics}
+        ],
         columns=["workspace_name", *metrics.keys()],
         links=[{"label": "Dashboard", "href": "/dashboard"}],
         filters=plan.filters,
     )
 
 
-def _resolve_identity(ctx: ControlPlaneContext, plan: PlatformQueryPlan, resource_key: str) -> PlatformQuerySection:
+def _resolve_identity(
+    ctx: ControlPlaneContext, plan: PlatformQueryPlan, resource_key: str
+) -> PlatformQuerySection:
     records = [
         {
             "user_id": str(ctx.user.id),
@@ -334,7 +396,11 @@ def _resolve_identity(ctx: ControlPlaneContext, plan: PlatformQueryPlan, resourc
             "workspace_id": str(ctx.workspace.id),
             "workspace_name": ctx.workspace.name,
             "tenant_id": str(ctx.workspace.tenant_id),
-            "workspace_role": str(ctx.membership.role.value if hasattr(ctx.membership.role, "value") else ctx.membership.role),
+            "workspace_role": str(
+                ctx.membership.role.value
+                if hasattr(ctx.membership.role, "value")
+                else ctx.membership.role
+            ),
         }
     ]
     return _section(
@@ -348,7 +414,9 @@ def _resolve_identity(ctx: ControlPlaneContext, plan: PlatformQueryPlan, resourc
     )
 
 
-def _resolve_configuration(ctx: ControlPlaneContext, plan: PlatformQueryPlan, resource_key: str) -> PlatformQuerySection:
+def _resolve_configuration(
+    ctx: ControlPlaneContext, plan: PlatformQueryPlan, resource_key: str
+) -> PlatformQuerySection:
     records = [
         {
             "deployment_profile": settings.deployment_profile,
@@ -356,7 +424,9 @@ def _resolve_configuration(ctx: ControlPlaneContext, plan: PlatformQueryPlan, re
             "csrf_enabled": settings.csrf_enabled,
             "artifact_storage_backend": settings.artifact_storage_backend,
             "chat_upload_max_mb": settings.chat_upload_max_mb,
-            "data_source_secret_policy": "configured" if settings.data_source_secret_key else "not_configured",
+            "data_source_secret_policy": "configured"
+            if settings.data_source_secret_key
+            else "not_configured",
             "secret_values": "<redacted>",
         }
     ]
@@ -373,7 +443,9 @@ def _resolve_configuration(ctx: ControlPlaneContext, plan: PlatformQueryPlan, re
     )
 
 
-def _resolve_data_sources(ctx: ControlPlaneContext, plan: PlatformQueryPlan, resource_key: str) -> PlatformQuerySection:
+def _resolve_data_sources(
+    ctx: ControlPlaneContext, plan: PlatformQueryPlan, resource_key: str
+) -> PlatformQuerySection:
     rows = list(
         ctx.db.execute(
             select(DataSource)
@@ -409,7 +481,9 @@ def _resolve_data_sources(ctx: ControlPlaneContext, plan: PlatformQueryPlan, res
     )
 
 
-def _resolve_chat_uploads(ctx: ControlPlaneContext, plan: PlatformQueryPlan, resource_key: str) -> PlatformQuerySection:
+def _resolve_chat_uploads(
+    ctx: ControlPlaneContext, plan: PlatformQueryPlan, resource_key: str
+) -> PlatformQuerySection:
     rows = list(
         ctx.db.execute(
             select(ChatUpload)
@@ -441,7 +515,9 @@ def _resolve_chat_uploads(ctx: ControlPlaneContext, plan: PlatformQueryPlan, res
     )
 
 
-def _resolve_workflows(ctx: ControlPlaneContext, plan: PlatformQueryPlan, resource_key: str) -> PlatformQuerySection:
+def _resolve_workflows(
+    ctx: ControlPlaneContext, plan: PlatformQueryPlan, resource_key: str
+) -> PlatformQuerySection:
     rows = list(
         ctx.db.execute(
             select(WorkflowSpec)
@@ -459,7 +535,9 @@ def _resolve_workflows(ctx: ControlPlaneContext, plan: PlatformQueryPlan, resour
                 "name": workflow.name,
                 "version": workflow.version,
                 "status": workflow.status,
-                "validation_status": build_workflow_validation_summary(spec, workflow_name=workflow.name)["status"],
+                "validation_status": build_workflow_validation_summary(
+                    spec, workflow_name=workflow.name
+                )["status"],
                 "created_at": _iso(workflow.created_at),
                 "updated_at": _iso(workflow.updated_at),
             }
@@ -476,7 +554,9 @@ def _resolve_workflows(ctx: ControlPlaneContext, plan: PlatformQueryPlan, resour
     )
 
 
-def _resolve_workflow_schedules(ctx: ControlPlaneContext, plan: PlatformQueryPlan, resource_key: str) -> PlatformQuerySection:
+def _resolve_workflow_schedules(
+    ctx: ControlPlaneContext, plan: PlatformQueryPlan, resource_key: str
+) -> PlatformQuerySection:
     rows = list(
         ctx.db.execute(
             select(WorkflowSpec)
@@ -543,14 +623,26 @@ def _resolve_workflow_schedules(ctx: ControlPlaneContext, plan: PlatformQueryPla
             "Shows schedule metadata persisted in workflow specs plus workspace-scoped scheduler jobs when available. "
             "External Prefect deployment connectivity is optional runtime evidence, not a catalog prerequisite."
         ),
-        columns=["workflow_name", "workflow_version", "cron", "interval_seconds", "timezone", "enabled", "source", "last_run_status", "next_run_at"],
+        columns=[
+            "workflow_name",
+            "workflow_version",
+            "cron",
+            "interval_seconds",
+            "timezone",
+            "enabled",
+            "source",
+            "last_run_status",
+            "next_run_at",
+        ],
         records=records,
         links=[{"label": "Workflows", "href": "/workflows"}],
         filters=plan.filters,
     )
 
 
-def _resolve_runs(ctx: ControlPlaneContext, plan: PlatformQueryPlan, resource_key: str) -> PlatformQuerySection:
+def _resolve_runs(
+    ctx: ControlPlaneContext, plan: PlatformQueryPlan, resource_key: str
+) -> PlatformQuerySection:
     rows = list(
         ctx.db.execute(
             select(WorkflowRun)
@@ -579,22 +671,37 @@ def _resolve_runs(ctx: ControlPlaneContext, plan: PlatformQueryPlan, resource_ke
         label="Workflow Runs",
         status=_status_for_records(records),
         resolver="runs",
-        columns=["flow_key", "status", "workflow_version", "trigger_type", "created_at", "updated_at"],
+        columns=[
+            "flow_key",
+            "status",
+            "workflow_version",
+            "trigger_type",
+            "created_at",
+            "updated_at",
+        ],
         records=records,
         links=[{"label": "Runs", "href": "/runs"}],
         filters=plan.filters,
     )
 
 
-def _resolve_run_nodes(ctx: ControlPlaneContext, plan: PlatformQueryPlan, resource_key: str) -> PlatformQuerySection:
-    stmt = select(WorkflowNodeExecution).where(WorkflowNodeExecution.workspace_id == ctx.workspace.id)
+def _resolve_run_nodes(
+    ctx: ControlPlaneContext, plan: PlatformQueryPlan, resource_key: str
+) -> PlatformQuerySection:
+    stmt = select(WorkflowNodeExecution).where(
+        WorkflowNodeExecution.workspace_id == ctx.workspace.id
+    )
     run_id = plan.filters.get("run_id") or plan.filters.get("workflow_run_id")
     if run_id:
         parsed_run_id = _uuid_filter_value(run_id)
-        stmt = stmt.where(WorkflowNodeExecution.workflow_run_id == (parsed_run_id or uuid.UUID(int=0)))
+        stmt = stmt.where(
+            WorkflowNodeExecution.workflow_run_id == (parsed_run_id or uuid.UUID(int=0))
+        )
     rows = list(
         ctx.db.execute(
-            stmt.order_by(WorkflowNodeExecution.created_at.desc(), WorkflowNodeExecution.id.desc()).limit(plan.limit)
+            stmt.order_by(
+                WorkflowNodeExecution.created_at.desc(), WorkflowNodeExecution.id.desc()
+            ).limit(plan.limit)
         ).scalars()
     )
     records = [
@@ -624,12 +731,16 @@ def _resolve_run_nodes(ctx: ControlPlaneContext, plan: PlatformQueryPlan, resour
     )
 
 
-def _resolve_agent_traces(ctx: ControlPlaneContext, plan: PlatformQueryPlan, resource_key: str) -> PlatformQuerySection:
+def _resolve_agent_traces(
+    ctx: ControlPlaneContext, plan: PlatformQueryPlan, resource_key: str
+) -> PlatformQuerySection:
     stmt = select(AgentExecutionTrace).where(AgentExecutionTrace.workspace_id == ctx.workspace.id)
     run_id = plan.filters.get("run_id") or plan.filters.get("workflow_run_id")
     if run_id:
         parsed_run_id = _uuid_filter_value(run_id)
-        stmt = stmt.where(AgentExecutionTrace.workflow_run_id == (parsed_run_id or uuid.UUID(int=0)))
+        stmt = stmt.where(
+            AgentExecutionTrace.workflow_run_id == (parsed_run_id or uuid.UUID(int=0))
+        )
     node_id = plan.filters.get("node_id")
     if node_id:
         stmt = stmt.where(AgentExecutionTrace.node_id == str(node_id))
@@ -638,7 +749,9 @@ def _resolve_agent_traces(ctx: ControlPlaneContext, plan: PlatformQueryPlan, res
         stmt = stmt.where(AgentExecutionTrace.status == str(status))
     rows = list(
         ctx.db.execute(
-            stmt.order_by(AgentExecutionTrace.started_at.desc(), AgentExecutionTrace.id.desc()).limit(plan.limit)
+            stmt.order_by(
+                AgentExecutionTrace.started_at.desc(), AgentExecutionTrace.id.desc()
+            ).limit(plan.limit)
         ).scalars()
     )
     records = [
@@ -671,7 +784,17 @@ def _resolve_agent_traces(ctx: ControlPlaneContext, plan: PlatformQueryPlan, res
         label="Agent Execution Traces",
         status=_status_for_records(records),
         resolver="agent_traces",
-        columns=["node_id", "node_type", "attempt", "status", "duration_ms", "tool_call_count", "token_usage", "cost_summary", "started_at"],
+        columns=[
+            "node_id",
+            "node_type",
+            "attempt",
+            "status",
+            "duration_ms",
+            "tool_call_count",
+            "token_usage",
+            "cost_summary",
+            "started_at",
+        ],
         records=records,
         links=[{"label": "Agents", "href": "/agents"}, {"label": "Runs", "href": "/runs"}],
         filters=plan.filters,
@@ -679,13 +802,23 @@ def _resolve_agent_traces(ctx: ControlPlaneContext, plan: PlatformQueryPlan, res
     )
 
 
-def _resolve_run_signals(ctx: ControlPlaneContext, plan: PlatformQueryPlan, resource_key: str) -> PlatformQuerySection:
+def _resolve_run_signals(
+    ctx: ControlPlaneContext, plan: PlatformQueryPlan, resource_key: str
+) -> PlatformQuerySection:
     stmt = select(WorkflowSignalEvent).where(WorkflowSignalEvent.workspace_id == ctx.workspace.id)
     run_id = plan.filters.get("run_id") or plan.filters.get("workflow_run_id")
     if run_id:
         parsed_run_id = _uuid_filter_value(run_id)
-        stmt = stmt.where(WorkflowSignalEvent.workflow_run_id == (parsed_run_id or uuid.UUID(int=0)))
-    rows = list(ctx.db.execute(stmt.order_by(WorkflowSignalEvent.created_at.desc(), WorkflowSignalEvent.id.desc()).limit(plan.limit)).scalars())
+        stmt = stmt.where(
+            WorkflowSignalEvent.workflow_run_id == (parsed_run_id or uuid.UUID(int=0))
+        )
+    rows = list(
+        ctx.db.execute(
+            stmt.order_by(
+                WorkflowSignalEvent.created_at.desc(), WorkflowSignalEvent.id.desc()
+            ).limit(plan.limit)
+        ).scalars()
+    )
     records = [
         {
             "id": str(signal.id),
@@ -693,7 +826,9 @@ def _resolve_run_signals(ctx: ControlPlaneContext, plan: PlatformQueryPlan, reso
             "signal_type": signal.signal_type,
             "target_step": signal.target_step,
             "note": signal.note,
-            "created_by_user_id": str(signal.created_by_user_id) if signal.created_by_user_id else None,
+            "created_by_user_id": str(signal.created_by_user_id)
+            if signal.created_by_user_id
+            else None,
             "created_at": _iso(signal.created_at),
         }
         for signal in rows
@@ -710,7 +845,9 @@ def _resolve_run_signals(ctx: ControlPlaneContext, plan: PlatformQueryPlan, reso
     )
 
 
-def _resolve_artifacts(ctx: ControlPlaneContext, plan: PlatformQueryPlan, resource_key: str) -> PlatformQuerySection:
+def _resolve_artifacts(
+    ctx: ControlPlaneContext, plan: PlatformQueryPlan, resource_key: str
+) -> PlatformQuerySection:
     rows = list(
         ctx.db.execute(
             select(Artifact)
@@ -723,12 +860,16 @@ def _resolve_artifacts(ctx: ControlPlaneContext, plan: PlatformQueryPlan, resour
     relationships: list[PlatformRelationship] = []
     for artifact in rows:
         artifact_id = str(artifact.id)
-        parent_ids = [str(parent_id) for parent_id in _json_loads(artifact.parent_artifact_ids_json, [])]
+        parent_ids = [
+            str(parent_id) for parent_id in _json_loads(artifact.parent_artifact_ids_json, [])
+        ]
         records.append(
             {
                 "id": artifact_id,
                 "kind": artifact.kind,
-                "workflow_run_id": str(artifact.workflow_run_id) if artifact.workflow_run_id else None,
+                "workflow_run_id": str(artifact.workflow_run_id)
+                if artifact.workflow_run_id
+                else None,
                 "produced_by_node_id": artifact.produced_by_node_id,
                 "parent_artifact_ids": parent_ids,
                 "uri_scheme": urlparse(artifact.uri).scheme or "local",
@@ -781,7 +922,9 @@ def _resolve_artifacts(ctx: ControlPlaneContext, plan: PlatformQueryPlan, resour
     )
 
 
-def _resolve_approvals(ctx: ControlPlaneContext, plan: PlatformQueryPlan, resource_key: str) -> PlatformQuerySection:
+def _resolve_approvals(
+    ctx: ControlPlaneContext, plan: PlatformQueryPlan, resource_key: str
+) -> PlatformQuerySection:
     rows = list(
         ctx.db.execute(
             select(HitlApproval)
@@ -813,7 +956,9 @@ def _resolve_approvals(ctx: ControlPlaneContext, plan: PlatformQueryPlan, resour
     )
 
 
-def _resolve_audit(ctx: ControlPlaneContext, plan: PlatformQueryPlan, resource_key: str) -> PlatformQuerySection:
+def _resolve_audit(
+    ctx: ControlPlaneContext, plan: PlatformQueryPlan, resource_key: str
+) -> PlatformQuerySection:
     rows = list(
         ctx.db.execute(
             select(AuditLog)
@@ -844,14 +989,23 @@ def _resolve_audit(ctx: ControlPlaneContext, plan: PlatformQueryPlan, resource_k
     )
 
 
-def _resolve_admin_ops(ctx: ControlPlaneContext, plan: PlatformQueryPlan, resource_key: str) -> PlatformQuerySection:
+def _resolve_admin_ops(
+    ctx: ControlPlaneContext, plan: PlatformQueryPlan, resource_key: str
+) -> PlatformQuerySection:
     jobs = list(
         ctx.db.execute(
-            select(ScheduledJob).order_by(ScheduledJob.next_run_at.asc(), ScheduledJob.job_name).limit(plan.limit)
+            select(ScheduledJob)
+            .order_by(ScheduledJob.next_run_at.asc(), ScheduledJob.job_name)
+            .limit(plan.limit)
         ).scalars()
     )
     metrics = {
-        "dlq": ctx.db.execute(select(func.count()).select_from(OutboxDlq).where(OutboxDlq.tenant_id == ctx.workspace.tenant_id)).scalar() or 0,
+        "dlq": ctx.db.execute(
+            select(func.count())
+            .select_from(OutboxDlq)
+            .where(OutboxDlq.tenant_id == ctx.workspace.tenant_id)
+        ).scalar()
+        or 0,
         "scheduled_jobs": len(jobs),
         "enabled_scheduled_jobs": sum(1 for job in jobs if job.enabled),
     }
@@ -882,24 +1036,44 @@ def _resolve_admin_ops(ctx: ControlPlaneContext, plan: PlatformQueryPlan, resour
     )
 
 
-def _resolve_finops(ctx: ControlPlaneContext, plan: PlatformQueryPlan, resource_key: str) -> PlatformQuerySection:
-    artifact_count = ctx.db.execute(
-        select(func.count()).select_from(Artifact).where(Artifact.tenant_id == ctx.workspace.tenant_id)
-    ).scalar() or 0
-    upload_count = ctx.db.execute(
-        select(func.count()).select_from(ChatUpload).where(ChatUpload.tenant_id == ctx.workspace.tenant_id)
-    ).scalar() or 0
-    run_count = ctx.db.execute(
-        select(func.count()).select_from(WorkflowRun).where(WorkflowRun.tenant_id == ctx.workspace.tenant_id)
-    ).scalar() or 0
+def _resolve_finops(
+    ctx: ControlPlaneContext, plan: PlatformQueryPlan, resource_key: str
+) -> PlatformQuerySection:
+    artifact_count = (
+        ctx.db.execute(
+            select(func.count())
+            .select_from(Artifact)
+            .where(Artifact.tenant_id == ctx.workspace.tenant_id)
+        ).scalar()
+        or 0
+    )
+    upload_count = (
+        ctx.db.execute(
+            select(func.count())
+            .select_from(ChatUpload)
+            .where(ChatUpload.tenant_id == ctx.workspace.tenant_id)
+        ).scalar()
+        or 0
+    )
+    run_count = (
+        ctx.db.execute(
+            select(func.count())
+            .select_from(WorkflowRun)
+            .where(WorkflowRun.tenant_id == ctx.workspace.tenant_id)
+        ).scalar()
+        or 0
+    )
     now = datetime.now(UTC)
-    expired_count = ctx.db.execute(
-        select(func.count())
-        .select_from(Artifact)
-        .where(Artifact.tenant_id == ctx.workspace.tenant_id)
-        .where(Artifact.expires_at.is_not(None))
-        .where(Artifact.expires_at < now)
-    ).scalar() or 0
+    expired_count = (
+        ctx.db.execute(
+            select(func.count())
+            .select_from(Artifact)
+            .where(Artifact.tenant_id == ctx.workspace.tenant_id)
+            .where(Artifact.expires_at.is_not(None))
+            .where(Artifact.expires_at < now)
+        ).scalar()
+        or 0
+    )
     traces = list(
         ctx.db.execute(
             select(AgentExecutionTrace.cost_summary_json, AgentExecutionTrace.token_usage_json)
@@ -924,7 +1098,9 @@ def _resolve_finops(ctx: ControlPlaneContext, plan: PlatformQueryPlan, resource_
         if isinstance(usage, dict):
             token_records += 1
             prompt_tokens += int(_first_numeric(usage, ["prompt_tokens", "input_tokens"]) or 0)
-            completion_tokens += int(_first_numeric(usage, ["completion_tokens", "output_tokens"]) or 0)
+            completion_tokens += int(
+                _first_numeric(usage, ["completion_tokens", "output_tokens"]) or 0
+            )
             total_tokens += int(_first_numeric(usage, ["total_tokens"]) or 0)
     if total_tokens == 0:
         total_tokens = prompt_tokens + completion_tokens
@@ -951,7 +1127,9 @@ def _resolve_finops(ctx: ControlPlaneContext, plan: PlatformQueryPlan, resource_
         label="FinOps and Cost Summary",
         status="ok",
         resolver="finops",
-        metrics={key: value for key, value in record.items() if isinstance(value, (int, float, bool))},
+        metrics={
+            key: value for key, value in record.items() if isinstance(value, (int, float, bool))
+        },
         records=[record],
         columns=list(record.keys()),
         links=[{"label": "Admin", "href": "/admin"}],
@@ -959,7 +1137,9 @@ def _resolve_finops(ctx: ControlPlaneContext, plan: PlatformQueryPlan, resource_
     )
 
 
-def _resolve_modelops_artifacts(ctx: ControlPlaneContext, plan: PlatformQueryPlan, resource_key: str) -> PlatformQuerySection:
+def _resolve_modelops_artifacts(
+    ctx: ControlPlaneContext, plan: PlatformQueryPlan, resource_key: str
+) -> PlatformQuerySection:
     summary = get_modelops_summary(ctx.db, workspace_id=ctx.workspace.id)
     records = summary["registry"][: plan.limit]
     monitor_records = summary["monitors"][: plan.limit]
@@ -983,14 +1163,31 @@ def _resolve_modelops_artifacts(ctx: ControlPlaneContext, plan: PlatformQueryPla
             "created_at",
         ],
         records=records,
-        metrics={**metrics, "monitor_records": len(monitor_records), "retrain_records": len(retrain_records)},
-        links=[{"label": "ModelOps", "href": "/modelops"}, {"label": "Reports", "href": "/reports"}],
+        metrics={
+            **metrics,
+            "monitor_records": len(monitor_records),
+            "retrain_records": len(retrain_records),
+        },
+        links=[
+            {"label": "ModelOps", "href": "/modelops"},
+            {"label": "Reports", "href": "/reports"},
+        ],
         redactions=["uri.external_credentials"],
         filters=plan.filters,
         relationships=[
             PlatformRelationship(
-                source=PlatformEntityRef(resource_key="modelops", entity_id=item["model_id"], label=item["version"], href="/modelops"),
-                target=PlatformEntityRef(resource_key="artifacts", entity_id=artifact_id, label=f"artifact:{artifact_id[:8]}", href="/reports"),
+                source=PlatformEntityRef(
+                    resource_key="modelops",
+                    entity_id=item["model_id"],
+                    label=item["version"],
+                    href="/modelops",
+                ),
+                target=PlatformEntityRef(
+                    resource_key="artifacts",
+                    entity_id=artifact_id,
+                    label=f"artifact:{artifact_id[:8]}",
+                    href="/reports",
+                ),
                 relationship_type="uses_monitor",
             )
             for item in retrain_records
@@ -999,7 +1196,9 @@ def _resolve_modelops_artifacts(ctx: ControlPlaneContext, plan: PlatformQueryPla
     )
 
 
-def _resolve_control_plane_adapters(ctx: ControlPlaneContext, plan: PlatformQueryPlan, resource_key: str) -> PlatformQuerySection:
+def _resolve_control_plane_adapters(
+    ctx: ControlPlaneContext, plan: PlatformQueryPlan, resource_key: str
+) -> PlatformQuerySection:
     records = [
         {
             "adapter": "product_chat",
@@ -1034,12 +1233,17 @@ def _resolve_control_plane_adapters(ctx: ControlPlaneContext, plan: PlatformQuer
             "active_internal": sum(1 for item in records if item["status"] == "active_internal"),
             "planned": sum(1 for item in records if item["status"] == "planned"),
         },
-        links=[{"label": "AI Workspace", "href": "/ai-workspace"}, {"label": "Control Plane Docs", "href": "/docs/universal-platform-control-plane.md"}],
+        links=[
+            {"label": "AI Workspace", "href": "/ai-workspace"},
+            {"label": "Control Plane Docs", "href": "/docs/universal-platform-control-plane.md"},
+        ],
         filters=plan.filters,
     )
 
 
-def _resolve_release_docs(ctx: ControlPlaneContext, plan: PlatformQueryPlan, resource_key: str) -> PlatformQuerySection:
+def _resolve_release_docs(
+    ctx: ControlPlaneContext, plan: PlatformQueryPlan, resource_key: str
+) -> PlatformQuerySection:
     root = Path(__file__).resolve().parents[4]
     doc_paths = [
         "README.md",
@@ -1076,7 +1280,8 @@ def _resolve_release_docs(ctx: ControlPlaneContext, plan: PlatformQueryPlan, res
     terms = [
         token
         for token in re.findall(r"[A-Za-z0-9_.-]{3,}", raw_terms.lower())
-        if token not in {"docs", "document", "release", "status", "task", "tasks", "query", "platform"}
+        if token
+        not in {"docs", "document", "release", "status", "task", "tasks", "query", "platform"}
     ][:8]
     for relative in doc_paths:
         path = root / relative
@@ -1088,7 +1293,10 @@ def _resolve_release_docs(ctx: ControlPlaneContext, plan: PlatformQueryPlan, res
             try:
                 lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
                 non_empty = [line.strip() for line in lines if line.strip()]
-                title = next((line.lstrip("# ").strip() for line in non_empty if line.startswith("#")), relative)
+                title = next(
+                    (line.lstrip("# ").strip() for line in non_empty if line.startswith("#")),
+                    relative,
+                )
                 summary = next((line for line in non_empty if not line.startswith("#")), None)
                 open_tasks = sum(1 for line in lines if "- [ ]" in line)
                 closed_tasks = sum(1 for line in lines if "- [x]" in line.lower())
@@ -1116,7 +1324,9 @@ def _resolve_release_docs(ctx: ControlPlaneContext, plan: PlatformQueryPlan, res
                 "match_count": len(matches),
                 "open_tasks": open_tasks,
                 "closed_tasks": closed_tasks,
-                "updated_at": _iso(datetime.fromtimestamp(path.stat().st_mtime, tz=UTC)) if exists else None,
+                "updated_at": _iso(datetime.fromtimestamp(path.stat().st_mtime, tz=UTC))
+                if exists
+                else None,
             }
         )
     return _section(
@@ -1124,7 +1334,15 @@ def _resolve_release_docs(ctx: ControlPlaneContext, plan: PlatformQueryPlan, res
         label="Release and Product Docs",
         status=_status_for_records(records),
         resolver="release_docs",
-        columns=["path", "exists", "title", "match_count", "open_tasks", "closed_tasks", "updated_at"],
+        columns=[
+            "path",
+            "exists",
+            "title",
+            "match_count",
+            "open_tasks",
+            "closed_tasks",
+            "updated_at",
+        ],
         records=records,
         metrics={
             "documents": len(records),

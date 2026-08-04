@@ -1,12 +1,12 @@
-import os
 import json
-import uuid
-import time
+import logging
+import os
+import re
 import shutil
 import tempfile
-import re
-import logging
-from typing import Dict, Optional, List
+import time
+import uuid
+from typing import Dict, List, Optional
 
 import pandas as pd
 
@@ -143,27 +143,32 @@ def list_projects() -> List[dict]:
                 data_mode = (
                     "full"
                     if any(
-                        isinstance(rec, dict) and rec.get("data_path")
-                        for rec in ds_meta.values()
+                        isinstance(rec, dict) and rec.get("data_path") for rec in ds_meta.values()
                     )
                     else "metadata_only"
                 )
-            items.append({
-                "dir_name": dir_name,
-                "dir_path": dir_path,
-                "manifest_path": os.path.join(dir_path, "manifest.json"),
-                "saved_ts": saved_ts,
-                "last_opened_ts": last_opened_ts,
-                "name": manifest.get("name") if isinstance(manifest.get("name"), str) else dir_name,
-                "pipeline_hash": manifest.get("pipeline_hash") if isinstance(manifest.get("pipeline_hash"), str) else "",
-                "data_mode": data_mode or "full",
-                "datasets_total": datasets_total or 0,
-                "datasets_saved": manifest.get("datasets_saved") or 0,
-                "tags": manifest.get("tags") or [],
-                "notes": manifest.get("notes") or "",
-                "archived": bool(manifest.get("archived", False)),
-                "manifest": manifest,
-            })
+            items.append(
+                {
+                    "dir_name": dir_name,
+                    "dir_path": dir_path,
+                    "manifest_path": os.path.join(dir_path, "manifest.json"),
+                    "saved_ts": saved_ts,
+                    "last_opened_ts": last_opened_ts,
+                    "name": manifest.get("name")
+                    if isinstance(manifest.get("name"), str)
+                    else dir_name,
+                    "pipeline_hash": manifest.get("pipeline_hash")
+                    if isinstance(manifest.get("pipeline_hash"), str)
+                    else "",
+                    "data_mode": data_mode or "full",
+                    "datasets_total": datasets_total or 0,
+                    "datasets_saved": manifest.get("datasets_saved") or 0,
+                    "tags": manifest.get("tags") or [],
+                    "notes": manifest.get("notes") or "",
+                    "archived": bool(manifest.get("archived", False)),
+                    "manifest": manifest,
+                }
+            )
         items.sort(key=lambda x: float(x.get("saved_ts") or 0.0), reverse=True)
         return items
     except Exception as e:
@@ -184,7 +189,7 @@ def save_project(
         datasets = datasets if isinstance(datasets, dict) else {}
         active_id = team_state.get("active_dataset_id")
         active_id = active_id if isinstance(active_id, str) and active_id else None
-        
+
         existing_manifest = None
         if isinstance(project_dir, str) and project_dir.strip():
             project_dir = project_dir.strip()
@@ -213,10 +218,10 @@ def save_project(
             if include_data:
                 ds_dir = os.path.join(project_dir, "datasets")
                 os.makedirs(ds_dir, exist_ok=True)
-        
+
         datasets_out: Dict[str, dict] = {}
         saved_count = 0
-        
+
         for did, entry in datasets.items():
             if not isinstance(did, str) or not did:
                 continue
@@ -256,7 +261,7 @@ def save_project(
                     meta["data_saved"] = True
                     saved_count += 1
             datasets_out[did] = meta
-        
+
         prev_tags: List[str] = []
         prev_notes = ""
         prev_archived = False
@@ -272,7 +277,7 @@ def save_project(
             prev_archived = bool(existing_manifest.get("archived", False))
             prev_last_opened = existing_manifest.get("last_opened_ts")
             prev_created_ts = existing_manifest.get("created_ts")
-        
+
         manifest = {
             "version": PIPELINE_STUDIO_PROJECTS_VERSION,
             "name": name.strip() if isinstance(name, str) and name.strip() else dir_name,
@@ -292,10 +297,10 @@ def save_project(
         }
         if prev_created_ts:
             manifest["created_ts"] = prev_created_ts
-        
+
         write_project_manifest(project_dir=project_dir, manifest=manifest)
         _prune_projects(max_items=PipelineStudioLimits.PROJECTS_MAX_ITEMS)
-        
+
         return {
             "project_dir": project_dir,
             "manifest_path": os.path.join(project_dir, "manifest.json"),
@@ -321,6 +326,7 @@ def _write_parquet(df: pd.DataFrame, path: str) -> bool:
 def _prune_projects(*, max_items: int) -> None:
     try:
         import shutil
+
         max_items = int(max_items or 0)
         if max_items <= 0:
             return

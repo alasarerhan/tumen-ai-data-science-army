@@ -34,6 +34,15 @@ Node type
 import logging  # noqa: E402, F401
 
 logger = logging.getLogger(__name__)
+import pandas as pd  # noqa: E402, F401
+from IPython.display import Markdown  # noqa: E402, F401
+from langchain.agents import create_agent  # noqa: E402, F401
+from langchain.tools import tool  # noqa: E402, F401
+from langchain_core.messages import AIMessage, BaseMessage  # noqa: E402, F401
+from langgraph.graph import END, START, StateGraph  # noqa: E402, F401
+from langgraph.graph.message import add_messages  # noqa: E402, F401
+from langgraph.prebuilt import InjectedState  # noqa: E402, F401
+from langgraph.types import Checkpointer  # noqa: E402, F401
 from typing_extensions import (  # noqa: E402, F401
     Annotated,
     Any,
@@ -45,23 +54,10 @@ from typing_extensions import (  # noqa: E402, F401
     TypedDict,
 )
 
-import pandas as pd  # noqa: E402, F401
-from IPython.display import Markdown  # noqa: E402, F401
-
-from langchain.agents import create_agent  # noqa: E402, F401
-from langchain.tools import tool  # noqa: E402, F401
-from langchain_core.messages import AIMessage, BaseMessage  # noqa: E402, F401
-from langgraph.graph import END, START, StateGraph  # noqa: E402, F401
-from langgraph.graph.message import add_messages  # noqa: E402, F401
-from langgraph.prebuilt import InjectedState  # noqa: E402, F401
-from langgraph.types import Checkpointer  # noqa: E402, F401
-
 from ai_data_science_team.templates import BaseAgent  # noqa: E402, F401
+from ai_data_science_team.tools import ab_testing as _ab  # noqa: E402, F401
 from ai_data_science_team.utils.messages import get_tool_call_names  # noqa: E402, F401
 from ai_data_science_team.utils.regex import format_agent_name  # noqa: E402, F401
-
-from ai_data_science_team.tools import ab_testing as _ab  # noqa: E402, F401
-
 
 AGENT_NAME = "ab_testing_agent"
 NODE_TYPE = "experiment.analyze"
@@ -246,9 +242,7 @@ def correct_multiple(
     """
     logger.info("    * Tool: correct_multiple")
 
-    result = _ab.apply_multiple_comparison_correction(
-        p_values=p_values, method=method, alpha=alpha
-    )
+    result = _ab.apply_multiple_comparison_correction(p_values=p_values, method=method, alpha=alpha)
     content = (
         f"Multiple-comparison correction ({result['method']}): "
         f"adjusted p-values={result['adjusted']}, "
@@ -380,10 +374,7 @@ def make_ab_testing_agent(
 
     def run_react_agent(state: GraphState):
         logger.info("    * RUN REACT TOOL-CALLING AGENT FOR A/B TESTING")
-        logger.info(
-            f"    * group_column={state.get('group_column')}, "
-            f"alpha={state.get('alpha')}"
-        )
+        logger.info(f"    * group_column={state.get('group_column')}, alpha={state.get('alpha')}")
         system_hint = (
             "You are an A/B testing analyst. Follow this playbook:\n"
             "1. Call check_srm on the experiment data.\n"
@@ -591,8 +582,7 @@ class ABTestingAgent(BaseAgent):
 
         eff_group = group_column or self._params["group_column"]
         eff_split = (
-            expected_split if expected_split is not None
-            else self._params.get("expected_split")
+            expected_split if expected_split is not None else self._params.get("expected_split")
         )
         eff_alpha = alpha if alpha is not None else self._params["alpha"]
 

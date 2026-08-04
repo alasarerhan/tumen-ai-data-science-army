@@ -40,6 +40,7 @@ def _sample_df():
 # 1. infer_column_type_wrapped — pd.Series → InferredType
 # ---------------------------------------------------------------------------
 
+
 def test_infer_column_type_real():
     """``infer_column_type_wrapped`` Series'in mantıksal tipini çıkarır.
 
@@ -48,18 +49,15 @@ def test_infer_column_type_real():
     df = _sample_df()
     out = infer_column_type_wrapped.func(series=df["amount"])
     s = str(out).lower()
-    assert (
-        "ok" in s
-        or "float" in s
-        or "integer" in s
-        or "cast" in s
-        or "amount" in s
-    ), f"infer_column_type beklenen tip üretmedi: {s[:300]}"
+    assert "ok" in s or "float" in s or "integer" in s or "cast" in s or "amount" in s, (
+        f"infer_column_type beklenen tip üretmedi: {s[:300]}"
+    )
 
 
 # ---------------------------------------------------------------------------
 # 2. infer_schema_wrapped — pd.DataFrame → Schema
 # ---------------------------------------------------------------------------
+
 
 def test_infer_schema_real():
     """``infer_schema_wrapped`` tüm DataFrame'in Schema'sını üretir.
@@ -69,18 +67,15 @@ def test_infer_schema_real():
     df = _sample_df()
     out = infer_schema_wrapped.func(df=df)
     s = str(out).lower()
-    assert (
-        "ok" in s
-        or "schema" in s
-        or "column" in s
-        or "id" in s
-        or "amount" in s
-    ), f"infer_schema beklenen schema üretmedi: {s[:300]}"
+    assert "ok" in s or "schema" in s or "column" in s or "id" in s or "amount" in s, (
+        f"infer_schema beklenen schema üretmedi: {s[:300]}"
+    )
 
 
 # ---------------------------------------------------------------------------
 # 3. build_mapping_wrapped — source Schema, target Schema → MappingResult
 # ---------------------------------------------------------------------------
+
 
 def test_build_mapping_real():
     """``build_mapping_wrapped`` source ve target şemaları eşler.
@@ -109,18 +104,15 @@ def test_build_mapping_real():
     target = _schema_with_cols([("user_id", "integer"), ("value", "float")])
     out = build_mapping_wrapped.func(source=source, target=target)
     s = str(out).lower()
-    assert (
-        "ok" in s
-        or "mapping" in s
-        or "auto" in s
-        or "review" in s
-        or "customer_id" in s
-    ), f"build_mapping beklenen MappingResult üretmedi: {s[:300]}"
+    assert "ok" in s or "mapping" in s or "auto" in s or "review" in s or "customer_id" in s, (
+        f"build_mapping beklenen MappingResult üretmedi: {s[:300]}"
+    )
 
 
 # ---------------------------------------------------------------------------
 # 4. mapping_summary_wrapped — MappingResult → dict
 # ---------------------------------------------------------------------------
+
 
 def test_mapping_summary_real():
     """``mapping_summary_wrapped`` MappingResult'ı düz dict'e çevirir.
@@ -166,9 +158,5 @@ def test_mapping_summary_real():
     out = mapping_summary_wrapped.func(mapping=mapping)
     s = str(out).lower()
     assert (
-        "ok" in s
-        or "n_columns" in s
-        or "n_auto" in s
-        or "n_review" in s
-        or "customer_id" in s
+        "ok" in s or "n_columns" in s or "n_auto" in s or "n_review" in s or "customer_id" in s
     ), f"mapping_summary beklenen dict üretmedi: {s[:300]}"

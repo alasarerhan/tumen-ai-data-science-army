@@ -6,10 +6,9 @@ in the visual workflow builder and discovery interface.
 
 from __future__ import annotations
 
-from typing import Any, Dict, List
+from typing import Any
 
-
-AGENT_CATEGORIES: Dict[str, Dict[str, Any]] = {
+AGENT_CATEGORIES: dict[str, dict[str, Any]] = {
     "data_processing": {
         "name": "Data Processing",
         "icon": "📊",
@@ -92,12 +91,12 @@ AGENT_CATEGORIES: Dict[str, Dict[str, Any]] = {
 
 def get_category_for_agent(agent_name: str) -> str:
     """Get the category for an agent.
-    
+
     Parameters
     ----------
     agent_name : str
         The name of the agent.
-    
+
     Returns
     -------
     str
@@ -109,14 +108,14 @@ def get_category_for_agent(agent_name: str) -> str:
     return "general"
 
 
-def get_agents_in_category(category: str) -> List[str]:
+def get_agents_in_category(category: str) -> list[str]:
     """Get all agents in a category.
-    
+
     Parameters
     ----------
     category : str
         The category key.
-    
+
     Returns
     -------
     List[str]
@@ -126,14 +125,14 @@ def get_agents_in_category(category: str) -> List[str]:
     return category_data.get("agents", [])
 
 
-def get_capabilities_for_category(category: str) -> List[str]:
+def get_capabilities_for_category(category: str) -> list[str]:
     """Get all capabilities for a category.
-    
+
     Parameters
     ----------
     category : str
         The category key.
-    
+
     Returns
     -------
     List[str]
@@ -143,9 +142,9 @@ def get_capabilities_for_category(category: str) -> List[str]:
     return category_data.get("capabilities", [])
 
 
-def get_all_capabilities() -> List[str]:
+def get_all_capabilities() -> list[str]:
     """Get all unique capabilities across all categories.
-    
+
     Returns
     -------
     List[str]
@@ -157,23 +156,26 @@ def get_all_capabilities() -> List[str]:
     return sorted(list(capabilities))
 
 
-def get_category_metadata(category: str) -> Dict[str, Any]:
+def get_category_metadata(category: str) -> dict[str, Any]:
     """Get full metadata for a category.
-    
+
     Parameters
     ----------
     category : str
         The category key.
-    
+
     Returns
     -------
     Dict[str, Any]
         Category metadata.
     """
-    return AGENT_CATEGORIES.get(category, {
-        "name": category.title(),
-        "icon": "📦",
-        "description": "",
-        "agents": [],
-        "capabilities": [],
-    })
+    return AGENT_CATEGORIES.get(
+        category,
+        {
+            "name": category.title(),
+            "icon": "📦",
+            "description": "",
+            "agents": [],
+            "capabilities": [],
+        },
+    )

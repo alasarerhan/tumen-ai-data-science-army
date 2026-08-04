@@ -36,7 +36,6 @@ from typing import Any, Dict, List, Mapping, Optional, Tuple  # noqa: E402, F401
 
 import pandas as pd  # noqa: E402, F401
 
-
 # ---------------------------------------------------------------------------
 # Type inference
 # ---------------------------------------------------------------------------
@@ -90,7 +89,9 @@ def _all_match(series: pd.Series, regex: re.Pattern, sample: int) -> bool:
     return all(regex.match(_normalise_string(s)) for s in sample_strings)
 
 
-def _majority_match(series: pd.Series, regex: re.Pattern, sample: int, threshold: float = 0.7) -> bool:
+def _majority_match(
+    series: pd.Series, regex: re.Pattern, sample: int, threshold: float = 0.7
+) -> bool:
     sample_strings = series.dropna().astype(str).head(sample).tolist()
     if not sample_strings:
         return False
@@ -162,9 +163,7 @@ def infer_column_type(
             transform="drop",
         )
 
-    cleaned_samples = [
-        _normalise_string(s) for s in string_series.head(sample_size).tolist()
-    ]    
+    cleaned_samples = [_normalise_string(s) for s in string_series.head(sample_size).tolist()]
 
     # Boolean first (cheap check).
     lowered = [s.strip().lower() for s in cleaned_samples]
@@ -196,9 +195,7 @@ def infer_column_type(
         )
 
     # Currency: detect symbol then strip it.
-    sym_match = re.compile(
-        r"(?P<sym>[$€£¥₺]|TRY|USD|EUR|GBP|JPY|RUB)"
-    )
+    sym_match = re.compile(r"(?P<sym>[$€£¥₺]|TRY|USD|EUR|GBP|JPY|RUB)")
 
     def _looks_like_currency() -> Tuple[bool, Optional[str]]:
         # Match at least 50% of samples.
@@ -409,7 +406,9 @@ def _split_tokens(name_norm: str) -> List[str]:
     return [p for p in parts if p]
 
 
-def _best_match(source_name: str, inferred_name: str, target_schema: Schema) -> Tuple[Optional[Tuple[ColumnInference, float]], List[Tuple[ColumnInference, float]]]:
+def _best_match(
+    source_name: str, inferred_name: str, target_schema: Schema
+) -> Tuple[Optional[Tuple[ColumnInference, float]], List[Tuple[ColumnInference, float]]]:
     """Pick the best target column for ``source_name``.
 
     Returns ``(chosen, ranked)`` where ``chosen`` is the top candidate
@@ -477,9 +476,7 @@ def build_mapping(
                 )
                 result.auto_apply_count += 1
                 continue
-        chosen, ranked = _best_match(
-            s_col.source, s_col.inferred.name, target
-        )
+        chosen, ranked = _best_match(s_col.source, s_col.inferred.name, target)
         if chosen is None:
             result.unmapped_source.append(s_col.source)
             result.columns.append(
@@ -504,10 +501,7 @@ def build_mapping(
             result.auto_apply_count += 1
         else:
             result.review_count += 1
-        rationale = "; ".join(
-            f"candidate={t.source} score={round(s, 3)}"
-            for t, s in ranked[:3]
-        )
+        rationale = "; ".join(f"candidate={t.source} score={round(s, 3)}" for t, s in ranked[:3])
         result.columns.append(
             ColumnMapping(
                 source=s_col.source,
@@ -520,9 +514,7 @@ def build_mapping(
             )
         )
     # Targets that no source filled.
-    filled_targets = {
-        c.target for c in result.columns if c.target is not None
-    }
+    filled_targets = {c.target for c in result.columns if c.target is not None}
     result.unfilled_target = sorted(
         t.source for t in target.columns if t.source not in filled_targets
     )
@@ -553,5 +545,3 @@ __all__ = [
     "build_mapping",
     "mapping_summary",
 ]
-
-

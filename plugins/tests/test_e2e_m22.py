@@ -18,18 +18,17 @@ Katman 2 — Orchestrated pipeline testleri
 Atlamak için:
     pytest tests/ -v -m "not e2e"
 """
+
 from __future__ import annotations
 
-
-from _llm import make_chat_model, skip_no_key
 from pathlib import Path
 from typing import Any, Dict
 
 import pandas as pd
 import pytest
+from _llm import make_chat_model, skip_no_key
 
 pytestmark = pytest.mark.e2e
-
 
 
 langchain_openai = pytest.importorskip(
@@ -40,17 +39,18 @@ langchain_openai = pytest.importorskip(
 # ---------------------------------------------------------------------------
 # Veri yolları (ai-data-science-team/data/)
 # ---------------------------------------------------------------------------
-_REPO_ROOT = Path(__file__).resolve().parents[2]   # ai-data-science-team/
-_DATA_DIR  = _REPO_ROOT / "data"
+_REPO_ROOT = Path(__file__).resolve().parents[2]  # ai-data-science-team/
+_DATA_DIR = _REPO_ROOT / "data"
 
-DIRTY_CSV   = _DATA_DIR / "dirty_dataset.csv"
-BIKE_SALES  = _DATA_DIR / "bike_sales_data.csv"
-CHURN_CSV   = _DATA_DIR / "churn_data.csv"
+DIRTY_CSV = _DATA_DIR / "dirty_dataset.csv"
+BIKE_SALES = _DATA_DIR / "bike_sales_data.csv"
+CHURN_CSV = _DATA_DIR / "churn_data.csv"
 
 
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
+
 
 @pytest.fixture(scope="module")
 def llm():
@@ -80,6 +80,7 @@ def df_churn():
 @pytest.fixture(autouse=True)
 def clean_registry():
     from ai_data_science_team.agent_registry import AgentRegistry
+
     AgentRegistry.clear()
     yield
     AgentRegistry.clear()
@@ -89,6 +90,7 @@ def clean_registry():
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _invoke_safe(agent, **kw):
     """invoke_agent; quota / missing-package sorunlarında gracefully skip."""
     try:
@@ -97,8 +99,10 @@ def _invoke_safe(agent, **kw):
         err = str(exc)
         if any(x in err for x in ("insufficient_quota", "RateLimitError", "rate_limit")):
             pytest.skip("OpenAI quota tükendi")
-        if any(x in err for x in ("ModuleNotFoundError", "ImportError", "No module named",
-                                   "Please install")):
+        if any(
+            x in err
+            for x in ("ModuleNotFoundError", "ImportError", "No module named", "Please install")
+        ):
             pytest.skip(f"Optional dependency missing: {err[:120]}")
         raise
 
@@ -135,7 +139,6 @@ def _make_chain_agents(llm):
 
 
 class TestDataCleaningAgentE2E:
-
     @skip_no_key
     def test_dirty_dataset_cleaned(self, llm, df_dirty):
         """dirty_dataset.csv veriyi temizler — cleaned df, orijinal satırları korur veya azaltır."""
@@ -157,8 +160,9 @@ class TestDataCleaningAgentE2E:
         assert isinstance(cleaned, pd.DataFrame), "Cleaned data DataFrame olmalı"
         assert len(cleaned) > 0, "Cleaned DataFrame boş olmamalı"
         # Sütun isimleri küçük harf olmalı (snake_case)
-        assert all(c == c.lower() for c in cleaned.columns), \
+        assert all(c == c.lower() for c in cleaned.columns), (
             f"Sütunlar snake_case değil: {cleaned.columns.tolist()}"
+        )
 
     @skip_no_key
     def test_cleaning_reduces_missing_values(self, llm, df_dirty):
@@ -169,16 +173,15 @@ class TestDataCleaningAgentE2E:
         agent = DataCleaningAgent(model=llm)
         _invoke_safe(
             agent,
-            user_instructions=(
-                "Drop or impute all missing values. Ensure no null values remain."
-            ),
+            user_instructions=("Drop or impute all missing values. Ensure no null values remain."),
             data_raw=df_dirty,
         )
         cleaned = agent.get_data_cleaned()
         if cleaned is not None:
             after_nulls = cleaned.isnull().sum().sum()
-            assert after_nulls <= before_nulls, \
+            assert after_nulls <= before_nulls, (
                 f"Null değerleri artmamalı: before={before_nulls}, after={after_nulls}"
+            )
 
     @skip_no_key
     def test_churn_data_cleaned(self, llm, df_churn):
@@ -215,7 +218,6 @@ class TestDataCleaningAgentE2E:
 
 
 class TestDataWranglingAgentE2E:
-
     @skip_no_key
     def test_bike_sales_monthly_aggregation(self, llm, df_bike):
         """Bike sales'i model bazında toplar — grouped df, orijinalden küçük olmalı."""
@@ -235,8 +237,7 @@ class TestDataWranglingAgentE2E:
             pytest.skip("DataWranglingAgent failed to produce output after retries")
         assert isinstance(wrangled, pd.DataFrame), "Wrangled data DataFrame olmalı"
         # Gruplandırılmış tablo orijinalden çok daha az satır içermeli
-        assert len(wrangled) < len(df_bike), \
-            "Gruplandırılmış veri orijinalden küçük olmalı"
+        assert len(wrangled) < len(df_bike), "Gruplandırılmış veri orijinalden küçük olmalı"
 
     @skip_no_key
     def test_bike_sales_date_features(self, llm, df_bike):
@@ -279,7 +280,6 @@ class TestDataWranglingAgentE2E:
 
 
 class TestDataVisualizationAgentE2E:
-
     @skip_no_key
     def test_bike_sales_bar_chart(self, llm, df_bike):
         """Bike model bazında satış bar chart üretir."""
@@ -309,7 +309,8 @@ class TestDataVisualizationAgentE2E:
 
         df_monthly = (
             df_bike.assign(year_month=df_bike["date"].dt.to_period("M").astype(str))
-            .groupby("year_month", as_index=False)["extended_sales"].sum()
+            .groupby("year_month", as_index=False)["extended_sales"]
+            .sum()
         )
 
         agent = DataVisualizationAgent(model=llm)
@@ -343,7 +344,6 @@ class TestDataVisualizationAgentE2E:
 
 
 class TestEDAToolsAgentE2E:
-
     @skip_no_key
     def test_eda_bike_sales_summary(self, llm, df_bike):
         """EDA agent bike sales veriOsini analiz eder."""
@@ -360,8 +360,7 @@ class TestEDAToolsAgentE2E:
             data_raw=df_bike.head(500),
         )
         msg = agent.get_ai_message()
-        assert isinstance(msg, str) and len(msg) > 50, \
-            f"EDA mesajı çok kısa veya boş: {msg!r}"
+        assert isinstance(msg, str) and len(msg) > 50, f"EDA mesajı çok kısa veya boş: {msg!r}"
 
     @skip_no_key
     def test_eda_churn_missing_values(self, llm, df_churn):
@@ -393,13 +392,13 @@ class TestEDAToolsAgentE2E:
         )
         msg = agent.get_ai_message().lower()
         stat_terms = ("mean", "median", "std", "average", "ortalama", "min", "max", "sum", "count")
-        assert any(t in msg for t in stat_terms), \
-            f"Mesaj istatistik terimi içermiyor: {msg[:200]}"
+        assert any(t in msg for t in stat_terms), f"Mesaj istatistik terimi içermiyor: {msg[:200]}"
 
 
 # ===========================================================================
 # KATMAN 2 — Orchestrated / Pipeline E2E Tests
 # ===========================================================================
+
 
 def _make_platform_executor(llm, initial_df: pd.DataFrame):
     """
@@ -410,15 +409,15 @@ def _make_platform_executor(llm, initial_df: pd.DataFrame):
     - Her step başarılı olunca context["_current_df"] güncellenir.
     """
     from ai_data_science_team.agents.data_cleaning_agent import DataCleaningAgent
-    from ai_data_science_team.agents.data_wrangling_agent import DataWranglingAgent
     from ai_data_science_team.agents.data_visualization_agent import DataVisualizationAgent
+    from ai_data_science_team.agents.data_wrangling_agent import DataWranglingAgent
     from ai_data_science_team.ds_agents.eda_tools_agent import EDAToolsAgent
 
     AGENT_MAP = {
-        "DataCleaningAgent":       DataCleaningAgent,
-        "DataWranglingAgent":      DataWranglingAgent,
-        "DataVisualizationAgent":  DataVisualizationAgent,
-        "EDAToolsAgent":           EDAToolsAgent,
+        "DataCleaningAgent": DataCleaningAgent,
+        "DataWranglingAgent": DataWranglingAgent,
+        "DataVisualizationAgent": DataVisualizationAgent,
+        "EDAToolsAgent": EDAToolsAgent,
     }
 
     def executor(agent_name: str, instruction: str, context: Dict[str, Any]) -> Dict[str, Any]:
@@ -474,7 +473,6 @@ def _make_platform_executor(llm, initial_df: pd.DataFrame):
 
 
 class TestOrchestratedPipelineE2E:
-
     @pytest.mark.xfail(
         reason=(
             "FeatureEngineeringAgent currently emits invalid Python on the churn smoke sample; "
@@ -498,7 +496,8 @@ class TestOrchestratedPipelineE2E:
         except Exception as exc:
             err = str(exc)
             if any(
-                x in err for x in ("ModuleNotFoundError", "ImportError", "No module named", "Please install")
+                x in err
+                for x in ("ModuleNotFoundError", "ImportError", "No module named", "Please install")
             ):
                 pytest.skip(f"Optional dependency missing: {err[:160]}")
             raise
@@ -534,8 +533,12 @@ class TestOrchestratedPipelineE2E:
         )
         feature_df = agents["feature"].get_data_engineered()
         feature_error = (agents["feature"].response or {}).get("feature_engineer_error")
-        assert isinstance(feature_df, pd.DataFrame), f"Feature engineering output missing: {feature_error}"
-        assert "Churn" in feature_df.columns, f"Engineered dataset lost the target column: {feature_error}"
+        assert isinstance(feature_df, pd.DataFrame), (
+            f"Feature engineering output missing: {feature_error}"
+        )
+        assert "Churn" in feature_df.columns, (
+            f"Engineered dataset lost the target column: {feature_error}"
+        )
         assert len(feature_df) > 0, f"Engineered dataset is empty: {feature_error}"
 
         _invoke_safe(
@@ -573,16 +576,29 @@ class TestOrchestratedPipelineE2E:
         from ai_data_science_team.agents.orchestrator_agent import OrchestratorAgent
         from ai_data_science_team.workflow_resolver import build_spec, build_step
 
-        AgentRegistry.register("DataCleaningAgent",  DataCleaningAgent,  capabilities=["data_cleaning"])
-        AgentRegistry.register("DataWranglingAgent", DataWranglingAgent, capabilities=["data_wrangling"])
+        AgentRegistry.register(
+            "DataCleaningAgent", DataCleaningAgent, capabilities=["data_cleaning"]
+        )
+        AgentRegistry.register(
+            "DataWranglingAgent", DataWranglingAgent, capabilities=["data_wrangling"]
+        )
 
-        spec = build_spec("bike_clean_wrangle", [
-            build_step("clean", "DataCleaningAgent",
-                       "Ensure column names are lowercase and remove any duplicate rows."),
-            build_step("wrangle", "DataWranglingAgent",
-                       "Group by bike_model and compute total extended_sales and quantity_sold.",
-                       depends_on=["clean"]),
-        ])
+        spec = build_spec(
+            "bike_clean_wrangle",
+            [
+                build_step(
+                    "clean",
+                    "DataCleaningAgent",
+                    "Ensure column names are lowercase and remove any duplicate rows.",
+                ),
+                build_step(
+                    "wrangle",
+                    "DataWranglingAgent",
+                    "Group by bike_model and compute total extended_sales and quantity_sold.",
+                    depends_on=["clean"],
+                ),
+            ],
+        )
 
         {"_current_df": df_bike.head(500)}
         executor = _make_platform_executor(llm, df_bike.head(500))
@@ -621,20 +637,31 @@ class TestOrchestratedPipelineE2E:
         """
         from ai_data_science_team.agent_registry import AgentRegistry
         from ai_data_science_team.agents.data_cleaning_agent import DataCleaningAgent
-        from ai_data_science_team.ds_agents.eda_tools_agent import EDAToolsAgent
         from ai_data_science_team.agents.orchestrator_agent import OrchestratorAgent
+        from ai_data_science_team.ds_agents.eda_tools_agent import EDAToolsAgent
         from ai_data_science_team.workflow_resolver import build_spec, build_step
 
-        AgentRegistry.register("DataCleaningAgent", DataCleaningAgent, capabilities=["data_cleaning"])
-        AgentRegistry.register("EDAToolsAgent",     EDAToolsAgent,     capabilities=["eda"])
+        AgentRegistry.register(
+            "DataCleaningAgent", DataCleaningAgent, capabilities=["data_cleaning"]
+        )
+        AgentRegistry.register("EDAToolsAgent", EDAToolsAgent, capabilities=["eda"])
 
-        spec = build_spec("clean_eda_pipeline", [
-            build_step("clean", "DataCleaningAgent",
-                       "Standardize column names to snake_case and remove null rows."),
-            build_step("eda", "EDAToolsAgent",
-                       "Provide basic descriptive statistics and highlight any anomalies.",
-                       depends_on=["clean"]),
-        ])
+        spec = build_spec(
+            "clean_eda_pipeline",
+            [
+                build_step(
+                    "clean",
+                    "DataCleaningAgent",
+                    "Standardize column names to snake_case and remove null rows.",
+                ),
+                build_step(
+                    "eda",
+                    "EDAToolsAgent",
+                    "Provide basic descriptive statistics and highlight any anomalies.",
+                    depends_on=["clean"],
+                ),
+            ],
+        )
 
         executor = _make_platform_executor(llm, df_dirty)
         orch = OrchestratorAgent(
@@ -665,28 +692,40 @@ class TestOrchestratedPipelineE2E:
         """
         from ai_data_science_team.agent_registry import AgentRegistry
         from ai_data_science_team.agents.data_cleaning_agent import DataCleaningAgent
-        from ai_data_science_team.agents.data_wrangling_agent import DataWranglingAgent
         from ai_data_science_team.agents.data_visualization_agent import DataVisualizationAgent
+        from ai_data_science_team.agents.data_wrangling_agent import DataWranglingAgent
         from ai_data_science_team.agents.orchestrator_agent import OrchestratorAgent
         from ai_data_science_team.workflow_resolver import build_spec, build_step
 
         for name, cls, caps in [
-            ("DataCleaningAgent",      DataCleaningAgent,      ["data_cleaning"]),
-            ("DataWranglingAgent",     DataWranglingAgent,     ["data_wrangling"]),
+            ("DataCleaningAgent", DataCleaningAgent, ["data_cleaning"]),
+            ("DataWranglingAgent", DataWranglingAgent, ["data_wrangling"]),
             ("DataVisualizationAgent", DataVisualizationAgent, ["visualization"]),
         ]:
             AgentRegistry.register(name, cls, capabilities=caps)
 
-        spec = build_spec("bike_full_pipeline", [
-            build_step("clean",     "DataCleaningAgent",
-                       "Ensure lowercase column names and no duplicate rows."),
-            build_step("wrangle",   "DataWranglingAgent",
-                       "Group by bike_model: sum extended_sales, sum quantity_sold.",
-                       depends_on=["clean"]),
-            build_step("visualize", "DataVisualizationAgent",
-                       "Create a horizontal bar chart of total extended_sales by bike_model.",
-                       depends_on=["wrangle"]),
-        ])
+        spec = build_spec(
+            "bike_full_pipeline",
+            [
+                build_step(
+                    "clean",
+                    "DataCleaningAgent",
+                    "Ensure lowercase column names and no duplicate rows.",
+                ),
+                build_step(
+                    "wrangle",
+                    "DataWranglingAgent",
+                    "Group by bike_model: sum extended_sales, sum quantity_sold.",
+                    depends_on=["clean"],
+                ),
+                build_step(
+                    "visualize",
+                    "DataVisualizationAgent",
+                    "Create a horizontal bar chart of total extended_sales by bike_model.",
+                    depends_on=["wrangle"],
+                ),
+            ],
+        )
 
         executor = _make_platform_executor(llm, df_bike.head(1000))
         orch = OrchestratorAgent(
@@ -706,12 +745,13 @@ class TestOrchestratedPipelineE2E:
         step_statuses = {s["step_id"]: s["status"] for s in rr["steps"]}
 
         # clean + wrangle başarılı olmalı
-        assert step_statuses.get("clean")   == "success", f"clean başarısız: {step_statuses}"
+        assert step_statuses.get("clean") == "success", f"clean başarısız: {step_statuses}"
         assert step_statuses.get("wrangle") == "success", f"wrangle başarısız: {step_statuses}"
 
         # visualize başarılı veya graceful failure (LLM kod üretmişse)
-        assert step_statuses.get("visualize") in ("success", "failed"), \
+        assert step_statuses.get("visualize") in ("success", "failed"), (
             f"visualize beklenmeyen durum: {step_statuses}"
+        )
 
         # Orchestrator özet mesajı olmalı
         assert orch.get_ai_message()
@@ -735,6 +775,7 @@ class TestOrchestratedPipelineE2E:
 
             if agent_name == "DataCleaningAgent":
                 from ai_data_science_team.agents.data_cleaning_agent import DataCleaningAgent
+
                 ag = DataCleaningAgent(model=llm)
                 ag.invoke_agent(user_instructions=instruction, data_raw=df_in)
                 cleaned = ag.get_data_cleaned()
@@ -743,6 +784,7 @@ class TestOrchestratedPipelineE2E:
                     return {"rows": len(cleaned), "agent": agent_name}
             elif agent_name == "DataWranglingAgent":
                 from ai_data_science_team.agents.data_wrangling_agent import DataWranglingAgent
+
                 ag = DataWranglingAgent(model=llm)
                 ag.invoke_agent(user_instructions=instruction, data_raw=df_in)
                 wrangled = ag.get_data_wrangled()
@@ -751,13 +793,20 @@ class TestOrchestratedPipelineE2E:
                     return {"rows": len(wrangled), "agent": agent_name}
             return {"agent": agent_name, "rows": len(df_in)}
 
-        spec = build_spec("runtime_data_flow", [
-            build_step("clean",   "DataCleaningAgent",
-                       "Lowercase column names, drop duplicates."),
-            build_step("wrangle", "DataWranglingAgent",
-                       "Group by bike_model and sum extended_sales.",
-                       depends_on=["clean"]),
-        ])
+        spec = build_spec(
+            "runtime_data_flow",
+            [
+                build_step(
+                    "clean", "DataCleaningAgent", "Lowercase column names, drop duplicates."
+                ),
+                build_step(
+                    "wrangle",
+                    "DataWranglingAgent",
+                    "Group by bike_model and sum extended_sales.",
+                    depends_on=["clean"],
+                ),
+            ],
+        )
 
         engine = RuntimeEngine(
             agent_executor=logging_executor,
@@ -777,7 +826,7 @@ class TestOrchestratedPipelineE2E:
             raise
 
         assert result.status in ("completed", "degraded")
-        assert "DataCleaningAgent"  in exec_log, "DataCleaningAgent çalışmadı"
+        assert "DataCleaningAgent" in exec_log, "DataCleaningAgent çalışmadı"
         assert "DataWranglingAgent" in exec_log, "DataWranglingAgent çalışmadı"
 
         # Wrangle adımı daha az satır döndürmeli (gruplandırma)
@@ -797,16 +846,16 @@ class TestOrchestratorDynamicWithRealAgents:
         """
         from ai_data_science_team.agent_registry import AgentRegistry
         from ai_data_science_team.agents.data_cleaning_agent import DataCleaningAgent
-        from ai_data_science_team.agents.data_wrangling_agent import DataWranglingAgent
         from ai_data_science_team.agents.data_visualization_agent import DataVisualizationAgent
-        from ai_data_science_team.ds_agents.eda_tools_agent import EDAToolsAgent
+        from ai_data_science_team.agents.data_wrangling_agent import DataWranglingAgent
         from ai_data_science_team.agents.orchestrator_agent import OrchestratorAgent
+        from ai_data_science_team.ds_agents.eda_tools_agent import EDAToolsAgent
 
         for name, cls, caps in [
-            ("DataCleaningAgent",      DataCleaningAgent,      ["data_cleaning"]),
-            ("DataWranglingAgent",     DataWranglingAgent,     ["data_wrangling"]),
+            ("DataCleaningAgent", DataCleaningAgent, ["data_cleaning"]),
+            ("DataWranglingAgent", DataWranglingAgent, ["data_wrangling"]),
             ("DataVisualizationAgent", DataVisualizationAgent, ["visualization"]),
-            ("EDAToolsAgent",          EDAToolsAgent,          ["eda"]),
+            ("EDAToolsAgent", EDAToolsAgent, ["eda"]),
         ]:
             AgentRegistry.register(name, cls, capabilities=caps)
 
@@ -843,7 +892,6 @@ class TestOrchestratorDynamicWithRealAgents:
 
 
 class TestRegistryIntegrationE2E:
-
     @skip_no_key
     def test_registry_query_then_run(self, llm, df_bike):
         """
@@ -894,7 +942,8 @@ class TestRegistryIntegrationE2E:
         from ai_data_science_team.workflow_resolver import WorkflowResolver
 
         AgentRegistry.register(
-            "DataCleaningAgent", DataCleaningAgent,
+            "DataCleaningAgent",
+            DataCleaningAgent,
             capabilities=["data_cleaning"],
             description="Cleans raw DataFrames.",
         )
@@ -903,9 +952,7 @@ class TestRegistryIntegrationE2E:
         resolver = WorkflowResolver(model=llm, registry_catalog=catalog)
 
         try:
-            result = resolver.resolve(
-                user_goal="Clean the dataset by removing missing values."
-            )
+            result = resolver.resolve(user_goal="Clean the dataset by removing missing values.")
         except Exception as exc:
             if any(x in str(exc) for x in ("insufficient_quota", "RateLimitError")):
                 pytest.skip("OpenAI quota tükendi")
@@ -914,5 +961,6 @@ class TestRegistryIntegrationE2E:
         spec = result["spec"]
         # LLM katalogdaki DataCleaningAgent'ı seçmeli
         agent_names = [s.get("agent") for s in spec.get("steps", [])]
-        assert "DataCleaningAgent" in agent_names, \
+        assert "DataCleaningAgent" in agent_names, (
             f"LLM katalogdan DataCleaningAgent seçmedi: {agent_names}"
+        )

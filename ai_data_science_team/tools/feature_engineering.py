@@ -33,7 +33,12 @@ from ai_data_science_team.tool_registry import (  # noqa: E402, F401
     parameters={
         "data": ToolParameter(type="object", description="Input DataFrame as dict", required=True),
         "columns": ToolParameter(type="array", description="Columns to encode", required=True),
-        "drop_first": ToolParameter(type="boolean", description="Drop first category to avoid multicollinearity", required=False, default=False),
+        "drop_first": ToolParameter(
+            type="boolean",
+            description="Drop first category to avoid multicollinearity",
+            required=False,
+            default=False,
+        ),
     },
     returns="DataFrame with encoded columns as dict",
     namespace="core.feature_engineering",
@@ -118,8 +123,14 @@ def label_encode(
     description="Extract datetime components (year, month, day, hour, etc.) from datetime columns.",
     parameters={
         "data": ToolParameter(type="object", description="Input DataFrame as dict", required=True),
-        "column": ToolParameter(type="string", description="Datetime column to extract from", required=True),
-        "features": ToolParameter(type="array", description="Features to extract: year, month, day, hour, minute, dayofweek, quarter", required=False),
+        "column": ToolParameter(
+            type="string", description="Datetime column to extract from", required=True
+        ),
+        "features": ToolParameter(
+            type="array",
+            description="Features to extract: year, month, day, hour, minute, dayofweek, quarter",
+            required=False,
+        ),
     },
     returns="DataFrame with datetime features as dict",
     namespace="core.feature_engineering",
@@ -184,7 +195,12 @@ def create_datetime_features(
     parameters={
         "data": ToolParameter(type="object", description="Input DataFrame as dict", required=True),
         "columns": ToolParameter(type="array", description="Columns to scale", required=True),
-        "method": ToolParameter(type="string", description="Scaling method: standard or minmax", required=False, default="standard"),
+        "method": ToolParameter(
+            type="string",
+            description="Scaling method: standard or minmax",
+            required=False,
+            default="standard",
+        ),
     },
     returns="DataFrame with scaled columns as dict",
     namespace="core.feature_engineering",
@@ -212,7 +228,7 @@ def scale_features(
     dict
         DataFrame with scaled columns as dictionary.
     """
-    from sklearn.preprocessing import StandardScaler, MinMaxScaler  # noqa: E402, F401
+    from sklearn.preprocessing import MinMaxScaler, StandardScaler  # noqa: E402, F401
 
     df = pd.DataFrame(data) if isinstance(data, dict) else data.copy()
 
@@ -239,8 +255,12 @@ def scale_features(
     parameters={
         "data": ToolParameter(type="object", description="Input DataFrame as dict", required=True),
         "columns": ToolParameter(type="array", description="Columns to expand", required=True),
-        "degree": ToolParameter(type="integer", description="Polynomial degree", required=False, default=2),
-        "interaction_only": ToolParameter(type="boolean", description="Only interaction terms", required=False, default=False),
+        "degree": ToolParameter(
+            type="integer", description="Polynomial degree", required=False, default=2
+        ),
+        "interaction_only": ToolParameter(
+            type="boolean", description="Only interaction terms", required=False, default=False
+        ),
     },
     returns="DataFrame with polynomial features as dict",
     namespace="core.feature_engineering",
@@ -298,9 +318,18 @@ def create_polynomial_features(
     parameters={
         "data": ToolParameter(type="object", description="Input DataFrame as dict", required=True),
         "column": ToolParameter(type="string", description="Column to bin", required=True),
-        "bins": ToolParameter(type="integer", description="Number of bins", required=False, default=5),
-        "labels": ToolParameter(type="array", description="Labels for bins (optional)", required=False),
-        "strategy": ToolParameter(type="string", description="Binning strategy: uniform, quantile", required=False, default="uniform"),
+        "bins": ToolParameter(
+            type="integer", description="Number of bins", required=False, default=5
+        ),
+        "labels": ToolParameter(
+            type="array", description="Labels for bins (optional)", required=False
+        ),
+        "strategy": ToolParameter(
+            type="string",
+            description="Binning strategy: uniform, quantile",
+            required=False,
+            default="uniform",
+        ),
     },
     returns="DataFrame with binned column as dict",
     namespace="core.feature_engineering",
@@ -352,9 +381,23 @@ def bin_numeric(
     description="Select features based on variance or correlation.",
     parameters={
         "data": ToolParameter(type="object", description="Input DataFrame as dict", required=True),
-        "target": ToolParameter(type="string", description="Target column for correlation-based selection", required=False),
-        "threshold": ToolParameter(type="number", description="Variance or correlation threshold", required=False, default=0.01),
-        "method": ToolParameter(type="string", description="Selection method: variance, correlation", required=False, default="variance"),
+        "target": ToolParameter(
+            type="string",
+            description="Target column for correlation-based selection",
+            required=False,
+        ),
+        "threshold": ToolParameter(
+            type="number",
+            description="Variance or correlation threshold",
+            required=False,
+            default=0.01,
+        ),
+        "method": ToolParameter(
+            type="string",
+            description="Selection method: variance, correlation",
+            required=False,
+            default="variance",
+        ),
     },
     returns="DataFrame with selected features as dict",
     namespace="core.feature_engineering",
@@ -394,7 +437,9 @@ def select_features(
 
         selector = VarianceThreshold(threshold=threshold)
         selector.fit(df[numeric_cols].fillna(0))
-        selected_cols = [numeric_cols[i] for i, selected in enumerate(selector.get_support()) if selected]
+        selected_cols = [
+            numeric_cols[i] for i, selected in enumerate(selector.get_support()) if selected
+        ]
 
     elif method == "correlation" and target:
         if target not in df.columns:

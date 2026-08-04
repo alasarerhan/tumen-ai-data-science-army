@@ -4,7 +4,6 @@ Tests for ``ai_data_science_team.tools.quality`` (B2 tool layer).
 
 from __future__ import annotations
 
-
 import numpy as np
 import pandas as pd
 import pytest
@@ -53,9 +52,7 @@ class TestExpectationSuiteFromTemplate:
         df = _customer_df()
         # In customer_default, index 2 is age value_range — make it stricter.
         overrides = {"2": {"min": 18, "max": 65}}
-        suite = expectation_suite_from_template(
-            "customer_default", df, overrides
-        )
+        suite = expectation_suite_from_template("customer_default", df, overrides)
         assert suite[2]["min"] == 18
         assert suite[2]["max"] == 65
 
@@ -224,7 +221,14 @@ class TestSummariseSuiteRun:
 
     def test_skipped_summary(self):
         pd.DataFrame({"a": [1]})
-        result = {"passed": 0, "failed": 0, "warning": 0, "skipped": 1, "errors": 0, "dataset_shape": [1, 1]}
+        result = {
+            "passed": 0,
+            "failed": 0,
+            "warning": 0,
+            "skipped": 1,
+            "errors": 0,
+            "dataset_shape": [1, 1],
+        }
         summary = summarise_suite_run(result)
         assert summary["status"] == "skipped"
 

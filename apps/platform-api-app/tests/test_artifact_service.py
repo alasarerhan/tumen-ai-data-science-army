@@ -59,7 +59,9 @@ def test_authorized_workspace_returns_workspace_for_member(seeded_db: dict[str, 
     assert authorized.id == workspace.id
 
 
-def test_authorized_workspace_raises_404_when_workspace_missing(seeded_db: dict[str, object]) -> None:
+def test_authorized_workspace_raises_404_when_workspace_missing(
+    seeded_db: dict[str, object],
+) -> None:
     # Arrange
     db = seeded_db["db"]
     user_id = seeded_db["user_member"].id
@@ -74,7 +76,9 @@ def test_authorized_workspace_raises_404_when_workspace_missing(seeded_db: dict[
     assert exc_info.value.status_code == 404
 
 
-def test_authorized_workspace_raises_403_when_membership_missing(seeded_db: dict[str, object]) -> None:
+def test_authorized_workspace_raises_403_when_membership_missing(
+    seeded_db: dict[str, object],
+) -> None:
     # Arrange
     db = seeded_db["db"]
     workspace = seeded_db["workspace"]
@@ -159,7 +163,9 @@ def test_create_artifact_record_with_valid_workflow_run(seeded_db: dict[str, obj
     assert artifact.workflow_run_id == run.id
 
 
-def test_create_artifact_record_rejects_run_from_other_workspace(seeded_db: dict[str, object]) -> None:
+def test_create_artifact_record_rejects_run_from_other_workspace(
+    seeded_db: dict[str, object],
+) -> None:
     # Arrange
     db = seeded_db["db"]
     tenant = seeded_db["tenant"]
@@ -243,7 +249,9 @@ def test_list_artifacts_for_workspace_filters_and_orders(seeded_db: dict[str, ob
     assert artifacts[-1].id == first.id
 
 
-def test_list_artifacts_for_workspace_filters_kind_run_and_preserves_parent_ids(seeded_db: dict[str, object]) -> None:
+def test_list_artifacts_for_workspace_filters_kind_run_and_preserves_parent_ids(
+    seeded_db: dict[str, object],
+) -> None:
     # Arrange
     db = seeded_db["db"]
     workspace = seeded_db["workspace"]
@@ -292,7 +300,9 @@ def test_list_artifacts_for_workspace_filters_kind_run_and_preserves_parent_ids(
     assert artifact_service.get_artifact_parent_ids(model) == [str(parent.id)]
 
 
-def test_get_artifact_parent_ids_tolerates_malformed_legacy_payload(seeded_db: dict[str, object]) -> None:
+def test_get_artifact_parent_ids_tolerates_malformed_legacy_payload(
+    seeded_db: dict[str, object],
+) -> None:
     # Arrange
     db = seeded_db["db"]
     workspace = seeded_db["workspace"]

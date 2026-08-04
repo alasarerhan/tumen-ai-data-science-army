@@ -56,7 +56,9 @@ def test_logs_endpoint_allows_mock_fallback_in_local_profile(client_and_run, mon
     monkeypatch.setattr(logs_module.settings, "allow_local_run_fallback", True)
 
     async def quick_mock_stream(run_id: str, run_status: str):
-        yield await logs_module._sse_event({"msg": f"Run {run_id} finished with status: {run_status}"})
+        yield await logs_module._sse_event(
+            {"msg": f"Run {run_id} finished with status: {run_status}"}
+        )
 
     monkeypatch.setattr(logs_module, "_mock_log_stream", quick_mock_stream)
 

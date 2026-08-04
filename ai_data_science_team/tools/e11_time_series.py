@@ -26,7 +26,6 @@ import numpy as np  # noqa: E402, F401
 import pandas as pd  # noqa: E402, F401
 from langchain.tools import tool  # noqa: E402, F401
 
-
 # ---------------------------------------------------------------------------
 # Stationarity test (ADF + KPSS)
 # ---------------------------------------------------------------------------
@@ -133,9 +132,7 @@ def seasonal_decompose_ts(
     try:
         from statsmodels.tsa.seasonal import seasonal_decompose as sm_decompose  # noqa: E402, F401
     except ImportError:
-        raise ImportError(
-            "statsmodels is required. Install with: pip install statsmodels"
-        )
+        raise ImportError("statsmodels is required. Install with: pip install statsmodels")
 
     s = pd.Series(data, name=series_name).dropna()
     if len(s) < 2 * period:
@@ -211,9 +208,7 @@ def autocorrelation_analysis(
     try:
         from statsmodels.tsa.stattools import acf, pacf  # noqa: E402, F401
     except ImportError:
-        raise ImportError(
-            "statsmodels is required. Install with: pip install statsmodels"
-        )
+        raise ImportError("statsmodels is required. Install with: pip install statsmodels")
 
     s = pd.Series(data, name=series_name).dropna()
     actual_nlags = min(nlags, len(s) // 2 - 1)
@@ -277,9 +272,7 @@ def train_arima(
     try:
         from statsmodels.tsa.statespace.sarimax import SARIMAX  # noqa: E402, F401
     except ImportError:
-        raise ImportError(
-            "statsmodels is required. Install with: pip install statsmodels"
-        )
+        raise ImportError("statsmodels is required. Install with: pip install statsmodels")
 
     s = pd.Series(data, name=series_name).dropna()
     p, d, q = order[:3]
@@ -298,7 +291,7 @@ def train_arima(
         return f"ARIMA fitting failed: {exc}", {"error": str(exc)}
 
     resid = fitted.resid.dropna()
-    rmse = float((resid ** 2).mean() ** 0.5)
+    rmse = float((resid**2).mean() ** 0.5)
     mae = float(resid.abs().mean())
 
     result: Dict[str, Any] = {
@@ -354,8 +347,7 @@ def train_prophet(
         from prophet import Prophet  # type: ignore[import]  # noqa: E402, F401
     except ImportError:
         raise ImportError(
-            "Prophet is required for train_prophet. "
-            "Install it with: pip install prophet"
+            "Prophet is required for train_prophet. Install it with: pip install prophet"
         )
 
     df = pd.DataFrame({"ds": pd.to_datetime(dates), "y": values}).dropna()
@@ -375,7 +367,7 @@ def train_prophet(
     in_sample = in_sample.set_index("ds")["yhat"]
     actual = df.set_index("ds")["y"]
     resid = (actual - in_sample).dropna()
-    rmse = float((resid ** 2).mean() ** 0.5)
+    rmse = float((resid**2).mean() ** 0.5)
     mae = float(resid.abs().mean())
 
     result: Dict[str, Any] = {
@@ -437,7 +429,7 @@ def evaluate_forecast(
     errors = actual_s - predicted_s
     abs_errors = errors.abs()
 
-    rmse = float((errors ** 2).mean() ** 0.5)
+    rmse = float((errors**2).mean() ** 0.5)
     mae = float(abs_errors.mean())
 
     # MAPE — skip zeros in actual to avoid division by zero
@@ -449,7 +441,7 @@ def evaluate_forecast(
     )
 
     # R²
-    ss_res = float((errors ** 2).sum())
+    ss_res = float((errors**2).sum())
     ss_tot = float(((actual_s - actual_s.mean()) ** 2).sum())
     r2 = 1 - ss_res / ss_tot if ss_tot != 0 else float("nan")
 
@@ -486,28 +478,39 @@ def evaluate_forecast(
 # AutoML forecast — races multiple algorithms, selects best by RMSE
 # ---------------------------------------------------------------------------
 
+
 def _season_length(freq: str) -> int:
     """Map a pandas-style frequency string to a seasonal period."""
     freq_upper = freq.upper().rstrip("S").rstrip("-")
     mapping = {
-        "H": 24, "D": 7, "W": 52, "M": 12, "Q": 4,
-        "A": 1, "Y": 1, "T": 60, "MIN": 60,
+        "H": 24,
+        "D": 7,
+        "W": 52,
+        "M": 12,
+        "Q": 4,
+        "A": 1,
+        "Y": 1,
+        "T": 60,
+        "MIN": 60,
     }
     return mapping.get(freq_upper, 1)
 
 
 def _rmse(actual: "np.ndarray", predicted: "np.ndarray") -> float:
     import numpy as _np  # noqa: E402, F401
+
     err = actual - predicted
-    return float(_np.sqrt(_np.mean(err ** 2)))
+    return float(_np.sqrt(_np.mean(err**2)))
 
 
 def _mae(actual: "np.ndarray", predicted: "np.ndarray") -> float:
     import numpy as _np  # noqa: E402, F401
+
     return float(_np.mean(_np.abs(actual - predicted)))
 
 
 # ---- statsforecast backend ------------------------------------------------
+
 
 def _automl_statsforecast(
     values: "np.ndarray",
@@ -584,14 +587,16 @@ def _automl_statsforecast(
     leaderboard: list[dict] = []
     for col in model_cols:
         actual_vals = cv["y"].values
-        pred_vals   = cv[col].values
+        pred_vals = cv[col].values
         if _np.isnan(pred_vals).any():
             continue
-        leaderboard.append({
-            "model": col,
-            "rmse":  round(_rmse(actual_vals, pred_vals), 4),
-            "mae":   round(_mae(actual_vals, pred_vals), 4),
-        })
+        leaderboard.append(
+            {
+                "model": col,
+                "rmse": round(_rmse(actual_vals, pred_vals), 4),
+                "mae": round(_mae(actual_vals, pred_vals), 4),
+            }
+        )
     leaderboard.sort(key=lambda x: x["rmse"])
     best_model_name = leaderboard[0]["model"]
 
@@ -617,6 +622,7 @@ def _automl_statsforecast(
 
 # ---- statsmodels fallback -------------------------------------------------
 
+
 def _automl_statsmodels(
     values: "np.ndarray",
     season_length: int,
@@ -637,13 +643,14 @@ def _automl_statsmodels(
     ─ Ridge w/ lag features: always available via scikit-learn
     """
     import math as _math  # noqa: E402, F401
+
     import numpy as _np  # noqa: E402, F401
     from statsmodels.tsa.holtwinters import ExponentialSmoothing  # noqa: E402, F401
     from statsmodels.tsa.statespace.sarimax import SARIMAX  # noqa: E402, F401
 
     len(values)
     train = values[:-test_size]
-    test  = values[-test_size:]
+    test = values[-test_size:]
     n_train = len(train)
 
     candidates: list[dict] = []
@@ -652,57 +659,87 @@ def _automl_statsmodels(
     def _try_sm(name: str, fit_fn):
         try:
             fitted = fit_fn(train)
-            preds  = _np.array(fitted.forecast(test_size), dtype=float)
+            preds = _np.array(fitted.forecast(test_size), dtype=float)
             if _np.isnan(preds).any():
                 return {"model": name, "error": "NaN predictions"}
-            return {"model": name, "fitted": fitted, "preds": preds,
-                    "rmse": round(_rmse(test, preds), 4),
-                    "mae":  round(_mae(test, preds), 4)}
+            return {
+                "model": name,
+                "fitted": fitted,
+                "preds": preds,
+                "rmse": round(_rmse(test, preds), 4),
+                "mae": round(_mae(test, preds), 4),
+            }
         except Exception as exc:
             return {"model": name, "error": str(exc)}
 
     # ---- Helper: lag-feature matrix ----------------------------------------
     def _lag_features(series: "_np.ndarray", lags: list) -> "_np.ndarray":
         max_lag = max(lags)
-        return _np.column_stack([series[max_lag - lag: len(series) - lag] for lag in lags])
+        return _np.column_stack([series[max_lag - lag : len(series) - lag] for lag in lags])
 
     # =========================================================================
     # 1. BASELINES
     # =========================================================================
     # Naive — repeat last value
     naive_preds = _np.full(test_size, float(train[-1]))
-    candidates.append({"model": "Naive", "preds": naive_preds,
-                       "rmse": round(_rmse(test, naive_preds), 4),
-                       "mae":  round(_mae(test, naive_preds), 4)})
+    candidates.append(
+        {
+            "model": "Naive",
+            "preds": naive_preds,
+            "rmse": round(_rmse(test, naive_preds), 4),
+            "mae": round(_mae(test, naive_preds), 4),
+        }
+    )
 
     # RandomWalkWithDrift — last value + average increments
     if n_train > 1:
         drift = float(_np.mean(_np.diff(train)))
         rwd_preds = _np.array([train[-1] + drift * (i + 1) for i in range(test_size)])
-        candidates.append({"model": "RandomWalkWithDrift", "preds": rwd_preds,
-                           "rmse": round(_rmse(test, rwd_preds), 4),
-                           "mae":  round(_mae(test, rwd_preds), 4)})
+        candidates.append(
+            {
+                "model": "RandomWalkWithDrift",
+                "preds": rwd_preds,
+                "rmse": round(_rmse(test, rwd_preds), 4),
+                "mae": round(_mae(test, rwd_preds), 4),
+            }
+        )
 
     # HistoricAverage — mean of train
     ha_preds = _np.full(test_size, float(_np.mean(train)))
-    candidates.append({"model": "HistoricAverage", "preds": ha_preds,
-                       "rmse": round(_rmse(test, ha_preds), 4),
-                       "mae":  round(_mae(test, ha_preds), 4)})
+    candidates.append(
+        {
+            "model": "HistoricAverage",
+            "preds": ha_preds,
+            "rmse": round(_rmse(test, ha_preds), 4),
+            "mae": round(_mae(test, ha_preds), 4),
+        }
+    )
 
     # WindowAverage — mean of last season window
     win = max(2, min(season_length, n_train))
     wa_preds = _np.full(test_size, float(_np.mean(train[-win:])))
-    candidates.append({"model": f"WindowAverage(w={win})", "preds": wa_preds,
-                       "rmse": round(_rmse(test, wa_preds), 4),
-                       "mae":  round(_mae(test, wa_preds), 4)})
+    candidates.append(
+        {
+            "model": f"WindowAverage(w={win})",
+            "preds": wa_preds,
+            "rmse": round(_rmse(test, wa_preds), 4),
+            "mae": round(_mae(test, wa_preds), 4),
+        }
+    )
 
     # SeasonalNaive — repeat last season block
     if season_length > 1 and n_train >= season_length:
-        sn_preds = _np.array([float(train[-(season_length - (i % season_length))])
-                               for i in range(test_size)])
-        candidates.append({"model": "SeasonalNaive", "preds": sn_preds,
-                           "rmse": round(_rmse(test, sn_preds), 4),
-                           "mae":  round(_mae(test, sn_preds), 4)})
+        sn_preds = _np.array(
+            [float(train[-(season_length - (i % season_length))]) for i in range(test_size)]
+        )
+        candidates.append(
+            {
+                "model": "SeasonalNaive",
+                "preds": sn_preds,
+                "rmse": round(_rmse(test, sn_preds), 4),
+                "mae": round(_mae(test, sn_preds), 4),
+            }
+        )
 
     # =========================================================================
     # 2. EXPONENTIAL SMOOTHING (statsmodels)
@@ -710,24 +747,32 @@ def _automl_statsmodels(
     if season_length > 1 and n_train >= 3 * season_length:
         for trend, seasonal in [("add", "add"), ("add", "mul"), ("add", None), (None, "add")]:
             label = f"ETS(trend={trend},seasonal={seasonal})"
+
             def _fit_hw(tr, t=trend, s=seasonal, sl=season_length):
                 return ExponentialSmoothing(
-                    tr, trend=t, seasonal=s,
+                    tr,
+                    trend=t,
+                    seasonal=s,
                     seasonal_periods=sl if s else None,
                     damped_trend=(t == "add"),
                     initialization_method="estimated",
                 ).fit(optimized=True)
+
             res = _try_sm(label, _fit_hw)
             if "error" not in res:
                 candidates.append(res)
     else:
         for trend in ["add", None]:
             label = f"ETS(trend={trend},seasonal=None)"
+
             def _fit_simple(tr, t=trend):
                 return ExponentialSmoothing(
-                    tr, trend=t, damped_trend=(t == "add"),
+                    tr,
+                    trend=t,
+                    damped_trend=(t == "add"),
                     initialization_method="estimated",
                 ).fit(optimized=True)
+
             res = _try_sm(label, _fit_simple)
             if "error" not in res:
                 candidates.append(res)
@@ -735,6 +780,7 @@ def _automl_statsmodels(
     # SES (Simple Exponential Smoothing)
     def _fit_ses(tr):
         return ExponentialSmoothing(tr, initialization_method="estimated").fit(optimized=True)
+
     res_ses = _try_sm("SES", _fit_ses)
     if "error" not in res_ses:
         candidates.append(res_ses)
@@ -746,10 +792,16 @@ def _automl_statsmodels(
     for order in arima_orders:
         label = f"ARIMA{order}"
         s_order = (1, 1, 1, season_length) if season_length > 1 else (0, 0, 0, 0)
+
         def _fit_arima(tr, o=order, so=s_order):
-            return SARIMAX(tr, order=o, seasonal_order=so,
-                           enforce_stationarity=False,
-                           enforce_invertibility=False).fit(disp=False)
+            return SARIMAX(
+                tr,
+                order=o,
+                seasonal_order=so,
+                enforce_stationarity=False,
+                enforce_invertibility=False,
+            ).fit(disp=False)
+
         res = _try_sm(label, _fit_arima)
         if "error" not in res:
             candidates.append(res)
@@ -759,6 +811,7 @@ def _automl_statsmodels(
     # =========================================================================
     try:
         from tbats import TBATS as _TBATS  # noqa: E402, F401
+
         tbats_estimator = _TBATS(
             seasonal_periods=[season_length] if season_length > 1 else None,
             use_arma_errors=True,
@@ -769,13 +822,15 @@ def _automl_statsmodels(
         tbats_mdl = tbats_estimator.fit(train)
         tbats_preds = _np.array(tbats_mdl.forecast(steps=test_size), dtype=float)
         if not _np.isnan(tbats_preds).any():
-            candidates.append({
-                "model": "TBATS",
-                "preds": tbats_preds,
-                "_tbats_estimator": tbats_estimator,
-                "rmse": round(_rmse(test, tbats_preds), 4),
-                "mae":  round(_mae(test, tbats_preds), 4),
-            })
+            candidates.append(
+                {
+                    "model": "TBATS",
+                    "preds": tbats_preds,
+                    "_tbats_estimator": tbats_estimator,
+                    "rmse": round(_rmse(test, tbats_preds), 4),
+                    "mae": round(_mae(test, tbats_preds), 4),
+                }
+            )
     except ImportError:
         pass
     except Exception:
@@ -790,7 +845,7 @@ def _automl_statsmodels(
 
     if n_train > max(lags) + 1:
         X_train = _lag_features(train, lags)
-        y_train = train[max(lags):]
+        y_train = train[max(lags) :]
 
         def _recursive_predict(model, n_steps: int) -> "_np.ndarray":
             buf = list(train)
@@ -805,17 +860,20 @@ def _automl_statsmodels(
         # Ridge Regression with lag features
         try:
             from sklearn.linear_model import Ridge  # noqa: E402, F401
+
             ridge = Ridge(alpha=1.0)
             ridge.fit(X_train, y_train)
             ridge_preds = _recursive_predict(ridge, test_size)
             if not _np.isnan(ridge_preds).any():
-                candidates.append({
-                    "model": "RidgeRegression(lags)",
-                    "preds": ridge_preds,
-                    "_model": ridge,
-                    "rmse": round(_rmse(test, ridge_preds), 4),
-                    "mae":  round(_mae(test, ridge_preds), 4),
-                })
+                candidates.append(
+                    {
+                        "model": "RidgeRegression(lags)",
+                        "preds": ridge_preds,
+                        "_model": ridge,
+                        "rmse": round(_rmse(test, ridge_preds), 4),
+                        "mae": round(_mae(test, ridge_preds), 4),
+                    }
+                )
         except ImportError:
             pass
         except Exception:
@@ -824,21 +882,27 @@ def _automl_statsmodels(
         # LightGBM with lag features (optional)
         try:
             import lightgbm as _lgb  # noqa: E402, F401
+
             lgb_model = _lgb.LGBMRegressor(
-                n_estimators=200, learning_rate=0.05,
-                max_depth=5, min_child_samples=2,
-                n_jobs=1, verbose=-1,
+                n_estimators=200,
+                learning_rate=0.05,
+                max_depth=5,
+                min_child_samples=2,
+                n_jobs=1,
+                verbose=-1,
             )
             lgb_model.fit(X_train, y_train)
             lgb_preds = _recursive_predict(lgb_model, test_size)
             if not _np.isnan(lgb_preds).any():
-                candidates.append({
-                    "model": "LightGBM(lags)",
-                    "preds": lgb_preds,
-                    "_model": lgb_model,
-                    "rmse": round(_rmse(test, lgb_preds), 4),
-                    "mae":  round(_mae(test, lgb_preds), 4),
-                })
+                candidates.append(
+                    {
+                        "model": "LightGBM(lags)",
+                        "preds": lgb_preds,
+                        "_model": lgb_model,
+                        "rmse": round(_rmse(test, lgb_preds), 4),
+                        "mae": round(_mae(test, lgb_preds), 4),
+                    }
+                )
         except ImportError:
             pass
         except Exception:
@@ -850,9 +914,14 @@ def _automl_statsmodels(
     valid = [c for c in candidates if "rmse" in c and not _math.isnan(c["rmse"])]
     if not valid:
         naive_preds = _np.full(test_size, float(values[-1]))
-        valid = [{"model": "Naive", "preds": naive_preds,
-                  "rmse": round(_rmse(test, naive_preds), 4),
-                  "mae":  round(_mae(test, naive_preds), 4)}]
+        valid = [
+            {
+                "model": "Naive",
+                "preds": naive_preds,
+                "rmse": round(_rmse(test, naive_preds), 4),
+                "mae": round(_mae(test, naive_preds), 4),
+            }
+        ]
     valid.sort(key=lambda x: x["rmse"])
     best_name = valid[0]["model"]
 
@@ -868,8 +937,9 @@ def _automl_statsmodels(
         elif best_name.startswith("WindowAverage"):
             best_forecast = [float(_np.mean(values[-win:]))] * periods_ahead
         elif best_name == "SeasonalNaive":
-            best_forecast = [float(values[-(season_length - (i % season_length))])
-                             for i in range(periods_ahead)]
+            best_forecast = [
+                float(values[-(season_length - (i % season_length))]) for i in range(periods_ahead)
+            ]
         elif best_name.startswith("ETS"):
             params: dict = {}
             if "trend=add" in best_name:
@@ -886,17 +956,22 @@ def _automl_statsmodels(
             ).fit(optimized=True)
             best_forecast = ets_full.forecast(periods_ahead).tolist()
         elif best_name == "SES":
-            ses_full = ExponentialSmoothing(
-                values, initialization_method="estimated"
-            ).fit(optimized=True)
+            ses_full = ExponentialSmoothing(values, initialization_method="estimated").fit(
+                optimized=True
+            )
             best_forecast = ses_full.forecast(periods_ahead).tolist()
         elif best_name.startswith("ARIMA"):
             import ast  # noqa: E402, F401
+
             order = ast.literal_eval(best_name.replace("ARIMA", ""))
             s_order = (1, 1, 1, season_length) if season_length > 1 else (0, 0, 0, 0)
-            full_fit = SARIMAX(values, order=order, seasonal_order=s_order,
-                               enforce_stationarity=False,
-                               enforce_invertibility=False).fit(disp=False)
+            full_fit = SARIMAX(
+                values,
+                order=order,
+                seasonal_order=s_order,
+                enforce_stationarity=False,
+                enforce_invertibility=False,
+            ).fit(disp=False)
             best_forecast = full_fit.forecast(periods_ahead).tolist()
         elif best_name == "TBATS":
             tbats_full = valid[0]["_tbats_estimator"].fit(values)
@@ -920,8 +995,7 @@ def _automl_statsmodels(
     except Exception:
         best_forecast = []
 
-    leaderboard = [{"model": c["model"], "rmse": c["rmse"], "mae": c["mae"]}
-                   for c in valid]
+    leaderboard = [{"model": c["model"], "rmse": c["rmse"], "mae": c["mae"]} for c in valid]
 
     return {
         "backend": "statsmodels",
@@ -993,18 +1067,20 @@ def auto_forecast(
     if backend in ("auto", "statsforecast"):
         try:
             import statsforecast  # noqa: F401
+
             use_sf = True
         except ImportError:
             if backend == "statsforecast":
-                raise ImportError(
-                    "statsforecast not found. Install: pip install statsforecast"
-                )
+                raise ImportError("statsforecast not found. Install: pip install statsforecast")
 
     if use_sf:
         try:
             result = _automl_statsforecast(values, freq, sl, test_size, periods_ahead, series_name)
         except Exception as exc:
-            return f"AutoML (statsforecast) failed: {exc}", {"error": str(exc), "series_name": series_name}
+            return f"AutoML (statsforecast) failed: {exc}", {
+                "error": str(exc),
+                "series_name": series_name,
+            }
     else:
         try:
             from statsmodels.tsa.holtwinters import ExponentialSmoothing  # noqa: F401
@@ -1013,13 +1089,16 @@ def auto_forecast(
         try:
             result = _automl_statsmodels(values, sl, test_size, periods_ahead, series_name)
         except Exception as exc:
-            return f"AutoML (statsmodels) failed: {exc}", {"error": str(exc), "series_name": series_name}
+            return f"AutoML (statsmodels) failed: {exc}", {
+                "error": str(exc),
+                "series_name": series_name,
+            }
 
     result["series_name"] = series_name
 
     # Build leaderboard text
     lb_lines = "\n".join(
-        f"  {i+1}. {r['model']:35s} RMSE={r['rmse']:.4f}  MAE={r['mae']:.4f}"
+        f"  {i + 1}. {r['model']:35s} RMSE={r['rmse']:.4f}  MAE={r['mae']:.4f}"
         for i, r in enumerate(result["leaderboard"])
     )
     text = (
@@ -1035,12 +1114,15 @@ def auto_forecast(
     )
     return text, result
 
+
 # Compatibility shims — modernized time_series module split into pure forecasts;
 # the agent file historically imported these convenience wrappers.
+
 
 def moving_average_forecast(series, *, window=3, horizon=1):
     """Simple moving average forecast."""
     import numpy as _np
+
     arr = _np.asarray(series, dtype=float)
     ma = arr[-window:].mean()
     return [float(ma)] * int(horizon)
@@ -1055,10 +1137,13 @@ def seasonal_naive_forecast(series, *, season=7, horizon=1):
 def multiplicative_seasonal_forecast(series, *, season=7, horizon=1):
     """Trend × seasonal multiplicative forecast."""
     import numpy as _np
+
     arr = _np.asarray(series, dtype=float)
     if len(arr) < season:
         return seasonal_naive_forecast(series, season=season, horizon=horizon)
-    trend = _np.mean(arr[-season*2:]) / max(_np.mean(arr[-season*4:-season*2]) if len(arr) >= season*4 else arr.mean(), 1e-9)
+    trend = _np.mean(arr[-season * 2 :]) / max(
+        _np.mean(arr[-season * 4 : -season * 2]) if len(arr) >= season * 4 else arr.mean(), 1e-9
+    )
     seasonal = arr[-season:]
     seasonal = seasonal / max(seasonal.mean(), 1e-9)
     return [float((arr[-1] * trend) * seasonal[i % season]) for i in range(int(horizon))]
@@ -1067,6 +1152,7 @@ def multiplicative_seasonal_forecast(series, *, season=7, horizon=1):
 def build_panel(datasets, *, freq="D", key_col=None, time_col="ts"):
     """Stack multiple time series into a single DataFrame."""
     import pandas as _pd
+
     out = []
     if isinstance(datasets, dict):
         items = list(datasets.items())
@@ -1075,7 +1161,7 @@ def build_panel(datasets, *, freq="D", key_col=None, time_col="ts"):
     else:
         items = [("k0", datasets)]
     for name, ds in items:
-        for df in (ds if isinstance(ds, list) else [ds]):
+        for df in ds if isinstance(ds, list) else [ds]:
             df = df.copy()
             df["series"] = name
             if time_col not in df.columns and key_col is None:
@@ -1090,6 +1176,7 @@ def holiday_calendar(country="US", years=None):
     """Return holidays.Dataset() filtered to country + years."""
     try:
         import holidays
+
         if years is None:
             return holidays.country_holidays(country)
         return holidays.country_holidays(country, years=years)

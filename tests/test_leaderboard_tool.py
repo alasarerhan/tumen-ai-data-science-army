@@ -1,4 +1,5 @@
 """Tests for I3 Experiment Tracking / Leaderboard tool."""
+
 from __future__ import annotations
 
 import math
@@ -21,15 +22,17 @@ def populated_store():
             s,
             experiment_id="exp1",
             model_id=m_id,
-            metrics={"auc": 0.7 + 0.05 * i, "f1": 0.5 + 0.05 * i,
-                     "rmse": 1.0 - 0.1 * i},
+            metrics={"auc": 0.7 + 0.05 * i, "f1": 0.5 + 0.05 * i, "rmse": 1.0 - 0.1 * i},
             params={"depth": 3 + i},
             is_champion=(m_id == "xgb"),
             created_at=100.0 + i,
         )
     i3.record_run(
-        s, experiment_id="exp2", model_id="rf",
-        metrics={"auc": 0.6}, created_at=200.0,
+        s,
+        experiment_id="exp2",
+        model_id="rf",
+        metrics={"auc": 0.6},
+        created_at=200.0,
     )
     return s
 
@@ -37,7 +40,9 @@ def populated_store():
 class TestRecordRun:
     def test_record_run_returns_dataclass(self, store):
         rec = i3.record_run(
-            store, experiment_id="e1", model_id="m1",
+            store,
+            experiment_id="e1",
+            model_id="m1",
             metrics={"auc": 0.8},
         )
         assert isinstance(rec, i3.ExperimentRecord)
@@ -47,8 +52,11 @@ class TestRecordRun:
 
     def test_record_run_with_custom_run_id(self, store):
         rec = i3.record_run(
-            store, experiment_id="e1", model_id="m1",
-            metrics={"auc": 0.7}, run_id="custom-id",
+            store,
+            experiment_id="e1",
+            model_id="m1",
+            metrics={"auc": 0.7},
+            run_id="custom-id",
         )
         assert rec.run_id == "custom-id"
 
@@ -81,14 +89,19 @@ class TestLeaderboard:
 
     def test_leaderboard_model_filter(self, populated_store):
         entries = i3.leaderboard(
-            populated_store, "exp1", "auc",
+            populated_store,
+            "exp1",
+            "auc",
             model_filter=["rf", "xgb"],
         )
         assert {e.model_id for e in entries} == {"rf", "xgb"}
 
     def test_leaderboard_higher_is_better_false(self, populated_store):
         entries = i3.leaderboard(
-            populated_store, "exp1", "rmse", higher_is_better=False,
+            populated_store,
+            "exp1",
+            "rmse",
+            higher_is_better=False,
         )
         assert pytest.approx(entries[0].primary_value, abs=1e-9) == 0.8
 
@@ -125,7 +138,9 @@ class TestSummariseMetrics:
 
     def test_single_value_std_zero(self, store):
         i3.record_run(
-            store, experiment_id="e1", model_id="m",
+            store,
+            experiment_id="e1",
+            model_id="m",
             metrics={"auc": 0.5},
         )
         s = i3.summarise_metrics(store, "e1", "auc")
@@ -135,7 +150,9 @@ class TestSummariseMetrics:
 class TestParallelCoordinates:
     def test_payload_shape(self, populated_store):
         payload = i3.parallel_coordinates_payload(
-            populated_store, "exp1", ["auc", "f1", "rmse"],
+            populated_store,
+            "exp1",
+            ["auc", "f1", "rmse"],
         )
         assert payload["experiment_id"] == "exp1"
         assert payload["metrics"] == ["auc", "f1", "rmse"]
@@ -143,11 +160,14 @@ class TestParallelCoordinates:
 
     def test_payload_missing_metric_nan(self, store):
         i3.record_run(
-            store, experiment_id="e1", model_id="m",
+            store,
+            experiment_id="e1",
+            model_id="m",
             metrics={"auc": 0.7},
         )
         payload = i3.parallel_coordinates_payload(
-            store, "e1", ["auc", "f1"],
+            store,
+            "e1",
+            ["auc", "f1"],
         )
         assert payload["points"][0]["f1"] != payload["points"][0]["f1"]  # NaN
-

@@ -36,7 +36,6 @@ import unicodedata  # noqa: E402, F401
 from dataclasses import dataclass, field  # noqa: E402, F401
 from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple  # noqa: E402, F401
 
-
 # ---------------------------------------------------------------------------
 # Default synonym table — Turkish / English business-term aliases.
 # ---------------------------------------------------------------------------
@@ -44,27 +43,56 @@ from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple  # noqa: 
 
 DEFAULT_SYNONYMS: Dict[str, List[str]] = {
     "churn": [
-        "müşteri kaybı", "müşteri kayip", "churn rate", "kayip orani",
-        "abonelik iptali", "attrition", "kayip",
+        "müşteri kaybı",
+        "müşteri kayip",
+        "churn rate",
+        "kayip orani",
+        "abonelik iptali",
+        "attrition",
+        "kayip",
     ],
     "revenue": [
-        "ciro", "gelir", "hasılat", "kazanç", "income", "sales",
-        "amount", "tutar", "price", "fiyat",
+        "ciro",
+        "gelir",
+        "hasılat",
+        "kazanç",
+        "income",
+        "sales",
+        "amount",
+        "tutar",
+        "price",
+        "fiyat",
     ],
     "customer": [
-        "müşteri", "kullanıcı", "user", "client", "member",
+        "müşteri",
+        "kullanıcı",
+        "user",
+        "client",
+        "member",
     ],
     "transaction": [
-        "işlem", "transaction", "satış", "sipariş", "order",
+        "işlem",
+        "transaction",
+        "satış",
+        "sipariş",
+        "order",
     ],
     "session": [
-        "oturum", "session", "ziyaret", "visit",
+        "oturum",
+        "session",
+        "ziyaret",
+        "visit",
     ],
     "churn_rate": [
-        "churn rate", "kayip orani", "abandonment rate", "kayip oranı",
+        "churn rate",
+        "kayip orani",
+        "abandonment rate",
+        "kayip oranı",
     ],
     "ltv": [
-        "lifetime value", "yaşamboyu değer", "müşteri değeri",
+        "lifetime value",
+        "yaşamboyu değer",
+        "müşteri değeri",
     ],
 }
 
@@ -284,9 +312,7 @@ def catalog_tree(catalog: Catalog) -> Dict[str, Any]:
         "sources": [s.to_dict() for s in catalog.sources],
         "n_sources": len(catalog.sources),
         "n_tables": sum(len(s.tables) for s in catalog.sources),
-        "n_columns": sum(
-            len(t.columns) for s in catalog.sources for t in s.tables
-        ),
+        "n_columns": sum(len(t.columns) for s in catalog.sources for t in s.tables),
     }
 
 
@@ -295,9 +321,7 @@ def catalog_tree(catalog: Catalog) -> Dict[str, Any]:
 # ---------------------------------------------------------------------------
 
 
-def add_term(
-    catalog: Catalog, term: str, *, synonyms: Optional[Sequence[str]] = None
-) -> None:
+def add_term(catalog: Catalog, term: str, *, synonyms: Optional[Sequence[str]] = None) -> None:
     """Register a business term; optionally add synonyms."""
     catalog.terms.setdefault(term, [])
     if synonyms:
@@ -327,9 +351,7 @@ def bind_term_column(
     t = src.get_table(table)
     if t is None or t.get_column(column) is None:
         return False
-    catalog.terms.setdefault(term, []).append(
-        f"{source}::{table}::{column}@{confidence}"
-    )
+    catalog.terms.setdefault(term, []).append(f"{source}::{table}::{column}@{confidence}")
     return True
 
 
@@ -352,15 +374,11 @@ def _match_score(query_norm: str, target_norm: str) -> float:
     q_tokens = set(query_norm.split())
     t_tokens = set(target_norm.split())
     token_score = (
-        len(q_tokens & t_tokens) / max(len(q_tokens | t_tokens), 1)
-        if q_tokens or t_tokens
-        else 0.0
+        len(q_tokens & t_tokens) / max(len(q_tokens | t_tokens), 1) if q_tokens or t_tokens else 0.0
     )
     q_bi = {query_norm[i : i + 2] for i in range(len(query_norm) - 1)}
     t_bi = {target_norm[i : i + 2] for i in range(len(target_norm) - 1)}
-    bi_score = (
-        len(q_bi & t_bi) / max(len(q_bi | t_bi), 1) if q_bi and t_bi else 0.0
-    )
+    bi_score = len(q_bi & t_bi) / max(len(q_bi | t_bi), 1) if q_bi and t_bi else 0.0
     return 0.5 * token_score + 0.5 * bi_score
 
 
@@ -522,7 +540,9 @@ def record_lineage(
     )
 
 
-def lineage_for(catalog: Catalog, source_name: str, table: Optional[str] = None) -> List[Dict[str, str]]:
+def lineage_for(
+    catalog: Catalog, source_name: str, table: Optional[str] = None
+) -> List[Dict[str, str]]:
     """Return all lineage records that consume the given source (and table)."""
     out: List[Dict[str, str]] = []
     for r in catalog.lineage:
@@ -563,5 +583,3 @@ __all__ = [
     "lineage_for",
     "make_catalog",
 ]
-
-

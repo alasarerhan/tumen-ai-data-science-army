@@ -9,11 +9,23 @@ from typing import Any
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from platform_api.db.models import Artifact, ModelDeploymentRecord, ModelMonitorSnapshot, ModelRegistryEntry
+from platform_api.db.models import (
+    Artifact,
+    ModelDeploymentRecord,
+    ModelMonitorSnapshot,
+    ModelRegistryEntry,
+)
 from platform_api.services.artifact_service import get_artifact_parent_ids
 
 MODEL_KINDS = {"model", "model_binary", "model_package", "trained_model"}
-METRIC_KINDS = {"metrics", "model_metrics", "evaluation", "model_evaluation", "evaluation_report", "drift_report"}
+METRIC_KINDS = {
+    "metrics",
+    "model_metrics",
+    "evaluation",
+    "model_evaluation",
+    "evaluation_report",
+    "drift_report",
+}
 
 
 def get_modelops_summary(db: Session, *, workspace_id: uuid.UUID) -> dict[str, Any]:
@@ -50,7 +62,10 @@ def get_modelops_summary(db: Session, *, workspace_id: uuid.UUID) -> dict[str, A
     model_artifacts = [item for item in artifacts if item.kind in MODEL_KINDS]
     metric_artifacts = [item for item in artifacts if item.kind in METRIC_KINDS]
     metrics_by_run = _group_by_run(metric_artifacts)
-    artifact_registry = [_artifact_registry_entry(item, metrics_by_run.get(str(item.workflow_run_id), [])) for item in model_artifacts]
+    artifact_registry = [
+        _artifact_registry_entry(item, metrics_by_run.get(str(item.workflow_run_id), []))
+        for item in model_artifacts
+    ]
     artifact_monitors = [_artifact_monitor_entry(item) for item in metric_artifacts]
     monitors = [_persisted_monitor_entry(item) for item in persisted_monitors] + artifact_monitors
     deployments = [_deployment_entry(item) for item in persisted_deployments]
@@ -58,7 +73,11 @@ def get_modelops_summary(db: Session, *, workspace_id: uuid.UUID) -> dict[str, A
     monitors_by_model = _monitors_by_model(monitors)
     if persisted_models:
         registry = [
-            _persisted_registry_entry(item, monitors_by_model.get(str(item.id), []), deployment_by_model.get(str(item.id), []))
+            _persisted_registry_entry(
+                item,
+                monitors_by_model.get(str(item.id), []),
+                deployment_by_model.get(str(item.id), []),
+            )
             for item in persisted_models
         ]
         artifact_fallback = artifact_registry
@@ -259,14 +278,22 @@ def _persisted_registry_entry(
         "approval_state": model.approval_state,
         "deployment_state": model.deployment_state,
         "monitoring_status": model.monitoring_status,
-        "latest_metric_artifact_ids": [item["artifact_id"] for item in linked_monitors if item.get("artifact_id")][:5],
-        "drift_status": _worst_status([model.drift_status, *[item.get("drift_status", "unknown") for item in linked_monitors]]),
+        "latest_metric_artifact_ids": [
+            item["artifact_id"] for item in linked_monitors if item.get("artifact_id")
+        ][:5],
+        "drift_status": _worst_status(
+            [model.drift_status, *[item.get("drift_status", "unknown") for item in linked_monitors]]
+        ),
         "performance_status": _worst_status(
-            [model.performance_status, *[item.get("performance_status", "unknown") for item in linked_monitors]]
+            [
+                model.performance_status,
+                *[item.get("performance_status", "unknown") for item in linked_monitors],
+            ]
         ),
         "deployment_ids": [item["deployment_id"] for item in linked_deployments[:5]],
         "retrain_candidate": any(
-            item.get("drift_status") in {"warning", "critical"} or item.get("performance_status") in {"warning", "critical"}
+            item.get("drift_status") in {"warning", "critical"}
+            or item.get("performance_status") in {"warning", "critical"}
             for item in linked_monitors
         )
         or model.drift_status in {"warning", "critical"}
@@ -290,15 +317,25 @@ def _artifact_monitor_entry(artifact: Artifact) -> dict[str, Any]:
         "created_at": artifact.created_at.isoformat() if artifact.created_at else None,
         "freshness": "snapshot",
         "drift_status": _status_from_text(artifact, metadata, ["drift", "psi", "ks"]),
-        "performance_status": _status_from_text(artifact, metadata, ["auc", "f1", "rmse", "mae", "accuracy", "decay"]),
+        "performance_status": _status_from_text(
+            artifact, metadata, ["auc", "f1", "rmse", "mae", "accuracy", "decay"]
+        ),
         "alert_policy": "not_configured",
         "source": "artifact",
     }
 
 
 def _persisted_monitor_entry(snapshot: ModelMonitorSnapshot) -> dict[str, Any]:
-    drift_status = snapshot.status if snapshot.monitor_type in {"drift", "data_drift", "concept_drift"} else "unknown"
-    performance_status = snapshot.status if snapshot.monitor_type in {"performance", "quality", "decay"} else "unknown"
+    drift_status = (
+        snapshot.status
+        if snapshot.monitor_type in {"drift", "data_drift", "concept_drift"}
+        else "unknown"
+    )
+    performance_status = (
+        snapshot.status
+        if snapshot.monitor_type in {"performance", "quality", "decay"}
+        else "unknown"
+    )
     return {
         "monitor_id": str(snapshot.id),
         "model_id": str(snapshot.model_id),
@@ -330,10 +367,14 @@ def _deployment_entry(deployment: ModelDeploymentRecord) -> dict[str, Any]:
         "status": deployment.status,
         "endpoint_configured": bool(deployment.endpoint_url),
         "deployed_at": deployment.deployed_at.isoformat() if deployment.deployed_at else None,
-        "rollback_model_id": str(deployment.rollback_model_id) if deployment.rollback_model_id else None,
+        "rollback_model_id": str(deployment.rollback_model_id)
+        if deployment.rollback_model_id
+        else None,
         "rollback_configured": bool(deployment.rollback_model_id or deployment.rollback_notes),
         "health_status": deployment.health_status,
-        "last_health_check_at": deployment.last_health_check_at.isoformat() if deployment.last_health_check_at else None,
+        "last_health_check_at": deployment.last_health_check_at.isoformat()
+        if deployment.last_health_check_at
+        else None,
         "created_at": deployment.created_at.isoformat() if deployment.created_at else None,
     }
 
@@ -387,13 +428,24 @@ def _deployments_by_model(deployments: list[dict[str, Any]]) -> dict[str, list[d
 
 
 def _drift_status(metrics: list[Artifact]) -> str:
-    statuses = [_status_from_text(item, _safe_json(getattr(item, "parent_artifact_ids_json", None)), ["drift", "psi", "ks"]) for item in metrics]
+    statuses = [
+        _status_from_text(
+            item,
+            _safe_json(getattr(item, "parent_artifact_ids_json", None)),
+            ["drift", "psi", "ks"],
+        )
+        for item in metrics
+    ]
     return _worst_status(statuses)
 
 
 def _performance_status(metrics: list[Artifact]) -> str:
     statuses = [
-        _status_from_text(item, _safe_json(getattr(item, "parent_artifact_ids_json", None)), ["auc", "f1", "rmse", "mae", "accuracy", "decay"])
+        _status_from_text(
+            item,
+            _safe_json(getattr(item, "parent_artifact_ids_json", None)),
+            ["auc", "f1", "rmse", "mae", "accuracy", "decay"],
+        )
         for item in metrics
     ]
     return _worst_status(statuses)
@@ -440,14 +492,18 @@ def _safe_json(raw: str | None) -> Any:
         return None
 
 
-def _require_workspace_artifact(db: Session, *, workspace_id: uuid.UUID, artifact_id: uuid.UUID) -> Artifact:
+def _require_workspace_artifact(
+    db: Session, *, workspace_id: uuid.UUID, artifact_id: uuid.UUID
+) -> Artifact:
     artifact = db.get(Artifact, artifact_id)
     if artifact is None or artifact.workspace_id != workspace_id:
         raise ValueError("Artifact is not available in this workspace")
     return artifact
 
 
-def _require_workspace_model(db: Session, *, workspace_id: uuid.UUID, model_id: uuid.UUID) -> ModelRegistryEntry:
+def _require_workspace_model(
+    db: Session, *, workspace_id: uuid.UUID, model_id: uuid.UUID
+) -> ModelRegistryEntry:
     model = db.get(ModelRegistryEntry, model_id)
     if model is None or model.workspace_id != workspace_id:
         raise ValueError("Model is not available in this workspace")

@@ -7,7 +7,6 @@ range writes.
 
 from typing import Any, Dict, List, Mapping, Sequence  # noqa: E402, F401
 
-
 from ai_data_science_team.tools.snowflake import (  # noqa: E402, F401
     BaseConnector,
     ConnectorConfig,
@@ -28,9 +27,7 @@ class GoogleSheetsConnector(BaseConnector):
             if not self.config.get("oauth_token"):
                 raise ConnectorError("auth='oauth' requires 'oauth_token'")
         else:
-            raise ConnectorError(
-                f"unknown Google Sheets auth method {auth!r}"
-            )
+            raise ConnectorError(f"unknown Google Sheets auth method {auth!r}")
         self._auth = auth
 
     def check_connection(self) -> Dict[str, Any]:
@@ -44,19 +41,13 @@ class GoogleSheetsConnector(BaseConnector):
             return [{"title": "Sheet1", "index": 0}]
         return cache
 
-    def register_sheets(
-        self, spreadsheet_id: str, sheets: Sequence[Mapping[str, Any]]
-    ) -> None:
+    def register_sheets(self, spreadsheet_id: str, sheets: Sequence[Mapping[str, Any]]) -> None:
         self._sheet_cache = getattr(self, "_sheet_cache", {})
         self._sheet_cache[spreadsheet_id] = [dict(s) for s in sheets]
 
-    def read_range(
-        self, spreadsheet_id: str, range_a1: str
-    ) -> List[List[Any]]:
+    def read_range(self, spreadsheet_id: str, range_a1: str) -> List[List[Any]]:
         if not range_a1 or "!" not in range_a1:
-            raise ConnectorError(
-                f"range_a1 must be of the form 'Sheet1!A1:B5', got {range_a1!r}"
-            )
+            raise ConnectorError(f"range_a1 must be of the form 'Sheet1!A1:B5', got {range_a1!r}")
         cache = getattr(self, "_range_cache", {})
         key = (spreadsheet_id, range_a1.split("!")[1])
         if key in cache:
@@ -64,9 +55,7 @@ class GoogleSheetsConnector(BaseConnector):
         # Default deterministic payload: a 2x2 zero matrix.
         return [[0, 0], [0, 0]]
 
-    def register_range(
-        self, spreadsheet_id: str, range_a1: str, values: List[List[Any]]
-    ) -> None:
+    def register_range(self, spreadsheet_id: str, range_a1: str, values: List[List[Any]]) -> None:
         self._range_cache = getattr(self, "_range_cache", {})
         key = (spreadsheet_id, range_a1.split("!")[1])
         self._range_cache[key] = values

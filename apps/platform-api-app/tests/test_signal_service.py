@@ -40,7 +40,9 @@ def test_parse_uuid_accepts_valid_values(value: str) -> None:
     assert parsed == uuid.UUID(value)
 
 
-@pytest.mark.parametrize("value", ["", "invalid", "\u011f\u00fc\u015f\u00f6\u00e7\u0131\u0130", "x" * 10000])
+@pytest.mark.parametrize(
+    "value", ["", "invalid", "\u011f\u00fc\u015f\u00f6\u00e7\u0131\u0130", "x" * 10000]
+)
 def test_parse_uuid_rejects_invalid_values(value: str) -> None:
     # Act / Assert
     with pytest.raises(HTTPException, match=r"Invalid run_id") as exc_info:
@@ -152,7 +154,9 @@ def test_emit_signal_mirrors_to_staged_runtime_signal_store(
     user_id = seeded_db["user_admin"].id
 
     monkeypatch.setattr(signal_service.settings, "orchestration_execution_mode", "staged_m22")
-    monkeypatch.setattr(signal_service.settings, "orchestration_state_redis_url", "redis://runtime-state")
+    monkeypatch.setattr(
+        signal_service.settings, "orchestration_state_redis_url", "redis://runtime-state"
+    )
 
     captured: list[WorkflowSignal] = []
 

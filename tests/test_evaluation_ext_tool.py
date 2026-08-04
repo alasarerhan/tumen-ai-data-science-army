@@ -54,16 +54,12 @@ class TestOptimizeThreshold:
         rng = np.random.RandomState(0)
         y_true = rng.binomial(1, 0.3, size=200).astype(int)
         y_prob = np.clip(rng.beta(2, 5, size=200), 0, 1)
-        rep = optimize_threshold(
-            y_true, y_prob, fp=1.0, fn=10.0, tn=0.0, tp=0.0, step=0.05
-        )
+        rep = optimize_threshold(y_true, y_prob, fp=1.0, fn=10.0, tn=0.0, tp=0.0, step=0.05)
         # Cost should be lower than baseline if FP/FN mirror class imbalance.
         assert rep.optimal_threshold is not None
         assert rep.cost_matrix == {"fp": 1.0, "fn": 10.0, "tp": 0.0, "tn": 0.0}
         assert rep.baseline_cost >= rep.expected_cost - 1e-6
-        assert all(
-            0 <= c["threshold"] <= 1 for c in rep.cost_curve
-        )
+        assert all(0 <= c["threshold"] <= 1 for c in rep.cost_curve)
 
     def test_high_fn_cost_prefers_lower_threshold(self):
         # Make positives rare; high fn_cost should pick a low threshold
@@ -72,13 +68,9 @@ class TestOptimizeThreshold:
         y_prob = np.concatenate([np.full(80, 0.3), np.full(20, 0.6)])
 
         # High FN cost → threshold should be lower
-        low_rep = optimize_threshold(
-            y_true, y_prob, fp=1.0, fn=100.0, tn=0.0, tp=0.0, step=0.05
-        )
+        low_rep = optimize_threshold(y_true, y_prob, fp=1.0, fn=100.0, tn=0.0, tp=0.0, step=0.05)
         # High FP cost → threshold should be higher (or equal)
-        high_rep = optimize_threshold(
-            y_true, y_prob, fp=100.0, fn=1.0, tn=0.0, tp=0.0, step=0.05
-        )
+        high_rep = optimize_threshold(y_true, y_prob, fp=100.0, fn=1.0, tn=0.0, tp=0.0, step=0.05)
         assert low_rep.optimal_threshold <= high_rep.optimal_threshold + 1e-6
 
     def test_empty_input_returns_safe_defaults(self):
@@ -96,9 +88,7 @@ class TestEvaluateSegments:
             }
         )
         y_true = pd.Series([1, 0, 1, 0, 0, 1, 1, 0])
-        rows = evaluate_segments(
-            df, y_true, df["pred"], ["region"], metric="accuracy"
-        )
+        rows = evaluate_segments(df, y_true, df["pred"], ["region"], metric="accuracy")
         assert len(rows) == 2
         for row in rows:
             assert row["metric_name"] == "accuracy"

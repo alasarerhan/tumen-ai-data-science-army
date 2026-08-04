@@ -105,7 +105,7 @@ def _execute_data_clean(ctx: NodeExecutionContext) -> dict[str, Any]:
     parent_ids = [str(source.id)] if source else []
     return {
         "outputs": {
-            "rows": int(len(cleaned)),
+            "rows": len(cleaned),
             "columns": list(map(str, cleaned.columns)),
             "recommended_steps": agent.get_recommended_cleaning_steps(),
             "data_cleaner_function": agent.get_data_cleaner_function(),
@@ -136,12 +136,14 @@ def _execute_feature_engineer(ctx: NodeExecutionContext) -> dict[str, Any]:
     parent_ids = [str(source.id)] if source else []
     return {
         "outputs": {
-            "rows": int(len(engineered)),
+            "rows": len(engineered),
             "columns": list(map(str, engineered.columns)),
             "recommended_steps": agent.get_recommended_feature_engineering_steps(),
             "feature_engineer_function": agent.get_feature_engineer_function(),
         },
-        "artifacts": [{"artifact_type": "feature_set", "uri": uri, "parent_artifact_ids": parent_ids}],
+        "artifacts": [
+            {"artifact_type": "feature_set", "uri": uri, "parent_artifact_ids": parent_ids}
+        ],
         "logs": [agent.get_log_summary() or "FeatureEngineeringAgent completed."],
     }
 
@@ -151,9 +153,13 @@ def _execute_model_train(ctx: NodeExecutionContext) -> dict[str, Any]:
     config = _node_config(ctx.node)
     target_variable = _target_variable(ctx, config)
     if not target_variable:
-        raise RuntimeError("model.train requires config.target_column or parameters.target_variable")
+        raise RuntimeError(
+            "model.train requires config.target_column or parameters.target_variable"
+        )
     if target_variable not in dataframe.columns:
-        raise RuntimeError(f"Target column '{target_variable}' was not found in the feature dataset")
+        raise RuntimeError(
+            f"Target column '{target_variable}' was not found in the feature dataset"
+        )
 
     model = _build_chat_model("model.train")
     model_dir = _local_node_directory(ctx) / "model"
@@ -178,11 +184,25 @@ def _execute_model_train(ctx: NodeExecutionContext) -> dict[str, Any]:
         raise RuntimeError("H2OMLAgent did not produce a model reference")
 
     model_uri = _write_json_artifact(ctx, filename="model_manifest.json", payload=model_manifest)
-    artifacts = [{"artifact_type": "model", "uri": model_uri, "parent_artifact_ids": [str(source.id)] if source else []}]
+    artifacts = [
+        {
+            "artifact_type": "model",
+            "uri": model_uri,
+            "parent_artifact_ids": [str(source.id)] if source else [],
+        }
+    ]
     outputs: dict[str, Any] = {"model": model_manifest}
     if leaderboard is not None:
-        metrics_uri = _write_dataframe_artifact(ctx, filename="leaderboard.csv", dataframe=leaderboard)
-        artifacts.append({"artifact_type": "metrics", "uri": metrics_uri, "parent_artifact_ids": [str(source.id)] if source else []})
+        metrics_uri = _write_dataframe_artifact(
+            ctx, filename="leaderboard.csv", dataframe=leaderboard
+        )
+        artifacts.append(
+            {
+                "artifact_type": "metrics",
+                "uri": metrics_uri,
+                "parent_artifact_ids": [str(source.id)] if source else [],
+            }
+        )
         outputs["leaderboard"] = _dataframe_preview(leaderboard, rows=20)
     return {
         "outputs": outputs,
@@ -196,7 +216,9 @@ def _execute_model_evaluate(ctx: NodeExecutionContext) -> dict[str, Any]:
     config = _node_config(ctx.node)
     target_variable = _target_variable(ctx, config)
     if not target_variable:
-        raise RuntimeError("model.evaluate requires config.target_column or parameters.target_variable")
+        raise RuntimeError(
+            "model.evaluate requires config.target_column or parameters.target_variable"
+        )
     model_artifacts = _collect_prior_artifact_payloads(ctx, kinds={"model"})
 
     from ai_data_science_team.ml_agents.model_evaluation_agent import ModelEvaluationAgent
@@ -221,7 +243,9 @@ def _execute_model_evaluate(ctx: NodeExecutionContext) -> dict[str, Any]:
     parent_ids = [str(source.id)] if source else []
     return {
         "outputs": {"evaluation": evaluation},
-        "artifacts": [{"artifact_type": "evaluation_report", "uri": uri, "parent_artifact_ids": parent_ids}],
+        "artifacts": [
+            {"artifact_type": "evaluation_report", "uri": uri, "parent_artifact_ids": parent_ids}
+        ],
         "logs": ["ModelEvaluationAgent completed."],
     }
 
@@ -234,7 +258,10 @@ def _execute_report_generate(ctx: NodeExecutionContext) -> dict[str, Any]:
     from ai_data_science_team.agents.strategic_agents import NarrativeAgent
 
     audience = config.get("audience") or "technical"
-    instruction = config.get("instruction") or f"Generate a {audience} data science workflow report from the available artifacts."
+    instruction = (
+        config.get("instruction")
+        or f"Generate a {audience} data science workflow report from the available artifacts."
+    )
     agent = NarrativeAgent(model=model)
     agent.invoke_agent(user_instructions=instruction, prior_artifacts=prior_artifacts)
     message = agent.get_ai_message()
@@ -248,7 +275,13 @@ def _execute_report_generate(ctx: NodeExecutionContext) -> dict[str, Any]:
     uri = _write_text_artifact(ctx, filename="report.md", content=report_text)
     return {
         "outputs": {"report": report_text, "tool_calls": agent.get_tool_calls()},
-        "artifacts": [{"artifact_type": "report", "uri": uri, "parent_artifact_ids": list(prior_artifacts.keys())}],
+        "artifacts": [
+            {
+                "artifact_type": "report",
+                "uri": uri,
+                "parent_artifact_ids": list(prior_artifacts.keys()),
+            }
+        ],
         "logs": ["NarrativeAgent completed."],
     }
 
@@ -299,14 +332,22 @@ def _execute_artifact_export(ctx: NodeExecutionContext) -> dict[str, Any]:
     uri = _write_json_artifact(ctx, filename="export_manifest.json", payload=manifest)
     return {
         "outputs": {"export_manifest": manifest},
-        "artifacts": [{"artifact_type": "export_manifest", "uri": uri, "parent_artifact_ids": [item["id"] for item in manifest["artifacts"]]}],
+        "artifacts": [
+            {
+                "artifact_type": "export_manifest",
+                "uri": uri,
+                "parent_artifact_ids": [item["id"] for item in manifest["artifacts"]],
+            }
+        ],
         "logs": [f"Export manifest created for {len(prior_artifacts)} artifact(s)."],
     }
 
 
 def _build_chat_model(node_type: str) -> Any:
     if not settings.openai_api_key:
-        raise RuntimeError(f"OPENAI_API_KEY is required to execute LLM-backed workflow node '{node_type}'")
+        raise RuntimeError(
+            f"OPENAI_API_KEY is required to execute LLM-backed workflow node '{node_type}'"
+        )
     from langchain_openai import ChatOpenAI
 
     kwargs: dict[str, Any] = {
@@ -355,7 +396,10 @@ def _run_parameters(run: WorkflowRun) -> dict[str, Any]:
 
 
 def _run_input_artifact_ids(run: WorkflowRun) -> list[str]:
-    return [str(item) for item in (json.loads(run.input_artifact_ids_json) if run.input_artifact_ids_json else [])]
+    return [
+        str(item)
+        for item in (json.loads(run.input_artifact_ids_json) if run.input_artifact_ids_json else [])
+    ]
 
 
 def _target_variable(ctx: NodeExecutionContext, config: dict[str, Any]) -> str | None:
@@ -389,7 +433,9 @@ def _collect_prior_artifacts(ctx: NodeExecutionContext) -> list[Artifact]:
         .order_by(WorkflowNodeExecution.execution_index.asc())
     ).scalars()
     for node in prior_nodes:
-        artifact_ids.extend(json.loads(node.produced_artifact_ids_json) if node.produced_artifact_ids_json else [])
+        artifact_ids.extend(
+            json.loads(node.produced_artifact_ids_json) if node.produced_artifact_ids_json else []
+        )
 
     artifacts: list[Artifact] = []
     seen: set[uuid.UUID] = set()
@@ -401,13 +447,19 @@ def _collect_prior_artifacts(ctx: NodeExecutionContext) -> list[Artifact]:
         if parsed_id in seen:
             continue
         artifact = ctx.db.get(Artifact, parsed_id)
-        if artifact and artifact.workspace_id == ctx.run.workspace_id and artifact.tenant_id == ctx.run.tenant_id:
+        if (
+            artifact
+            and artifact.workspace_id == ctx.run.workspace_id
+            and artifact.tenant_id == ctx.run.tenant_id
+        ):
             artifacts.append(artifact)
             seen.add(parsed_id)
     return artifacts
 
 
-def _collect_prior_artifact_payloads(ctx: NodeExecutionContext, *, kinds: set[str] | None = None) -> dict[str, Any]:
+def _collect_prior_artifact_payloads(
+    ctx: NodeExecutionContext, *, kinds: set[str] | None = None
+) -> dict[str, Any]:
     payloads: dict[str, Any] = {}
     for artifact in _collect_prior_artifacts(ctx):
         if kinds and artifact.kind not in kinds:
@@ -450,14 +502,23 @@ def _looks_like_tabular_uri(uri: str) -> bool:
 
 def _resolve_local_artifact_path(uri: str) -> Path:
     if uri.startswith(("http://", "https://", "s3://", "gs://", "az://")):
-        raise RuntimeError(f"Remote artifact reads are not available in this worker runtime yet: {uri}")
-    allowed_roots = [Path(settings.artifact_storage_local_dir).resolve(), Path(settings.chat_upload_dir).resolve()]
-    raw = Path(uri)
-    candidates = [raw] if raw.is_absolute() else [
-        Path(settings.artifact_storage_local_dir) / raw,
-        Path(settings.chat_upload_dir) / raw,
-        raw,
+        raise RuntimeError(
+            f"Remote artifact reads are not available in this worker runtime yet: {uri}"
+        )
+    allowed_roots = [
+        Path(settings.artifact_storage_local_dir).resolve(),
+        Path(settings.chat_upload_dir).resolve(),
     ]
+    raw = Path(uri)
+    candidates = (
+        [raw]
+        if raw.is_absolute()
+        else [
+            Path(settings.artifact_storage_local_dir) / raw,
+            Path(settings.chat_upload_dir) / raw,
+            raw,
+        ]
+    )
     for candidate in candidates:
         resolved = candidate.resolve()
         if not any(resolved.is_relative_to(root) for root in allowed_roots):
@@ -488,8 +549,8 @@ def _build_dataframe_profile(dataframe: Any, *, sample_rows: int) -> dict[str, A
     numeric = dataframe.select_dtypes(include="number")
     sample = dataframe.head(max(0, sample_rows))
     profile = {
-        "row_count": int(len(dataframe)),
-        "column_count": int(len(dataframe.columns)),
+        "row_count": len(dataframe),
+        "column_count": len(dataframe.columns),
         "columns": [
             {
                 "name": str(column),
@@ -511,7 +572,7 @@ def _dataframe_preview(dataframe: Any, *, rows: int) -> dict[str, Any]:
 
     preview = dataframe.head(max(0, rows)).where(pd.notna(dataframe.head(max(0, rows))), None)
     return {
-        "rows": int(len(dataframe)),
+        "rows": len(dataframe),
         "columns": list(map(str, dataframe.columns)),
         "sample": _json_safe(preview.to_dict(orient="records")),
     }
@@ -528,10 +589,14 @@ def _write_json_artifact(ctx: NodeExecutionContext, *, filename: str, payload: A
 
 
 def _write_text_artifact(ctx: NodeExecutionContext, *, filename: str, content: str) -> str:
-    return _write_bytes_artifact(ctx, filename=filename, body=content.encode("utf-8"), content_type="text/markdown")
+    return _write_bytes_artifact(
+        ctx, filename=filename, body=content.encode("utf-8"), content_type="text/markdown"
+    )
 
 
-def _write_bytes_artifact(ctx: NodeExecutionContext, *, filename: str, body: bytes, content_type: str) -> str:
+def _write_bytes_artifact(
+    ctx: NodeExecutionContext, *, filename: str, body: bytes, content_type: str
+) -> str:
     storage = get_artifact_storage_backend()
     key = f"workflow-runs/{ctx.run.id}/{ctx.node.node_id}/{filename}"
     if storage.backend == "local":
@@ -542,7 +607,9 @@ def _write_bytes_artifact(ctx: NodeExecutionContext, *, filename: str, body: byt
     if storage.backend == "s3":
         import boto3
 
-        boto3.client("s3").put_object(Bucket=storage.root, Key=key, Body=body, ContentType=content_type)
+        boto3.client("s3").put_object(
+            Bucket=storage.root, Key=key, Body=body, ContentType=content_type
+        )
         return storage.build_uri(key)
     if storage.backend == "gcs":
         from google.cloud import storage as gcs_storage
@@ -554,7 +621,12 @@ def _write_bytes_artifact(ctx: NodeExecutionContext, *, filename: str, body: byt
 
 
 def _local_node_directory(ctx: NodeExecutionContext) -> Path:
-    path = Path(settings.artifact_storage_local_dir) / "workflow-runs" / str(ctx.run.id) / ctx.node.node_id
+    path = (
+        Path(settings.artifact_storage_local_dir)
+        / "workflow-runs"
+        / str(ctx.run.id)
+        / ctx.node.node_id
+    )
     path.mkdir(parents=True, exist_ok=True)
     return path
 

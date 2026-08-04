@@ -71,8 +71,7 @@ def adj_lift(
         cov = cov.reshape(-1, cov.shape[1])
     if t_arr.size < 2 or cov.shape[0] != y_arr.size:
         raise ValueError(
-            f"shape mismatch: y={y_arr.shape}, treatment={t_arr.shape}, "
-            f"covariates={cov.shape}"
+            f"shape mismatch: y={y_arr.shape}, treatment={t_arr.shape}, covariates={cov.shape}"
         )
     if set(t_arr.tolist()) - {0, 1}:
         raise ValueError("treatment must be binary 0/1")
@@ -140,5 +139,3 @@ __all__ = [
     "check_propensity_overlap",
     "e_value",
 ]
-
-

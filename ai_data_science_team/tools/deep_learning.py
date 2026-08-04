@@ -38,6 +38,7 @@ try:
     import torch.nn as nn  # noqa: E402, F401
     import torch.nn.functional as F  # noqa: E402, F401
     from torch.utils.data import DataLoader, TensorDataset  # noqa: E402, F401
+
     _TORCH_AVAILABLE = True
 except Exception:  # pragma: no cover
     _TORCH_AVAILABLE = False
@@ -319,12 +320,12 @@ def train_mlp_classifier(
             bad += 1
         if verbose:
             logger.info(
-                f"epoch {epoch+1}/{epochs} train_loss={train_loss:.4f} "
+                f"epoch {epoch + 1}/{epochs} train_loss={train_loss:.4f} "
                 f"val_loss={v_loss:.4f} val_metric={v_metric:.4f}"
             )
         if bad >= early_stopping_patience:
             if verbose:
-                logger.info(f"early stop at epoch {epoch+1}")
+                logger.info(f"early stop at epoch {epoch + 1}")
             break
 
     if best_state is not None:
@@ -395,9 +396,7 @@ def train_lstm_forecaster(
     optim = _make_optimizer(model, lr, 1e-4)
     sched = _make_scheduler(optim, 0.5, 3)
 
-    tr_loader = DataLoader(
-        TensorDataset(X_tr, y_tr), batch_size=batch_size, shuffle=True
-    )
+    tr_loader = DataLoader(TensorDataset(X_tr, y_tr), batch_size=batch_size, shuffle=True)
     loss_curve: List[Dict[str, float]] = []
     best_val = float("inf")
     best_state: Optional[Dict[str, Any]] = None
@@ -436,7 +435,7 @@ def train_lstm_forecaster(
         else:
             bad += 1
         if verbose:
-            logger.info(f"epoch {epoch+1}/{epochs} val_mse={v_loss:.4f}")
+            logger.info(f"epoch {epoch + 1}/{epochs} val_mse={v_loss:.4f}")
         if bad >= early_stopping_patience:
             break
     if best_state is not None:
@@ -467,5 +466,3 @@ __all__ = [
     "train_mlp_classifier",
     "train_lstm_forecaster",
 ]
-
-

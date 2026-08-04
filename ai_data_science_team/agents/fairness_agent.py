@@ -12,10 +12,15 @@ PowerAnalysisAgent.
 Node type: ``model.fairness_audit``
 """
 
-from typing import (Dict, Optional, Tuple)  # noqa: E402
 import logging  # noqa: E402, F401
-from typing import Any  # noqa: E402, F401
+from typing import (  # noqa: E402
+    Any,  # noqa: E402, F401
+    Dict,
+    Optional,
+    Tuple,
+)
 
+import pandas as pd  # noqa: E402, F401
 from langchain.tools import tool  # noqa: E402, F401
 from langchain_core.messages import AIMessage, BaseMessage  # noqa: E402, F401
 from langgraph.graph import END, START, StateGraph  # noqa: E402, F401
@@ -24,11 +29,6 @@ from langgraph.types import Checkpointer  # noqa: E402, F401
 from typing_extensions import Annotated, Sequence, TypedDict  # noqa: E402, F401
 
 from ai_data_science_team.templates import BaseAgent  # noqa: E402, F401
-from ai_data_science_team.utils.regex import format_agent_name  # noqa: E402, F401
-
-import pandas as pd  # noqa: E402, F401
-
-
 from ai_data_science_team.tools.fairness import (  # noqa: E402, F401
     audit_fairness,
     demographic_parity_difference,
@@ -38,7 +38,7 @@ from ai_data_science_team.tools.fairness import (  # noqa: E402, F401
     simulate_threshold_mitigation,
     violates_four_fifths,
 )
-
+from ai_data_science_team.utils.regex import format_agent_name  # noqa: E402, F401
 
 logger = logging.getLogger(__name__)
 
@@ -50,8 +50,11 @@ NODE_TYPE = "model.fairness_audit"
 # Tool wrappers
 # ---------------------------------------------------------------------------
 
+
 @tool(response_format="content_and_artifact")
-def per_group_metrics_wrapped(y_true: Sequence[int], y_pred: Sequence[int], sensitive: Sequence) -> Tuple[str, dict]:
+def per_group_metrics_wrapped(
+    y_true: Sequence[int], y_pred: Sequence[int], sensitive: Sequence
+) -> Tuple[str, dict]:
     """Tool wrapper for ``per_group_metrics``.
 
     Per-group base rates + selection/TPR/FPR.
@@ -59,7 +62,7 @@ def per_group_metrics_wrapped(y_true: Sequence[int], y_pred: Sequence[int], sens
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: f3_per_group_metrics")
-    kwargs = {'y_true': y_true, 'y_pred': y_pred, 'sensitive': sensitive}
+    kwargs = {"y_true": y_true, "y_pred": y_pred, "sensitive": sensitive}
     try:
         result = per_group_metrics(**kwargs)
     except Exception as exc:
@@ -87,7 +90,7 @@ def demographic_parity_difference_wrapped(group_df: pd.DataFrame) -> Tuple[str, 
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: f3_demographic_parity_difference")
-    kwargs = {'group_df': group_df}
+    kwargs = {"group_df": group_df}
     try:
         result = demographic_parity_difference(**kwargs)
     except Exception as exc:
@@ -115,7 +118,7 @@ def demographic_parity_ratio_wrapped(group_df: pd.DataFrame) -> Tuple[str, dict]
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: f3_demographic_parity_ratio")
-    kwargs = {'group_df': group_df}
+    kwargs = {"group_df": group_df}
     try:
         result = demographic_parity_ratio(**kwargs)
     except Exception as exc:
@@ -143,7 +146,7 @@ def equalized_odds_difference_wrapped(group_df: pd.DataFrame) -> Tuple[str, dict
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: f3_equalized_odds_difference")
-    kwargs = {'group_df': group_df}
+    kwargs = {"group_df": group_df}
     try:
         result = equalized_odds_difference(**kwargs)
     except Exception as exc:
@@ -171,7 +174,7 @@ def violates_four_fifths_wrapped(group_df: pd.DataFrame) -> Tuple[str, dict]:
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: f3_violates_four_fifths")
-    kwargs = {'group_df': group_df}
+    kwargs = {"group_df": group_df}
     try:
         result = violates_four_fifths(**kwargs)
     except Exception as exc:
@@ -191,7 +194,12 @@ def violates_four_fifths_wrapped(group_df: pd.DataFrame) -> Tuple[str, dict]:
 
 
 @tool(response_format="content_and_artifact")
-def simulate_threshold_mitigation_wrapped(y_true: Sequence[int], y_pred_proba: Sequence[float], sensitive: Sequence, target_rate: Optional[float]) -> Tuple[str, dict]:
+def simulate_threshold_mitigation_wrapped(
+    y_true: Sequence[int],
+    y_pred_proba: Sequence[float],
+    sensitive: Sequence,
+    target_rate: Optional[float],
+) -> Tuple[str, dict]:
     """Tool wrapper for ``simulate_threshold_mitigation``.
 
     Simulate equalized-odds post-processing by picking per-group
@@ -199,7 +207,12 @@ def simulate_threshold_mitigation_wrapped(y_true: Sequence[int], y_pred_proba: S
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: f3_simulate_threshold_mitigation")
-    kwargs = {'y_true': y_true, 'y_pred_proba': y_pred_proba, 'sensitive': sensitive, 'target_rate': target_rate}
+    kwargs = {
+        "y_true": y_true,
+        "y_pred_proba": y_pred_proba,
+        "sensitive": sensitive,
+        "target_rate": target_rate,
+    }
     try:
         result = simulate_threshold_mitigation(**kwargs)
     except Exception as exc:
@@ -219,7 +232,9 @@ def simulate_threshold_mitigation_wrapped(y_true: Sequence[int], y_pred_proba: S
 
 
 @tool(response_format="content_and_artifact")
-def audit_fairness_wrapped(y_true: Sequence[int], y_pred: Sequence[int], sensitive: Sequence) -> Tuple[str, dict]:
+def audit_fairness_wrapped(
+    y_true: Sequence[int], y_pred: Sequence[int], sensitive: Sequence
+) -> Tuple[str, dict]:
     """Tool wrapper for ``audit_fairness``.
 
     Run the full F3 audit on a single protected attribute.
@@ -227,7 +242,7 @@ def audit_fairness_wrapped(y_true: Sequence[int], y_pred: Sequence[int], sensiti
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: f3_audit_fairness")
-    kwargs = {'y_true': y_true, 'y_pred': y_pred, 'sensitive': sensitive}
+    kwargs = {"y_true": y_true, "y_pred": y_pred, "sensitive": sensitive}
     try:
         result = audit_fairness(**kwargs)
     except Exception as exc:
@@ -300,7 +315,12 @@ def make_fairness_agent(
     def run_react_agent(state: GraphState):
         logger.info("    * RUN REACT AGENT FOR F3")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
-        messages = [("system", "You are the F3 agent. Use the available tools to complete the user's request.")] + list(base)
+        messages = [
+            (
+                "system",
+                "You are the F3 agent. Use the available tools to complete the user's request.",
+            )
+        ] + list(base)
         input_payload = {"messages": messages}
         return react_agent.invoke(input_payload, invoke_react_agent_kwargs)
 
@@ -319,7 +339,9 @@ def make_fairness_agent(
             last_ai = AIMessage(content=getattr(internal[-1], "content", ""), name=AGENT_NAME)
         tool_calls = []
         for msg in internal:
-            name = getattr(getattr(msg, "tool_call_id", None), "name", None) or getattr(msg, "name", None)
+            name = getattr(getattr(msg, "tool_call_id", None), "name", None) or getattr(
+                msg, "name", None
+            )
             if name:
                 tool_calls.append(name)
         if log_tool_calls and tool_calls:
@@ -387,6 +409,7 @@ class FairnessAuditAgent(BaseAgent):
         if not self.response or "messages" not in self.response:
             return None
         from IPython.display import Markdown as _Markdown  # noqa: E402, F401
+
         for msg in reversed(self.response.get("messages", [])):
             content = getattr(msg, "content", "")
             if content:

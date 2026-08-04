@@ -62,9 +62,7 @@ def _safe_float(x: Any) -> float:
         return float("nan")
 
 
-def numeric_shift(
-    left: pd.Series, right: pd.Series
-) -> Dict[str, float]:
+def numeric_shift(left: pd.Series, right: pd.Series) -> Dict[str, float]:
     """Return mean / std / null_rate shift for a numeric column.
     std_*-shift only meaningful if both sides have >=2 numeric
     values."""
@@ -86,9 +84,7 @@ def numeric_shift(
     return out
 
 
-def schema_delta(
-    left: pd.DataFrame, right: pd.DataFrame
-) -> Tuple[List[str], List[str], List[str]]:
+def schema_delta(left: pd.DataFrame, right: pd.DataFrame) -> Tuple[List[str], List[str], List[str]]:
     l_cols = set(left.columns)
     r_cols = set(right.columns)
     return (
@@ -98,9 +94,7 @@ def schema_delta(
     )
 
 
-def key_set_diff(
-    left: pd.DataFrame, right: pd.DataFrame, key: str
-) -> Tuple[Set[Any], Set[Any]]:
+def key_set_diff(left: pd.DataFrame, right: pd.DataFrame, key: str) -> Tuple[Set[Any], Set[Any]]:
     """Return (keys_only_in_left, keys_only_in_right)."""
     if key not in left.columns or key not in right.columns:
         raise KeyError(f"key column not present in both sides: {key}")
@@ -187,5 +181,3 @@ def diff_payload(
         "column_stats": s.column_stats,
         "drift_columns": s.drift_columns,
     }
-
-

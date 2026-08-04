@@ -4,6 +4,7 @@ Tool tests run without a real LLM.
 Agent construction / invoke tests use a deterministic FakeLLM mock so no
 API key is needed.
 """
+
 from __future__ import annotations
 
 import math
@@ -25,10 +26,7 @@ def _make_trend_series(n: int = 60, noise: float = 2.0, seed: int = 42) -> List[
 
 def _make_seasonal_series(n: int = 120, period: int = 12, seed: int = 42) -> List[float]:
     rng = random.Random(seed)
-    return [
-        50 + 10 * math.sin(2 * math.pi * i / period) + rng.gauss(0, 1)
-        for i in range(n)
-    ]
+    return [50 + 10 * math.sin(2 * math.pi * i / period) + rng.gauss(0, 1) for i in range(n)]
 
 
 def _make_stationary_series(n: int = 100, seed: int = 42) -> List[float]:
@@ -45,9 +43,7 @@ def test_stationarity_test_stationary_series():
     from ai_data_science_team.tools.e11_time_series import stationarity_test
 
     data = _make_stationary_series(120)
-    text, result = stationarity_test.func(
-        data=data, series_name="white_noise", significance=0.05
-    )
+    text, result = stationarity_test.func(data=data, series_name="white_noise", significance=0.05)
     assert result["n_observations"] == 120
     assert "adf" in result
     assert "kpss" in result
@@ -122,7 +118,7 @@ def test_autocorrelation_returns_lags():
 
     data = _make_stationary_series(100)
     _, result = autocorrelation_analysis.func(data=data, nlags=10)
-    assert len(result["acf_values"]) == 11   # lag 0 .. 10
+    assert len(result["acf_values"]) == 11  # lag 0 .. 10
     assert len(result["pacf_values"]) == 11
     assert "suggested_arima" in result
 
@@ -144,9 +140,7 @@ def test_train_arima_returns_aic_bic():
     from ai_data_science_team.tools.e11_time_series import train_arima
 
     data = _make_stationary_series(80)
-    _, result = train_arima.func(
-        data=data, order=[1, 0, 1], seasonal_order=[0, 0, 0, 0]
-    )
+    _, result = train_arima.func(data=data, order=[1, 0, 1], seasonal_order=[0, 0, 0, 0])
     assert "aic" in result
     assert "bic" in result
     assert isinstance(result["aic"], float)
@@ -238,11 +232,7 @@ def _fake_llm():
 
         def _generate(self, messages, stop=None, _run_manager=None, **kw) -> ChatResult:
             return ChatResult(
-                generations=[
-                    ChatGeneration(
-                        message=LCAIMessage(content="Analysis complete.")
-                    )
-                ]
+                generations=[ChatGeneration(message=LCAIMessage(content="Analysis complete."))]
             )
 
         def bind_tools(self, tools, **kw):
@@ -308,9 +298,7 @@ def test_auto_forecast_returns_leaderboard():
     from ai_data_science_team.tools.e11_time_series import auto_forecast
 
     data = _make_seasonal_series(96, period=12)
-    _, result = auto_forecast.func(
-        data=data, periods_ahead=12, freq="M", backend="statsmodels"
-    )
+    _, result = auto_forecast.func(data=data, periods_ahead=12, freq="M", backend="statsmodels")
     assert "leaderboard" in result
     assert len(result["leaderboard"]) >= 2
     # Leaderboard must be sorted ascending by RMSE
@@ -323,9 +311,7 @@ def test_auto_forecast_best_model_key():
     from ai_data_science_team.tools.e11_time_series import auto_forecast
 
     data = _make_stationary_series(80)
-    _, result = auto_forecast.func(
-        data=data, periods_ahead=6, freq="M", backend="statsmodels"
-    )
+    _, result = auto_forecast.func(data=data, periods_ahead=6, freq="M", backend="statsmodels")
     for k in ("best_model", "best_model_test_rmse", "best_model_test_mae", "forecast"):
         assert k in result, f"Missing key: {k}"
     assert len(result["forecast"]) == 6
@@ -336,9 +322,7 @@ def test_auto_forecast_forecast_length():
     from ai_data_science_team.tools.e11_time_series import auto_forecast
 
     data = _make_trend_series(60)
-    _, result = auto_forecast.func(
-        data=data, periods_ahead=8, freq="M", backend="statsmodels"
-    )
+    _, result = auto_forecast.func(data=data, periods_ahead=8, freq="M", backend="statsmodels")
     assert len(result["forecast"]) == 8
 
 
@@ -357,9 +341,7 @@ def test_auto_forecast_backend_key():
     from ai_data_science_team.tools.e11_time_series import auto_forecast
 
     data = _make_seasonal_series(72)
-    _, result = auto_forecast.func(
-        data=data, periods_ahead=6, freq="M", backend="statsmodels"
-    )
+    _, result = auto_forecast.func(data=data, periods_ahead=6, freq="M", backend="statsmodels")
     assert result["backend"] == "statsmodels"
 
 
@@ -368,9 +350,7 @@ def test_auto_forecast_leaderboard_rmse_positive():
     from ai_data_science_team.tools.e11_time_series import auto_forecast
 
     data = _make_seasonal_series(60)
-    _, result = auto_forecast.func(
-        data=data, periods_ahead=6, freq="M", backend="statsmodels"
-    )
+    _, result = auto_forecast.func(data=data, periods_ahead=6, freq="M", backend="statsmodels")
     for entry in result["leaderboard"]:
         assert entry["rmse"] >= 0
         assert math.isfinite(entry["rmse"])

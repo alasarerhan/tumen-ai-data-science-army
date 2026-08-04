@@ -45,11 +45,13 @@ def _invoke_wrapper(wrapped, /, **kwargs):
 def _toy_df_target() -> tuple[pd.DataFrame, pd.Series]:
     """3 numeric feature + binary target (sınıflandırma)."""
     np.random.seed(42)
-    df = pd.DataFrame({
-        "a": np.random.randn(50),
-        "b": np.random.randn(50) + 0.5,
-        "c": np.random.randn(50) - 0.5,
-    })
+    df = pd.DataFrame(
+        {
+            "a": np.random.randn(50),
+            "b": np.random.randn(50) + 0.5,
+            "c": np.random.randn(50) - 0.5,
+        }
+    )
     target = pd.Series([int(i % 2) for i in range(50)])
     return df, target
 
@@ -138,7 +140,8 @@ def test_multicollinearity_report_real():
     """multicollinearity_report: VIF + correlation matrix."""
     df, _ = _toy_df_target()
     content, artifact = _invoke_wrapper(
-        multicollinearity_report_wrapped, df=df,
+        multicollinearity_report_wrapped,
+        df=df,
     )
     assert "ok" in content
     result = artifact["result"]

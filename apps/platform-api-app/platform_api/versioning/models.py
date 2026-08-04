@@ -10,7 +10,7 @@ https://zylos.ai/research/2026-03-06-ai-agent-version-management-safe-upgrade-pa
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from typing import Any, Dict, Optional
+from typing import Any
 
 from sqlalchemy import JSON, DateTime, Float, ForeignKey, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -21,7 +21,7 @@ from platform_api.db.base import Base
 
 class WorkflowVersion(Base):
     """Represents a version of a workflow specification.
-    
+
     Attributes
     ----------
     id : str
@@ -43,17 +43,17 @@ class WorkflowVersion(Base):
     created_by : str, optional
         User ID who created this version.
     """
-    
+
     __tablename__ = "workflow_versions"
     __table_args__ = (
         UniqueConstraint("workflow_id", "version", name="uq_workflow_versions_workflow_version"),
     )
-    
+
     id: Mapped[str] = mapped_column(String(36), primary_key=True)
     workflow_id: Mapped[str] = mapped_column(String(36), index=True)
     version: Mapped[int] = mapped_column(Integer, nullable=False)
-    spec: Mapped[Dict[str, Any]] = mapped_column(JSON, nullable=False)
-    changelog: Mapped[Optional[str]] = mapped_column(Text)
+    spec: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False)
+    changelog: Mapped[str | None] = mapped_column(Text)
     status: Mapped[str] = mapped_column(String(20), default="draft", nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
@@ -61,15 +61,15 @@ class WorkflowVersion(Base):
         server_default=func.now(),
         nullable=False,
     )
-    published_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
-    created_by: Mapped[Optional[str]] = mapped_column(String(36))
-    
-    deployment: Mapped[Optional["CanaryDeployment"]] = relationship(
+    published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_by: Mapped[str | None] = mapped_column(String(36))
+
+    deployment: Mapped[CanaryDeployment | None] = relationship(
         back_populates="version",
         uselist=False,
     )
-    
-    def to_dict(self) -> Dict[str, Any]:
+
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "id": self.id,
@@ -86,12 +86,12 @@ class WorkflowVersion(Base):
 
 class CanaryDeployment(Base):
     """Represents a canary deployment for a workflow version.
-    
+
     Canary deployments gradually roll out a new version:
     - Stage 0: 5% traffic for 24h
     - Stage 1: 25% traffic for 24h
     - Stage 2: 100% traffic
-    
+
     Attributes
     ----------
     id : str
@@ -121,12 +121,10 @@ class CanaryDeployment(Base):
     rollback_reason : str, optional
         Reason for rollback.
     """
-    
+
     __tablename__ = "canary_deployments"
-    __table_args__ = (
-        UniqueConstraint("version_id", name="uq_canary_deployments_version_id"),
-    )
-    
+    __table_args__ = (UniqueConstraint("version_id", name="uq_canary_deployments_version_id"),)
+
     id: Mapped[str] = mapped_column(String(36), primary_key=True)
     version_id: Mapped[str] = mapped_column(
         String(36),
@@ -138,22 +136,22 @@ class CanaryDeployment(Base):
     current_stage: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     current_traffic: Mapped[float] = mapped_column(Float, default=0.05, nullable=False)
     status: Mapped[str] = mapped_column(String(20), default="pending", nullable=False)
-    stages: Mapped[Dict[str, Any]] = mapped_column(JSON, nullable=False)
-    rollback_triggers: Mapped[Dict[str, Any]] = mapped_column(JSON, nullable=False)
+    stages: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False)
+    rollback_triggers: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         server_default=func.now(),
         nullable=False,
     )
-    started_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
-    completed_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
-    rolled_back_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
-    rollback_reason: Mapped[Optional[str]] = mapped_column(Text)
-    
-    version: Mapped["WorkflowVersion"] = relationship(back_populates="deployment")
-    
-    def to_dict(self) -> Dict[str, Any]:
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    rolled_back_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    rollback_reason: Mapped[str | None] = mapped_column(Text)
+
+    version: Mapped[WorkflowVersion] = relationship(back_populates="deployment")
+
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "id": self.id,

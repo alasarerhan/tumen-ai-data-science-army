@@ -84,13 +84,12 @@ def _rule_based_recommendations(summary: dict) -> list[str]:
 
 def _cache_key(summary: dict) -> str:
     summary_for_hash = {k: v for k, v in summary.items() if k != "run_id"}
-    return hashlib.sha256(
-        json.dumps(summary_for_hash, sort_keys=True).encode()
-    ).hexdigest()[:16]
+    return hashlib.sha256(json.dumps(summary_for_hash, sort_keys=True).encode()).hexdigest()[:16]
 
 
 def _get_cached_recommendations(key: str) -> list[str] | None:
     from platform_api.core.config import settings
+
     if not settings.openai_cache_enabled:
         return None
     with _strategy_cache_lock:
@@ -106,6 +105,7 @@ def _get_cached_recommendations(key: str) -> list[str] | None:
 
 def _set_cached_recommendations(key: str, recs: list[str] | None) -> None:
     from platform_api.core.config import settings
+
     if not settings.openai_cache_enabled:
         return
     with _strategy_cache_lock:
@@ -118,6 +118,7 @@ def _set_cached_recommendations(key: str, recs: list[str] | None) -> None:
 
 async def _openai_recommendations(summary: dict) -> list[str] | None:
     from platform_api.core.config import settings
+
     if not settings.openai_api_key:
         return None
 
@@ -128,6 +129,7 @@ async def _openai_recommendations(summary: dict) -> list[str] | None:
 
     try:
         from openai import AsyncOpenAI
+
         client = AsyncOpenAI(api_key=settings.openai_api_key)
         user_prompt = (
             "Below are the operational statistics of a data science platform workspace.\n"

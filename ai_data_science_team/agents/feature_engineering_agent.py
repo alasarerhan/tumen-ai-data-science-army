@@ -1,6 +1,3 @@
-
-
-
 import logging
 
 logger = logging.getLogger(__name__)
@@ -10,39 +7,36 @@ logger = logging.getLogger(__name__)
 # * Agents: Feature Engineering Agent
 
 # Libraries
-from typing_extensions import TypedDict, Annotated, Sequence, Literal  # noqa: E402, F401
-import operator  # noqa: E402, F401
-
-from langchain_core.prompts import PromptTemplate  # noqa: E402, F401
-from langchain_core.messages import BaseMessage  # noqa: E402, F401
-
-from langgraph.types import Command  # noqa: E402, F401
-from langgraph.checkpoint.memory import MemorySaver  # noqa: E402, F401
-
-import os  # noqa: E402, F401
 import json  # noqa: E402, F401
+import operator  # noqa: E402, F401
+import os  # noqa: E402, F401
+
 import pandas as pd  # noqa: E402, F401
-
 from IPython.display import Markdown  # noqa: E402, F401
+from langchain_core.messages import BaseMessage  # noqa: E402, F401
+from langchain_core.prompts import PromptTemplate  # noqa: E402, F401
+from langgraph.checkpoint.memory import MemorySaver  # noqa: E402, F401
+from langgraph.types import Command  # noqa: E402, F401
+from typing_extensions import Annotated, Literal, Sequence, TypedDict  # noqa: E402, F401
 
-from ai_data_science_team.templates import (  # noqa: E402, F401
-    node_func_human_review,
-    node_func_fix_agent_code,
-    node_func_report_agent_outputs,
-    create_coding_agent_graph,
-    BaseAgent,
-)
 from ai_data_science_team.parsers.parsers import PythonOutputParser  # noqa: E402, F401
+from ai_data_science_team.templates import (  # noqa: E402, F401
+    BaseAgent,
+    create_coding_agent_graph,
+    node_func_fix_agent_code,
+    node_func_human_review,
+    node_func_report_agent_outputs,
+)
+from ai_data_science_team.utils.logging import log_ai_error, log_ai_function  # noqa: E402, F401
+from ai_data_science_team.utils.messages import get_last_user_message_content  # noqa: E402, F401
 from ai_data_science_team.utils.regex import (  # noqa: E402, F401
-    relocate_imports_inside_function,
     add_comments_to_top,
     format_agent_name,
     format_recommended_steps,
     get_generic_summary,
+    relocate_imports_inside_function,
 )
-from ai_data_science_team.utils.logging import log_ai_function, log_ai_error  # noqa: E402, F401
 from ai_data_science_team.utils.sandbox import run_code_sandboxed_subprocess  # noqa: E402, F401
-from ai_data_science_team.utils.messages import get_last_user_message_content  # noqa: E402, F401
 
 # Setup
 AGENT_NAME = "feature_engineering_agent"
@@ -369,9 +363,7 @@ class FeatureEngineeringAgent(BaseAgent):
         Retrieves the agent's workflow summary, if logging is enabled.
         """
         if self.response and self.response.get("messages"):
-            summary = get_generic_summary(
-                json.loads(self.response.get("messages")[-1].content)
-            )
+            summary = get_generic_summary(json.loads(self.response.get("messages")[-1].content))
             if markdown:
                 return Markdown(summary)
             else:
@@ -622,7 +614,9 @@ def make_feature_engineering_agent(
                     "sample_values": sample_vals,
                 }
             )
-        return json.dumps({"n_rows": n_rows, "n_cols": df_limited.shape[1], "schema": schema}, indent=2)
+        return json.dumps(
+            {"n_rows": n_rows, "n_cols": df_limited.shape[1], "schema": schema}, indent=2
+        )
 
     # Define GraphState for the router
     class GraphState(TypedDict):
@@ -837,9 +831,7 @@ def make_feature_engineering_agent(
             ],
         )
 
-        feature_engineering_agent = (
-            feature_engineering_prompt | llm | PythonOutputParser()
-        )
+        feature_engineering_agent = feature_engineering_prompt | llm | PythonOutputParser()
 
         response = feature_engineering_agent.invoke(
             {
@@ -890,9 +882,7 @@ def make_feature_engineering_agent(
                 df_out = pd.DataFrame(result)
                 target = state.get("target_variable")
                 if target and target not in df_out.columns:
-                    validation_error = (
-                        f"Target column '{target}' missing from engineered output."
-                    )
+                    validation_error = f"Target column '{target}' missing from engineered output."
             except Exception as exc:
                 validation_error = f"Engineered output is not a valid table: {exc}"
         else:

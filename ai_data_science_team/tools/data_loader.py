@@ -1,11 +1,10 @@
-from langchain.tools import tool
-
 import logging
-import pandas as pd
 import os
 from pathlib import Path
 
-from typing_extensions import Tuple, List, Dict, Optional, Union
+import pandas as pd
+from langchain.tools import tool
+from typing_extensions import Dict, List, Optional, Tuple, Union
 
 logger = logging.getLogger(__name__)
 
@@ -63,6 +62,7 @@ def load_directory(
     logger.info(f"    * Tool: load_directory | {directory_path}")
 
     import os  # noqa: E402, F401
+
     import pandas as pd  # noqa: E402, F401
 
     if directory_path is None:
@@ -384,9 +384,7 @@ def get_file_info(file_path: str) -> Tuple[str, List[Dict]]:
     import time  # noqa: E402, F401
 
     if not os.path.isfile(file_path):
-        return f"{file_path} is not a valid file.", [
-            {"type": "error", "file_path": file_path}
-        ]
+        return f"{file_path} is not a valid file.", [{"type": "error", "file_path": file_path}]
 
     file_stats = os.stat(file_path)
 
@@ -439,8 +437,8 @@ def search_files_by_pattern(
     """
     logger.info(f"    * Tool: search_files_by_pattern | {directory_path}")
 
-    import os  # noqa: E402, F401
     import fnmatch  # noqa: E402, F401
+    import os  # noqa: E402, F401
 
     try:
         base_path = Path(directory_path).expanduser().resolve()
@@ -620,9 +618,7 @@ def auto_load_file(file_path: str, max_rows: Optional[int] = None) -> pd.DataFra
     if resolved_path is None:
         if matches:
             shown = "\n".join([f"- {m}" for m in matches])
-            return (
-                f"File not found: {file_path}. Multiple matches found; please specify a full path:\n{shown}"
-            )
+            return f"File not found: {file_path}. Multiple matches found; please specify a full path:\n{shown}"
         hint = " Try `data/<filename>` if it's in the project data folder."
         return f"File not found: {file_path}.{hint}"
 

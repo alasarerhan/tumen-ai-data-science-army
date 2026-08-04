@@ -36,7 +36,8 @@ def test_mcnemar_test_real(llm_or_skip, llm_model):
     tool = mcnemar_test_wrapped
     result, _ = _assert_result(
         _drive_tool_call(
-            llm_model, tool,
+            llm_model,
+            tool,
             "mcnemar_test tool'unu TEK çağrı ile çağır. "
             "y_true=[0, 1, 0, 1, 0, 1, 0, 1, 0, 1], "
             "y_pred_a=[0, 1, 0, 1, 0, 0, 0, 1, 0, 1], "
@@ -46,9 +47,9 @@ def test_mcnemar_test_real(llm_or_skip, llm_model):
         tool.name,
     )
     s = str(result).lower()
-    assert (
-        "mcnemar" in s or "ok" in s or "p_value" in s or "statistic" in s
-    ), f"mcnemar_test beklenen test istatistiği üretmedi: {s[:200]}"
+    assert "mcnemar" in s or "ok" in s or "p_value" in s or "statistic" in s, (
+        f"mcnemar_test beklenen test istatistiği üretmedi: {s[:200]}"
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -61,7 +62,8 @@ def test_wilcoxon_signed_rank_real(llm_or_skip, llm_model):
     tool = wilcoxon_signed_rank_wrapped
     result, _ = _assert_result(
         _drive_tool_call(
-            llm_model, tool,
+            llm_model,
+            tool,
             "wilcoxon_signed_rank tool'unu TEK çağrı ile çağır. "
             "residuals_a=[0.1, -0.2, 0.3, -0.1, 0.4, -0.3, 0.2, -0.1], "
             "residuals_b=[0.05, -0.1, 0.2, -0.05, 0.25, -0.2, 0.15, -0.05], "
@@ -70,9 +72,9 @@ def test_wilcoxon_signed_rank_real(llm_or_skip, llm_model):
         tool.name,
     )
     s = str(result).lower()
-    assert (
-        "wilcoxon" in s or "ok" in s or "p_value" in s or "statistic" in s
-    ), f"wilcoxon beklenen test istatistiği üretmedi: {s[:200]}"
+    assert "wilcoxon" in s or "ok" in s or "p_value" in s or "statistic" in s, (
+        f"wilcoxon beklenen test istatistiği üretmedi: {s[:200]}"
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -85,7 +87,8 @@ def test_auc_with_delong_ci_real(llm_or_skip, llm_model):
     tool = auc_with_delong_ci_wrapped
     result, _ = _assert_result(
         _drive_tool_call(
-            llm_model, tool,
+            llm_model,
+            tool,
             "auc_with_delong_ci tool'unu TEK çağrı ile çağır. "
             "y_true=[0, 1, 0, 1, 0, 1, 0, 1, 0, 1], "
             "scores=[0.1, 0.9, 0.2, 0.8, 0.3, 0.7, 0.4, 0.6, 0.45, 0.55], "
@@ -94,9 +97,9 @@ def test_auc_with_delong_ci_real(llm_or_skip, llm_model):
         tool.name,
     )
     s = str(result).lower()
-    assert (
-        "auc" in s or "ok" in s or "ci" in s or "delong" in s
-    ), f"auc_with_delong_ci beklenen AUC üretmedi: {s[:200]}"
+    assert "auc" in s or "ok" in s or "ci" in s or "delong" in s, (
+        f"auc_with_delong_ci beklenen AUC üretmedi: {s[:200]}"
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -109,7 +112,8 @@ def test_delong_pvalue_real(llm_or_skip, llm_model):
     tool = delong_pvalue_wrapped
     result, _ = _assert_result(
         _drive_tool_call(
-            llm_model, tool,
+            llm_model,
+            tool,
             "delong_pvalue tool'unu TEK çağrı ile çağır. "
             "y_true=[0, 1, 0, 1, 0, 1, 0, 1, 0, 1], "
             "scores_a=[0.1, 0.9, 0.2, 0.8, 0.3, 0.7, 0.4, 0.6, 0.45, 0.55], "
@@ -118,9 +122,9 @@ def test_delong_pvalue_real(llm_or_skip, llm_model):
         tool.name,
     )
     s = str(result).lower()
-    assert (
-        "p_value" in s or "ok" in s or "delong" in s
-    ), f"delong_pvalue beklenen p-value üretmedi: {s[:200]}"
+    assert "p_value" in s or "ok" in s or "delong" in s, (
+        f"delong_pvalue beklenen p-value üretmedi: {s[:200]}"
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -133,7 +137,8 @@ def test_compare_models_real(llm_or_skip, llm_model):
     tool = compare_models_wrapped
     result, _ = _assert_result(
         _drive_tool_call(
-            llm_model, tool,
+            llm_model,
+            tool,
             "compare_models tool'unu TEK çağrı ile çağır. "
             "y_true=[0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1], "
             "y_proba_a=[0.1, 0.9, 0.2, 0.8, 0.3, 0.7, 0.4, 0.6, 0.45, 0.55, 0.5, 0.5], "
@@ -142,6 +147,6 @@ def test_compare_models_real(llm_or_skip, llm_model):
         tool.name,
     )
     s = str(result).lower()
-    assert (
-        "compare" in s or "ok" in s or "decision" in s or "compar" in s
-    ), f"compare_models beklenen karar yapısı üretmedi: {s[:200]}"
+    assert "compare" in s or "ok" in s or "decision" in s or "compar" in s, (
+        f"compare_models beklenen karar yapısı üretmedi: {s[:200]}"
+    )

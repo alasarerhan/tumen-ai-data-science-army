@@ -10,8 +10,8 @@ FinOps: Adds TTL column for artifact cleanup to prevent unbounded storage growth
 from __future__ import annotations
 
 import sqlalchemy as sa
-from alembic import op
 
+from alembic import op
 
 revision = "0009_artifact_expires"
 down_revision = "0008_rls"

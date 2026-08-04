@@ -27,7 +27,8 @@ class TestBuild:
         with pytest.raises(ValueError):
             h3.build_tableau_connector(
                 h3.ConnectorConfig(
-                    name="x", kind="tableau",
+                    name="x",
+                    kind="tableau",
                     params={"site": "s", "token_name": "n", "token_value": "v"},
                 )
             )
@@ -85,4 +86,3 @@ class TestBehaviors:
         assert r["format"] == "pdf"
         with pytest.raises(h3.ConnectorError):
             c.export_workbook("wb-1", fmt="weird")
-

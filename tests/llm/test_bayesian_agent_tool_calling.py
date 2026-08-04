@@ -40,19 +40,16 @@ def test_beta_posterior_real(llm_or_skip, llm_model):
     tool = beta_posterior_wrapped
     result, _ = _assert_result(
         _drive_tool_call(
-            llm_model, tool,
-            "beta_posterior tool'unu TEK çağrı ile çağır. "
-            "successes=42, failures=18.",
+            llm_model,
+            tool,
+            "beta_posterior tool'unu TEK çağrı ile çağır. successes=42, failures=18.",
         ),
         tool.name,
     )
     s = str(result).lower()
-    assert (
-        "beta" in s
-        or "alpha" in s
-        or "beta_param" in s
-        or "ok" in s
-    ), f"beta_posterior beklenen Beta posterior parametreleri üretmedi: {s[:200]}"
+    assert "beta" in s or "alpha" in s or "beta_param" in s or "ok" in s, (
+        f"beta_posterior beklenen Beta posterior parametreleri üretmedi: {s[:200]}"
+    )
 
 
 def test_normal_means_posterior_real(llm_or_skip, llm_model):
@@ -60,20 +57,17 @@ def test_normal_means_posterior_real(llm_or_skip, llm_model):
     tool = normal_means_posterior_wrapped
     result, _ = _assert_result(
         _drive_tool_call(
-            llm_model, tool,
+            llm_model,
+            tool,
             "normal_means_posterior tool'unu TEK çağrı ile çağır. "
             "samples_a=[1.2, 0.9, 1.5, 1.1, 0.8], samples_b=[2.1, 2.4, 1.9, 2.7, 2.2].",
         ),
         tool.name,
     )
     s = str(result).lower()
-    assert (
-        "posterior" in s
-        or "mean" in s
-        or "normal" in s
-        or "mu" in s
-        or "ok" in s
-    ), f"normal_means_posterior beklenen posterior üretmedi: {s[:200]}"
+    assert "posterior" in s or "mean" in s or "normal" in s or "mu" in s or "ok" in s, (
+        f"normal_means_posterior beklenen posterior üretmedi: {s[:200]}"
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -103,7 +97,8 @@ def test_bayes_decision_real_clear_winner():
 
     content, artifact = _invoke_wrapper(
         bayes_decision_wrapped,
-        posterior_a=post_a, posterior_b=post_b,
+        posterior_a=post_a,
+        posterior_b=post_b,
     )
     assert "ok" in content
     decision = artifact["result"]
@@ -125,7 +120,8 @@ def test_bayes_decision_real_clear_loser():
 
     _content, artifact = _invoke_wrapper(
         bayes_decision_wrapped,
-        posterior_a=post_a, posterior_b=post_b,
+        posterior_a=post_a,
+        posterior_b=post_b,
     )
     decision = artifact["result"]
     # Çok yüksek loss → inconclusive (tool'un bilinen sözleşmesi)
@@ -141,7 +137,8 @@ def test_bayes_decision_real_inconclusive():
 
     _content, artifact = _invoke_wrapper(
         bayes_decision_wrapped,
-        posterior_a=post_a, posterior_b=post_b,
+        posterior_a=post_a,
+        posterior_b=post_b,
     )
     decision = artifact["result"]
     # Eşikler çok yakın → inconclusive.
@@ -162,7 +159,8 @@ def test_bayes_decision_real_with_prior():
 
     _content, artifact = _invoke_wrapper(
         bayes_decision_wrapped,
-        posterior_a=post_a, posterior_b=post_b,
+        posterior_a=post_a,
+        posterior_b=post_b,
     )
     decision = artifact["result"]
     # ``expected_loss`` eşiği aşıyor; tool ``inconclusive`` dönmeli.
@@ -180,7 +178,8 @@ def test_bayes_decision_real_schema_keys():
 
     _content, artifact = _invoke_wrapper(
         bayes_decision_wrapped,
-        posterior_a=post_a, posterior_b=post_b,
+        posterior_a=post_a,
+        posterior_b=post_b,
     )
     decision = artifact["result"]
     expected_keys = {"decision", "rationale", "prob_b_better", "expected_loss_b_over_a"}

@@ -35,6 +35,7 @@ pytestmark = pytest.mark.llm
 # 1. PURE: make_dashboard — model-driven
 # ---------------------------------------------------------------------------
 
+
 def test_make_dashboard_real(llm_or_skip, llm_model):
     """make_dashboard(name, panels) alır; Dashboard objesi döner."""
     tool = make_dashboard_wrapped
@@ -44,9 +45,9 @@ def test_make_dashboard_real(llm_or_skip, llm_model):
     ]
     result, _ = _assert_result(
         _drive_tool_call(
-            llm_model, tool,
-            f"make_dashboard tool'unu TEK çağrı ile çağır. "
-            f"name='Ops Dashboard', panels={panels!r}",
+            llm_model,
+            tool,
+            f"make_dashboard tool'unu TEK çağrı ile çağır. name='Ops Dashboard', panels={panels!r}",
         ),
         tool.name,
     )
@@ -60,6 +61,7 @@ def test_make_dashboard_real(llm_or_skip, llm_model):
 # 2. STATEFUL: Dashboard Pydantic dataclass
 # ---------------------------------------------------------------------------
 
+
 def _fresh_dashboard(name: str = "Ops Dashboard") -> Dashboard:
     """Test için taze, izole Dashboard."""
     return Dashboard(dashboard_id="d_test", name=name)
@@ -72,13 +74,19 @@ def _seed_dashboard() -> Dashboard:
         dash,
         title="Active Users",
         artifact_ref="artifact:users",
-        row=0, col=0, width=1, height=1,
+        row=0,
+        col=0,
+        width=1,
+        height=1,
     )
     add_panel(
         dash,
         title="Latency",
         artifact_ref="artifact:latency",
-        row=0, col=1, width=1, height=1,
+        row=0,
+        col=1,
+        width=1,
+        height=1,
     )
     return dash
 
@@ -90,7 +98,8 @@ def test_add_panel_real():
         dash,
         title="Revenue",
         artifact_ref="artifact:rev",
-        row=0, col=0,
+        row=0,
+        col=0,
     )
     assert panel.title == "Revenue"
     assert len(dash.panels) == 1
@@ -133,6 +142,7 @@ def test_render_snapshot_real():
 # ---------------------------------------------------------------------------
 # Registry bütünlüğü — gelecekteki kırılmaları yakalar
 # ---------------------------------------------------------------------------
+
 
 def test_stateful_vs_pure_count():
     assert len(DASHBOARD_COMPOSER_TOOLS) == 5, (

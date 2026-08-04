@@ -3,6 +3,7 @@
 Tests are intentionally self-contained (no live DB, no network).
 SQLConnector tests use sqlite+pysqlite (stdlib), so no extra driver is needed.
 """
+
 from __future__ import annotations
 
 import io
@@ -146,6 +147,7 @@ def test_local_file_connector_columns(tmp_csv_dir: Path):
 def test_local_file_connector_file_type_filter(tmp_csv_dir: Path):
     # Add a parquet file to the directory
     import pandas as pd
+
     pd.DataFrame({"a": [1]}).to_parquet(tmp_csv_dir / "data.parquet")
 
     from ai_data_science_team.connectors import LocalFileConnector
@@ -198,6 +200,7 @@ def sqlite_conn():
 
     # Seed a test table
     import sqlalchemy as sa
+
     with conn._engine.connect() as c:
         c.execute(sa.text("CREATE TABLE orders (id INTEGER, amount REAL)"))
         c.execute(sa.text("INSERT INTO orders VALUES (1, 99.9), (2, 49.5), (3, 199.0)"))
@@ -266,9 +269,7 @@ def _make_server_with_csv(tmp_csv_dir: Path):
 
 def test_mcp_server_initialize(tmp_csv_dir: Path):
     srv = _make_server_with_csv(tmp_csv_dir)
-    resp = srv.handle_request(
-        {"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {}}
-    )
+    resp = srv.handle_request({"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {}})
     assert resp["result"]["protocolVersion"] == "2024-11-05"
     assert "tools" in resp["result"]["capabilities"]
 
@@ -339,9 +340,7 @@ def test_mcp_server_resources_read(tmp_csv_dir: Path):
 
 def test_mcp_server_unknown_method_returns_error(tmp_csv_dir: Path):
     srv = _make_server_with_csv(tmp_csv_dir)
-    resp = srv.handle_request(
-        {"jsonrpc": "2.0", "id": 99, "method": "no_such_method"}
-    )
+    resp = srv.handle_request({"jsonrpc": "2.0", "id": 99, "method": "no_such_method"})
     assert "error" in resp
     assert resp["error"]["code"] == -32601
 

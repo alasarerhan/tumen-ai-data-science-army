@@ -38,7 +38,6 @@ from statsmodels.stats.proportion import (  # noqa: E402, F401
     proportion_effectsize,
 )
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
@@ -136,14 +135,10 @@ def solve_power(
     -------
     dict with the solved quantity, the inputs used, and the metric type.
     """
-    metric_type = _resolve_metric_type(
-        metric_type, baseline_mean, baseline_sd, baseline_rate
-    )
+    metric_type = _resolve_metric_type(metric_type, baseline_mean, baseline_sd, baseline_rate)
     solve_for = solve_for.lower()
     if solve_for not in {"n", "power", "alpha", "effect_size"}:
-        raise ValueError(
-            "solve_for must be one of 'n', 'power', 'alpha', 'effect_size'"
-        )
+        raise ValueError("solve_for must be one of 'n', 'power', 'alpha', 'effect_size'")
 
     # When we are solving for effect_size, the raw lift inputs are NOT needed.
     needs_raw_inputs = solve_for != "effect_size"
@@ -153,9 +148,7 @@ def solve_power(
         if needs_raw_inputs and expected_lift is None:
             raise ValueError("expected_lift is required for continuous metrics")
         if needs_raw_inputs and (baseline_mean is None or baseline_sd is None):
-            raise ValueError(
-                "baseline_mean and baseline_sd are required for continuous metrics"
-            )
+            raise ValueError("baseline_mean and baseline_sd are required for continuous metrics")
         if needs_raw_inputs:
             effect_size: float = _cohens_d(expected_lift, baseline_sd)  # type: ignore[arg-type]
         else:
@@ -180,8 +173,7 @@ def solve_power(
                 effect_size = _cohens_h(baseline_rate, treatment_rate)
             else:
                 raise ValueError(
-                    "For proportion metrics supply expected_lift OR "
-                    "expected_treatment_rate."
+                    "For proportion metrics supply expected_lift OR expected_treatment_rate."
                 )
         else:
             effect_size = float("nan")
@@ -318,9 +310,7 @@ def minimum_detectable_effect(
         if baseline_sd is None:
             raise ValueError("baseline_sd required for continuous MDE")
         absolute_lift = effect_size * baseline_sd
-        relative_lift = (
-            absolute_lift / baseline_mean if baseline_mean not in (0, 0.0) else None
-        )
+        relative_lift = absolute_lift / baseline_mean if baseline_mean not in (0, 0.0) else None
     else:
         # For proportion metrics, the standardized effect is Cohen's h;
         # invert it to recover an absolute rate change.
@@ -482,9 +472,7 @@ def suggest_stratification(
         # Independence from group column.
         group_p: Optional[float] = None
         if group_column and group_column in data.columns:
-            cross = pd.crosstab(
-                data[col].fillna("__nan__"), data[group_column].fillna("__nan__")
-            )
+            cross = pd.crosstab(data[col].fillna("__nan__"), data[group_column].fillna("__nan__"))
             if cross.shape == (nunique, data[group_column].nunique()) and nunique > 1:
                 try:
                     _, p, _, _ = scipy_stats.chi2_contingency(cross)
@@ -494,13 +482,9 @@ def suggest_stratification(
 
         reason_parts: List[str] = []
         if skew_score:
-            reason_parts.append(
-                f"top bucket share {top_share:.0%} suggests imbalance risk"
-            )
+            reason_parts.append(f"top bucket share {top_share:.0%} suggests imbalance risk")
         if group_p is not None and group_p < 0.10:
-            reason_parts.append(
-                f"associated with {group_column} (chi-square p={group_p:.3f})"
-            )
+            reason_parts.append(f"associated with {group_column} (chi-square p={group_p:.3f})")
         if not reason_parts:
             continue
 
@@ -603,4 +587,3 @@ __all__ = [
     "suggest_stratification",
     "design_experiment",
 ]
-

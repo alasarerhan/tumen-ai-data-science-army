@@ -9,7 +9,6 @@ provides a uniform contract and an in-memory backend for tests.
 
 from typing import Any, Dict, List, Mapping, Sequence  # noqa: E402, F401
 
-
 from ai_data_science_team.tools.snowflake import (  # noqa: E402, F401
     BaseConnector,
     ConnectorConfig,
@@ -57,9 +56,7 @@ class RESTConnector(BaseConnector):
         self._probe_cache = getattr(self, "_probe_cache", {})
         self._probe_cache[path] = dict(payload)
 
-    def schema_infer(
-        self, path: str = "/", *, sample_size: int = 1
-    ) -> List[Dict[str, str]]:
+    def schema_infer(self, path: str = "/", *, sample_size: int = 1) -> List[Dict[str, str]]:
         cache = getattr(self, "_schema_cache", {}).get(path)
         if cache is not None:
             return cache
@@ -72,9 +69,7 @@ class RESTConnector(BaseConnector):
             {"name": "ts", "type": "datetime"},
         ]
 
-    def register_schema(
-        self, path: str, columns: Sequence[Mapping[str, str]]
-    ) -> None:
+    def register_schema(self, path: str, columns: Sequence[Mapping[str, str]]) -> None:
         self._schema_cache = getattr(self, "_schema_cache", {})
         self._schema_cache[path] = [dict(c) for c in columns]
 
@@ -88,9 +83,7 @@ class RESTConnector(BaseConnector):
         out = []
         for p in range(min(max_pages, 3)):
             for i in range(page_size):
-                out.append(
-                    {"page": p + 1, "index": i, "id": f"{(p * page_size) + i}"}
-                )
+                out.append({"page": p + 1, "index": i, "id": f"{(p * page_size) + i}"})
         return out[: page_size * max_pages]
 
 

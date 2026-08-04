@@ -8,9 +8,10 @@ Security measures:
 
 Reference: https://github.com/python-pillow/Pillow/blob/main/docs/references/security.rst
 """
+
 import base64  # noqa: E402, F401
 from io import BytesIO  # noqa: E402, F401
-from typing import Optional, Tuple, Any  # noqa: E402, F401
+from typing import Any, Optional, Tuple  # noqa: E402, F401
 
 import matplotlib.pyplot as plt  # noqa: E402, F401
 from PIL import Image  # noqa: E402, F401
@@ -35,7 +36,7 @@ def strip_exif_metadata(img: Image.Image) -> Image.Image:
     data = list(img.getdata())
     img_without_exif = Image.new(img.mode, img.size)
     img_without_exif.putdata(data)
-    
+
     return img_without_exif
 
 
@@ -50,13 +51,12 @@ def validate_image_size(img: Image.Image) -> None:
             f"Image dimensions ({width}x{height}) exceed maximum allowed "
             f"({MAX_IMAGE_DIMENSION}x{MAX_IMAGE_DIMENSION})"
         )
-    
+
     total_pixels = width * height
     max_pixels = Image.MAX_IMAGE_PIXELS or 100_000_000
     if total_pixels > max_pixels:
         raise ValueError(
-            f"Image has {total_pixels:,} pixels, exceeding maximum "
-            f"{max_pixels:,} pixels"
+            f"Image has {total_pixels:,} pixels, exceeding maximum {max_pixels:,} pixels"
         )
 
 
@@ -74,12 +74,12 @@ def safe_load_image(file_bytes: bytes, max_size_mb: int = MAX_IMAGE_SIZE_MB) -> 
     """
     if len(file_bytes) > max_size_mb * 1024 * 1024:
         raise ValueError(f"Image exceeds maximum size of {max_size_mb}MB")
-    
+
     if len(file_bytes) == 0:
         raise ValueError("Image data is empty")
-    
+
     buf = BytesIO(file_bytes)
-    
+
     try:
         img = Image.open(buf)
         img.verify()
@@ -87,9 +87,9 @@ def safe_load_image(file_bytes: bytes, max_size_mb: int = MAX_IMAGE_SIZE_MB) -> 
         raise ValueError("Decompression bomb detected - image rejected")
     except Exception as e:
         raise ValueError(f"Invalid image: {e}")
-    
+
     buf.seek(0)
-    
+
     try:
         img = Image.open(buf)
         img.load()
@@ -97,11 +97,11 @@ def safe_load_image(file_bytes: bytes, max_size_mb: int = MAX_IMAGE_SIZE_MB) -> 
         raise ValueError("Decompression bomb detected - image rejected")
     except Exception as e:
         raise ValueError(f"Failed to load image: {e}")
-    
+
     validate_image_size(img)
-    
+
     img = strip_exif_metadata(img)
-    
+
     return img
 
 
@@ -140,27 +140,27 @@ def matplotlib_from_base64(
         img_data = base64.b64decode(encoded, validate=True)
     except Exception as e:
         raise ValueError(f"Invalid base64 encoding: {e}")
-    
+
     img = safe_load_image(img_data)
-    
+
     fig, ax = plt.subplots(figsize=figsize)
-    
+
     ax.imshow(img)
-    ax.axis('off')
-    
+    ax.axis("off")
+
     if title:
         ax.set_title(title)
-    
+
     plt.show()
-    
+
     return fig, ax
 
 
 __all__ = [
-    'strip_exif_metadata',
-    'validate_image_size',
-    'safe_load_image',
-    'matplotlib_from_base64',
-    'MAX_IMAGE_SIZE_MB',
-    'MAX_IMAGE_DIMENSION',
+    "strip_exif_metadata",
+    "validate_image_size",
+    "safe_load_image",
+    "matplotlib_from_base64",
+    "MAX_IMAGE_SIZE_MB",
+    "MAX_IMAGE_DIMENSION",
 ]

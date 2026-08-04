@@ -8,11 +8,13 @@ Adds:
 - outbox_dlq: Dead Letter Queue for failed outbox events
 - scheduled_jobs: Background job scheduling with leader election
 """
+
 from __future__ import annotations
 
 import sqlalchemy as sa
-from alembic import op
 from sqlalchemy.dialects import postgresql
+
+from alembic import op
 
 revision = "0010_add_dlq_and_scheduler"
 down_revision = "0009_artifact_expires"
@@ -32,12 +34,27 @@ def upgrade() -> None:
         sa.Column("final_error", sa.Text, nullable=True),
         sa.Column("retry_count", sa.Integer, nullable=False),
         sa.Column("original_created_at", sa.DateTime(timezone=True), nullable=False),
-        sa.Column("moved_to_dlq_at", sa.DateTime(timezone=True), server_default=sa.func.current_timestamp(), nullable=False),
+        sa.Column(
+            "moved_to_dlq_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.func.current_timestamp(),
+            nullable=False,
+        ),
         sa.Column("reviewed", sa.Boolean, default=False, nullable=False),
         sa.Column("reviewed_at", sa.DateTime(timezone=True), nullable=True),
-        sa.Column("reviewed_by_user_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
+        sa.Column(
+            "reviewed_by_user_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey("users.id", ondelete="SET NULL"),
+            nullable=True,
+        ),
         sa.Column("resolution_note", sa.Text, nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.current_timestamp(), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.func.current_timestamp(),
+            nullable=False,
+        ),
     )
     op.create_index("ix_outbox_dlq_created_at", "outbox_dlq", ["created_at"])
     op.create_index("ix_outbox_dlq_event_type", "outbox_dlq", ["event_type"])
@@ -56,8 +73,19 @@ def upgrade() -> None:
         sa.Column("last_run_error", sa.Text, nullable=True),
         sa.Column("leader_id", sa.String(100), nullable=True),
         sa.Column("leader_expires_at", sa.DateTime(timezone=True), nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.current_timestamp(), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.current_timestamp(), onupdate=sa.func.current_timestamp(), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.func.current_timestamp(),
+            nullable=False,
+        ),
+        sa.Column(
+            "updated_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.func.current_timestamp(),
+            onupdate=sa.func.current_timestamp(),
+            nullable=False,
+        ),
     )
     op.create_index("ix_scheduled_jobs_next_run", "scheduled_jobs", ["next_run_at"])
     op.create_index("uq_scheduled_jobs_name", "scheduled_jobs", ["job_name"], unique=True)

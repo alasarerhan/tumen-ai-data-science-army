@@ -36,7 +36,7 @@ def test_parse_uuid_accepts_valid_string_forms(value: str) -> None:
         "   ",
         "not-a-uuid",
         "\u011f\u00fc\u015f\u00f6\u00e7\u0131\u0130",
-        "\U0001F600",
+        "\U0001f600",
         "x" * 10000,
     ],
 )
@@ -143,7 +143,7 @@ def test_get_workspace_for_member_returns_workspace_record(
         {},
         {"threshold": 0.5, "active": True},
         {
-            "unicode": "\u011f\u00fc\u015f\u00f6\u00e7\u0131\u0130 \U0001F600",
+            "unicode": "\u011f\u00fc\u015f\u00f6\u00e7\u0131\u0130 \U0001f600",
             "huge": 10**100,
             "nested": {"items": [1]},
         },
@@ -359,7 +359,9 @@ def test_get_run_by_id_for_workspace_error_cases(
         run_service.get_run_by_id_for_workspace(
             db,
             run_id=run_id,
-            workspace_id=uuid.UUID(workspace_id) if status_code == 404 else seeded_db["workspace"].id,
+            workspace_id=uuid.UUID(workspace_id)
+            if status_code == 404
+            else seeded_db["workspace"].id,
         )
     assert exc_info.value.status_code == status_code
 

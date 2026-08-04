@@ -51,6 +51,7 @@ def _sample_df():
 # 1. scan_pii_wrapped — pd.DataFrame → PIIScanReport
 # ---------------------------------------------------------------------------
 
+
 def test_scan_pii_real():
     """scan_pii_wrapped: email + phone sütunlarını PII olarak tespit eder."""
     df = _sample_df()
@@ -66,6 +67,7 @@ def test_scan_pii_real():
 # ---------------------------------------------------------------------------
 # 2. default_strategies_for_wrapped — Pydantic PIIScanReport → dict
 # ---------------------------------------------------------------------------
+
 
 def test_default_strategies_for_real():
     """``default_strategies_for_wrapped`` bir PIIScanReport'tan strateji önerir.
@@ -88,6 +90,7 @@ def test_default_strategies_for_real():
 # ---------------------------------------------------------------------------
 # 3. anonymize_dataframe_wrapped — pd.DataFrame + strategies Mapping
 # ---------------------------------------------------------------------------
+
 
 def test_anonymize_dataframe_real():
     """``anonymize_dataframe_wrapped`` stratejiyi uygulayıp AnonymisationResult döner.

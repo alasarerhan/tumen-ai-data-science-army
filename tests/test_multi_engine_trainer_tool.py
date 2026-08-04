@@ -41,9 +41,7 @@ from ai_data_science_team.tools.multi_engine_trainer import (  # noqa: E402
 )
 
 
-def _toy_classification(
-    n: int = 80, seed: int = 0
-) -> tuple[pd.DataFrame, pd.Series]:
+def _toy_classification(n: int = 80, seed: int = 0) -> tuple[pd.DataFrame, pd.Series]:
     rng = np.random.RandomState(seed)
     x1 = rng.normal(size=n)
     x2 = rng.normal(size=n)

@@ -27,7 +27,6 @@ from typing import Any, Dict, Sequence, Tuple  # noqa: E402, F401
 
 import numpy as np  # noqa: E402, F401
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
@@ -80,7 +79,9 @@ class BetaPosterior:
         # Monte-Carlo is the standard way without a closed-form integral.
         rng = np.random.default_rng(0)
         self_samples = beta_dist.rvs(self.alpha_post, self.beta_post, size=20000, random_state=rng)
-        other_samples = beta_dist.rvs(other.alpha_post, other.beta_post, size=20000, random_state=rng)
+        other_samples = beta_dist.rvs(
+            other.alpha_post, other.beta_post, size=20000, random_state=rng
+        )
         return float(np.mean(self_samples > other_samples))
 
     def expected_loss(self, other: "BetaPosterior", *, threshold: float = 0.0) -> float:
@@ -171,8 +172,7 @@ def bayes_decision(
     elif 1 - prob_b > prob_b_better_threshold and exp_loss < expected_loss_threshold:
         decision = "stay_with_a"
         rationale = (
-            f"P(A>B)={1 - prob_b:.3f} above the threshold; "
-            f"B does not yet meaningfully beat A."
+            f"P(A>B)={1 - prob_b:.3f} above the threshold; B does not yet meaningfully beat A."
         )
     else:
         decision = "inconclusive"
@@ -209,8 +209,7 @@ class NormalMeansPosterior:
         like_precision_a = self.n_a / max(self.var_a, 1e-12)
         post_precision_a = prior_precision + like_precision_a
         post_mean_a = (
-            prior_precision * self.prior_mean
-            + like_precision_a * (self.sum_a / max(self.n_a, 1))
+            prior_precision * self.prior_mean + like_precision_a * (self.sum_a / max(self.n_a, 1))
         ) / post_precision_a
         return float(post_mean_a), float(1.0 / post_precision_a)
 
@@ -219,8 +218,7 @@ class NormalMeansPosterior:
         like_precision_b = self.n_b / max(self.var_b, 1e-12)
         post_precision_b = prior_precision + like_precision_b
         post_mean_b = (
-            prior_precision * self.prior_mean
-            + like_precision_b * (self.sum_b / max(self.n_b, 1))
+            prior_precision * self.prior_mean + like_precision_b * (self.sum_b / max(self.n_b, 1))
         ) / post_precision_b
         return float(post_mean_b), float(1.0 / post_precision_b)
 
@@ -229,14 +227,14 @@ class NormalMeansPosterior:
 
         mu, var = self.posterior_params_a()
         z = float(norm.ppf(1 - (1 - mass) / 2))
-        return (mu - z * var ** 0.5, mu + z * var ** 0.5)
+        return (mu - z * var**0.5, mu + z * var**0.5)
 
     def credible_interval_b(self, mass: float = 0.95) -> Tuple[float, float]:
         from scipy.stats import norm  # noqa: E402, F401
 
         mu, var = self.posterior_params_b()
         z = float(norm.ppf(1 - (1 - mass) / 2))
-        return (mu - z * var ** 0.5, mu + z * var ** 0.5)
+        return (mu - z * var**0.5, mu + z * var**0.5)
 
     def prob_b_better_than_a(self, threshold: float = 0.0) -> float:
         """P(B - A > threshold) using the analytic posterior of the
@@ -299,5 +297,3 @@ __all__ = [
     "normal_means_posterior",
     "NormalMeansPosterior",
 ]
-
-

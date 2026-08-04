@@ -31,9 +31,18 @@ from ai_data_science_team.tool_registry import (  # noqa: E402, F401
     description="Detect anomalies using Isolation Forest algorithm.",
     parameters={
         "data": ToolParameter(type="object", description="Input DataFrame as dict", required=True),
-        "contamination": ToolParameter(type="number", description="Expected proportion of outliers (0-0.5)", required=False, default=0.1),
-        "n_estimators": ToolParameter(type="integer", description="Number of trees", required=False, default=100),
-        "random_state": ToolParameter(type="integer", description="Random seed", required=False, default=42),
+        "contamination": ToolParameter(
+            type="number",
+            description="Expected proportion of outliers (0-0.5)",
+            required=False,
+            default=0.1,
+        ),
+        "n_estimators": ToolParameter(
+            type="integer", description="Number of trees", required=False, default=100
+        ),
+        "random_state": ToolParameter(
+            type="integer", description="Random seed", required=False, default=42
+        ),
     },
     returns="Dict with anomaly indices, scores, and summary",
     namespace="core.anomaly",
@@ -88,7 +97,7 @@ def isolation_forest_detect(
     anomaly_indices = df.index[anomaly_mask].tolist()
     anomaly_scores = scores[anomaly_mask].tolist()
 
-    summary = f"Isolation Forest detected {len(anomaly_indices)} anomalies ({len(anomaly_indices)/len(df)*100:.1f}% of data)"
+    summary = f"Isolation Forest detected {len(anomaly_indices)} anomalies ({len(anomaly_indices) / len(df) * 100:.1f}% of data)"
 
     return {
         "anomaly_indices": anomaly_indices,
@@ -103,8 +112,15 @@ def isolation_forest_detect(
     description="Detect anomalies using Local Outlier Factor algorithm.",
     parameters={
         "data": ToolParameter(type="object", description="Input DataFrame as dict", required=True),
-        "n_neighbors": ToolParameter(type="integer", description="Number of neighbors", required=False, default=20),
-        "contamination": ToolParameter(type="number", description="Expected proportion of outliers (0-0.5)", required=False, default=0.1),
+        "n_neighbors": ToolParameter(
+            type="integer", description="Number of neighbors", required=False, default=20
+        ),
+        "contamination": ToolParameter(
+            type="number",
+            description="Expected proportion of outliers (0-0.5)",
+            required=False,
+            default=0.1,
+        ),
     },
     returns="Dict with anomaly indices, scores, and summary",
     namespace="core.anomaly",
@@ -155,7 +171,7 @@ def lof_detect(
     anomaly_indices = df.index[anomaly_mask].tolist()
     anomaly_scores = scores[anomaly_mask].tolist()
 
-    summary = f"LOF detected {len(anomaly_indices)} anomalies ({len(anomaly_indices)/len(df)*100:.1f}% of data)"
+    summary = f"LOF detected {len(anomaly_indices)} anomalies ({len(anomaly_indices) / len(df) * 100:.1f}% of data)"
 
     return {
         "anomaly_indices": anomaly_indices,
@@ -170,8 +186,15 @@ def lof_detect(
     description="Detect anomalies using Histogram-based Outlier Score (requires PyOD).",
     parameters={
         "data": ToolParameter(type="object", description="Input DataFrame as dict", required=True),
-        "contamination": ToolParameter(type="number", description="Expected proportion of outliers (0-0.5)", required=False, default=0.1),
-        "n_bins": ToolParameter(type="integer", description="Number of bins", required=False, default=10),
+        "contamination": ToolParameter(
+            type="number",
+            description="Expected proportion of outliers (0-0.5)",
+            required=False,
+            default=0.1,
+        ),
+        "n_bins": ToolParameter(
+            type="integer", description="Number of bins", required=False, default=10
+        ),
     },
     returns="Dict with anomaly indices, scores, and summary",
     namespace="core.anomaly",
@@ -222,7 +245,7 @@ def hbos_detect(
         anomaly_indices = df.index[anomaly_mask].tolist()
         anomaly_scores = scores[anomaly_mask].tolist()
 
-        summary = f"HBOS detected {len(anomaly_indices)} anomalies ({len(anomaly_indices)/len(df)*100:.1f}% of data)"
+        summary = f"HBOS detected {len(anomaly_indices)} anomalies ({len(anomaly_indices) / len(df) * 100:.1f}% of data)"
     except ImportError:
         return isolation_forest_detect(data, contamination=contamination)
 
@@ -239,7 +262,12 @@ def hbos_detect(
     description="Detect anomalies using Copula-based Outlier Detection (requires PyOD).",
     parameters={
         "data": ToolParameter(type="object", description="Input DataFrame as dict", required=True),
-        "contamination": ToolParameter(type="number", description="Expected proportion of outliers (0-0.5)", required=False, default=0.1),
+        "contamination": ToolParameter(
+            type="number",
+            description="Expected proportion of outliers (0-0.5)",
+            required=False,
+            default=0.1,
+        ),
     },
     returns="Dict with anomaly indices, scores, and summary",
     namespace="core.anomaly",
@@ -287,7 +315,7 @@ def copod_detect(
         anomaly_indices = df.index[anomaly_mask].tolist()
         anomaly_scores = scores[anomaly_mask].tolist()
 
-        summary = f"COPOD detected {len(anomaly_indices)} anomalies ({len(anomaly_indices)/len(df)*100:.1f}% of data)"
+        summary = f"COPOD detected {len(anomaly_indices)} anomalies ({len(anomaly_indices) / len(df) * 100:.1f}% of data)"
     except ImportError:
         return isolation_forest_detect(data, contamination=contamination)
 
@@ -304,8 +332,15 @@ def copod_detect(
     description="Detect anomalies using ensemble voting of multiple algorithms.",
     parameters={
         "data": ToolParameter(type="object", description="Input DataFrame as dict", required=True),
-        "contamination": ToolParameter(type="number", description="Expected proportion of outliers (0-0.5)", required=False, default=0.1),
-        "methods": ToolParameter(type="array", description="Methods to ensemble: isolation_forest, lof", required=False),
+        "contamination": ToolParameter(
+            type="number",
+            description="Expected proportion of outliers (0-0.5)",
+            required=False,
+            default=0.1,
+        ),
+        "methods": ToolParameter(
+            type="array", description="Methods to ensemble: isolation_forest, lof", required=False
+        ),
     },
     returns="Dict with anomaly indices, scores, and summary",
     namespace="core.anomaly",
@@ -367,7 +402,7 @@ def ensemble_detect(
     anomaly_mask = votes >= threshold
     anomaly_indices = df.index[anomaly_mask].tolist()
 
-    summary = f"Ensemble ({', '.join(methods)}) detected {len(anomaly_indices)} anomalies ({len(anomaly_indices)/len(df)*100:.1f}% of data)"
+    summary = f"Ensemble ({', '.join(methods)}) detected {len(anomaly_indices)} anomalies ({len(anomaly_indices) / len(df) * 100:.1f}% of data)"
 
     return {
         "anomaly_indices": anomaly_indices,

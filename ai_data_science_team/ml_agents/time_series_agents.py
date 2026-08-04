@@ -35,20 +35,22 @@ import pandas as pd  # noqa: E402, F401
 from langchain_core.messages import AIMessage, BaseMessage  # noqa: E402, F401
 
 try:
-    from IPython.display import Markdown  # optional — only needed in notebook contexts  # noqa: E402, F401
+    from IPython.display import (
+        Markdown,  # optional — only needed in notebook contexts  # noqa: E402, F401
+    )
 except ImportError:
     Markdown = None  # type: ignore[assignment,misc]
 
 from langchain.agents import create_agent  # noqa: E402, F401
-from langgraph.graph.message import add_messages  # noqa: E402, F401
 from langgraph.graph import END, START, StateGraph  # noqa: E402, F401
+from langgraph.graph.message import add_messages  # noqa: E402, F401
 from langgraph.types import Checkpointer  # noqa: E402, F401
 from typing_extensions import Annotated, TypedDict  # noqa: E402, F401
 
 from ai_data_science_team.templates import BaseAgent  # noqa: E402, F401
 from ai_data_science_team.tools.e11_time_series import (  # noqa: E402, F401
-    autocorrelation_analysis,
     auto_forecast,
+    autocorrelation_analysis,
     evaluate_forecast,
     seasonal_decompose_ts,
     stationarity_test,
@@ -62,10 +64,10 @@ from ai_data_science_team.utils.regex import format_agent_name  # noqa: E402, F4
 # Tool sets
 # ---------------------------------------------------------------------------
 
-_EDA_TOOLS      = [stationarity_test, seasonal_decompose_ts, autocorrelation_analysis]
+_EDA_TOOLS = [stationarity_test, seasonal_decompose_ts, autocorrelation_analysis]
 _FORECAST_TOOLS = [train_arima, train_prophet]
-_EVAL_TOOLS     = [evaluate_forecast]
-_AUTOFC_TOOLS   = [auto_forecast]
+_EVAL_TOOLS = [evaluate_forecast]
+_AUTOFC_TOOLS = [auto_forecast]
 
 # ---------------------------------------------------------------------------
 # Shared helpers
@@ -141,11 +143,7 @@ def _build_ts_graph(
             df = pd.DataFrame(data_raw)
             n = len(df)
             cols = ", ".join(df.columns.tolist())
-            sample_vals = (
-                df[value_col].dropna().head(5).tolist()
-                if value_col in df.columns
-                else []
-            )
+            sample_vals = df[value_col].dropna().head(5).tolist() if value_col in df.columns else []
             data_info = (
                 f"\n\nDataset: {n} rows, columns: [{cols}]"
                 f"\nDate column: '{date_col}', Value column: '{value_col}'"
@@ -394,8 +392,7 @@ class _TimeSeriesAgentMixin:
         if not markdown:
             return msgs
         pretty = "\n\n".join(
-            f"### {getattr(m,'type','MSG').upper()}\n\n{getattr(m,'content','')}"
-            for m in msgs
+            f"### {getattr(m, 'type', 'MSG').upper()}\n\n{getattr(m, 'content', '')}" for m in msgs
         )
         return Markdown(pretty)
 

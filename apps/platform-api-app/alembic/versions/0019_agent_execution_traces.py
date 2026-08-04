@@ -9,9 +9,9 @@ Create Date: 2026-06-04
 from __future__ import annotations
 
 import sqlalchemy as sa
-from alembic import op
 from sqlalchemy.dialects import postgresql
 
+from alembic import op
 
 revision = "0019_agent_execution_traces"
 down_revision = "0018_data_source_secrets"
@@ -40,13 +40,29 @@ def upgrade() -> None:
         sa.Column("started_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("finished_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("duration_ms", sa.Integer(), nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("CURRENT_TIMESTAMP"), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.text("CURRENT_TIMESTAMP"), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("CURRENT_TIMESTAMP"),
+            nullable=False,
+        ),
+        sa.Column(
+            "updated_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("CURRENT_TIMESTAMP"),
+            nullable=False,
+        ),
         sa.ForeignKeyConstraint(["tenant_id"], ["tenants.id"], ondelete="CASCADE"),
         sa.ForeignKeyConstraint(["workspace_id"], ["workspaces.id"], ondelete="CASCADE"),
         sa.ForeignKeyConstraint(["workflow_run_id"], ["workflow_runs.id"], ondelete="CASCADE"),
-        sa.ForeignKeyConstraint(["workflow_node_execution_id"], ["workflow_node_executions.id"], ondelete="CASCADE"),
-        sa.ForeignKeyConstraint(["workspace_id", "tenant_id"], ["workspaces.id", "workspaces.tenant_id"], ondelete="CASCADE"),
+        sa.ForeignKeyConstraint(
+            ["workflow_node_execution_id"], ["workflow_node_executions.id"], ondelete="CASCADE"
+        ),
+        sa.ForeignKeyConstraint(
+            ["workspace_id", "tenant_id"],
+            ["workspaces.id", "workspaces.tenant_id"],
+            ondelete="CASCADE",
+        ),
     )
     op.create_index(
         "ix_agent_execution_traces_node_created",
@@ -67,6 +83,8 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     op.drop_index("ix_agent_execution_traces_run_status", table_name="agent_execution_traces")
-    op.drop_index("ix_agent_execution_traces_workspace_created", table_name="agent_execution_traces")
+    op.drop_index(
+        "ix_agent_execution_traces_workspace_created", table_name="agent_execution_traces"
+    )
     op.drop_index("ix_agent_execution_traces_node_created", table_name="agent_execution_traces")
     op.drop_table("agent_execution_traces")

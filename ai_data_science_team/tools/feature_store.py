@@ -12,7 +12,6 @@ import uuid  # noqa: E402, F401
 from dataclasses import dataclass, field  # noqa: E402, F401
 from typing import Any, Dict, List, Optional, Sequence, Tuple  # noqa: E402, F401
 
-
 VALID_DTYPES = {"int", "float", "string", "bool", "array", "embed"}
 
 
@@ -25,6 +24,7 @@ def _now() -> float:
 
 
 # ----- Feature definition --------------------------------------------------
+
 
 @dataclass
 class FeatureDefinition:
@@ -48,9 +48,7 @@ class FeatureStore:
         self.definitions.append(d)
 
     def by_id(self, fid: str) -> Optional[FeatureDefinition]:
-        return next(
-            (d for d in self.definitions if d.feature_id == fid), None
-        )
+        return next((d for d in self.definitions if d.feature_id == fid), None)
 
     def by_name(self, name: str) -> List[FeatureDefinition]:
         return [d for d in self.definitions if d.name == name]
@@ -70,9 +68,7 @@ def register_feature(
     feature_id: Optional[str] = None,
 ) -> FeatureDefinition:
     if dtype not in VALID_DTYPES:
-        raise ValueError(
-            f"dtype must be one of {sorted(VALID_DTYPES)}"
-        )
+        raise ValueError(f"dtype must be one of {sorted(VALID_DTYPES)}")
     d = FeatureDefinition(
         feature_id=feature_id or _new_id(),
         name=name,
@@ -90,6 +86,7 @@ def register_feature(
 
 
 # ----- Search / catalog ----------------------------------------------------
+
 
 def search_features(
     store: FeatureStore,
@@ -115,6 +112,7 @@ def search_features(
 
 # ----- Versioning helpers --------------------------------------------------
 
+
 def version_sort_key(version: str) -> Tuple[int, ...]:
     parts: List[int] = []
     for piece in version.split("."):
@@ -126,7 +124,8 @@ def version_sort_key(version: str) -> Tuple[int, ...]:
 
 
 def latest_version(
-    store: FeatureStore, name: str,
+    store: FeatureStore,
+    name: str,
 ) -> Optional[FeatureDefinition]:
     same = store.by_name(name)
     if not same:
@@ -135,6 +134,7 @@ def latest_version(
 
 
 # ----- Online / offline consistency ---------------------------------------
+
 
 @dataclass
 class ConsistencyReport:
@@ -150,7 +150,8 @@ class ConsistencyReport:
 
 
 def _sample_match(
-    online: Sequence[Any], offline: Sequence[Any],
+    online: Sequence[Any],
+    offline: Sequence[Any],
     tolerance: float = 1e-9,
 ) -> bool:
     if len(online) != len(offline):
@@ -176,15 +177,10 @@ def check_consistency(
 ) -> ConsistencyReport:
     issues: List[str] = []
     dtypes_match = (
-        online_dtype is not None
-        and offline_dtype is not None
-        and online_dtype == offline_dtype
+        online_dtype is not None and offline_dtype is not None and online_dtype == offline_dtype
     )
     if not dtypes_match:
-        issues.append(
-            f"dtype mismatch: online={online_dtype!r} "
-            f"offline={offline_dtype!r}"
-        )
+        issues.append(f"dtype mismatch: online={online_dtype!r} offline={offline_dtype!r}")
     samples_match = _sample_match(online_value_sample, offline_value_sample)
     if not samples_match:
         issues.append("value sample mismatch between online and offline")
@@ -202,6 +198,7 @@ def check_consistency(
 
 
 # ----- Freshness probe -----------------------------------------------------
+
 
 @dataclass
 class FreshnessRecord:
@@ -221,7 +218,8 @@ class FreshnessReport:
 
 def probe_freshness(
     record: FreshnessRecord,
-    *, now: Optional[float] = None,
+    *,
+    now: Optional[float] = None,
 ) -> FreshnessReport:
     ts = now if now is not None else _now()
     age = ts - record.last_updated_at
@@ -236,16 +234,20 @@ def probe_freshness(
 
 def bulk_probe_freshness(
     records: Sequence[FreshnessRecord],
-    *, now: Optional[float] = None,
+    *,
+    now: Optional[float] = None,
 ) -> List[FreshnessReport]:
     return [probe_freshness(r, now=now) for r in records]
 
 
 # ----- Lineage pointer -----------------------------------------------------
 
+
 def attach_lineage(
     store: FeatureStore,
-    *, feature_id: str, lineage_node_id: str,
+    *,
+    feature_id: str,
+    lineage_node_id: str,
 ) -> FeatureDefinition:
     d = store.by_id(feature_id)
     if d is None:
@@ -256,28 +258,30 @@ def attach_lineage(
 
 # ----- Catalog payload -----------------------------------------------------
 
+
 def catalog_payload(
-    store: FeatureStore, feature_ids: Sequence[str],
+    store: FeatureStore,
+    feature_ids: Sequence[str],
 ) -> Dict[str, Any]:
     items: List[Dict[str, Any]] = []
     for fid in feature_ids:
         d = store.by_id(fid)
         if d is None:
             continue
-        items.append({
-            "feature_id": d.feature_id,
-            "name": d.name,
-            "version": d.version,
-            "dtype": d.dtype,
-            "owner": d.owner,
-            "tags": d.tags,
-            "lineage_node_id": d.lineage_node_id,
-            "description": d.description,
-            "created_at": d.created_at,
-        })
+        items.append(
+            {
+                "feature_id": d.feature_id,
+                "name": d.name,
+                "version": d.version,
+                "dtype": d.dtype,
+                "owner": d.owner,
+                "tags": d.tags,
+                "lineage_node_id": d.lineage_node_id,
+                "description": d.description,
+                "created_at": d.created_at,
+            }
+        )
     return {
         "n": len(items),
         "features": items,
     }
-
-

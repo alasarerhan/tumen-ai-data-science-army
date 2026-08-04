@@ -20,9 +20,7 @@ class TestBuild:
 
     def test_missing_base_url(self):
         with pytest.raises(ValueError):
-            h7.build_rest_connector(
-                h7.ConnectorConfig(name="x", kind="rest", params={})
-            )
+            h7.build_rest_connector(h7.ConnectorConfig(name="x", kind="rest", params={}))
 
     def test_bearer_missing_token(self):
         with pytest.raises(ValueError):
@@ -62,8 +60,8 @@ class TestBehaviors:
     def test_schema_registered(self):
         c = h7.build_rest_connector(_cfg())
         c.register_schema(
-            "/users", [{"name": "u_id", "type": "int"},
-                       {"name": "u_email", "type": "string"}],
+            "/users",
+            [{"name": "u_id", "type": "int"}, {"name": "u_email", "type": "string"}],
         )
         cols = c.schema_infer("/users")
         assert cols[0]["name"] == "u_id"
@@ -81,4 +79,3 @@ class TestBehaviors:
             c._paginate_cache = {}
         c._paginate_cache["/x"] = [{"k": 1}, {"k": 2}]
         assert c.paginate("/x") == [{"k": 1}, {"k": 2}]
-

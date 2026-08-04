@@ -11,7 +11,6 @@ import uuid  # noqa: E402, F401
 from dataclasses import dataclass, field  # noqa: E402, F401
 from typing import Any, Dict, List, Mapping, Optional  # noqa: E402, F401
 
-
 CARD_SECTIONS: tuple = (
     "model_details",
     "intended_use",
@@ -30,6 +29,7 @@ def _new_id() -> str:
 
 def _now() -> float:
     return time.time()
+
 
 @dataclass
 class CardSection:
@@ -57,9 +57,10 @@ class ModelCard:
             "created_at": self.created_at,
             "updated_at": self.updated_at,
             "draft": self.draft,
-            "sections": {k: {"content": v.content, "is_draft": v.is_draft,
-                              "last_updated": v.last_updated}
-                         for k, v in self.sections.items()},
+            "sections": {
+                k: {"content": v.content, "is_draft": v.is_draft, "last_updated": v.last_updated}
+                for k, v in self.sections.items()
+            },
         }
 
 
@@ -90,17 +91,13 @@ def generate_card(
     if training_data:
         card.sections["training_data"].content = _fmt_mapping(training_data)
     if features:
-        card.sections["features"].content = "\n".join(
-            f"- {f}" for f in features
-        )
+        card.sections["features"].content = "\n".join(f"- {f}" for f in features)
     if metrics:
         card.sections["metrics"].content = _fmt_metrics(metrics)
     if fairness:
         card.sections["fairness"].content = _fmt_mapping(fairness)
     if lineage:
-        card.sections["lineage"].content = "\n".join(
-            f"- {a}" for a in lineage
-        )
+        card.sections["lineage"].content = "\n".join(f"- {a}" for a in lineage)
     if limitations:
         card.sections["limitations"].content = limitations
         card.sections["limitations"].is_draft = True
@@ -158,7 +155,9 @@ def update_section(
         },
     )
     new_card.sections[section] = CardSection(
-        name=section, content=content, is_draft=is_draft,
+        name=section,
+        content=content,
+        is_draft=is_draft,
         last_updated=_now(),
     )
     CARD_REGISTRY[new_card.card_id] = new_card
@@ -208,5 +207,3 @@ def get_card(card_id: str) -> ModelCard:
 
 def list_cards(model_id: str) -> List[ModelCard]:
     return [c for c in CARD_REGISTRY.values() if c.model_id == model_id]
-
-

@@ -80,7 +80,10 @@ def sql_database_pipeline(connection):
     result = _execute_sql_agent(state, engine)
 
     assert result["data_sql"] is None
-    assert result["sql_database_error"] == "SQL agent failed: Only read-only SELECT queries are allowed."
+    assert (
+        result["sql_database_error"]
+        == "SQL agent failed: Only read-only SELECT queries are allowed."
+    )
 
     with engine.connect() as conn:
         count = conn.execute(sa.text("SELECT COUNT(*) FROM orders")).scalar_one()

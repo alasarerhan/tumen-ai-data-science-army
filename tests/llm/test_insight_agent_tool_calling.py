@@ -49,14 +49,16 @@ def _rich_df() -> pd.DataFrame:
       - const: tüm 3.14 (sabit kolon)
     """
     np.random.seed(42)
-    return pd.DataFrame({
-        "a": np.random.randn(50),
-        "b": np.random.randn(50) + 1.0,
-        "heavy": np.random.exponential(scale=0.5, size=50),
-        "c": [float(i) for i in range(50)],
-        "imbalanced": ["x"] * 45 + ["y"] * 5,
-        "const": [3.14] * 50,
-    })
+    return pd.DataFrame(
+        {
+            "a": np.random.randn(50),
+            "b": np.random.randn(50) + 1.0,
+            "heavy": np.random.exponential(scale=0.5, size=50),
+            "c": [float(i) for i in range(50)],
+            "imbalanced": ["x"] * 45 + ["y"] * 5,
+            "const": [3.14] * 50,
+        }
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -82,7 +84,8 @@ def test_find_strong_correlations_real():
     """find_strong_correlations: |corr| ≥ eşik kolon çiftleri."""
     df = _rich_df()
     content, artifact = _invoke_wrapper(
-        find_strong_correlations_wrapped, df=df,
+        find_strong_correlations_wrapped,
+        df=df,
     )
     assert "ok" in content
     assert isinstance(artifact["result"], list)
@@ -116,7 +119,8 @@ def test_find_missing_patterns_real():
     df = _rich_df()
     df["sparse"] = [None] * 25 + [float(i) for i in range(25)]  # %50 null
     content, artifact = _invoke_wrapper(
-        find_missing_patterns_wrapped, df=df,
+        find_missing_patterns_wrapped,
+        df=df,
     )
     assert "ok" in content
     assert isinstance(artifact["result"], list)
@@ -131,7 +135,8 @@ def test_find_class_imbalance_real():
     """find_class_imbalance: 45/5 imbalanced → 'imbalanced' yakalanır."""
     df = _rich_df()
     content, artifact = _invoke_wrapper(
-        find_class_imbalance_wrapped, df=df,
+        find_class_imbalance_wrapped,
+        df=df,
     )
     assert "ok" in content
     assert isinstance(artifact["result"], list)
@@ -146,7 +151,8 @@ def test_find_constants_and_outliers_real():
     """find_constants_and_outliers: 'const' kolonu (tüm 3.14) yakalanır."""
     df = _rich_df()
     content, artifact = _invoke_wrapper(
-        find_constants_and_outliers_wrapped, df=df,
+        find_constants_and_outliers_wrapped,
+        df=df,
     )
     assert "ok" in content
     assert isinstance(artifact["result"], list)

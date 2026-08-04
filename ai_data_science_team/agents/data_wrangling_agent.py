@@ -1,6 +1,3 @@
-
-
-
 import logging
 
 logger = logging.getLogger(__name__)
@@ -10,37 +7,44 @@ logger = logging.getLogger(__name__)
 # * Agents: Data Wrangling Agent
 
 # Libraries
-from typing_extensions import TypedDict, Annotated, Sequence, Literal, Union, Optional  # noqa: E402, F401
+import json  # noqa: E402, F401
 import operator  # noqa: E402, F401
 import os  # noqa: E402, F401
-import json  # noqa: E402, F401
+
 import pandas as pd  # noqa: E402, F401
 from IPython.display import Markdown  # noqa: E402, F401
-
-from langchain_core.prompts import PromptTemplate  # noqa: E402, F401
 from langchain_core.messages import BaseMessage  # noqa: E402, F401
-from langgraph.types import Command  # noqa: E402, F401
+from langchain_core.prompts import PromptTemplate  # noqa: E402, F401
 from langgraph.checkpoint.memory import MemorySaver  # noqa: E402, F401
-
-from ai_data_science_team.templates import (  # noqa: E402, F401
-    node_func_human_review,
-    node_func_fix_agent_code,
-    node_func_report_agent_outputs,
-    create_coding_agent_graph,
-    BaseAgent,
+from langgraph.types import Command  # noqa: E402, F401
+from typing_extensions import (  # noqa: E402, F401
+    Annotated,
+    Literal,
+    Optional,
+    Sequence,
+    TypedDict,
+    Union,
 )
+
 from ai_data_science_team.parsers.parsers import PythonOutputParser  # noqa: E402, F401
+from ai_data_science_team.templates import (  # noqa: E402, F401
+    BaseAgent,
+    create_coding_agent_graph,
+    node_func_fix_agent_code,
+    node_func_human_review,
+    node_func_report_agent_outputs,
+)
+from ai_data_science_team.tools.dataframe import get_dataframe_summary  # noqa: E402, F401
+from ai_data_science_team.utils.logging import log_ai_error, log_ai_function  # noqa: E402, F401
+from ai_data_science_team.utils.messages import get_last_user_message_content  # noqa: E402, F401
 from ai_data_science_team.utils.regex import (  # noqa: E402, F401
-    relocate_imports_inside_function,
     add_comments_to_top,
     format_agent_name,
     format_recommended_steps,
     get_generic_summary,
+    relocate_imports_inside_function,
 )
-from ai_data_science_team.tools.dataframe import get_dataframe_summary  # noqa: E402, F401
-from ai_data_science_team.utils.logging import log_ai_function, log_ai_error  # noqa: E402, F401
 from ai_data_science_team.utils.sandbox import run_code_sandboxed_subprocess  # noqa: E402, F401
-from ai_data_science_team.utils.messages import get_last_user_message_content  # noqa: E402, F401
 
 # Setup Logging Path
 AGENT_NAME = "data_wrangling_agent"
@@ -377,9 +381,7 @@ class DataWranglingAgent(BaseAgent):
         Retrieves the agent's workflow summary, if logging is enabled.
         """
         if self.response and self.response.get("messages"):
-            summary = get_generic_summary(
-                json.loads(self.response.get("messages")[-1].content)
-            )
+            summary = get_generic_summary(json.loads(self.response.get("messages")[-1].content))
             if markdown:
                 return Markdown(summary)
             else:
@@ -507,14 +509,10 @@ Function Name: {self.response.get("data_wrangler_function_name")}
                 elif isinstance(item, dict):
                     converted_list.append(item)
                 else:
-                    raise ValueError(
-                        "List must contain only DataFrames or dictionaries."
-                    )
+                    raise ValueError("List must contain only DataFrames or dictionaries.")
             return converted_list
 
-        raise ValueError(
-            "data_raw must be a DataFrame, a dict, or a list of dicts/DataFrames."
-        )
+        raise ValueError("data_raw must be a DataFrame, a dict, or a list of dicts/DataFrames.")
 
 
 # Function
@@ -628,7 +626,9 @@ def make_data_wrangling_agent(
         if isinstance(data_raw, dict):
             dataframes = {"main": pd.DataFrame.from_dict(data_raw)}
         elif isinstance(data_raw, list) and all(isinstance(item, dict) for item in data_raw):
-            dataframes = {f"dataset_{i}": pd.DataFrame.from_dict(d) for i, d in enumerate(data_raw, start=1)}
+            dataframes = {
+                f"dataset_{i}": pd.DataFrame.from_dict(d) for i, d in enumerate(data_raw, start=1)
+            }
         else:
             raise ValueError("data_raw must be a dict or a list of dicts.")
 
@@ -859,9 +859,7 @@ def make_data_wrangling_agent(
 
         def human_review(
             state: GraphState,
-        ) -> Command[
-            Literal["recommend_wrangling_steps", "report_agent_outputs"]
-        ]:
+        ) -> Command[Literal["recommend_wrangling_steps", "report_agent_outputs"]]:
             return node_func_human_review(
                 state=state,
                 prompt_text=prompt_text_human_review,

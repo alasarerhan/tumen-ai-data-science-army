@@ -9,8 +9,8 @@ import pytest
 from ai_data_science_team.tools.insight import (
     ALL_KINDS,
     KIND_ANOMALY,
-    KIND_CORRELATION,
     KIND_CONSTANT,
+    KIND_CORRELATION,
     KIND_IMBALANCE,
     KIND_MISSING,
     KIND_SKEW,

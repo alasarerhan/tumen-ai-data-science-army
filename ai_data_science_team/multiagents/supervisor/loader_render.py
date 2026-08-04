@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-
 import os
 from typing import Any, Callable, Optional
 
@@ -37,9 +36,8 @@ def summarize_multi_loaded_datasets(
                 max_cols = 10
                 if preview_df.shape[1] > max_cols:
                     preview_df = preview_df.iloc[:, :max_cols]
-                preview_txt = (
-                    "\n\nPreview (first 5 rows):\n\n"
-                    + preview_df.to_markdown(index=False)
+                preview_txt = "\n\nPreview (first 5 rows):\n\n" + preview_df.to_markdown(
+                    index=False
                 )
         except Exception:
             pass
@@ -61,11 +59,7 @@ def summarize_multi_loaded_datasets(
 
 def summarize_multiple_loaded_files(multiple_loaded_files: list[str]) -> AIMessage:
     joined = ", ".join(multiple_loaded_files[:20])
-    more = (
-        f" (+{len(multiple_loaded_files) - 20} more)"
-        if len(multiple_loaded_files) > 20
-        else ""
-    )
+    more = f" (+{len(multiple_loaded_files) - 20} more)" if len(multiple_loaded_files) > 20 else ""
     return AIMessage(
         content=(
             "Loaded multiple datasets from the directory:\n\n"
@@ -136,11 +130,7 @@ def summarize_directory_listing(
         names, rows = _rows_from_dir_listing(dir_listing)
         wants_csv_only = "csv" in last_human and ("list" in last_human or "files" in last_human)
         if wants_csv_only and rows:
-            rows = [
-                row
-                for row in rows
-                if str(row.get("filename", "")).lower().endswith(".csv")
-            ]
+            rows = [row for row in rows if str(row.get("filename", "")).lower().endswith(".csv")]
             names = [row.get("filename") for row in rows if row.get("filename")]
             if not rows:
                 return AIMessage(
@@ -155,9 +145,7 @@ def summarize_directory_listing(
 
             df_listing = pd.DataFrame(rows)
             table_cols = [
-                column
-                for column in ["filename", "type", "path"]
-                if column in df_listing.columns
+                column for column in ["filename", "type", "path"] if column in df_listing.columns
             ]
             table_text = df_listing[table_cols].to_markdown(index=False)
 

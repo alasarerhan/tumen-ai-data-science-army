@@ -22,6 +22,7 @@ Workspace-scoped (member = any of owner/admin/member)
   POST /v1/workflows/{id}/archive        workspace admin | workspace owner
   GET  /v1/strategy/reports/generate     workspace member
 """
+
 from __future__ import annotations
 
 from platform_api.db.models import TenantRole, WorkspaceRole

@@ -54,20 +54,17 @@ def test_default_scenarios_real(llm_or_skip, llm_model):
     tool = default_scenarios_wrapped
     result, _ = _assert_result(
         _drive_tool_call(
-            llm_model, tool,
+            llm_model,
+            tool,
             "default_scenarios tool'unu TEK çağrı ile çağır. "
             "sigma_levels=[0.05, 0.1, 0.2], mask_levels=[0.1, 0.2, 0.3].",
         ),
         tool.name,
     )
     s = str(result).lower()
-    assert (
-        "scenario" in s
-        or "noise" in s
-        or "sigma" in s
-        or "mask" in s
-        or "ok" in s
-    ), f"default_scenarios beklenen senaryo seti üretmedi: {s[:200]}"
+    assert "scenario" in s or "noise" in s or "sigma" in s or "mask" in s or "ok" in s, (
+        f"default_scenarios beklenen senaryo seti üretmedi: {s[:200]}"
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -104,7 +101,7 @@ def test_mask_features_real():
     assert masked_count > 0
     # Sıfırlanmamış hücreler orijinal değerleri korumalı
     nonzero_pos = np.argwhere(out != 0.0)
-    for (i, j) in nonzero_pos:
+    for i, j in nonzero_pos:
         assert out[i, j] == X[i, j]
 
 

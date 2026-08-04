@@ -28,6 +28,15 @@ Supported response formats
 import logging  # noqa: E402, F401
 
 logger = logging.getLogger(__name__)
+import pandas as pd  # noqa: E402, F401
+from IPython.display import Markdown  # noqa: E402, F401
+from langchain.agents import create_agent  # noqa: E402, F401
+from langchain.tools import tool  # noqa: E402, F401
+from langchain_core.messages import AIMessage, BaseMessage  # noqa: E402, F401
+from langgraph.graph import END, START, StateGraph  # noqa: E402, F401
+from langgraph.graph.message import add_messages  # noqa: E402, F401
+from langgraph.prebuilt import InjectedState  # noqa: E402, F401
+from langgraph.types import Checkpointer  # noqa: E402, F401
 from typing_extensions import (  # noqa: E402, F401
     Annotated,
     Any,
@@ -38,17 +47,6 @@ from typing_extensions import (  # noqa: E402, F401
     Tuple,
     TypedDict,
 )
-
-import pandas as pd  # noqa: E402, F401
-from IPython.display import Markdown  # noqa: E402, F401
-
-from langchain.agents import create_agent  # noqa: E402, F401
-from langchain.tools import tool  # noqa: E402, F401
-from langchain_core.messages import AIMessage, BaseMessage  # noqa: E402, F401
-from langgraph.graph import END, START, StateGraph  # noqa: E402, F401
-from langgraph.graph.message import add_messages  # noqa: E402, F401
-from langgraph.prebuilt import InjectedState  # noqa: E402, F401
-from langgraph.types import Checkpointer  # noqa: E402, F401
 
 from ai_data_science_team.templates import BaseAgent  # noqa: E402, F401
 from ai_data_science_team.utils.messages import get_tool_call_names  # noqa: E402, F401
@@ -99,6 +97,7 @@ def call_api(
     logger.info("    * Tool: call_api")
 
     import time  # noqa: E402, F401
+
     import requests as req  # noqa: E402, F401
 
     if not url:
@@ -153,6 +152,7 @@ def call_api(
         elif fmt == "csv":
             try:
                 import io  # noqa: E402, F401
+
                 df = pd.read_csv(io.StringIO(resp.text))
                 parsed_body = df.to_dict(orient="records")
             except Exception as e:
@@ -181,8 +181,7 @@ def call_api(
             artifact["parse_error"] = parse_error
 
         content = (
-            f"API call {m} {url} → HTTP {status} in {latency_ms} ms. "
-            f"Body preview: {body_preview}"
+            f"API call {m} {url} → HTTP {status} in {latency_ms} ms. Body preview: {body_preview}"
         )
         return content, artifact
 

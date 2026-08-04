@@ -1,4 +1,5 @@
-﻿"""TG1/TG2 tests for chat and workflow signal APIs (M21 + M17 UI backend support)."""
+"""TG1/TG2 tests for chat and workflow signal APIs (M21 + M17 UI backend support)."""
+
 from __future__ import annotations
 
 import io
@@ -43,7 +44,9 @@ class TestChatSessionLifecycle:
         client, sdb = admin_client
         ws_id = str(sdb["workspace"].id)
 
-        created = client.post("/v1/chat/sessions", json={"workspace_id": ws_id, "title": "Revenue Chat"})
+        created = client.post(
+            "/v1/chat/sessions", json={"workspace_id": ws_id, "title": "Revenue Chat"}
+        )
         assert created.status_code == 201
         body = created.json()
         assert body["title"] == "Revenue Chat"
@@ -56,7 +59,9 @@ class TestChatSessionLifecycle:
         client, sdb = admin_client
         ws_id = str(sdb["workspace"].id)
 
-        created = client.post("/v1/chat/sessions", json={"workspace_id": ws_id, "title": "Artifacts"}).json()
+        created = client.post(
+            "/v1/chat/sessions", json={"workspace_id": ws_id, "title": "Artifacts"}
+        ).json()
         sid = created["id"]
 
         msg = client.post(
@@ -72,7 +77,9 @@ class TestChatSessionLifecycle:
     def test_stream_endpoint_emits_done(self, admin_client):
         client, sdb = admin_client
         ws_id = str(sdb["workspace"].id)
-        sid = client.post("/v1/chat/sessions", json={"workspace_id": ws_id, "title": "SSE"}).json()["id"]
+        sid = client.post("/v1/chat/sessions", json={"workspace_id": ws_id, "title": "SSE"}).json()[
+            "id"
+        ]
 
         async def fake_stream(*args, **kwargs):
             yield ChatStreamEvent(type="progress")
@@ -80,7 +87,9 @@ class TestChatSessionLifecycle:
                 type="final",
                 delta="streamed assistant text",
                 text="streamed assistant text",
-                artifacts=[{"type": "report", "title": "Done", "content": "streamed assistant text"}],
+                artifacts=[
+                    {"type": "report", "title": "Done", "content": "streamed assistant text"}
+                ],
             )
 
         with patch("platform_api.routes.chat.stream_assistant_reply", fake_stream):
@@ -99,9 +108,12 @@ class TestChatSessionLifecycle:
         assert '"type": "message"' in joined
         assert '"type": "done"' in joined
 
-        messages = client.get(f"/v1/chat/sessions/{sid}/messages?workspace_id={ws_id}").json()["items"]
+        messages = client.get(f"/v1/chat/sessions/{sid}/messages?workspace_id={ws_id}").json()[
+            "items"
+        ]
         assistant_messages = [
-            message for message in messages
+            message
+            for message in messages
             if message["role"] == "assistant" and message["content"] == "streamed assistant text"
         ]
         assert len(assistant_messages) == 1
@@ -109,7 +121,9 @@ class TestChatSessionLifecycle:
     def test_stream_endpoint_emits_error_for_generation_failure(self, admin_client):
         client, sdb = admin_client
         ws_id = str(sdb["workspace"].id)
-        sid = client.post("/v1/chat/sessions", json={"workspace_id": ws_id, "title": "SSE error"}).json()["id"]
+        sid = client.post(
+            "/v1/chat/sessions", json={"workspace_id": ws_id, "title": "SSE error"}
+        ).json()["id"]
 
         async def fake_stream(*args, **kwargs):
             yield ChatStreamEvent(type="progress")
@@ -131,7 +145,9 @@ class TestChatSessionLifecycle:
     def test_stream_endpoint_emits_done_with_real_generator(self, admin_client):
         client, sdb = admin_client
         ws_id = str(sdb["workspace"].id)
-        sid = client.post("/v1/chat/sessions", json={"workspace_id": ws_id, "title": "SSE"}).json()["id"]
+        sid = client.post("/v1/chat/sessions", json={"workspace_id": ws_id, "title": "SSE"}).json()[
+            "id"
+        ]
 
         with client.stream(
             "POST",
@@ -147,7 +163,9 @@ class TestChatSessionLifecycle:
     def test_file_upload_persists_metadata(self, admin_client):
         client, sdb = admin_client
         ws_id = str(sdb["workspace"].id)
-        sid = client.post("/v1/chat/sessions", json={"workspace_id": ws_id, "title": "Uploads"}).json()["id"]
+        sid = client.post(
+            "/v1/chat/sessions", json={"workspace_id": ws_id, "title": "Uploads"}
+        ).json()["id"]
 
         files = {"file": ("sample.csv", io.BytesIO(b"a,b\n1,2\n"), "text/csv")}
         form = {"workspace_id": ws_id}
@@ -206,10 +224,17 @@ class TestWorkflowSignals:
 
         client.post(
             f"/v1/runs/{run_id}/signals",
-            json={"workspace_id": ws_id, "signal_type": "skip", "target_step": "eda", "payload": {}},
+            json={
+                "workspace_id": ws_id,
+                "signal_type": "skip",
+                "target_step": "eda",
+                "payload": {},
+            },
         )
 
-        with client.stream("GET", f"/v1/runs/{run_id}/signals/stream?workspace_id={ws_id}") as response:
+        with client.stream(
+            "GET", f"/v1/runs/{run_id}/signals/stream?workspace_id={ws_id}"
+        ) as response:
             assert response.status_code == 200
             lines = [line for line in response.iter_lines() if line]
 
@@ -218,13 +243,21 @@ class TestWorkflowSignals:
         assert '"signal_type": "skip"' in joined
         assert '"type": "done"' in joined
 
-    def test_emit_signal_mirrors_into_staged_runtime_store(self, admin_client, monkeypatch: pytest.MonkeyPatch):
+    def test_emit_signal_mirrors_into_staged_runtime_store(
+        self, admin_client, monkeypatch: pytest.MonkeyPatch
+    ):
         client, sdb = admin_client
         ws_id = str(sdb["workspace"].id)
         run_id = self._create_run(client, ws_id)
 
-        monkeypatch.setattr("platform_api.services.signal_service.settings.orchestration_execution_mode", "staged_m22")
-        monkeypatch.setattr("platform_api.services.signal_service.settings.orchestration_state_redis_url", "redis://runtime-state")
+        monkeypatch.setattr(
+            "platform_api.services.signal_service.settings.orchestration_execution_mode",
+            "staged_m22",
+        )
+        monkeypatch.setattr(
+            "platform_api.services.signal_service.settings.orchestration_state_redis_url",
+            "redis://runtime-state",
+        )
 
         captured: list[WorkflowSignal] = []
 

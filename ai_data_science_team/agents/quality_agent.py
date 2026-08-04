@@ -12,10 +12,16 @@ PowerAnalysisAgent.
 Node type: ``data.validate``
 """
 
-from typing import (Dict, Optional, Tuple)  # noqa: E402
 import logging  # noqa: E402, F401
-from typing import Any  # noqa: E402, F401
+from typing import (  # noqa: E402
+    Any,  # noqa: E402, F401
+    Dict,
+    Mapping,  # noqa: E402
+    Optional,
+    Tuple,
+)
 
+import pandas as pd  # noqa: E402, F401
 from langchain.tools import tool  # noqa: E402, F401
 from langchain_core.messages import AIMessage, BaseMessage  # noqa: E402, F401
 from langgraph.graph import END, START, StateGraph  # noqa: E402, F401
@@ -24,17 +30,12 @@ from langgraph.types import Checkpointer  # noqa: E402, F401
 from typing_extensions import Annotated, Sequence, TypedDict  # noqa: E402, F401
 
 from ai_data_science_team.templates import BaseAgent  # noqa: E402, F401
-from ai_data_science_team.utils.regex import format_agent_name  # noqa: E402, F401
-
-import pandas as pd  # noqa: E402, F401
-from typing import Mapping  # noqa: E402
-
 from ai_data_science_team.tools.quality import (  # noqa: E402, F401
     expectation_suite_from_template,
     summarise_suite_run,
     validate_against_suite,
 )
-
+from ai_data_science_team.utils.regex import format_agent_name  # noqa: E402, F401
 
 logger = logging.getLogger(__name__)
 
@@ -46,8 +47,11 @@ NODE_TYPE = "data.validate"
 # Tool wrappers
 # ---------------------------------------------------------------------------
 
+
 @tool(response_format="content_and_artifact")
-def b2_expectation_suite_from_template_wrapped(template_name: str, dataset: pd.DataFrame, overrides: Optional[Mapping[str, Any]]) -> Tuple[str, dict]:
+def b2_expectation_suite_from_template_wrapped(
+    template_name: str, dataset: pd.DataFrame, overrides: Optional[Mapping[str, Any]]
+) -> Tuple[str, dict]:
     """Tool wrapper for ``expectation_suite_from_template``.
 
     Generate a starter expectation suite for ``dataset``.
@@ -55,7 +59,7 @@ def b2_expectation_suite_from_template_wrapped(template_name: str, dataset: pd.D
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: b2_expectation_suite_from_template")
-    kwargs = {'template_name': template_name, 'dataset': dataset, 'overrides': overrides}
+    kwargs = {"template_name": template_name, "dataset": dataset, "overrides": overrides}
     try:
         result = expectation_suite_from_template(**kwargs)
     except Exception as exc:
@@ -75,7 +79,9 @@ def b2_expectation_suite_from_template_wrapped(template_name: str, dataset: pd.D
 
 
 @tool(response_format="content_and_artifact")
-def b2_validate_against_suite_wrapped(df: pd.DataFrame, suite: Sequence[Mapping[str, Any]]) -> Tuple[str, dict]:
+def b2_validate_against_suite_wrapped(
+    df: pd.DataFrame, suite: Sequence[Mapping[str, Any]]
+) -> Tuple[str, dict]:
     """Tool wrapper for ``validate_against_suite``.
 
     Validate ``df`` against ``suite`` and return a per-rule result.
@@ -83,7 +89,7 @@ def b2_validate_against_suite_wrapped(df: pd.DataFrame, suite: Sequence[Mapping[
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: b2_validate_against_suite")
-    kwargs = {'df': df, 'suite': suite}
+    kwargs = {"df": df, "suite": suite}
     try:
         result = validate_against_suite(**kwargs)
     except Exception as exc:
@@ -111,7 +117,7 @@ def b2_summarise_suite_run_wrapped(result: Mapping[str, Any]) -> Tuple[str, dict
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: b2_summarise_suite_run")
-    kwargs = {'result': result}
+    kwargs = {"result": result}
     try:
         result = summarise_suite_run(**kwargs)
     except Exception as exc:
@@ -180,7 +186,12 @@ def make_quality_agent(
     def run_react_agent(state: GraphState):
         logger.info("    * RUN REACT AGENT FOR B2")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
-        messages = [("system", "You are the B2 agent. Use the available tools to complete the user's request.")] + list(base)
+        messages = [
+            (
+                "system",
+                "You are the B2 agent. Use the available tools to complete the user's request.",
+            )
+        ] + list(base)
         input_payload = {"messages": messages}
         return react_agent.invoke(input_payload, invoke_react_agent_kwargs)
 
@@ -199,7 +210,9 @@ def make_quality_agent(
             last_ai = AIMessage(content=getattr(internal[-1], "content", ""), name=AGENT_NAME)
         tool_calls = []
         for msg in internal:
-            name = getattr(getattr(msg, "tool_call_id", None), "name", None) or getattr(msg, "name", None)
+            name = getattr(getattr(msg, "tool_call_id", None), "name", None) or getattr(
+                msg, "name", None
+            )
             if name:
                 tool_calls.append(name)
         if log_tool_calls and tool_calls:
@@ -267,6 +280,7 @@ class QualityAgent(BaseAgent):
         if not self.response or "messages" not in self.response:
             return None
         from IPython.display import Markdown as _Markdown  # noqa: E402, F401
+
         for msg in reversed(self.response.get("messages", [])):
             content = getattr(msg, "content", "")
             if content:

@@ -12,10 +12,16 @@ PowerAnalysisAgent.
 Node type: ``model.train.cluster``
 """
 
-from typing import (Dict, Optional, Tuple)  # noqa: E402
 import logging  # noqa: E402, F401
-from typing import Any  # noqa: E402, F401
+from typing import (  # noqa: E402
+    Any,  # noqa: E402, F401
+    Dict,
+    Mapping,  # noqa: E402
+    Optional,
+    Tuple,
+)
 
+import numpy as np  # noqa: E402, F401
 from langchain.tools import tool  # noqa: E402, F401
 from langchain_core.messages import AIMessage, BaseMessage  # noqa: E402, F401
 from langgraph.graph import END, START, StateGraph  # noqa: E402, F401
@@ -24,11 +30,6 @@ from langgraph.types import Checkpointer  # noqa: E402, F401
 from typing_extensions import Annotated, Sequence, TypedDict  # noqa: E402, F401
 
 from ai_data_science_team.templates import BaseAgent  # noqa: E402, F401
-from ai_data_science_team.utils.regex import format_agent_name  # noqa: E402, F401
-
-import numpy as np  # noqa: E402, F401
-from typing import Mapping  # noqa: E402
-
 from ai_data_science_team.tools.e12_clustering import (  # noqa: E402, F401
     ClusteringResult,
     build_naming_seeds,
@@ -43,7 +44,7 @@ from ai_data_science_team.tools.e12_clustering import (  # noqa: E402, F401
     run_kmeans,
     segmentation_template,
 )
-
+from ai_data_science_team.utils.regex import format_agent_name  # noqa: E402, F401
 
 logger = logging.getLogger(__name__)
 
@@ -55,6 +56,7 @@ NODE_TYPE = "model.train.cluster"
 # Tool wrappers
 # ---------------------------------------------------------------------------
 
+
 @tool(response_format="content_and_artifact")
 def run_kmeans_wrapped(X: np.ndarray) -> Tuple[str, dict]:
     """Tool wrapper for ``run_kmeans``.
@@ -64,7 +66,7 @@ def run_kmeans_wrapped(X: np.ndarray) -> Tuple[str, dict]:
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: e12_run_kmeans")
-    kwargs = {'X': X}
+    kwargs = {"X": X}
     try:
         result = run_kmeans(**kwargs)
     except Exception as exc:
@@ -92,7 +94,7 @@ def run_dbscan_wrapped(X: np.ndarray) -> Tuple[str, dict]:
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: e12_run_dbscan")
-    kwargs = {'X': X}
+    kwargs = {"X": X}
     try:
         result = run_dbscan(**kwargs)
     except Exception as exc:
@@ -120,7 +122,7 @@ def run_hierarchical_wrapped(X: np.ndarray) -> Tuple[str, dict]:
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: e12_run_hierarchical")
-    kwargs = {'X': X}
+    kwargs = {"X": X}
     try:
         result = run_hierarchical(**kwargs)
     except Exception as exc:
@@ -148,7 +150,7 @@ def compute_silhouette_wrapped(X: np.ndarray, labels: np.ndarray) -> Tuple[str, 
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: e12_compute_silhouette")
-    kwargs = {'X': X, 'labels': labels}
+    kwargs = {"X": X, "labels": labels}
     try:
         result = compute_silhouette(**kwargs)
     except Exception as exc:
@@ -176,7 +178,7 @@ def compute_calinski_harabasz_wrapped(X: np.ndarray, labels: np.ndarray) -> Tupl
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: e12_compute_calinski_harabasz")
-    kwargs = {'X': X, 'labels': labels}
+    kwargs = {"X": X, "labels": labels}
     try:
         result = compute_calinski_harabasz(**kwargs)
     except Exception as exc:
@@ -204,7 +206,7 @@ def cluster_sizes_wrapped(labels: Sequence[int]) -> Tuple[str, dict]:
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: e12_cluster_sizes")
-    kwargs = {'labels': labels}
+    kwargs = {"labels": labels}
     try:
         result = cluster_sizes(**kwargs)
     except Exception as exc:
@@ -224,7 +226,9 @@ def cluster_sizes_wrapped(labels: Sequence[int]) -> Tuple[str, dict]:
 
 
 @tool(response_format="content_and_artifact")
-def profile_clusters_wrapped(X: np.ndarray, labels: Sequence[int], feature_names: Optional[Sequence[str]]) -> Tuple[str, dict]:
+def profile_clusters_wrapped(
+    X: np.ndarray, labels: Sequence[int], feature_names: Optional[Sequence[str]]
+) -> Tuple[str, dict]:
     """Tool wrapper for ``profile_clusters``.
 
     Per-cluster mean / std / min / max for each feature.
@@ -232,7 +236,7 @@ def profile_clusters_wrapped(X: np.ndarray, labels: Sequence[int], feature_names
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: e12_profile_clusters")
-    kwargs = {'X': X, 'labels': labels, 'feature_names': feature_names}
+    kwargs = {"X": X, "labels": labels, "feature_names": feature_names}
     try:
         result = profile_clusters(**kwargs)
     except Exception as exc:
@@ -260,7 +264,7 @@ def build_naming_seeds_wrapped(profiles: Sequence[Mapping[str, Any]]) -> Tuple[s
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: e12_build_naming_seeds")
-    kwargs = {'profiles': profiles}
+    kwargs = {"profiles": profiles}
     try:
         result = build_naming_seeds(**kwargs)
     except Exception as exc:
@@ -280,7 +284,9 @@ def build_naming_seeds_wrapped(profiles: Sequence[Mapping[str, Any]]) -> Tuple[s
 
 
 @tool(response_format="content_and_artifact")
-def segmentation_template_wrapped(profiles: Sequence[Mapping[str, Any]], naming_seeds: Sequence[Mapping[str, Any]]) -> Tuple[str, dict]:
+def segmentation_template_wrapped(
+    profiles: Sequence[Mapping[str, Any]], naming_seeds: Sequence[Mapping[str, Any]]
+) -> Tuple[str, dict]:
     """Tool wrapper for ``segmentation_template``.
 
     Build a marketing-segment-style template: each cluster becomes
@@ -288,7 +294,7 @@ def segmentation_template_wrapped(profiles: Sequence[Mapping[str, Any]], naming_
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: e12_segmentation_template")
-    kwargs = {'profiles': profiles, 'naming_seeds': naming_seeds}
+    kwargs = {"profiles": profiles, "naming_seeds": naming_seeds}
     try:
         result = segmentation_template(**kwargs)
     except Exception as exc:
@@ -316,7 +322,7 @@ def run_clustering_wrapped(X: Any) -> Tuple[str, dict]:
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: e12_run_clustering")
-    kwargs = {'X': X}
+    kwargs = {"X": X}
     try:
         result = run_clustering(**kwargs)
     except Exception as exc:
@@ -344,7 +350,7 @@ def result_payload_wrapped(r: ClusteringResult) -> Tuple[str, dict]:
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: e12_result_payload")
-    kwargs = {'r': r}
+    kwargs = {"r": r}
     try:
         result = result_payload(**kwargs)
     except Exception as exc:
@@ -421,7 +427,12 @@ def make_clustering_agent(
     def run_react_agent(state: GraphState):
         logger.info("    * RUN REACT AGENT FOR E12")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
-        messages = [("system", "You are the E12 agent. Use the available tools to complete the user's request.")] + list(base)
+        messages = [
+            (
+                "system",
+                "You are the E12 agent. Use the available tools to complete the user's request.",
+            )
+        ] + list(base)
         input_payload = {"messages": messages}
         return react_agent.invoke(input_payload, invoke_react_agent_kwargs)
 
@@ -440,7 +451,9 @@ def make_clustering_agent(
             last_ai = AIMessage(content=getattr(internal[-1], "content", ""), name=AGENT_NAME)
         tool_calls = []
         for msg in internal:
-            name = getattr(getattr(msg, "tool_call_id", None), "name", None) or getattr(msg, "name", None)
+            name = getattr(getattr(msg, "tool_call_id", None), "name", None) or getattr(
+                msg, "name", None
+            )
             if name:
                 tool_calls.append(name)
         if log_tool_calls and tool_calls:
@@ -508,6 +521,7 @@ class ClusteringAgent(BaseAgent):
         if not self.response or "messages" not in self.response:
             return None
         from IPython.display import Markdown as _Markdown  # noqa: E402, F401
+
         for msg in reversed(self.response.get("messages", [])):
             content = getattr(msg, "content", "")
             if content:

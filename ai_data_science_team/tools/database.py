@@ -32,15 +32,24 @@ from ai_data_science_team.tool_registry import (  # noqa: E402, F401
     name="introspect_schema",
     description="Get database metadata including tables, columns, types, primary keys, and foreign keys.",
     parameters={
-        "connection": ToolParameter(type="object", description="SQLAlchemy connection or engine", required=True),
-        "n_samples": ToolParameter(type="integer", description="Number of sample values per column", required=False, default=10),
+        "connection": ToolParameter(
+            type="object", description="SQLAlchemy connection or engine", required=True
+        ),
+        "n_samples": ToolParameter(
+            type="integer",
+            description="Number of sample values per column",
+            required=False,
+            default=10,
+        ),
     },
     returns="Dict with database metadata",
     namespace="core.database",
     capabilities=["database", "schema", "introspection", "metadata"],
     cost_tier="medium",
 )
-def introspect_schema(connection: Union[sql.engine.base.Connection, sql.engine.base.Engine], n_samples: int = 10) -> dict:
+def introspect_schema(
+    connection: Union[sql.engine.base.Connection, sql.engine.base.Engine], n_samples: int = 10
+) -> dict:
     """Get database metadata including tables, columns, types, and relationships.
 
     Parameters
@@ -99,7 +108,9 @@ def introspect_schema(connection: Union[sql.engine.base.Connection, sql.engine.b
                     table_name_quoted = f"{preparer.quote_identifier(schema_name)}.{preparer.quote_identifier(table_name)}"
                     col_name_quoted = preparer.quote_identifier(col_name)
 
-                    query = build_sample_query(col_name_quoted, table_name_quoted, n_samples, dialect_name)
+                    query = build_sample_query(
+                        col_name_quoted, table_name_quoted, n_samples, dialect_name
+                    )
 
                     try:
                         df = pd.read_sql(query, conn)
@@ -107,11 +118,13 @@ def introspect_schema(connection: Union[sql.engine.base.Connection, sql.engine.b
                     except Exception as e:
                         samples = [f"Error retrieving data: {str(e)}"]
 
-                    table_info["columns"].append({
-                        "name": col_name,
-                        "type": col_type,
-                        "sample_values": samples,
-                    })
+                    table_info["columns"].append(
+                        {
+                            "name": col_name,
+                            "type": col_type,
+                            "sample_values": samples,
+                        }
+                    )
 
                 pk_constraint = inspector.get_pk_constraint(table_name, schema=schema_name)
                 table_info["primary_key"] = pk_constraint.get("constrained_columns", [])
@@ -144,10 +157,18 @@ def introspect_schema(connection: Union[sql.engine.base.Connection, sql.engine.b
     name="sample_table",
     description="Get sample rows from a database table.",
     parameters={
-        "connection": ToolParameter(type="object", description="SQLAlchemy connection or engine", required=True),
-        "table_name": ToolParameter(type="string", description="Table name to sample", required=True),
-        "schema": ToolParameter(type="string", description="Schema name (if applicable)", required=False),
-        "n_rows": ToolParameter(type="integer", description="Number of rows to sample", required=False, default=100),
+        "connection": ToolParameter(
+            type="object", description="SQLAlchemy connection or engine", required=True
+        ),
+        "table_name": ToolParameter(
+            type="string", description="Table name to sample", required=True
+        ),
+        "schema": ToolParameter(
+            type="string", description="Schema name (if applicable)", required=False
+        ),
+        "n_rows": ToolParameter(
+            type="integer", description="Number of rows to sample", required=False, default=100
+        ),
     },
     returns="DataFrame as dict",
     namespace="core.database",
@@ -188,7 +209,9 @@ def sample_table(
         preparer = inspector.bind.dialect.identifier_preparer
 
         if schema:
-            full_table = f"{preparer.quote_identifier(schema)}.{preparer.quote_identifier(table_name)}"
+            full_table = (
+                f"{preparer.quote_identifier(schema)}.{preparer.quote_identifier(table_name)}"
+            )
         else:
             full_table = preparer.quote_identifier(table_name)
 
@@ -213,7 +236,9 @@ def sample_table(
     name="execute_sql",
     description="Execute a SQL query and return results as a DataFrame.",
     parameters={
-        "connection": ToolParameter(type="object", description="SQLAlchemy connection or engine", required=True),
+        "connection": ToolParameter(
+            type="object", description="SQLAlchemy connection or engine", required=True
+        ),
         "query": ToolParameter(type="string", description="SQL query to execute", required=True),
     },
     returns="DataFrame as dict",
@@ -255,9 +280,15 @@ def execute_sql(
     description="Check if a SQL query contains destructive operations (INSERT, UPDATE, DELETE, DROP, etc.).",
     parameters={
         "query": ToolParameter(type="string", description="SQL query to validate", required=True),
-        "allow_insert": ToolParameter(type="boolean", description="Allow INSERT statements", required=False, default=False),
-        "allow_update": ToolParameter(type="boolean", description="Allow UPDATE statements", required=False, default=False),
-        "allow_delete": ToolParameter(type="boolean", description="Allow DELETE statements", required=False, default=False),
+        "allow_insert": ToolParameter(
+            type="boolean", description="Allow INSERT statements", required=False, default=False
+        ),
+        "allow_update": ToolParameter(
+            type="boolean", description="Allow UPDATE statements", required=False, default=False
+        ),
+        "allow_delete": ToolParameter(
+            type="boolean", description="Allow DELETE statements", required=False, default=False
+        ),
     },
     returns="Dict with is_safe boolean and reason string",
     namespace="core.database",
@@ -317,7 +348,9 @@ def validate_sql_safety(
     return {"is_safe": True, "reason": "Query is safe"}
 
 
-def build_sample_query(col_name_quoted: str, table_name_quoted: str, n: int, dialect_name: str) -> str:
+def build_sample_query(
+    col_name_quoted: str, table_name_quoted: str, n: int, dialect_name: str
+) -> str:
     """Build a dialect-specific sample query.
 
     Parameters

@@ -9,11 +9,9 @@ Atlamak icin:
 """
 
 import pytest
-
 from _llm import make_chat_model, skip_no_key
 
 pytestmark = pytest.mark.integration
-
 
 
 langchain_openai = pytest.importorskip(
@@ -65,13 +63,16 @@ def llm():
 def test_results_synthesizer_basic(llm):
     """ResultsSynthesizerAgent should return a non-empty AI message."""
     from ai_data_science_team.agents.strategic_agents import ResultsSynthesizerAgent
+
     agent = ResultsSynthesizerAgent(model=llm)
-    _inv(agent,
-         user_instructions=(
-             "Merge the clustering and forecasting results, extract key metrics, "
-             "and rank the top 3 findings by business impact."
-         ),
-         prior_artifacts=_UPSTREAM)
+    _inv(
+        agent,
+        user_instructions=(
+            "Merge the clustering and forecasting results, extract key metrics, "
+            "and rank the top 3 findings by business impact."
+        ),
+        prior_artifacts=_UPSTREAM,
+    )
     msg = agent.get_ai_message()
     assert isinstance(msg, str) and len(msg) > 0
 
@@ -80,12 +81,15 @@ def test_results_synthesizer_basic(llm):
 def test_results_synthesizer_artifacts(llm):
     """ResultsSynthesizerAgent should populate artifacts dict."""
     from ai_data_science_team.agents.strategic_agents import ResultsSynthesizerAgent
+
     agent = ResultsSynthesizerAgent(model=llm)
-    _inv(agent,
-         user_instructions=(
-             "Extract key metrics and compare them against baseline: rmse=180, silhouette=0.55."
-         ),
-         prior_artifacts=_UPSTREAM)
+    _inv(
+        agent,
+        user_instructions=(
+            "Extract key metrics and compare them against baseline: rmse=180, silhouette=0.55."
+        ),
+        prior_artifacts=_UPSTREAM,
+    )
     assert isinstance(agent.get_artifacts(), dict)
 
 
@@ -93,10 +97,13 @@ def test_results_synthesizer_artifacts(llm):
 def test_results_synthesizer_tool_calls(llm):
     """ResultsSynthesizerAgent should invoke at least one synthesis tool."""
     from ai_data_science_team.agents.strategic_agents import ResultsSynthesizerAgent
+
     agent = ResultsSynthesizerAgent(model=llm)
-    _inv(agent,
-         user_instructions="Rank the findings from the downstream agents by potential revenue impact.",
-         prior_artifacts=_UPSTREAM)
+    _inv(
+        agent,
+        user_instructions="Rank the findings from the downstream agents by potential revenue impact.",
+        prior_artifacts=_UPSTREAM,
+    )
     tool_calls = agent.get_tool_calls()
     assert isinstance(tool_calls, list) and len(tool_calls) > 0
 
@@ -110,13 +117,16 @@ def test_results_synthesizer_tool_calls(llm):
 def test_contextual_knowledge_agent_basic(llm):
     """ContextualKnowledgeAgent should return a non-empty AI message."""
     from ai_data_science_team.agents.strategic_agents import ContextualKnowledgeAgent
+
     agent = ContextualKnowledgeAgent(model=llm)
-    _inv(agent,
-         user_instructions=(
-             "Build a context profile for the following business and "
-             "generate two clarifying questions for the stakeholder."
-         ),
-         prior_artifacts={"business_context": _BIZ})
+    _inv(
+        agent,
+        user_instructions=(
+            "Build a context profile for the following business and "
+            "generate two clarifying questions for the stakeholder."
+        ),
+        prior_artifacts={"business_context": _BIZ},
+    )
     msg = agent.get_ai_message()
     assert isinstance(msg, str) and len(msg) > 0
 
@@ -125,10 +135,9 @@ def test_contextual_knowledge_agent_basic(llm):
 def test_contextual_knowledge_agent_tool_calls(llm):
     """ContextualKnowledgeAgent should invoke at least one knowledge tool."""
     from ai_data_science_team.agents.strategic_agents import ContextualKnowledgeAgent
+
     agent = ContextualKnowledgeAgent(model=llm)
-    _inv(agent,
-         user_instructions="Extract business entities from: " + _BIZ,
-         prior_artifacts={})
+    _inv(agent, user_instructions="Extract business entities from: " + _BIZ, prior_artifacts={})
     assert isinstance(agent.get_tool_calls(), list) and len(agent.get_tool_calls()) > 0
 
 
@@ -141,13 +150,16 @@ def test_contextual_knowledge_agent_tool_calls(llm):
 def test_narrative_agent_executive_summary(llm):
     """NarrativeAgent should produce an executive summary."""
     from ai_data_science_team.agents.strategic_agents import NarrativeAgent
+
     agent = NarrativeAgent(model=llm)
-    _inv(agent,
-         user_instructions=(
-             "Generate a concise executive summary (max 3 sentences) "
-             "based on the clustering and forecasting findings."
-         ),
-         prior_artifacts=_UPSTREAM)
+    _inv(
+        agent,
+        user_instructions=(
+            "Generate a concise executive summary (max 3 sentences) "
+            "based on the clustering and forecasting findings."
+        ),
+        prior_artifacts=_UPSTREAM,
+    )
     msg = agent.get_ai_message()
     assert isinstance(msg, str) and len(msg) > 0
 
@@ -156,10 +168,13 @@ def test_narrative_agent_executive_summary(llm):
 def test_narrative_agent_tool_calls(llm):
     """NarrativeAgent should invoke at least one narrative tool."""
     from ai_data_science_team.agents.strategic_agents import NarrativeAgent
+
     agent = NarrativeAgent(model=llm)
-    _inv(agent,
-         user_instructions="Format a one-page strategic report from the provided agent results.",
-         prior_artifacts=_UPSTREAM)
+    _inv(
+        agent,
+        user_instructions="Format a one-page strategic report from the provided agent results.",
+        prior_artifacts=_UPSTREAM,
+    )
     assert isinstance(agent.get_tool_calls(), list) and len(agent.get_tool_calls()) > 0
 
 
@@ -172,13 +187,16 @@ def test_narrative_agent_tool_calls(llm):
 def test_recommendation_agent_basic(llm):
     """RecommendationAgent should return a non-empty AI message with recommendations."""
     from ai_data_science_team.agents.strategic_agents import RecommendationAgent
+
     agent = RecommendationAgent(model=llm)
-    _inv(agent,
-         user_instructions=(
-             "Generate 3 prioritised actionable recommendations to improve "
-             "revenue forecasting accuracy and customer segmentation quality."
-         ),
-         prior_artifacts=_UPSTREAM)
+    _inv(
+        agent,
+        user_instructions=(
+            "Generate 3 prioritised actionable recommendations to improve "
+            "revenue forecasting accuracy and customer segmentation quality."
+        ),
+        prior_artifacts=_UPSTREAM,
+    )
     msg = agent.get_ai_message()
     assert isinstance(msg, str) and len(msg) > 0
 
@@ -187,15 +205,18 @@ def test_recommendation_agent_basic(llm):
 def test_recommendation_agent_artifacts(llm):
     """RecommendationAgent should return a dict from get_artifacts()."""
     from ai_data_science_team.agents.strategic_agents import RecommendationAgent
+
     agent = RecommendationAgent(model=llm)
-    _inv(agent,
-         user_instructions=(
-             "Prioritise these three actions using ICE scoring: "
-             "1) Retrain forecast model weekly. "
-             "2) Add customer LTV feature. "
-             "3) Deploy A/B test for personalization."
-         ),
-         prior_artifacts=_UPSTREAM)
+    _inv(
+        agent,
+        user_instructions=(
+            "Prioritise these three actions using ICE scoring: "
+            "1) Retrain forecast model weekly. "
+            "2) Add customer LTV feature. "
+            "3) Deploy A/B test for personalization."
+        ),
+        prior_artifacts=_UPSTREAM,
+    )
     assert isinstance(agent.get_artifacts(), dict)
 
 
@@ -203,11 +224,14 @@ def test_recommendation_agent_artifacts(llm):
 def test_recommendation_agent_tool_calls(llm):
     """RecommendationAgent should invoke at least one recommendation tool."""
     from ai_data_science_team.agents.strategic_agents import RecommendationAgent
+
     agent = RecommendationAgent(model=llm)
-    _inv(agent,
-         user_instructions=(
-             "Design an A/B test to validate whether weekly model retraining "
-             "significantly reduces RMSE compared to monthly retraining."
-         ),
-         prior_artifacts=_UPSTREAM)
+    _inv(
+        agent,
+        user_instructions=(
+            "Design an A/B test to validate whether weekly model retraining "
+            "significantly reduces RMSE compared to monthly retraining."
+        ),
+        prior_artifacts=_UPSTREAM,
+    )
     assert isinstance(agent.get_tool_calls(), list) and len(agent.get_tool_calls()) > 0

@@ -10,13 +10,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 
 @dataclass
 class ApprovalRequest:
     """Represents an approval request in a HITL workflow.
-    
+
     Attributes
     ----------
     id : str
@@ -56,27 +56,27 @@ class ApprovalRequest:
     escalation_level : int
         Current escalation level (0 = initial, 1+ = escalated).
     """
-    
+
     id: str
     workflow_run_id: str
     step_id: str
     agent_name: str
     title: str
     content: str
-    context: Dict[str, Any] = field(default_factory=dict)
+    context: dict[str, Any] = field(default_factory=dict)
     urgency: str = "medium"
     sla_timeout: str = "8h"
-    escalation_path: List[str] = field(default_factory=lambda: ["backup"])
+    escalation_path: list[str] = field(default_factory=lambda: ["backup"])
     created_at: datetime = field(default_factory=datetime.utcnow)
-    expires_at: Optional[datetime] = None
+    expires_at: datetime | None = None
     status: str = "pending"
-    reviewer_id: Optional[str] = None
-    decision_at: Optional[datetime] = None
-    decision: Optional[str] = None
-    notes: Optional[str] = None
+    reviewer_id: str | None = None
+    decision_at: datetime | None = None
+    decision: str | None = None
+    notes: str | None = None
     escalation_level: int = 0
-    
-    def to_dict(self) -> Dict[str, Any]:
+
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization."""
         return {
             "id": self.id,
@@ -98,9 +98,9 @@ class ApprovalRequest:
             "notes": self.notes,
             "escalation_level": self.escalation_level,
         }
-    
+
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "ApprovalRequest":
+    def from_dict(cls, data: dict[str, Any]) -> ApprovalRequest:
         """Create from dictionary."""
         return cls(
             id=data["id"],
@@ -113,11 +113,17 @@ class ApprovalRequest:
             urgency=data.get("urgency", "medium"),
             sla_timeout=data.get("sla_timeout", "8h"),
             escalation_path=data.get("escalation_path", ["backup"]),
-            created_at=datetime.fromisoformat(data["created_at"]) if data.get("created_at") else datetime.utcnow(),
-            expires_at=datetime.fromisoformat(data["expires_at"]) if data.get("expires_at") else None,
+            created_at=datetime.fromisoformat(data["created_at"])
+            if data.get("created_at")
+            else datetime.utcnow(),
+            expires_at=datetime.fromisoformat(data["expires_at"])
+            if data.get("expires_at")
+            else None,
             status=data.get("status", "pending"),
             reviewer_id=data.get("reviewer_id"),
-            decision_at=datetime.fromisoformat(data["decision_at"]) if data.get("decision_at") else None,
+            decision_at=datetime.fromisoformat(data["decision_at"])
+            if data.get("decision_at")
+            else None,
             decision=data.get("decision"),
             notes=data.get("notes"),
             escalation_level=data.get("escalation_level", 0),
@@ -127,7 +133,7 @@ class ApprovalRequest:
 @dataclass
 class SLAConfig:
     """SLA configuration for approval requests.
-    
+
     Attributes
     ----------
     urgency : str
@@ -137,20 +143,20 @@ class SLAConfig:
     escalation_path : List[str]
         List of escalation targets.
     """
-    
+
     urgency: str
     timeout: str
-    escalation_path: List[str]
-    
+    escalation_path: list[str]
+
     @classmethod
-    def from_urgency(cls, urgency: str) -> "SLAConfig":
+    def from_urgency(cls, urgency: str) -> SLAConfig:
         """Create SLA config from urgency level.
-        
+
         Parameters
         ----------
         urgency : str
             Priority level: "high", "medium", or "low".
-        
+
         Returns
         -------
         SLAConfig
@@ -174,10 +180,10 @@ class SLAConfig:
             ),
         }
         return configs.get(urgency, configs["medium"])
-    
+
     def to_timeout_seconds(self) -> int:
         """Convert timeout string to seconds.
-        
+
         Returns
         -------
         int
@@ -188,19 +194,19 @@ class SLAConfig:
             "m": 60,
             "d": 86400,
         }
-        
+
         for unit, multiplier in unit_multipliers.items():
             if self.timeout.endswith(unit):
                 value = int(self.timeout[:-1])
                 return value * multiplier
-        
+
         return int(self.timeout)
 
 
 @dataclass
 class ApprovalResponse:
     """Response to an approval request.
-    
+
     Attributes
     ----------
     approval_id : str
@@ -216,15 +222,15 @@ class ApprovalResponse:
     reviewer_id : str
         ID of the reviewer.
     """
-    
+
     approval_id: str
     decision: str
-    notes: Optional[str] = None
-    modified_data: Optional[Dict[str, Any]] = None
+    notes: str | None = None
+    modified_data: dict[str, Any] | None = None
     reviewed_at: datetime = field(default_factory=datetime.utcnow)
     reviewer_id: str = ""
-    
-    def to_dict(self) -> Dict[str, Any]:
+
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization."""
         return {
             "approval_id": self.approval_id,

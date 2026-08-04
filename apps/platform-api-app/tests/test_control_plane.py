@@ -14,8 +14,8 @@ from platform_api.control_plane.catalog import catalog_resource_keys, get_non_qu
 from platform_api.control_plane.query import build_context_for_chat_session, chat_platform_reply
 from platform_api.db.models import (
     AgentExecutionTrace,
-    AuditLog,
     Artifact,
+    AuditLog,
     DataSource,
     TenantMembership,
     TenantRole,
@@ -54,7 +54,9 @@ def _seed_workflow_and_run(seeded_db):
         name="Revenue Pipeline",
         version=1,
         status="published",
-        spec_json=json.dumps({"name": "Revenue Pipeline", "steps": [{"id": "s1", "tool": "data_clean"}]}),
+        spec_json=json.dumps(
+            {"name": "Revenue Pipeline", "steps": [{"id": "s1", "tool": "data_clean"}]}
+        ),
         created_by_user_id=user.id,
     )
     db.add(workflow)
@@ -89,14 +91,9 @@ def test_catalog_covers_core_platform_surfaces() -> None:
 
 
 def test_control_plane_package_does_not_depend_on_dsml_agent_registry() -> None:
-    import platform_api.control_plane.actions as actions
-    import platform_api.control_plane.catalog as catalog
-    import platform_api.control_plane.query as query
+    from platform_api.control_plane import actions, catalog, query
 
-    combined = "\n".join(
-        inspect.getsource(module)
-        for module in [actions, catalog, query]
-    )
+    combined = "\n".join(inspect.getsource(module) for module in [actions, catalog, query])
 
     assert "ai_data_science_team" not in combined
     assert "ToolRegistry" not in combined
@@ -133,8 +130,14 @@ def test_query_returns_workflow_run_and_redacted_data_source(seeded_db):
     assert response.status_code == 200
     body = response.json()
     assert body["type"] == "platform_query_result"
-    assert {section["resource_key"] for section in body["sections"]} == {"workflows", "runs", "data_sources"}
-    ds_section = next(section for section in body["sections"] if section["resource_key"] == "data_sources")
+    assert {section["resource_key"] for section in body["sections"]} == {
+        "workflows",
+        "runs",
+        "data_sources",
+    }
+    ds_section = next(
+        section for section in body["sections"] if section["resource_key"] == "data_sources"
+    )
     serialized_records = json.dumps(ds_section["records"])
     assert "secret_ref" not in serialized_records
     assert "ds-secret" not in serialized_records
@@ -241,14 +244,18 @@ def test_query_returns_expanded_scheduler_modelops_lineage_and_docs(seeded_db):
     assert sections["workflow.schedules"]["status"] == "ok"
     assert sections["workflow.schedules"]["records"][0]["cron"] == "0 8 * * 1-5"
     assert sections["artifacts"]["relationships"]
-    assert any(rel["relationship_type"] == "parent_of" for rel in sections["artifacts"]["relationships"])
+    assert any(
+        rel["relationship_type"] == "parent_of" for rel in sections["artifacts"]["relationships"]
+    )
     assert sections["modelops"]["status"] == "ok"
     assert sections["modelops"]["metrics"]["registered_models"] == 1
     assert sections["modelops"]["metrics"]["monitor_snapshots"] == 1
     assert sections["modelops"]["records"][0]["monitoring_status"] == "linked"
     docs = sections["release.docs"]
     assert docs["metrics"]["existing_documents"] >= 1
-    assert any(record["path"] == "docs/universal-platform-control-plane.md" for record in docs["records"])
+    assert any(
+        record["path"] == "docs/universal-platform-control-plane.md" for record in docs["records"]
+    )
 
 
 def test_finops_query_requires_tenant_admin_and_returns_safe_summary(seeded_db):

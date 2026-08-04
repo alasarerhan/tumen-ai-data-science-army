@@ -10,6 +10,7 @@ Tests cover:
   - DLQ replay
   - Queue statistics
 """
+
 from __future__ import annotations
 
 import json
@@ -206,7 +207,9 @@ class TestRecoverStuckEvents:
             event_type="test.event",
         )
         stuck_event.status = OutboxEventStatus.processing
-        stuck_event.created_at = datetime.now(UTC) - timedelta(seconds=STUCK_PROCESSING_THRESHOLD_SECONDS + 60)
+        stuck_event.created_at = datetime.now(UTC) - timedelta(
+            seconds=STUCK_PROCESSING_THRESHOLD_SECONDS + 60
+        )
         db.commit()
 
         recovered = service.recover_stuck_events()
@@ -283,7 +286,7 @@ class TestMarkFailed:
         assert event.status == OutboxEventStatus.pending
         assert event.retry_count == 1
         assert event.next_retry_at is not None
-        expected_backoff = 1 * (2 ** 1)
+        expected_backoff = 1 * (2**1)
         actual_backoff = (event.next_retry_at - datetime.now(UTC)).total_seconds()
         assert abs(actual_backoff - expected_backoff) < 2
 
@@ -467,7 +470,9 @@ class TestProcessPendingEvents:
         assert event.status == OutboxEventStatus.published
 
     @pytest.mark.asyncio
-    async def test_process_pending_events_publisher_failure_retries(self, seeded_db: dict, monkeypatch) -> None:
+    async def test_process_pending_events_publisher_failure_retries(
+        self, seeded_db: dict, monkeypatch
+    ) -> None:
         db = seeded_db["db"]
         service = OutboxService(db)
 
@@ -489,7 +494,9 @@ class TestProcessPendingEvents:
         assert event.retry_count == 1
 
     @pytest.mark.asyncio
-    async def test_process_pending_events_moves_to_dlq_after_max_retries(self, seeded_db: dict) -> None:
+    async def test_process_pending_events_moves_to_dlq_after_max_retries(
+        self, seeded_db: dict
+    ) -> None:
         db = seeded_db["db"]
         service = OutboxService(db)
 

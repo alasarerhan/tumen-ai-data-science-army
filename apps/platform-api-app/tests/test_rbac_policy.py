@@ -5,6 +5,7 @@ Covers:
   - require_workspace_member: grants member/admin/owner, denies non-member
   - require_workspace_admin: grants admin/owner, denies member, denies non-member
 """
+
 from __future__ import annotations
 
 import uuid
@@ -202,16 +203,18 @@ async def test_require_workspace_admin_denies_member():
     u = _make_user()
     membership = _make_membership(WorkspaceRole.member)  # member, not admin
 
-    with patch(
-        "platform_api.authz.dependencies._get_workspace_and_membership",
-        return_value={"user": u, "workspace": ws, "membership": membership},
+    with (
+        patch(
+            "platform_api.authz.dependencies._get_workspace_and_membership",
+            return_value={"user": u, "workspace": ws, "membership": membership},
+        ),
+        pytest.raises(HTTPException) as exc_info,
     ):
-        with pytest.raises(HTTPException) as exc_info:
-            await require_workspace_admin(
-                workspace_id=str(ws.id),
-                principal=MagicMock(),
-                db=MagicMock(),
-            )
+        await require_workspace_admin(
+            workspace_id=str(ws.id),
+            principal=MagicMock(),
+            db=MagicMock(),
+        )
 
     assert exc_info.value.status_code == 403
     assert "admin" in exc_info.value.detail.lower()
@@ -223,15 +226,17 @@ async def test_require_workspace_admin_raises_if_no_membership():
 
     ws = _make_workspace()
 
-    with patch(
-        "platform_api.authz.dependencies._get_workspace_and_membership",
-        side_effect=HTTPException(status_code=403, detail="Workspace membership required"),
+    with (
+        patch(
+            "platform_api.authz.dependencies._get_workspace_and_membership",
+            side_effect=HTTPException(status_code=403, detail="Workspace membership required"),
+        ),
+        pytest.raises(HTTPException) as exc_info,
     ):
-        with pytest.raises(HTTPException) as exc_info:
-            await require_workspace_admin(
-                workspace_id=str(ws.id),
-                principal=MagicMock(),
-                db=MagicMock(),
-            )
+        await require_workspace_admin(
+            workspace_id=str(ws.id),
+            principal=MagicMock(),
+            db=MagicMock(),
+        )
 
     assert exc_info.value.status_code == 403

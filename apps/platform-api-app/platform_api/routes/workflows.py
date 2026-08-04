@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-from typing import Optional
 
 from fastapi import APIRouter, Depends, Header, Query
 from pydantic import BaseModel
@@ -13,9 +12,13 @@ from platform_api.authz.dependencies import require_workspace_admin, require_wor
 from platform_api.core.etag import compute_etag, validate_etag
 from platform_api.core.service_errors import ValidationError
 from platform_api.db.session import get_db
-from platform_api.schemas.pagination import build_paginated_response, MAX_PAGE_SIZE
+from platform_api.schemas.pagination import MAX_PAGE_SIZE, build_paginated_response
 from platform_api.schemas.workflows import CreateWorkflowSpecRequest
 from platform_api.services.identity_service import get_or_create_user
+from platform_api.services.workflow_chain_validator import (
+    get_workflow_agent_catalog,
+    get_workflow_chain_ruleset,
+)
 from platform_api.services.workflow_service import (
     archive_workflow_spec,
     build_workflow_validation_summary,
@@ -24,10 +27,6 @@ from platform_api.services.workflow_service import (
     get_workflow_spec_for_workspace,
     list_workflow_specs,
     publish_workflow_spec,
-)
-from platform_api.services.workflow_chain_validator import (
-    get_workflow_agent_catalog,
-    get_workflow_chain_ruleset,
 )
 
 router = APIRouter(prefix="/v1/workflows", tags=["workflows"])
@@ -87,7 +86,7 @@ async def create_workflow_spec(
 async def get_workflow_specs(
     name: str | None = None,
     status: str | None = None,
-    cursor: Optional[str] = Query(default=None, description="Pagination cursor (workflow ID)"),
+    cursor: str | None = Query(default=None, description="Pagination cursor (workflow ID)"),
     limit: int = Query(default=20, ge=1, le=MAX_PAGE_SIZE, description="Items per page"),
     context: dict = Depends(require_workspace_member),
     db: Session = Depends(get_db),
@@ -223,7 +222,7 @@ async def archive_workflow(
 
 class CreateScheduleRequest(BaseModel):
     cron: str
-    timezone: Optional[str] = "UTC"
+    timezone: str | None = "UTC"
 
 
 @router.post("/{workflow_id}/schedule")
@@ -347,7 +346,7 @@ async def resume_schedule(
 @router.post("/{workflow_id}/trigger")
 async def trigger_workflow(
     workflow_id: str,
-    body: Optional[dict] = None,
+    body: dict | None = None,
     context: dict = Depends(require_workspace_member),
     db: Session = Depends(get_db),
 ) -> dict:

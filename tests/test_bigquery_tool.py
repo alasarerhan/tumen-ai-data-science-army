@@ -22,7 +22,8 @@ class TestBuild:
         with pytest.raises(ValueError):
             h2.build_bigquery_connector(
                 h2.ConnectorConfig(
-                    name="x", kind="bigquery",
+                    name="x",
+                    kind="bigquery",
                     params={"dataset": "d", "credentials_path": "/p"},
                 )
             )
@@ -69,7 +70,6 @@ class TestBehaviors:
 
     def test_query_cost_estimate(self):
         c = h2.build_bigquery_connector(_cfg())
-        e = c.query_cost_estimate("SELECT 1", bytes_processed=1024 ** 4)
+        e = c.query_cost_estimate("SELECT 1", bytes_processed=1024**4)
         # 1 TB → $5.
         assert e["estimated_cost_usd"] == 5.0
-

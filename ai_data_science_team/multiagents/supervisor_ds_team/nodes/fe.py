@@ -16,7 +16,8 @@ from langchain_core.messages import AIMessage  # noqa: E402, F401
 from ai_data_science_team.multiagents.supervisor import (  # noqa: E402, F401
     SupervisorDSState,
     append_agent_feedback,
-    register_python_transform_dataset)
+    register_python_transform_dataset,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -24,6 +25,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class FeNodeDeps:
     """Dependencies for the fe node."""
+
     feature_engineering_agent: Any
     ensure_dataset_registry: Any  # was _ensure_dataset_registry
     ensure_df: Any  # was _ensure_df
@@ -58,14 +60,16 @@ def make_node_fe(deps: FeNodeDeps) -> Callable[[SupervisorDSState], dict]:
                     "data_sql",
                     "data_raw",
                     "feature_data",
-                ])
+                ],
+            )
         )
         if deps.is_empty_df(active_df):
             return {
                 "messages": [
                     AIMessage(
                         content="No dataset is available for feature engineering. Load a file (or run a SQL query) first.",
-                        name="feature_engineering_agent")
+                        name="feature_engineering_agent",
+                    )
                 ],
                 "last_worker": "Feature_Engineering_Agent",
             }
@@ -73,12 +77,11 @@ def make_node_fe(deps: FeNodeDeps) -> Callable[[SupervisorDSState], dict]:
             messages=before_msgs,
             user_instructions=last_human,
             data_raw=active_df,
-            target_variable=state.get("target_variable"))
+            target_variable=state.get("target_variable"),
+        )
         response = deps.feature_engineering_agent.response or {}
         merged = deps.merge_messages(before_msgs, response)
-        merged["messages"] = deps.tag_messages(
-            merged.get("messages"), "feature_engineering_agent"
-        )
+        merged["messages"] = deps.tag_messages(merged.get("messages"), "feature_engineering_agent")
         append_agent_feedback(
             merged,
             agent_name="feature_engineering_agent",
@@ -88,7 +91,8 @@ def make_node_fe(deps: FeNodeDeps) -> Callable[[SupervisorDSState], dict]:
             extra_text="Feature engineering completed.",
             error_text=response.get("feature_engineer_error"),
             error_log_path=response.get("feature_engineer_error_log_path"),
-            error_prefix="Feature engineering error")
+            error_prefix="Feature engineering error",
+        )
         feature_data = response.get("data_engineered")
         if feature_data is not None:
             try:
@@ -106,7 +110,8 @@ def make_node_fe(deps: FeNodeDeps) -> Callable[[SupervisorDSState], dict]:
                     parent_id=active_dataset_id,
                     error_text=response.get("feature_engineer_error"),
                     error_log_path=response.get("feature_engineer_error_log_path"),
-                    summary=response.get("feature_engineering_summary"))
+                    summary=response.get("feature_engineering_summary"),
+                )
             except Exception:
                 pass
         downstream_resets = (
@@ -131,9 +136,7 @@ def make_node_fe(deps: FeNodeDeps) -> Callable[[SupervisorDSState], dict]:
                 **state.get("artifacts", {}),
                 "feature_engineering": response,
                 "feature_engineering_details": {
-                    "feature_engineer_function": response.get(
-                        "feature_engineer_function"
-                    ),
+                    "feature_engineer_function": response.get("feature_engineer_function"),
                     "feature_engineer_function_path": response.get(
                         "feature_engineer_function_path"
                     ),
@@ -144,9 +147,7 @@ def make_node_fe(deps: FeNodeDeps) -> Callable[[SupervisorDSState], dict]:
                     "feature_engineer_error_log_path": response.get(
                         "feature_engineer_error_log_path"
                     ),
-                    "feature_engineering_summary": response.get(
-                        "feature_engineering_summary"
-                    ),
+                    "feature_engineering_summary": response.get("feature_engineering_summary"),
                     "recommended_steps": response.get("recommended_steps"),
                 },
             },
@@ -154,9 +155,7 @@ def make_node_fe(deps: FeNodeDeps) -> Callable[[SupervisorDSState], dict]:
             **downstream_resets,
         }
 
-
     return node_fe
-
 
 
 __all__ = ["FeNodeDeps", "make_node_fe"]

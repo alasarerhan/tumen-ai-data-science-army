@@ -12,9 +12,13 @@ PowerAnalysisAgent.
 Node type: ``model.balance``
 """
 
-from typing import (Dict, Optional, Tuple)  # noqa: E402
 import logging  # noqa: E402, F401
-from typing import Any  # noqa: E402, F401
+from typing import (  # noqa: E402
+    Any,  # noqa: E402, F401
+    Dict,
+    Optional,
+    Tuple,
+)
 
 from langchain.tools import tool  # noqa: E402, F401
 from langchain_core.messages import AIMessage, BaseMessage  # noqa: E402, F401
@@ -24,10 +28,6 @@ from langgraph.types import Checkpointer  # noqa: E402, F401
 from typing_extensions import Annotated, Sequence, TypedDict  # noqa: E402, F401
 
 from ai_data_science_team.templates import BaseAgent  # noqa: E402, F401
-from ai_data_science_team.utils.regex import format_agent_name  # noqa: E402, F401
-
-
-
 from ai_data_science_team.tools.balance import (  # noqa: E402, F401
     ClassDistribution,
     apply_strategy,
@@ -40,7 +40,7 @@ from ai_data_science_team.tools.balance import (  # noqa: E402, F401
     select_strategy,
     undersample_indices,
 )
-
+from ai_data_science_team.utils.regex import format_agent_name  # noqa: E402, F401
 
 logger = logging.getLogger(__name__)
 
@@ -52,6 +52,7 @@ NODE_TYPE = "model.balance"
 # Tool wrappers
 # ---------------------------------------------------------------------------
 
+
 @tool(response_format="content_and_artifact")
 def class_distribution_wrapped(y: Sequence[Any]) -> Tuple[str, dict]:
     """Tool wrapper for ``class_distribution``.
@@ -61,7 +62,7 @@ def class_distribution_wrapped(y: Sequence[Any]) -> Tuple[str, dict]:
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: d4_class_distribution")
-    kwargs = {'y': y}
+    kwargs = {"y": y}
     try:
         result = class_distribution(**kwargs)
     except Exception as exc:
@@ -89,7 +90,7 @@ def is_imbalanced_wrapped(dist: ClassDistribution) -> Tuple[str, dict]:
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: d4_is_imbalanced")
-    kwargs = {'dist': dist}
+    kwargs = {"dist": dist}
     try:
         result = is_imbalanced(**kwargs)
     except Exception as exc:
@@ -117,7 +118,7 @@ def select_strategy_wrapped(dist: ClassDistribution) -> Tuple[str, dict]:
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: d4_select_strategy")
-    kwargs = {'dist': dist}
+    kwargs = {"dist": dist}
     try:
         result = select_strategy(**kwargs)
     except Exception as exc:
@@ -145,7 +146,7 @@ def estimate_strategy_impact_wrapped(dist: ClassDistribution, strategy: str) -> 
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: d4_estimate_strategy_impact")
-    kwargs = {'dist': dist, 'strategy': strategy}
+    kwargs = {"dist": dist, "strategy": strategy}
     try:
         result = estimate_strategy_impact(**kwargs)
     except Exception as exc:
@@ -173,7 +174,7 @@ def recommend_metrics_wrapped(dist: ClassDistribution) -> Tuple[str, dict]:
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: d4_recommend_metrics")
-    kwargs = {'dist': dist}
+    kwargs = {"dist": dist}
     try:
         result = recommend_metrics(**kwargs)
     except Exception as exc:
@@ -201,7 +202,7 @@ def undersample_indices_wrapped(y: Sequence[Any]) -> Tuple[str, dict]:
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: d4_undersample_indices")
-    kwargs = {'y': y}
+    kwargs = {"y": y}
     try:
         result = undersample_indices(**kwargs)
     except Exception as exc:
@@ -229,7 +230,7 @@ def class_weight_wrapped(y: Sequence[Any]) -> Tuple[str, dict]:
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: d4_class_weight")
-    kwargs = {'y': y}
+    kwargs = {"y": y}
     try:
         result = class_weight(**kwargs)
     except Exception as exc:
@@ -257,7 +258,7 @@ def apply_strategy_wrapped(y: Sequence[Any], strategy: str) -> Tuple[str, dict]:
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: d4_apply_strategy")
-    kwargs = {'y': y, 'strategy': strategy}
+    kwargs = {"y": y, "strategy": strategy}
     try:
         result = apply_strategy(**kwargs)
     except Exception as exc:
@@ -285,7 +286,7 @@ def balance_payload_wrapped(dist: ClassDistribution) -> Tuple[str, dict]:
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: d4_balance_payload")
-    kwargs = {'dist': dist}
+    kwargs = {"dist": dist}
     try:
         result = balance_payload(**kwargs)
     except Exception as exc:
@@ -360,7 +361,12 @@ def make_balance_agent(
     def run_react_agent(state: GraphState):
         logger.info("    * RUN REACT AGENT FOR D4")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
-        messages = [("system", "You are the D4 agent. Use the available tools to complete the user's request.")] + list(base)
+        messages = [
+            (
+                "system",
+                "You are the D4 agent. Use the available tools to complete the user's request.",
+            )
+        ] + list(base)
         input_payload = {"messages": messages}
         return react_agent.invoke(input_payload, invoke_react_agent_kwargs)
 
@@ -379,7 +385,9 @@ def make_balance_agent(
             last_ai = AIMessage(content=getattr(internal[-1], "content", ""), name=AGENT_NAME)
         tool_calls = []
         for msg in internal:
-            name = getattr(getattr(msg, "tool_call_id", None), "name", None) or getattr(msg, "name", None)
+            name = getattr(getattr(msg, "tool_call_id", None), "name", None) or getattr(
+                msg, "name", None
+            )
             if name:
                 tool_calls.append(name)
         if log_tool_calls and tool_calls:
@@ -447,6 +455,7 @@ class DataBalancingAgent(BaseAgent):
         if not self.response or "messages" not in self.response:
             return None
         from IPython.display import Markdown as _Markdown  # noqa: E402, F401
+
         for msg in reversed(self.response.get("messages", [])):
             content = getattr(msg, "content", "")
             if content:

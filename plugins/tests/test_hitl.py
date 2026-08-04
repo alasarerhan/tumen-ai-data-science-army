@@ -3,10 +3,10 @@
 Tool tests call ``.func()`` directly (no LLM required).
 Agent construction tests use a deterministic FakeChatModel stub.
 """
+
 from __future__ import annotations
 
 import json
-
 
 # ===========================================================================
 # Helpers
@@ -25,9 +25,7 @@ def _fake_llm():
             return "fake"
 
         def _generate(self, messages, stop=None, _run_manager=None, **kw) -> ChatResult:
-            return ChatResult(
-                generations=[ChatGeneration(message=LCAIMessage(content="Done."))]
-            )
+            return ChatResult(generations=[ChatGeneration(message=LCAIMessage(content="Done."))])
 
         def bind_tools(self, tools, **kw):
             return self
@@ -38,6 +36,7 @@ def _fake_llm():
 def _reset_hitl_stores():
     """Reset module-level in-memory stores between tests."""
     import ai_data_science_team.tools.hitl as _h
+
     _h._reset_stores()
 
 
@@ -86,8 +85,8 @@ def test_create_request_has_request_id():
 
 def test_create_request_stores_in_memory():
     _reset_hitl_stores()
-    from ai_data_science_team.tools.hitl import create_approval_request
     import ai_data_science_team.tools.hitl as _h
+    from ai_data_science_team.tools.hitl import create_approval_request
 
     _, artifact = create_approval_request.func(
         step_name="model_training",
@@ -203,7 +202,14 @@ def test_format_notification_artifact_keys():
     _, artifact = format_approval_notification.func(
         request_json=_make_request_json(),
     )
-    for key in ("notification_markdown", "request_id", "channel", "urgency", "risk_level", "step_name"):
+    for key in (
+        "notification_markdown",
+        "request_id",
+        "channel",
+        "urgency",
+        "risk_level",
+        "step_name",
+    ):
         assert key in artifact
 
 
@@ -232,7 +238,7 @@ def test_format_notification_action_required_present():
 
 def test_check_status_pending():
     _reset_hitl_stores()
-    from ai_data_science_team.tools.hitl import create_approval_request, check_approval_status
+    from ai_data_science_team.tools.hitl import check_approval_status, create_approval_request
 
     _, req = create_approval_request.func(
         step_name="status_test", description="Check pending status"
@@ -253,7 +259,7 @@ def test_check_status_not_found():
 
 def test_check_status_artifact_keys():
     _reset_hitl_stores()
-    from ai_data_science_team.tools.hitl import create_approval_request, check_approval_status
+    from ai_data_science_team.tools.hitl import check_approval_status, create_approval_request
 
     _, req = create_approval_request.func(step_name="keys_test", description="Test keys")
     _, artifact = check_approval_status.func(request_id=req["request_id"])
@@ -263,7 +269,7 @@ def test_check_status_artifact_keys():
 
 def test_check_status_content_has_step_name():
     _reset_hitl_stores()
-    from ai_data_science_team.tools.hitl import create_approval_request, check_approval_status
+    from ai_data_science_team.tools.hitl import check_approval_status, create_approval_request
 
     _, req = create_approval_request.func(
         step_name="unique_step_xyz", description="For content test"
@@ -279,7 +285,11 @@ def test_check_status_content_has_step_name():
 
 def test_log_decision_approved():
     _reset_hitl_stores()
-    from ai_data_science_team.tools.hitl import create_approval_request, log_approval_decision, check_approval_status
+    from ai_data_science_team.tools.hitl import (
+        check_approval_status,
+        create_approval_request,
+        log_approval_decision,
+    )
 
     _, req = create_approval_request.func(step_name="approve_me", description="Approve this step")
     rid = req["request_id"]
@@ -327,9 +337,7 @@ def test_log_decision_normalises_unknown():
     from ai_data_science_team.tools.hitl import create_approval_request, log_approval_decision
 
     _, req = create_approval_request.func(step_name="norm_test", description="Test norm")
-    _, artifact = log_approval_decision.func(
-        request_id=req["request_id"], decision="UNKNOWN_VALUE"
-    )
+    _, artifact = log_approval_decision.func(request_id=req["request_id"], decision="UNKNOWN_VALUE")
     assert artifact["decision"] == "modified"
 
 
@@ -372,13 +380,15 @@ def test_log_decision_nonexistent_request_still_records():
 # ===========================================================================
 
 
-_AGENT_OUTPUT = json.dumps({
-    "n_clusters": 5,
-    "silhouette_score": 0.72,
-    "inertia": 1234.5,
-    "best_model": "KMeans",
-    "feature_importance": {"age": 0.4, "income": 0.35, "tenure": 0.25},
-})
+_AGENT_OUTPUT = json.dumps(
+    {
+        "n_clusters": 5,
+        "silhouette_score": 0.72,
+        "inertia": 1234.5,
+        "best_model": "KMeans",
+        "feature_importance": {"age": 0.4, "income": 0.35, "tenure": 0.25},
+    }
+)
 
 
 def test_summarize_returns_tuple():
@@ -436,9 +446,7 @@ def test_summarize_respects_max_length():
     from ai_data_science_team.tools.hitl import summarize_for_approval
 
     large_output = json.dumps({f"key_{i}": i * 1.5 for i in range(50)})
-    _, artifact = summarize_for_approval.func(
-        agent_output_json=large_output, max_length=100
-    )
+    _, artifact = summarize_for_approval.func(agent_output_json=large_output, max_length=100)
     # Should not summarise all 50 keys
     assert artifact["summarised_keys"] < 50
 
@@ -476,13 +484,12 @@ def test_approval_gate_agent_instantiation_with_hitl():
 
 
 def test_approval_gate_agent_custom_checkpointer():
-    from ai_data_science_team.agents.hitl_agent import ApprovalGateAgent
     from langgraph.checkpoint.memory import MemorySaver
 
+    from ai_data_science_team.agents.hitl_agent import ApprovalGateAgent
+
     cp = MemorySaver()
-    agent = ApprovalGateAgent(
-        model=_fake_llm(), human_in_the_loop=True, checkpointer=cp
-    )
+    agent = ApprovalGateAgent(model=_fake_llm(), human_in_the_loop=True, checkpointer=cp)
     assert agent._params["checkpointer"] is cp
 
 
@@ -535,7 +542,7 @@ def test_approval_gate_update_params_toggle_hitl():
 
 
 def test_approval_gate_default_tools_count():
-    from ai_data_science_team.agents.hitl_agent import ApprovalGateAgent, _HITL_TOOLS
+    from ai_data_science_team.agents.hitl_agent import _HITL_TOOLS, ApprovalGateAgent
 
     agent = ApprovalGateAgent(model=_fake_llm(), human_in_the_loop=False)
     assert len(agent._params["tools"]) == len(_HITL_TOOLS)

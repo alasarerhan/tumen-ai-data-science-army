@@ -7,22 +7,20 @@
 # Imports
 # !pip install git+https://github.com/business-science/ai-data-science-team.git --upgrade
 
-from openai import OpenAI
-
-import streamlit as st
-import pandas as pd
-import plotly.io as pio
 import json
 
+import pandas as pd
+import plotly.io as pio
+import streamlit as st
 from langchain_community.chat_message_histories import StreamlitChatMessageHistory
 from langchain_openai import ChatOpenAI
+from openai import OpenAI
 
 from ai_data_science_team import (
-    PandasDataAnalyst,
-    DataWranglingAgent,
     DataVisualizationAgent,
+    DataWranglingAgent,
+    PandasDataAnalyst,
 )
-
 
 # * APP INPUTS ----
 
@@ -101,9 +99,7 @@ Upload a CSV or Excel file and ask questions about your data.
 The AI agent will analyze your dataset and return either data tables or interactive charts.
 """)
 
-uploaded_file = st.file_uploader(
-    "Choose a CSV or Excel file", type=["csv", "xlsx", "xls"]
-)
+uploaded_file = st.file_uploader("Choose a CSV or Excel file", type=["csv", "xlsx", "xls"])
 if uploaded_file is not None:
     if uploaded_file.name.endswith(".csv"):
         df = pd.read_csv(uploaded_file)
@@ -196,9 +192,7 @@ if question := st.chat_input("Enter your question here:", key="query_input"):
             st.chat_message("ai").write(
                 "An error occurred while processing your query. Please try again."
             )
-            msgs.add_ai_message(
-                "An error occurred while processing your query. Please try again."
-            )
+            msgs.add_ai_message("An error occurred while processing your query. Please try again.")
             st.stop()
 
         routing = result.get("routing_preprocessor_decision")
@@ -259,8 +253,6 @@ if question := st.chat_input("Enter your question here:", key="query_input"):
                 st.chat_message("ai").write(response_text)
                 st.dataframe(data_wrangled)
             else:
-                response_text = (
-                    "An error occurred while processing your query. Please try again."
-                )
+                response_text = "An error occurred while processing your query. Please try again."
                 msgs.add_ai_message(response_text)
                 st.chat_message("ai").write(response_text)

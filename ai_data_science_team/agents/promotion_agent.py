@@ -12,9 +12,14 @@ PowerAnalysisAgent.
 Node type: ``deploy.promote``
 """
 
-from typing import (Dict, Optional, Tuple)  # noqa: E402
 import logging  # noqa: E402, F401
-from typing import Any  # noqa: E402, F401
+from typing import (  # noqa: E402
+    Any,  # noqa: E402, F401
+    Dict,
+    Mapping,  # noqa: E402, F401
+    Optional,
+    Tuple,
+)
 
 from langchain.tools import tool  # noqa: E402, F401
 from langchain_core.messages import AIMessage, BaseMessage  # noqa: E402, F401
@@ -24,10 +29,6 @@ from langgraph.types import Checkpointer  # noqa: E402, F401
 from typing_extensions import Annotated, Sequence, TypedDict  # noqa: E402, F401
 
 from ai_data_science_team.templates import BaseAgent  # noqa: E402, F401
-from ai_data_science_team.utils.regex import format_agent_name  # noqa: E402, F401
-
-from typing import Mapping  # noqa: E402, F401
-
 from ai_data_science_team.tools.promotion import (  # noqa: E402, F401
     ModelVersionRecord,
     approve,
@@ -39,7 +40,7 @@ from ai_data_science_team.tools.promotion import (  # noqa: E402, F401
     request_promotion,
     validate_signature,
 )
-
+from ai_data_science_team.utils.regex import format_agent_name  # noqa: E402, F401
 
 logger = logging.getLogger(__name__)
 
@@ -51,6 +52,7 @@ NODE_TYPE = "deploy.promote"
 # Tool wrappers
 # ---------------------------------------------------------------------------
 
+
 @tool(response_format="content_and_artifact")
 def register_version_wrapped(model_id: str, version: str) -> Tuple[str, dict]:
     """Tool wrapper for ``register_version``.
@@ -60,7 +62,7 @@ def register_version_wrapped(model_id: str, version: str) -> Tuple[str, dict]:
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: g5_register_version")
-    kwargs = {'model_id': model_id, 'version': version}
+    kwargs = {"model_id": model_id, "version": version}
     try:
         result = register_version(**kwargs)
     except Exception as exc:
@@ -80,7 +82,9 @@ def register_version_wrapped(model_id: str, version: str) -> Tuple[str, dict]:
 
 
 @tool(response_format="content_and_artifact")
-def validate_signature_wrapped(candidate: ModelVersionRecord, target: ModelVersionRecord) -> Tuple[str, dict]:
+def validate_signature_wrapped(
+    candidate: ModelVersionRecord, target: ModelVersionRecord
+) -> Tuple[str, dict]:
     """Tool wrapper for ``validate_signature``.
 
     Check that two records share the same input schema and
@@ -88,7 +92,7 @@ def validate_signature_wrapped(candidate: ModelVersionRecord, target: ModelVersi
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: g5_validate_signature")
-    kwargs = {'candidate': candidate, 'target': target}
+    kwargs = {"candidate": candidate, "target": target}
     try:
         result = validate_signature(**kwargs)
     except Exception as exc:
@@ -108,7 +112,9 @@ def validate_signature_wrapped(candidate: ModelVersionRecord, target: ModelVersi
 
 
 @tool(response_format="content_and_artifact")
-def evaluate_min_metrics_wrapped(metrics: Mapping[str, float], required: Mapping[str, float]) -> Tuple[str, dict]:
+def evaluate_min_metrics_wrapped(
+    metrics: Mapping[str, float], required: Mapping[str, float]
+) -> Tuple[str, dict]:
     """Tool wrapper for ``evaluate_min_metrics``.
 
     All required metric thresholds must be met (or exceeded).
@@ -116,7 +122,7 @@ def evaluate_min_metrics_wrapped(metrics: Mapping[str, float], required: Mapping
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: g5_evaluate_min_metrics")
-    kwargs = {'metrics': metrics, 'required': required}
+    kwargs = {"metrics": metrics, "required": required}
     try:
         result = evaluate_min_metrics(**kwargs)
     except Exception as exc:
@@ -144,7 +150,7 @@ def request_promotion_wrapped(record: ModelVersionRecord, to_stage: str) -> Tupl
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: g5_request_promotion")
-    kwargs = {'record': record, 'to_stage': to_stage}
+    kwargs = {"record": record, "to_stage": to_stage}
     try:
         result = request_promotion(**kwargs)
     except Exception as exc:
@@ -172,7 +178,7 @@ def approve_wrapped(record: ModelVersionRecord, to_stage: str) -> Tuple[str, dic
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: g5_approve")
-    kwargs = {'record': record, 'to_stage': to_stage}
+    kwargs = {"record": record, "to_stage": to_stage}
     try:
         result = approve(**kwargs)
     except Exception as exc:
@@ -200,7 +206,7 @@ def demote_wrapped(record: ModelVersionRecord, to_stage: str) -> Tuple[str, dict
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: g5_demote")
-    kwargs = {'record': record, 'to_stage': to_stage}
+    kwargs = {"record": record, "to_stage": to_stage}
     try:
         result = demote(**kwargs)
     except Exception as exc:
@@ -220,7 +226,9 @@ def demote_wrapped(record: ModelVersionRecord, to_stage: str) -> Tuple[str, dict
 
 
 @tool(response_format="content_and_artifact")
-def get_version_by_stage_wrapped(registry: Mapping[str, ModelVersionRecord], stage: str) -> Tuple[str, dict]:
+def get_version_by_stage_wrapped(
+    registry: Mapping[str, ModelVersionRecord], stage: str
+) -> Tuple[str, dict]:
     """Tool wrapper for ``get_version_by_stage``.
 
     Pick the highest version (lexicographic / max) record in
@@ -228,7 +236,7 @@ def get_version_by_stage_wrapped(registry: Mapping[str, ModelVersionRecord], sta
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: g5_get_version_by_stage")
-    kwargs = {'registry': registry, 'stage': stage}
+    kwargs = {"registry": registry, "stage": stage}
     try:
         result = get_version_by_stage(**kwargs)
     except Exception as exc:
@@ -248,7 +256,9 @@ def get_version_by_stage_wrapped(registry: Mapping[str, ModelVersionRecord], sta
 
 
 @tool(response_format="content_and_artifact")
-def mlflow_alias_sync_wrapped(model_id: str, version: str, alias: str, registry_uri: Optional[str]) -> Tuple[str, dict]:
+def mlflow_alias_sync_wrapped(
+    model_id: str, version: str, alias: str, registry_uri: Optional[str]
+) -> Tuple[str, dict]:
     """Tool wrapper for ``mlflow_alias_sync``.
 
     Best-effort MLflow alias update.  Returns an in-memory ack
@@ -256,7 +266,12 @@ def mlflow_alias_sync_wrapped(model_id: str, version: str, alias: str, registry_
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: g5_mlflow_alias_sync")
-    kwargs = {'model_id': model_id, 'version': version, 'alias': alias, 'registry_uri': registry_uri}
+    kwargs = {
+        "model_id": model_id,
+        "version": version,
+        "alias": alias,
+        "registry_uri": registry_uri,
+    }
     try:
         result = mlflow_alias_sync(**kwargs)
     except Exception as exc:
@@ -330,7 +345,12 @@ def make_promotion_agent(
     def run_react_agent(state: GraphState):
         logger.info("    * RUN REACT AGENT FOR G5")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
-        messages = [("system", "You are the G5 agent. Use the available tools to complete the user's request.")] + list(base)
+        messages = [
+            (
+                "system",
+                "You are the G5 agent. Use the available tools to complete the user's request.",
+            )
+        ] + list(base)
         input_payload = {"messages": messages}
         return react_agent.invoke(input_payload, invoke_react_agent_kwargs)
 
@@ -349,7 +369,9 @@ def make_promotion_agent(
             last_ai = AIMessage(content=getattr(internal[-1], "content", ""), name=AGENT_NAME)
         tool_calls = []
         for msg in internal:
-            name = getattr(getattr(msg, "tool_call_id", None), "name", None) or getattr(msg, "name", None)
+            name = getattr(getattr(msg, "tool_call_id", None), "name", None) or getattr(
+                msg, "name", None
+            )
             if name:
                 tool_calls.append(name)
         if log_tool_calls and tool_calls:
@@ -417,6 +439,7 @@ class ModelPromotionAgent(BaseAgent):
         if not self.response or "messages" not in self.response:
             return None
         from IPython.display import Markdown as _Markdown  # noqa: E402, F401
+
         for msg in reversed(self.response.get("messages", [])):
             content = getattr(msg, "content", "")
             if content:

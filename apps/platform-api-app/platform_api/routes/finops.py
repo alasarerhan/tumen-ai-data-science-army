@@ -159,6 +159,7 @@ async def get_finops_summary(
 ) -> dict:
     """Get FinOps cost optimization summary (admin only)."""
     from ai_data_science_team.utils.agent_cache import get_agent_cache
+
     from platform_api.db.models import Artifact, ChatUpload, WorkflowRun
 
     cache = get_agent_cache()
@@ -166,17 +167,26 @@ async def get_finops_summary(
 
     tenant_id = context["tenant_id"]
 
-    artifact_count = db.execute(
-        select(func.count()).select_from(Artifact).where(Artifact.tenant_id == tenant_id)
-    ).scalar() or 0
+    artifact_count = (
+        db.execute(
+            select(func.count()).select_from(Artifact).where(Artifact.tenant_id == tenant_id)
+        ).scalar()
+        or 0
+    )
 
-    upload_count = db.execute(
-        select(func.count()).select_from(ChatUpload).where(ChatUpload.tenant_id == tenant_id)
-    ).scalar() or 0
+    upload_count = (
+        db.execute(
+            select(func.count()).select_from(ChatUpload).where(ChatUpload.tenant_id == tenant_id)
+        ).scalar()
+        or 0
+    )
 
-    run_count = db.execute(
-        select(func.count()).select_from(WorkflowRun).where(WorkflowRun.tenant_id == tenant_id)
-    ).scalar() or 0
+    run_count = (
+        db.execute(
+            select(func.count()).select_from(WorkflowRun).where(WorkflowRun.tenant_id == tenant_id)
+        ).scalar()
+        or 0
+    )
 
     expired_count = len(list_expired_artifacts(db, tenant_id=tenant_id))
 
@@ -195,9 +205,7 @@ async def get_finops_summary(
             "upload_max_mb": settings.chat_upload_max_mb,
             "agent_cache_enabled": settings.agent_cache_enabled,
         },
-        "recommendations": _generate_recommendations(
-            artifact_count, expired_count, cache_stats
-        ),
+        "recommendations": _generate_recommendations(artifact_count, expired_count, cache_stats),
     }
 
 
@@ -209,19 +217,13 @@ def _generate_recommendations(
     recs = []
 
     if expired_count > 100:
-        recs.append(
-            f"Run artifact cleanup to free storage ({expired_count} expired artifacts)"
-        )
+        recs.append(f"Run artifact cleanup to free storage ({expired_count} expired artifacts)")
 
     if artifact_count > 10000:
-        recs.append(
-            "Consider reducing artifact_retention_days to control storage growth"
-        )
+        recs.append("Consider reducing artifact_retention_days to control storage growth")
 
     if cache_stats.get("backend") == "memory":
-        recs.append(
-            "Configure Redis for agent_cache_redis_url to enable distributed caching"
-        )
+        recs.append("Configure Redis for agent_cache_redis_url to enable distributed caching")
 
     if not recs:
         recs.append("FinOps configuration looks optimal")

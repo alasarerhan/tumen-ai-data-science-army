@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from typing import Any, Dict, Optional
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
@@ -22,7 +22,7 @@ router = APIRouter(prefix="/v1/versioning", tags=["versioning"])
 
 class CreateVersionRequest(BaseModel):
     workflow_id: str
-    workflow_spec: Dict[str, Any]
+    workflow_spec: dict[str, Any]
     changelog: str = ""
 
 
@@ -36,10 +36,10 @@ class RollbackRequest(BaseModel):
 
 
 class CheckMetricsRequest(BaseModel):
-    metrics: Dict[str, Any]
+    metrics: dict[str, Any]
 
 
-def _get_redis() -> Optional[Redis]:
+def _get_redis() -> Redis | None:
     if settings.agent_cache_redis_url:
         return Redis.from_url(settings.agent_cache_redis_url)
     return None
@@ -106,7 +106,7 @@ async def create_version(
     body: CreateVersionRequest,
     context: dict = Depends(require_workspace_admin),
     db: Session = Depends(get_db),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     user = context["user"]
     workspace = context["workspace"]
     redis = _get_redis()
@@ -116,9 +116,9 @@ async def create_version(
         workspace_id=workspace.id,
         user_id=user.id,
     )
-    
+
     manager = WorkflowVersionManager(db, redis)
-    
+
     try:
         version_id = await manager.create_version(
             workflow_id=str(workflow_spec.id),
@@ -126,9 +126,9 @@ async def create_version(
             changelog=body.changelog,
             created_by=str(user.id),
         )
-        
+
         version = await manager._get_version(version_id)
-        
+
         return {
             "id": version_id,
             "workflow_id": str(workflow_spec.id),
@@ -145,14 +145,14 @@ async def deploy_version(
     body: DeployVersionRequest,
     context: dict = Depends(require_workspace_admin),
     db: Session = Depends(get_db),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     user = context["user"]
     workspace = context["workspace"]
     redis = _get_redis()
     _require_scoped_version(db, version_id=version_id, workspace_id=workspace.id, user_id=user.id)
-    
+
     manager = WorkflowVersionManager(db, redis)
-    
+
     try:
         result = await manager.deploy_version(
             version_id=version_id,
@@ -168,7 +168,7 @@ async def advance_canary(
     deployment_id: str,
     context: dict = Depends(require_workspace_admin),
     db: Session = Depends(get_db),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     user = context["user"]
     workspace = context["workspace"]
     redis = _get_redis()
@@ -178,9 +178,9 @@ async def advance_canary(
         workspace_id=workspace.id,
         user_id=user.id,
     )
-    
+
     manager = WorkflowVersionManager(db, redis)
-    
+
     try:
         result = await manager.advance_canary(deployment_id)
         return result
@@ -194,7 +194,7 @@ async def rollback_workflow(
     body: RollbackRequest,
     context: dict = Depends(require_workspace_admin),
     db: Session = Depends(get_db),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     user = context["user"]
     workspace = context["workspace"]
     redis = _get_redis()
@@ -204,9 +204,9 @@ async def rollback_workflow(
         workspace_id=workspace.id,
         user_id=user.id,
     )
-    
+
     manager = WorkflowVersionManager(db, redis)
-    
+
     try:
         result = await manager.rollback(
             workflow_id=workflow_id,
@@ -224,7 +224,7 @@ async def check_rollback_triggers(
     body: CheckMetricsRequest,
     context: dict = Depends(require_workspace_admin),
     db: Session = Depends(get_db),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     user = context["user"]
     workspace = context["workspace"]
     redis = _get_redis()
@@ -234,9 +234,9 @@ async def check_rollback_triggers(
         workspace_id=workspace.id,
         user_id=user.id,
     )
-    
+
     manager = WorkflowVersionManager(db, redis)
-    
+
     try:
         result = await manager.check_rollback_triggers(
             deployment_id=deployment_id,
@@ -253,7 +253,7 @@ async def get_version_history(
     limit: int = 10,
     context: dict = Depends(require_workspace_member),
     db: Session = Depends(get_db),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     user = context["user"]
     workspace = context["workspace"]
     redis = _get_redis()
@@ -263,12 +263,12 @@ async def get_version_history(
         workspace_id=workspace.id,
         user_id=user.id,
     )
-    
+
     manager = WorkflowVersionManager(db, redis)
-    
+
     versions = await manager.get_version_history(
         workflow_id=workflow_id,
         limit=limit,
     )
-    
+
     return {"versions": versions}

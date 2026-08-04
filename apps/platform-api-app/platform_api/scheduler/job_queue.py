@@ -14,9 +14,9 @@ Usage
 ::
 
     from platform_api.scheduler.job_queue import ScheduledJobQueue
-    
+
     queue = ScheduledJobQueue(redis_url="redis://localhost:6379")
-    
+
     # Enqueue a job
     job_id = queue.enqueue(
         workflow_id="wf-123",
@@ -25,7 +25,7 @@ Usage
         tenant_id="tenant-1",
         workspace_id="ws-1",
     )
-    
+
     # Claim and process a job
     job = queue.claim_job(consumer_name="worker-1")
     if job:
@@ -37,7 +37,7 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import Any
 from uuid import uuid4
 
 from redis import Redis
@@ -50,19 +50,19 @@ logger = logging.getLogger(__name__)
 
 class RedisKeys:
     """Centralized Redis key management."""
-    
+
     STREAM_SCHEDULED_JOBS = "workflow:scheduled:jobs"
     STREAM_DEAD_LETTER = "workflow:scheduled:dead"
     CONSUMER_GROUP = "workflow-workers"
-    
+
     @staticmethod
     def job(job_id: str) -> str:
         return f"job:{job_id}"
-    
+
     @staticmethod
     def status_set(status: str) -> str:
         return f"status:{status}"
-    
+
     @staticmethod
     def workflow_jobs(workflow_id: str) -> str:
         return f"workflow:{workflow_id}:jobs"
@@ -70,20 +70,20 @@ class RedisKeys:
 
 class ScheduledJobQueue:
     """Redis Streams-backed job queue for scheduled workflows.
-    
+
     This class implements a reliable job queue using Redis Streams with
     consumer groups, automatic retry, and dead-letter handling.
-    
+
     Parameters
     ----------
     redis_url : str, optional
         Redis connection URL. Defaults to settings.agent_cache_redis_url.
-    
+
     Attributes
     ----------
     redis : Redis
         Redis client instance.
-    
+
     Example
     -------
     >>> queue = ScheduledJobQueue()
@@ -95,17 +95,17 @@ class ScheduledJobQueue:
     ...     workspace_id="ws-1",
     ... )
     """
-    
-    def __init__(self, redis_url: Optional[str] = None):
+
+    def __init__(self, redis_url: str | None = None):
         url = redis_url or settings.agent_cache_redis_url
         if not url:
             raise ValueError(
                 "Redis URL is required. Set AGENT_CACHE_REDIS_URL environment variable."
             )
-        
+
         self.redis = Redis.from_url(url, decode_responses=True)
         self._ensure_consumer_group()
-    
+
     def _ensure_consumer_group(self) -> None:
         """Ensure the consumer group exists for the stream."""
         try:
@@ -124,11 +124,11 @@ class ScheduledJobQueue:
             if "BUSYGROUP" not in str(e):
                 logger.error("Failed to create consumer group: %s", e)
                 raise
-    
+
     def enqueue(
         self,
         workflow_id: str,
-        workflow_spec: Dict[str, Any],
+        workflow_spec: dict[str, Any],
         schedule: str,
         tenant_id: str,
         workspace_id: str,
@@ -136,7 +136,7 @@ class ScheduledJobQueue:
         priority: str = "normal",
     ) -> str:
         """Add a scheduled job to the queue.
-        
+
         Parameters
         ----------
         workflow_id : str
@@ -153,14 +153,14 @@ class ScheduledJobQueue:
             Maximum retry attempts. Defaults to 3.
         priority : str, optional
             Job priority: "high", "normal", "low". Defaults to "normal".
-        
+
         Returns
         -------
         str
             The unique job ID.
         """
         job_id = str(uuid4())
-        
+
         job_record = {
             "id": job_id,
             "workflow_id": workflow_id,
@@ -175,33 +175,33 @@ class ScheduledJobQueue:
             "created_at": datetime.utcnow().isoformat(),
             "updated_at": datetime.utcnow().isoformat(),
         }
-        
+
         self.redis.json().set(RedisKeys.job(job_id), JsonPath.root_path(), job_record)
         self.redis.sadd(RedisKeys.status_set("queued"), job_id)
         self.redis.sadd(RedisKeys.workflow_jobs(workflow_id), job_id)
         self.redis.xadd(RedisKeys.STREAM_SCHEDULED_JOBS, {"jobId": job_id})
-        
+
         logger.info("Enqueued job %s for workflow %s", job_id, workflow_id)
-        
+
         return job_id
-    
+
     def claim_job(
         self,
         consumer_name: str,
         block_ms: int = 1000,
-    ) -> Optional[Dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         """Claim a job from the queue for processing.
-        
+
         Uses Redis Streams consumer groups to ensure each job is
         processed by exactly one consumer.
-        
+
         Parameters
         ----------
         consumer_name : str
             Unique name for this consumer.
         block_ms : int, optional
             Milliseconds to block waiting for a job. Defaults to 1000.
-        
+
         Returns
         -------
         Optional[Dict[str, Any]]
@@ -214,14 +214,14 @@ class ScheduledJobQueue:
             count=1,
             block=block_ms,
         )
-        
+
         if not messages:
             return None
-        
+
         stream_name, entries = messages[0]
         message_id, fields = entries[0]
         job_id = fields.get("jobId")
-        
+
         if not job_id:
             logger.warning("Received message without jobId")
             self.redis.xack(
@@ -230,26 +230,26 @@ class ScheduledJobQueue:
                 message_id,
             )
             return None
-        
+
         job = self.redis.json().get(RedisKeys.job(job_id))
-        
+
         if job:
             job["message_id"] = message_id
             job["status"] = "processing"
             job["attempts"] += 1
             job["updated_at"] = datetime.utcnow().isoformat()
-            
+
             self.redis.json().set(RedisKeys.job(job_id), JsonPath.root_path(), job)
             self.redis.srem(RedisKeys.status_set("queued"), job_id)
             self.redis.sadd(RedisKeys.status_set("processing"), job_id)
-            
+
             logger.info("Claimed job %s (attempt %d)", job_id, job["attempts"])
-        
+
         return job
-    
+
     def ack_job(self, job_id: str, message_id: str) -> None:
         """Acknowledge successful job processing.
-        
+
         Parameters
         ----------
         job_id : str
@@ -262,24 +262,24 @@ class ScheduledJobQueue:
             RedisKeys.CONSUMER_GROUP,
             message_id,
         )
-        
+
         job = self.redis.json().get(RedisKeys.job(job_id))
         if job:
             job["status"] = "completed"
             job["updated_at"] = datetime.utcnow().isoformat()
             self.redis.json().set(RedisKeys.job(job_id), JsonPath.root_path(), job)
-        
+
         self.redis.srem(RedisKeys.status_set("processing"), job_id)
         self.redis.sadd(RedisKeys.status_set("completed"), job_id)
-        
+
         logger.info("Completed job %s", job_id)
-    
+
     def retry_job(self, job_id: str, error: str) -> None:
         """Re-enqueue a failed job for retry.
-        
+
         If the job has exceeded its max attempts, it will be moved
         to the dead-letter queue.
-        
+
         Parameters
         ----------
         job_id : str
@@ -288,35 +288,35 @@ class ScheduledJobQueue:
             The error message from the failed attempt.
         """
         job = self.redis.json().get(RedisKeys.job(job_id))
-        
+
         if not job:
             logger.warning("Job %s not found for retry", job_id)
             return
-        
+
         job["last_error"] = error
         job["updated_at"] = datetime.utcnow().isoformat()
-        
+
         if job["attempts"] >= job["max_attempts"]:
             self._move_to_dead_letter(job, error)
         else:
             job["status"] = "retrying"
             self.redis.json().set(RedisKeys.job(job_id), JsonPath.root_path(), job)
-            
+
             self.redis.srem(RedisKeys.status_set("processing"), job_id)
             self.redis.sadd(RedisKeys.status_set("retrying"), job_id)
-            
+
             self.redis.xadd(RedisKeys.STREAM_SCHEDULED_JOBS, {"jobId": job_id})
-            
+
             logger.info(
                 "Re-enqueued job %s for retry (attempt %d/%d)",
                 job_id,
                 job["attempts"],
                 job["max_attempts"],
             )
-    
-    def _move_to_dead_letter(self, job: Dict[str, Any], error: str) -> None:
+
+    def _move_to_dead_letter(self, job: dict[str, Any], error: str) -> None:
         """Move a job to the dead-letter queue.
-        
+
         Parameters
         ----------
         job : Dict[str, Any]
@@ -325,11 +325,11 @@ class ScheduledJobQueue:
             The final error message.
         """
         job_id = job["id"]
-        
+
         job["status"] = "dead-letter"
         job["final_error"] = error
         job["dead_letter_at"] = datetime.utcnow().isoformat()
-        
+
         self.redis.xadd(
             RedisKeys.STREAM_DEAD_LETTER,
             {
@@ -339,52 +339,52 @@ class ScheduledJobQueue:
                 "workflow_id": job.get("workflow_id", ""),
             },
         )
-        
+
         self.redis.json().set(RedisKeys.job(job_id), JsonPath.root_path(), job)
-        
+
         self.redis.srem(RedisKeys.status_set("processing"), job_id)
         self.redis.sadd(RedisKeys.status_set("dead-letter"), job_id)
-        
+
         logger.warning("Moved job %s to dead-letter queue: %s", job_id, error)
-    
-    def get_job(self, job_id: str) -> Optional[Dict[str, Any]]:
+
+    def get_job(self, job_id: str) -> dict[str, Any] | None:
         """Get a job by ID.
-        
+
         Parameters
         ----------
         job_id : str
             The job ID.
-        
+
         Returns
         -------
         Optional[Dict[str, Any]]
             The job record, or None if not found.
         """
         return self.redis.json().get(RedisKeys.job(job_id))
-    
+
     def get_jobs_by_status(self, status: str) -> list:
         """Get all job IDs with a specific status.
-        
+
         Parameters
         ----------
         status : str
             The status to filter by.
-        
+
         Returns
         -------
         list
             List of job IDs.
         """
         return list(self.redis.smembers(RedisKeys.status_set(status)))
-    
+
     def get_dead_letter_jobs(self, limit: int = 100) -> list:
         """Get jobs from the dead-letter queue.
-        
+
         Parameters
         ----------
         limit : int, optional
             Maximum number of jobs to return. Defaults to 100.
-        
+
         Returns
         -------
         list
@@ -397,45 +397,45 @@ class ScheduledJobQueue:
             if job:
                 jobs.append(job)
         return jobs
-    
+
     def requeue_dead_letter_job(self, job_id: str) -> bool:
         """Re-queue a job from the dead-letter queue.
-        
+
         Parameters
         ----------
         job_id : str
             The job ID to re-queue.
-        
+
         Returns
         -------
         bool
             True if the job was re-queued, False if not found.
         """
         job = self.get_job(job_id)
-        
+
         if not job or job.get("status") != "dead-letter":
             return False
-        
+
         job["status"] = "queued"
         job["attempts"] = 0
         job["updated_at"] = datetime.utcnow().isoformat()
         del job["final_error"]
         del job["dead_letter_at"]
-        
+
         self.redis.json().set(RedisKeys.job(job_id), JsonPath.root_path(), job)
-        
+
         self.redis.srem(RedisKeys.status_set("dead-letter"), job_id)
         self.redis.sadd(RedisKeys.status_set("queued"), job_id)
-        
+
         self.redis.xadd(RedisKeys.STREAM_SCHEDULED_JOBS, {"jobId": job_id})
-        
+
         logger.info("Re-queued dead-letter job %s", job_id)
-        
+
         return True
-    
-    def get_queue_stats(self) -> Dict[str, int]:
+
+    def get_queue_stats(self) -> dict[str, int]:
         """Get queue statistics.
-        
+
         Returns
         -------
         Dict[str, int]
@@ -449,7 +449,7 @@ class ScheduledJobQueue:
             "dead_letter": len(self.get_jobs_by_status("dead-letter")),
         }
 
-    def purge_tenant_data(self, tenant_id: str) -> Dict[str, int]:
+    def purge_tenant_data(self, tenant_id: str) -> dict[str, int]:
         """Delete all Redis-backed scheduled-job data for a tenant."""
         job_ids_to_delete: list[str] = []
         workflow_ids_to_touch: set[str] = set()
@@ -495,7 +495,9 @@ class ScheduledJobQueue:
                         *pending_ids,
                     )
                 except Exception:
-                    logger.debug("No pending scheduled-job stream entries to ack during tenant purge")
+                    logger.debug(
+                        "No pending scheduled-job stream entries to ack during tenant purge"
+                    )
             if to_delete:
                 self.redis.xdel(stream_name, *to_delete)
                 deleted_stream_entries += len(to_delete)

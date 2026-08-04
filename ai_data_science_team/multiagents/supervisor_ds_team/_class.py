@@ -118,9 +118,7 @@ class SupervisorDSTeam:
         )
         return None
 
-    def invoke_agent(
-        self, user_instructions: str, artifacts: Optional[dict] = None, **kwargs
-    ):
+    def invoke_agent(self, user_instructions: str, artifacts: Optional[dict] = None, **kwargs):
         """Convenience wrapper for a single human prompt."""
         msg = HumanMessage(content=user_instructions)
         return self.invoke_messages(messages=[msg], artifacts=artifacts, **kwargs)
@@ -129,9 +127,7 @@ class SupervisorDSTeam:
         self, user_instructions: str, artifacts: Optional[dict] = None, **kwargs
     ):
         msg = HumanMessage(content=user_instructions)
-        return await self.ainvoke_messages(
-            messages=[msg], artifacts=artifacts, **kwargs
-        )
+        return await self.ainvoke_messages(messages=[msg], artifacts=artifacts, **kwargs)
 
     def invoke(self, input: dict, **kwargs):
         """Generic invoke passthrough (for backward compatibility)."""
@@ -171,9 +167,7 @@ class SupervisorDSTeam:
         try:
             from IPython.display import Image, display  # noqa: E402, F401
 
-            display(
-                Image(self._compiled_graph.get_graph(xray=xray).draw_mermaid_png())
-            )
+            display(Image(self._compiled_graph.get_graph(xray=xray).draw_mermaid_png()))
         except Exception:
             return None
 

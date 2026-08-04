@@ -39,6 +39,7 @@ def _sample_df():
 # 1. b2_expectation_suite_from_template_wrapped
 # ---------------------------------------------------------------------------
 
+
 def test_b2_expectation_suite_from_template_real():
     """``b2_expectation_suite_from_template_wrapped`` template ismiyle suite üretir.
 
@@ -60,6 +61,7 @@ def test_b2_expectation_suite_from_template_real():
 # 2. b2_validate_against_suite_wrapped
 # ---------------------------------------------------------------------------
 
+
 def test_b2_validate_against_suite_real():
     """``b2_validate_against_suite_wrapped`` bir suite'i df'e uygular.
 
@@ -74,18 +76,15 @@ def test_b2_validate_against_suite_real():
     ]
     out = b2_validate_against_suite_wrapped.func(df=df, suite=suite)
     s = str(out).lower()
-    assert (
-        "ok" in s
-        or "passed" in s
-        or "failed" in s
-        or "rule" in s
-        or "validate" in s
-    ), f"b2_validate_against_suite beklenen sonuç üretmedi: {s[:300]}"
+    assert "ok" in s or "passed" in s or "failed" in s or "rule" in s or "validate" in s, (
+        f"b2_validate_against_suite beklenen sonuç üretmedi: {s[:300]}"
+    )
 
 
 # ---------------------------------------------------------------------------
 # 3. b2_summarise_suite_run_wrapped
 # ---------------------------------------------------------------------------
+
 
 def test_b2_summarise_suite_run_real():
     """``b2_summarise_suite_run_wrapped`` validate çıktısını özetler.
@@ -103,10 +102,6 @@ def test_b2_summarise_suite_run_real():
     }
     out = b2_summarise_suite_run_wrapped.func(result=fake_result)
     s = str(out).lower()
-    assert (
-        "ok" in s
-        or "status" in s
-        or "summary" in s
-        or "passed" in s
-        or "warn" in s
-    ), f"b2_summarise_suite_run beklenen özet üretmedi: {s[:300]}"
+    assert "ok" in s or "status" in s or "summary" in s or "passed" in s or "warn" in s, (
+        f"b2_summarise_suite_run beklenen özet üretmedi: {s[:300]}"
+    )

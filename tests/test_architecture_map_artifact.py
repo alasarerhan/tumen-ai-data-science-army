@@ -3,6 +3,7 @@
 The test generates the map from the library functions so it never
 depends on pre-existing build artifacts on disk.
 """
+
 from __future__ import annotations
 
 import json

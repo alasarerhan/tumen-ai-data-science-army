@@ -9,7 +9,6 @@ contract and an in-memory backend for unit tests.
 
 from typing import Any, Dict, List, Mapping, Sequence  # noqa: E402, F401
 
-
 from ai_data_science_team.tools.snowflake import (  # noqa: E402, F401
     BaseConnector,
     ConnectorConfig,
@@ -24,9 +23,7 @@ class ObjectStorageConnector(BaseConnector):
         super().__init__(config)
         provider = self.config.get("provider", "s3")
         if provider not in {"s3", "gcs"}:
-            raise ConnectorError(
-                f"object_storage provider must be 's3' or 'gcs', got {provider!r}"
-            )
+            raise ConnectorError(f"object_storage provider must be 's3' or 'gcs', got {provider!r}")
         if provider == "s3":
             self.config.require("bucket")
         else:
@@ -44,15 +41,12 @@ class ObjectStorageConnector(BaseConnector):
         out["region"] = self.config.get("region", "us-east-1")
         return out
 
-    def list_objects(
-        self, prefix: str = "", *, max_keys: int = 1000
-    ) -> List[Dict[str, Any]]:
+    def list_objects(self, prefix: str = "", *, max_keys: int = 1000) -> List[Dict[str, Any]]:
         cache = getattr(self, "_object_cache", [])
         if cache:
             return [o for o in cache if o.get("key", "").startswith(prefix)][:max_keys]
         return [
-            {"key": f"data/sample-{i}.csv", "size": 1024 * (i + 1)}
-            for i in range(min(3, max_keys))
+            {"key": f"data/sample-{i}.csv", "size": 1024 * (i + 1)} for i in range(min(3, max_keys))
         ]
 
     def register_objects(self, objects: Sequence[Mapping[str, Any]]) -> None:
@@ -86,9 +80,7 @@ class ObjectStorageConnector(BaseConnector):
             "status": "ok",
         }
 
-    def signed_url(
-        self, key: str, *, expires_in: int = 3600
-    ) -> str:
+    def signed_url(self, key: str, *, expires_in: int = 3600) -> str:
         return (
             f"https://{self.config.get('bucket')}.{self._provider}.example.com/"
             f"{key}?expires_in={expires_in}"

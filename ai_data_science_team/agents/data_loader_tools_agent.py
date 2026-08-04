@@ -1,33 +1,29 @@
-
-from typing_extensions import Any, Optional, Annotated, Sequence, List, Dict, TypedDict
-
-
 import logging
 
+from typing_extensions import Annotated, Any, Dict, List, Optional, Sequence, TypedDict
+
 logger = logging.getLogger(__name__)
-import pandas as pd  # noqa: E402, F401
 import os  # noqa: E402, F401
 
+import pandas as pd  # noqa: E402, F401
 from IPython.display import Markdown  # noqa: E402, F401
-
-from langchain_core.messages import BaseMessage, AIMessage  # noqa: E402, F401
-
 from langchain.agents import create_agent  # noqa: E402, F401
+from langchain_core.messages import AIMessage, BaseMessage  # noqa: E402, F401
+from langgraph.graph import END, START, StateGraph  # noqa: E402, F401
 from langgraph.graph.message import add_messages  # noqa: E402, F401
 from langgraph.types import Checkpointer  # noqa: E402, F401
-from langgraph.graph import START, END, StateGraph  # noqa: E402, F401
 
 from ai_data_science_team.templates import BaseAgent  # noqa: E402, F401
-from ai_data_science_team.utils.regex import format_agent_name  # noqa: E402, F401
 from ai_data_science_team.tools.data_loader import (  # noqa: E402, F401
-    load_directory,
-    load_file,
+    get_file_info,
     list_directory_contents,
     list_directory_recursive,
-    get_file_info,
+    load_directory,
+    load_file,
     search_files_by_pattern,
 )
 from ai_data_science_team.utils.messages import get_tool_call_names  # noqa: E402, F401
+from ai_data_science_team.utils.regex import format_agent_name  # noqa: E402, F401
 
 AGENT_NAME = "data_loader_tools_agent"
 
@@ -221,9 +217,7 @@ class DataLoaderToolsAgent(BaseAgent):
             isinstance(v, dict) and "data" in v for v in artifact.values()
         ):
             dataframes = {
-                k: pd.DataFrame(v["data"])
-                if v.get("data") is not None
-                else pd.DataFrame()
+                k: pd.DataFrame(v["data"]) if v.get("data") is not None else pd.DataFrame()
                 for k, v in artifact.items()
             }
             return dataframes if as_dataframe else dataframes

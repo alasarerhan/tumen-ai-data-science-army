@@ -76,9 +76,8 @@ def merge_agent_outputs(outputs_json: str) -> Tuple[str, Dict[str, Any]]:
     if len(merged) > 20:
         lines.append(f"  … (+{len(merged) - 20} more keys)")
 
-    text = (
-        f"✅ Merged {len(raw)} agent output(s) → {len(merged)} total keys.\n\n"
-        + "\n".join(lines)
+    text = f"✅ Merged {len(raw)} agent output(s) → {len(merged)} total keys.\n\n" + "\n".join(
+        lines
     )
     return text, {
         "merged": merged,
@@ -124,9 +123,7 @@ def extract_key_metrics(
 
     if requested:
         extracted = {
-            k: v
-            for k, v in merged.items()
-            if any(req.lower() in k.lower() for req in requested)
+            k: v for k, v in merged.items() if any(req.lower() in k.lower() for req in requested)
         }
     else:
         extracted = dict(merged)
@@ -208,7 +205,12 @@ def compare_results(
             elif good is False:
                 regressions.append(k)
 
-            deltas[k] = {"baseline": b_val, "current": c_val, "delta": round(delta, 4), "pct": round(pct, 2)}
+            deltas[k] = {
+                "baseline": b_val,
+                "current": c_val,
+                "delta": round(delta, 4),
+                "pct": round(pct, 2),
+            }
             lines.append(f"  {icon} {k}: {b_val} → {c_val} (Δ {delta:+.4f}, {pct:+.1f}%)")
         except (TypeError, ValueError):
             deltas[k] = {"baseline": b_val, "current": c_val, "delta": None}
@@ -478,7 +480,11 @@ def extract_business_entities(
         lines.append(f"  [{etype.upper()}]: {', '.join(vals[:5]) if vals else 'none found'}")
 
     text_out = f"🔍 Extracted {total} business entity mention(s):\n" + "\n".join(lines)
-    return text_out, {"entities": entities, "total": total, "requested_types": list(requested_types)}
+    return text_out, {
+        "entities": entities,
+        "total": total,
+        "requested_types": list(requested_types),
+    }
 
 
 # ===========================================================================
@@ -554,8 +560,7 @@ def generate_executive_summary(
     if isinstance(findings, list):
         top = findings[:3]
         findings_text = "; ".join(
-            str(f.get("description", f)) if isinstance(f, dict) else str(f)
-            for f in top
+            str(f.get("description", f)) if isinstance(f, dict) else str(f) for f in top
         )
         n_findings = len(findings)
     elif isinstance(findings, dict):
@@ -563,8 +568,7 @@ def generate_executive_summary(
         if ranked:
             top = ranked[:3]
             findings_text = "; ".join(
-                str(f.get("description", f)) if isinstance(f, dict) else str(f)
-                for f in top
+                str(f.get("description", f)) if isinstance(f, dict) else str(f) for f in top
             )
             n_findings = findings.get("total", len(ranked))
         else:
@@ -651,11 +655,7 @@ def generate_section(
     else:
         data_block = "\n  *(No structured data provided — please fill in manually.)*"
 
-    content = (
-        f"## {section_title}\n\n"
-        f"*Guidance ({tone_style}): {guidance}*\n"
-        f"{data_block}\n"
-    )
+    content = f"## {section_title}\n\n*Guidance ({tone_style}): {guidance}*\n{data_block}\n"
 
     return content, {
         "section_type": section_type,
@@ -812,14 +812,16 @@ def generate_recommendations(
         impact = _IMPACT_LEVELS[i % len(_IMPACT_LEVELS)]
         template = _ACTION_TEMPLATES[i % len(_ACTION_TEMPLATES)]
         action = template.format(desc=desc[:120])
-        recommendations.append({
-            "rank": i + 1,
-            "action": action,
-            "impact": impact,
-            "effort": effort,
-            "time_horizon": horizon,
-            "source_finding": desc[:120],
-        })
+        recommendations.append(
+            {
+                "rank": i + 1,
+                "action": action,
+                "impact": impact,
+                "effort": effort,
+                "time_horizon": horizon,
+                "source_finding": desc[:120],
+            }
+        )
 
     lines = [
         f"  {r['rank']}. [{r['impact'].upper()} impact / {r['effort']} effort] {r['action']}"
@@ -894,7 +896,7 @@ def design_ab_test(
         "treatment": f"Modified experience to validate: {hypothesis}",
         "success_criteria": (
             f"Statistically significant improvement in {primary_metric} "
-            f"of ≥ {expected_effect_pct:.1f}% at {confidence_level*100:.0f}% confidence"
+            f"of ≥ {expected_effect_pct:.1f}% at {confidence_level * 100:.0f}% confidence"
         ),
         "guardrail_metrics": ["revenue_per_user", "bounce_rate", "support_tickets"],
     }
@@ -905,7 +907,7 @@ def design_ab_test(
         f"  Hypothesis    : {hypothesis}\n"
         f"  Primary Metric: {primary_metric}\n"
         f"  Expected Lift : {expected_effect_pct:.1f}%\n"
-        f"  Confidence    : {confidence_level*100:.0f}%  (z={z})\n"
+        f"  Confidence    : {confidence_level * 100:.0f}%  (z={z})\n"
         f"  Required n    : {n_total:,} total ({n_per_variant:,} per variant)\n"
         f"  Available n   : {audience_size:,}\n"
         f"  Duration      : {test_duration_days} days\n"
@@ -981,8 +983,10 @@ def prioritize_actions(
         f"  {a['priority_rank']}. [score={a.get(score_key, '?')}] {a['description'][:80]}"
         for a in scored
     ]
-    text = (
-        f"🎯 {len(scored)} action(s) prioritised using {framework.upper()}:\n"
-        + "\n".join(lines)
-    )
-    return text, {"prioritized": scored, "framework": framework, "count": len(scored), "valid": True}
+    text = f"🎯 {len(scored)} action(s) prioritised using {framework.upper()}:\n" + "\n".join(lines)
+    return text, {
+        "prioritized": scored,
+        "framework": framework,
+        "count": len(scored),
+        "valid": True,
+    }

@@ -19,6 +19,15 @@ Supported methods
 import logging  # noqa: E402, F401
 
 logger = logging.getLogger(__name__)
+import pandas as pd  # noqa: E402, F401
+from IPython.display import Markdown  # noqa: E402, F401
+from langchain.agents import create_agent  # noqa: E402, F401
+from langchain.tools import tool  # noqa: E402, F401
+from langchain_core.messages import AIMessage, BaseMessage  # noqa: E402, F401
+from langgraph.graph import END, START, StateGraph  # noqa: E402, F401
+from langgraph.graph.message import add_messages  # noqa: E402, F401
+from langgraph.prebuilt import InjectedState  # noqa: E402, F401
+from langgraph.types import Checkpointer  # noqa: E402, F401
 from typing_extensions import (  # noqa: E402, F401
     Annotated,
     Any,
@@ -28,17 +37,6 @@ from typing_extensions import (  # noqa: E402, F401
     Tuple,
     TypedDict,
 )
-
-import pandas as pd  # noqa: E402, F401
-from IPython.display import Markdown  # noqa: E402, F401
-
-from langchain.agents import create_agent  # noqa: E402, F401
-from langchain.tools import tool  # noqa: E402, F401
-from langchain_core.messages import AIMessage, BaseMessage  # noqa: E402, F401
-from langgraph.graph import END, START, StateGraph  # noqa: E402, F401
-from langgraph.graph.message import add_messages  # noqa: E402, F401
-from langgraph.prebuilt import InjectedState  # noqa: E402, F401
-from langgraph.types import Checkpointer  # noqa: E402, F401
 
 from ai_data_science_team.templates import BaseAgent  # noqa: E402, F401
 from ai_data_science_team.utils.messages import get_tool_call_names  # noqa: E402, F401
@@ -101,9 +99,11 @@ def detect_anomalies(
         try:
             if model_name == "HBOS":
                 from pyod.models.hbos import HBOS  # noqa: E402, F401
+
                 clf = HBOS(contamination=contamination)
             elif model_name == "COPOD":
                 from pyod.models.copod import COPOD  # noqa: E402, F401
+
                 clf = COPOD(contamination=contamination)
             else:
                 raise ImportError("Unknown PyOD model")
@@ -268,9 +268,7 @@ def make_anomaly_detection_agent(
             "then return a concise summary of the findings including the number "
             "of anomalies detected and the anomaly rate."
         )
-        base_messages = state.get("messages", []) or [
-            ("user", state.get("user_instructions"))
-        ]
+        base_messages = state.get("messages", []) or [("user", state.get("user_instructions"))]
         messages = [("system", system_hint)] + list(base_messages)
 
         input_payload = {
@@ -440,7 +438,9 @@ class AnomalyDetectionAgent(BaseAgent):
                 "user_instructions": user_instructions,
                 "data_raw": data_raw.to_dict() if data_raw is not None else None,
                 "method": method or self._params["method"],
-                "contamination": contamination if contamination is not None else self._params["contamination"],
+                "contamination": contamination
+                if contamination is not None
+                else self._params["contamination"],
             },
             **kwargs,
         )

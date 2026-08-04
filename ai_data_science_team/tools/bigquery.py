@@ -10,7 +10,6 @@ of the connector family.
 
 from typing import Any, Dict, List, Optional  # noqa: E402, F401
 
-
 from ai_data_science_team.tools.snowflake import (  # noqa: E402, F401
     BaseConnector,
     ConnectorConfig,
@@ -64,19 +63,20 @@ class BigQueryConnector(BaseConnector):
         cache = getattr(self, "_schema_cache", {})
         if table not in cache:
             raise ConnectorError(
-                f"unknown BigQuery table {table!r}; seed _schema_cache "
-                "or use a real driver"
+                f"unknown BigQuery table {table!r}; seed _schema_cache or use a real driver"
             )
         return cache[table]
 
     def query_cost_estimate(
-        self, query: str, bytes_processed: Optional[float] = None,
+        self,
+        query: str,
+        bytes_processed: Optional[float] = None,
     ) -> Dict[str, Any]:
         """Crude cost estimate: 5 $/TB processed."""
         if bytes_processed is None:
             # Pretend we scanned 10 GB by default.
-            bytes_processed = 10 * 1024 ** 3
-        cost = bytes_processed / (1024 ** 4) * 5.0
+            bytes_processed = 10 * 1024**3
+        cost = bytes_processed / (1024**4) * 5.0
         return {
             "query": query,
             "bytes_processed": bytes_processed,

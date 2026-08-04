@@ -1,4 +1,5 @@
 """Tests for J12 Lineage Graph tool."""
+
 from __future__ import annotations
 
 import pytest
@@ -27,8 +28,12 @@ def populated_graph(graph):
     j12.add_edge(graph, dep.node_id, rep.node_id)
     return {
         "graph": graph,
-        "src": src, "ds": ds, "feat": feat,
-        "model": model, "dep": dep, "rep": rep,
+        "src": src,
+        "ds": ds,
+        "feat": feat,
+        "model": model,
+        "dep": dep,
+        "rep": rep,
     }
 
 
@@ -45,7 +50,9 @@ class TestAddNode:
 
     def test_attrs_copied(self, graph):
         n = j12.add_node(
-            graph, kind="model", label="m",
+            graph,
+            kind="model",
+            label="m",
             attrs={"version": "v1"},
         )
         assert n.attrs["version"] == "v1"
@@ -76,8 +83,7 @@ class TestAddEdge:
 class TestAncestorsDescendants:
     def test_ancestors_chain(self, populated_graph):
         # model ancestors: source, dataset, feature
-        anc = j12.ancestors(populated_graph["graph"],
-                             populated_graph["model"].node_id)
+        anc = j12.ancestors(populated_graph["graph"], populated_graph["model"].node_id)
         assert set(anc) == {
             populated_graph["src"].node_id,
             populated_graph["ds"].node_id,
@@ -86,8 +92,7 @@ class TestAncestorsDescendants:
 
     def test_descendants_chain(self, populated_graph):
         # dataset descendants: feature, model, deployment, report
-        desc = j12.descendants(populated_graph["graph"],
-                               populated_graph["ds"].node_id)
+        desc = j12.descendants(populated_graph["graph"], populated_graph["ds"].node_id)
         assert set(desc) == {
             populated_graph["feat"].node_id,
             populated_graph["model"].node_id,
@@ -96,13 +101,11 @@ class TestAncestorsDescendants:
         }
 
     def test_leaf_has_no_descendants(self, populated_graph):
-        desc = j12.descendants(populated_graph["graph"],
-                               populated_graph["rep"].node_id)
+        desc = j12.descendants(populated_graph["graph"], populated_graph["rep"].node_id)
         assert desc == []
 
     def test_root_has_no_ancestors(self, populated_graph):
-        anc = j12.ancestors(populated_graph["graph"],
-                            populated_graph["src"].node_id)
+        anc = j12.ancestors(populated_graph["graph"], populated_graph["src"].node_id)
         assert anc == []
 
 
@@ -140,4 +143,3 @@ class TestNodeSummary:
     def test_unknown(self, graph):
         with pytest.raises(KeyError):
             j12.node_summary(graph, "nope")
-

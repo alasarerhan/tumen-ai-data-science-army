@@ -24,9 +24,9 @@ from typing import Any, Dict, List, Optional  # noqa: F401, E402
 import pandas as pd  # noqa: F401, E402
 
 from ai_data_science_team.tool_registry import (  # noqa: F401, E402
-    ToolRegistry,
     ToolDefinition,
     ToolParameter,
+    ToolRegistry,
     register_tool,
 )
 
@@ -68,9 +68,16 @@ def _infer_units(columns: list[str]) -> dict[str, str]:
         "data": ToolParameter(type="object", description="Input DataFrame as dict", required=True),
         "x": ToolParameter(type="string", description="Column name for X-axis", required=True),
         "y": ToolParameter(type="string", description="Column name for Y-axis", required=True),
-        "color": ToolParameter(type="string", description="Column name for color grouping", required=False),
+        "color": ToolParameter(
+            type="string", description="Column name for color grouping", required=False
+        ),
         "title": ToolParameter(type="string", description="Chart title", required=False),
-        "trendline": ToolParameter(type="string", description="Add trendline: 'ols' or 'lowess'", required=False, default=None),
+        "trendline": ToolParameter(
+            type="string",
+            description="Add trendline: 'ols' or 'lowess'",
+            required=False,
+            default=None,
+        ),
     },
     returns="Plotly figure as JSON-serializable dict",
     namespace="core.visualization",
@@ -138,11 +145,19 @@ def scatter_plot(
     description="Create a bar chart to compare values across categories.",
     parameters={
         "data": ToolParameter(type="object", description="Input DataFrame as dict", required=True),
-        "x": ToolParameter(type="string", description="Column name for X-axis (categories)", required=True),
-        "y": ToolParameter(type="string", description="Column name for Y-axis (values)", required=True),
-        "color": ToolParameter(type="string", description="Column name for color grouping", required=False),
+        "x": ToolParameter(
+            type="string", description="Column name for X-axis (categories)", required=True
+        ),
+        "y": ToolParameter(
+            type="string", description="Column name for Y-axis (values)", required=True
+        ),
+        "color": ToolParameter(
+            type="string", description="Column name for color grouping", required=False
+        ),
         "title": ToolParameter(type="string", description="Chart title", required=False),
-        "orientation": ToolParameter(type="string", description="Bar orientation: 'v' or 'h'", required=False, default="v"),
+        "orientation": ToolParameter(
+            type="string", description="Bar orientation: 'v' or 'h'", required=False, default="v"
+        ),
     },
     returns="Plotly figure as JSON-serializable dict",
     namespace="core.visualization",
@@ -210,9 +225,13 @@ def bar_chart(
     description="Create a line chart to visualize trends over time or ordered categories.",
     parameters={
         "data": ToolParameter(type="object", description="Input DataFrame as dict", required=True),
-        "x": ToolParameter(type="string", description="Column name for X-axis (typically time)", required=True),
+        "x": ToolParameter(
+            type="string", description="Column name for X-axis (typically time)", required=True
+        ),
         "y": ToolParameter(type="string", description="Column name for Y-axis", required=True),
-        "color": ToolParameter(type="string", description="Column name for color grouping", required=False),
+        "color": ToolParameter(
+            type="string", description="Column name for color grouping", required=False
+        ),
         "title": ToolParameter(type="string", description="Chart title", required=False),
     },
     returns="Plotly figure as JSON-serializable dict",
@@ -278,9 +297,13 @@ def line_chart(
     parameters={
         "data": ToolParameter(type="object", description="Input DataFrame as dict", required=True),
         "x": ToolParameter(type="string", description="Column name for X-axis", required=True),
-        "color": ToolParameter(type="string", description="Column name for color grouping", required=False),
+        "color": ToolParameter(
+            type="string", description="Column name for color grouping", required=False
+        ),
         "title": ToolParameter(type="string", description="Chart title", required=False),
-        "nbins": ToolParameter(type="integer", description="Number of bins", required=False, default=10),
+        "nbins": ToolParameter(
+            type="integer", description="Number of bins", required=False, default=10
+        ),
     },
     returns="Plotly figure as JSON-serializable dict",
     namespace="core.visualization",
@@ -341,9 +364,15 @@ def histogram(
     description="Create a box plot to visualize statistical summaries (median, quartiles, outliers).",
     parameters={
         "data": ToolParameter(type="object", description="Input DataFrame as dict", required=True),
-        "x": ToolParameter(type="string", description="Column name for X-axis (grouping)", required=False),
-        "y": ToolParameter(type="string", description="Column name for Y-axis (values)", required=True),
-        "color": ToolParameter(type="string", description="Column name for color grouping", required=False),
+        "x": ToolParameter(
+            type="string", description="Column name for X-axis (grouping)", required=False
+        ),
+        "y": ToolParameter(
+            type="string", description="Column name for Y-axis (values)", required=True
+        ),
+        "color": ToolParameter(
+            type="string", description="Column name for color grouping", required=False
+        ),
         "title": ToolParameter(type="string", description="Chart title", required=False),
     },
     returns="Plotly figure as JSON-serializable dict",
@@ -395,7 +424,9 @@ def box_plot(
             x: _label_for_column(x, units) if x else "",
             y: _label_for_column(y, units) if y else "",
         },
-        title=title or f"Distribution of {_label_for_column(y, units)}" + (f" by {_label_for_column(x, units)}" if x else ""),
+        title=title
+        or f"Distribution of {_label_for_column(y, units)}"
+        + (f" by {_label_for_column(x, units)}" if x else ""),
         **kwargs,
     )
 
@@ -408,11 +439,19 @@ def box_plot(
     description="Create a violin plot to visualize distribution shape and density.",
     parameters={
         "data": ToolParameter(type="object", description="Input DataFrame as dict", required=True),
-        "x": ToolParameter(type="string", description="Column name for X-axis (grouping)", required=False),
-        "y": ToolParameter(type="string", description="Column name for Y-axis (values)", required=True),
-        "color": ToolParameter(type="string", description="Column name for color grouping", required=False),
+        "x": ToolParameter(
+            type="string", description="Column name for X-axis (grouping)", required=False
+        ),
+        "y": ToolParameter(
+            type="string", description="Column name for Y-axis (values)", required=True
+        ),
+        "color": ToolParameter(
+            type="string", description="Column name for color grouping", required=False
+        ),
         "title": ToolParameter(type="string", description="Chart title", required=False),
-        "box": ToolParameter(type="boolean", description="Show embedded box plot", required=False, default=False),
+        "box": ToolParameter(
+            type="boolean", description="Show embedded box plot", required=False, default=False
+        ),
     },
     returns="Plotly figure as JSON-serializable dict",
     namespace="core.visualization",
@@ -467,7 +506,9 @@ def violin_plot(
             x: _label_for_column(x, units) if x else "",
             y: _label_for_column(y, units) if y else "",
         },
-        title=title or f"Distribution of {_label_for_column(y, units)}" + (f" by {_label_for_column(x, units)}" if x else ""),
+        title=title
+        or f"Distribution of {_label_for_column(y, units)}"
+        + (f" by {_label_for_column(x, units)}" if x else ""),
         **kwargs,
     )
 
@@ -482,9 +523,13 @@ def violin_plot(
         "data": ToolParameter(type="object", description="Input DataFrame as dict", required=True),
         "x": ToolParameter(type="string", description="Column name for X-axis", required=False),
         "y": ToolParameter(type="string", description="Column name for Y-axis", required=False),
-        "z": ToolParameter(type="string", description="Column name for color values", required=False),
+        "z": ToolParameter(
+            type="string", description="Column name for color values", required=False
+        ),
         "title": ToolParameter(type="string", description="Chart title", required=False),
-        "correlation": ToolParameter(type="boolean", description="Compute correlation matrix", required=False, default=False),
+        "correlation": ToolParameter(
+            type="boolean", description="Compute correlation matrix", required=False, default=False
+        ),
     },
     returns="Plotly figure as JSON-serializable dict",
     namespace="core.visualization",

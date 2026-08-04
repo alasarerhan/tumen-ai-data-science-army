@@ -13,8 +13,7 @@ from typing import Any, Callable  # noqa: E402, F401
 
 from langchain_core.messages import AIMessage  # noqa: E402, F401
 
-from ai_data_science_team.multiagents.supervisor import (  # noqa: E402, F401
-    SupervisorDSState)
+from ai_data_science_team.multiagents.supervisor import SupervisorDSState  # noqa: E402, F401
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +21,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class SqlNodeDeps:
     """Dependencies for the sql node."""
+
     sql_database_agent: Any
     append_error_message: Any  # was _append_error_message
     ensure_dataset_registry: Any  # was _ensure_dataset_registry
@@ -43,9 +43,7 @@ def make_node_sql(deps: SqlNodeDeps) -> Callable[[SupervisorDSState], dict]:
         before_msgs = list(state.get("messages", []) or [])
         last_human = deps._get_last_human_text(before_msgs)
         datasets, active_dataset_id = deps.ensure_dataset_registry(state)
-        deps.sql_database_agent.invoke_messages(
-            messages=before_msgs,
-            user_instructions=last_human)
+        deps.sql_database_agent.invoke_messages(messages=before_msgs, user_instructions=last_human)
         response = deps.sql_database_agent.response or {}
         merged = deps.merge_messages(before_msgs, response)
         merged["messages"] = deps.tag_messages(merged.get("messages"), "sql_database_agent")
@@ -53,17 +51,17 @@ def make_node_sql(deps: SqlNodeDeps) -> Callable[[SupervisorDSState], dict]:
             "sql_database_agent",
             response.get("data_sql"),
             deps._get_last_human_text(before_msgs),
-            extra_text=response.get("sql_query_code", ""))
+            extra_text=response.get("sql_query_code", ""),
+        )
         if summary_text:
-            merged["messages"].append(
-                AIMessage(content=summary_text, name="sql_database_agent")
-            )
+            merged["messages"].append(AIMessage(content=summary_text, name="sql_database_agent"))
         deps.append_error_message(
             merged,
             "sql_database_agent",
             response.get("sql_database_error"),
             response.get("sql_database_error_log_path"),
-            prefix="SQL error")
+            prefix="SQL error",
+        )
         data_sql = response.get("data_sql")
         if data_sql is not None:
             try:
@@ -101,15 +99,14 @@ def make_node_sql(deps: SqlNodeDeps) -> Callable[[SupervisorDSState], dict]:
                         },
                     },
                     parent_id=None,
-                    make_active=True)
+                    make_active=True,
+                )
             except Exception:
                 pass
         return {
             **merged,
             "data_sql": data_sql,
-            "active_data_key": "data_sql"
-            if data_sql is not None
-            else state.get("active_data_key"),
+            "active_data_key": "data_sql" if data_sql is not None else state.get("active_data_key"),
             "datasets": datasets,
             "active_dataset_id": active_dataset_id,
             "artifacts": {
@@ -117,16 +114,10 @@ def make_node_sql(deps: SqlNodeDeps) -> Callable[[SupervisorDSState], dict]:
                 "sql": {
                     "sql_query_code": response.get("sql_query_code"),
                     "sql_database_function": response.get("sql_database_function"),
-                    "sql_database_function_path": response.get(
-                        "sql_database_function_path"
-                    ),
-                    "sql_database_function_name": response.get(
-                        "sql_database_function_name"
-                    ),
+                    "sql_database_function_path": response.get("sql_database_function_path"),
+                    "sql_database_function_name": response.get("sql_database_function_name"),
                     "sql_database_error": response.get("sql_database_error"),
-                    "sql_database_error_log_path": response.get(
-                        "sql_database_error_log_path"
-                    ),
+                    "sql_database_error_log_path": response.get("sql_database_error_log_path"),
                     "recommended_steps": response.get("recommended_steps"),
                     "data_sql": data_sql,
                 },
@@ -134,9 +125,7 @@ def make_node_sql(deps: SqlNodeDeps) -> Callable[[SupervisorDSState], dict]:
             "last_worker": "SQL_Database_Agent",
         }
 
-
     return node_sql
-
 
 
 __all__ = ["SqlNodeDeps", "make_node_sql"]

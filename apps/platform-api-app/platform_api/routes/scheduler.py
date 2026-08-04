@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, Optional
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
@@ -14,15 +14,14 @@ from platform_api.scheduler.schedule_parser import ScheduleParser
 router = APIRouter(prefix="/v1/scheduler", tags=["scheduler"])
 
 
-def _job_belongs_to_workspace(job: Dict[str, Any], workspace_id: str, tenant_id: str) -> bool:
-    return (
-        str(job.get("workspace_id")) == workspace_id
-        and str(job.get("tenant_id")) == tenant_id
-    )
+def _job_belongs_to_workspace(job: dict[str, Any], workspace_id: str, tenant_id: str) -> bool:
+    return str(job.get("workspace_id")) == workspace_id and str(job.get("tenant_id")) == tenant_id
 
 
-def _scoped_queue_stats(queue: ScheduledJobQueue, workspace_id: str, tenant_id: str) -> Dict[str, int]:
-    stats: Dict[str, int] = {}
+def _scoped_queue_stats(
+    queue: ScheduledJobQueue, workspace_id: str, tenant_id: str
+) -> dict[str, int]:
+    stats: dict[str, int] = {}
     for status, response_key in (
         ("queued", "queued"),
         ("processing", "processing"),
@@ -45,7 +44,7 @@ class ParseScheduleRequest(BaseModel):
 
 class EnqueueJobRequest(BaseModel):
     workflow_id: str
-    workflow_spec: Dict[str, Any]
+    workflow_spec: dict[str, Any]
     schedule: str
     max_attempts: int = 3
     priority: str = "normal"
@@ -55,7 +54,7 @@ class EnqueueJobRequest(BaseModel):
 async def parse_schedule(
     body: ParseScheduleRequest,
     context: dict = Depends(require_workspace_member),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     parser = ScheduleParser()
     try:
         cron, description = parser.parse_with_description(body.expression)
@@ -72,9 +71,9 @@ async def parse_schedule(
 async def enqueue_job(
     body: EnqueueJobRequest,
     context: dict = Depends(require_workspace_admin),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     workspace = context["workspace"]
-    
+
     try:
         queue = ScheduledJobQueue()
         job_id = queue.enqueue(
@@ -99,27 +98,27 @@ async def enqueue_job(
 async def get_job(
     job_id: str,
     context: dict = Depends(require_workspace_member),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     workspace = context["workspace"]
     queue = ScheduledJobQueue()
     job = queue.get_job(job_id)
-    
+
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
     if not _job_belongs_to_workspace(job, str(workspace.id), str(workspace.tenant_id)):
         raise HTTPException(status_code=404, detail="Job not found")
-    
+
     return job
 
 
 @router.get("/jobs")
 async def list_jobs(
-    status: Optional[str] = None,
+    status: str | None = None,
     context: dict = Depends(require_workspace_member),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     workspace = context["workspace"]
     queue = ScheduledJobQueue()
-    
+
     if status:
         job_ids = queue.get_jobs_by_status(status)
     else:
@@ -128,20 +127,20 @@ async def list_jobs(
             "stats": stats,
             "jobs": [],
         }
-    
+
     jobs = []
     for job_id in job_ids[:50]:
         job = queue.get_job(job_id)
         if job and _job_belongs_to_workspace(job, str(workspace.id), str(workspace.tenant_id)):
             jobs.append(job)
-    
+
     return {"jobs": jobs}
 
 
 @router.get("/stats")
 async def get_queue_stats(
     context: dict = Depends(require_workspace_member),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     workspace = context["workspace"]
     queue = ScheduledJobQueue()
     return _scoped_queue_stats(queue, str(workspace.id), str(workspace.tenant_id))
@@ -151,17 +150,17 @@ async def get_queue_stats(
 async def requeue_job(
     job_id: str,
     context: dict = Depends(require_workspace_admin),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     workspace = context["workspace"]
     queue = ScheduledJobQueue()
     job = queue.get_job(job_id)
     if not job or not _job_belongs_to_workspace(job, str(workspace.id), str(workspace.tenant_id)):
         raise HTTPException(status_code=404, detail="Job not found or not in dead-letter queue")
     success = queue.requeue_dead_letter_job(job_id)
-    
+
     if not success:
         raise HTTPException(status_code=404, detail="Job not found or not in dead-letter queue")
-    
+
     return {"job_id": job_id, "status": "requeued"}
 
 
@@ -169,7 +168,7 @@ async def requeue_job(
 async def list_dead_letter_jobs(
     limit: int = 50,
     context: dict = Depends(require_workspace_member),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     workspace = context["workspace"]
     queue = ScheduledJobQueue()
     jobs = [

@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
-from unittest.mock import MagicMock, AsyncMock, patch
 
 from platform_api.discovery.agent_discovery import AgentDiscoveryService
 
@@ -165,7 +166,9 @@ class TestAgentDiscoveryService:
         self,
         service: AgentDiscoveryService,
     ) -> None:
-        with patch("platform_api.discovery.agent_discovery.AGENT_CATEGORIES", {"eda": {"name": "EDA"}}):
+        with patch(
+            "platform_api.discovery.agent_discovery.AGENT_CATEGORIES", {"eda": {"name": "EDA"}}
+        ):
             results = await service.get_categories()
 
             assert len(results) == 1

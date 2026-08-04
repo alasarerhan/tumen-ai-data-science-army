@@ -28,7 +28,6 @@ Public surface
 from dataclasses import dataclass, field  # noqa: E402, F401
 from typing import Any, Dict, Iterable, Mapping, Optional  # noqa: E402, F401
 
-
 # ---------------------------------------------------------------------------
 # Port allocation
 # ---------------------------------------------------------------------------
@@ -83,13 +82,13 @@ def render_bentofile(
 ) -> str:
     """Return a bentofile.yaml body for serving ``model_id`` v``version``."""
     return (
-        "service: \"scoring_service:svc\"\n"
+        'service: "scoring_service:svc"\n'
         "labels:\n"
         "  owner: ai-data-science-team\n"
-        f"  model_id: \"{model_id}\"\n"
-        f"  model_version: \"{version}\"\n"
+        f'  model_id: "{model_id}"\n'
+        f'  model_version: "{version}"\n'
         "include:\n"
-        "  - \"app.py\"\n"
+        '  - "app.py"\n'
         f"python:\n"
         "  packages:\n"
         "    - scikit-learn\n"
@@ -113,7 +112,7 @@ def render_fastapi_app(
         "from fastapi import FastAPI, HTTPException\n"
         "from pydantic import BaseModel\n"
         "\n"
-        "app = FastAPI(title=f\"{model_id}::{version}\")\n"
+        'app = FastAPI(title=f"{model_id}::{version}")\n'
         "\n"
         "class PredictRequest(BaseModel):\n"
         "    features: dict\n"
@@ -128,7 +127,11 @@ def render_fastapi_app(
         "        raise HTTPException(status_code=400, detail='features must be a dict')\n"
         "    # Real implementations would call ``model.predict(req.features)``;\n"
         "    # this scaffold provides a stable contract surface.\n"
-        "    return {'prediction': None, 'model_id': '" + model_id + "', 'version': '" + version + "'}\n"
+        "    return {'prediction': None, 'model_id': '"
+        + model_id
+        + "', 'version': '"
+        + version
+        + "'}\n"
     )
 
 
@@ -232,5 +235,3 @@ __all__ = [
     "record_deployment",
     "record_rollback",
 ]
-
-

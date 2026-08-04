@@ -37,7 +37,9 @@ class ProjectNotFoundError(PipelineStudioError):
 
 class ProjectSaveError(PipelineStudioError):
     def __init__(self, project_name: str, cause: str):
-        super().__init__(f"Failed to save project '{project_name}': {cause}", {"project_name": project_name})
+        super().__init__(
+            f"Failed to save project '{project_name}': {cause}", {"project_name": project_name}
+        )
         self.project_name = project_name
 
 
@@ -49,7 +51,9 @@ class DatasetNotFoundError(PipelineStudioError):
 
 class UndoNotSupportedError(PipelineStudioError):
     def __init__(self, action_type: str):
-        super().__init__(f"Undo not implemented for action type '{action_type}'", {"action_type": action_type})
+        super().__init__(
+            f"Undo not implemented for action type '{action_type}'", {"action_type": action_type}
+        )
         self.action_type = action_type
 
 

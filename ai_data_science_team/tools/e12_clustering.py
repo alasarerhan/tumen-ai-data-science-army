@@ -30,6 +30,7 @@ logger = logging.getLogger(__name__)
 # K-Means clustering
 # ---------------------------------------------------------------------------
 
+
 @tool(response_format="content_and_artifact")
 def run_kmeans(
     data: List[List[float]],
@@ -112,6 +113,7 @@ def run_kmeans(
 # DBSCAN clustering
 # ---------------------------------------------------------------------------
 
+
 @tool(response_format="content_and_artifact")
 def run_dbscan(
     data: List[List[float]],
@@ -165,7 +167,9 @@ def run_dbscan(
         non_noise_mask = np.array(labels) != -1
         if non_noise_mask.sum() >= 2:
             try:
-                sil = round(float(silhouette_score(X[non_noise_mask], np.array(labels)[non_noise_mask])), 4)
+                sil = round(
+                    float(silhouette_score(X[non_noise_mask], np.array(labels)[non_noise_mask])), 4
+                )
             except Exception as exc:
                 logger.warning("silhouette_score failed for DBSCAN: %s", exc)
 
@@ -193,6 +197,7 @@ def run_dbscan(
 # ---------------------------------------------------------------------------
 # PCA dimensionality reduction
 # ---------------------------------------------------------------------------
+
 
 @tool(response_format="content_and_artifact")
 def reduce_pca(
@@ -250,7 +255,7 @@ def reduce_pca(
     summary_lines = [
         f"PCA completed — {n_comp_eff} components from {n_features} features.",
         "Explained variance per component: "
-        + ", ".join(f"PC{i+1}: {v:.1%}" for i, v in enumerate(evr)),
+        + ", ".join(f"PC{i + 1}: {v:.1%}" for i, v in enumerate(evr)),
         f"Cumulative explained variance: {cumvar:.1%}",
     ]
     return "\n".join(summary_lines), artifact
@@ -259,6 +264,7 @@ def reduce_pca(
 # ---------------------------------------------------------------------------
 # t-SNE dimensionality reduction
 # ---------------------------------------------------------------------------
+
 
 @tool(response_format="content_and_artifact")
 def reduce_tsne(
@@ -331,6 +337,7 @@ def reduce_tsne(
 # Cluster profiling
 # ---------------------------------------------------------------------------
 
+
 @tool(response_format="content_and_artifact")
 def compute_cluster_profile(
     data: List[List[float]],
@@ -368,9 +375,9 @@ def compute_cluster_profile(
             "size": int(mask.sum()),
             "share": round(float(mask.sum()) / n_samples, 4),
             "mean": [round(float(v), 4) for v in subset.mean(axis=0)],
-            "std":  [round(float(v), 4) for v in subset.std(axis=0)],
-            "min":  [round(float(v), 4) for v in subset.min(axis=0)],
-            "max":  [round(float(v), 4) for v in subset.max(axis=0)],
+            "std": [round(float(v), 4) for v in subset.std(axis=0)],
+            "min": [round(float(v), 4) for v in subset.min(axis=0)],
+            "max": [round(float(v), 4) for v in subset.max(axis=0)],
         }
 
     artifact: Dict[str, Any] = {
@@ -384,7 +391,9 @@ def compute_cluster_profile(
     for cid, stats in profiles.items():
         lines.append(
             f"  Cluster {cid}: n={stats['size']} ({stats['share']:.1%}) — "
-            + "mean=[" + ", ".join(f"{v:.3f}" for v in stats["mean"]) + "]"
+            + "mean=["
+            + ", ".join(f"{v:.3f}" for v in stats["mean"])
+            + "]"
         )
     return "\n".join(lines), artifact
 
@@ -392,6 +401,7 @@ def compute_cluster_profile(
 # ---------------------------------------------------------------------------
 # Silhouette score
 # ---------------------------------------------------------------------------
+
 
 @tool(response_format="content_and_artifact")
 def compute_silhouette(
@@ -419,7 +429,7 @@ def compute_silhouette(
         n_clusters (int).
     """
     try:
-        from sklearn.metrics import silhouette_score, silhouette_samples  # noqa: E402, F401
+        from sklearn.metrics import silhouette_samples, silhouette_score  # noqa: E402, F401
     except ImportError:
         raise ImportError("pip install scikit-learn")
 
@@ -466,9 +476,10 @@ def compute_silhouette(
         f"Overall silhouette score: {status}",
     ]
     if per_cluster:
-        lines.append("Per-cluster silhouette: " + ", ".join(f"C{k}: {v}" for k, v in per_cluster.items()))
+        lines.append(
+            "Per-cluster silhouette: " + ", ".join(f"C{k}: {v}" for k, v in per_cluster.items())
+        )
     return "\n".join(lines), artifact
-
 
 
 @dataclass
@@ -476,6 +487,7 @@ class ClusteringResult:
     """Compat shim — modernized e12_clustering module exposes functions only;
     the agent file historically expected a dataclass. Use run_clustering() payload instead.
     """
+
     labels: Sequence[int] = field(default_factory=list)
     algorithm: str = ""
     n_clusters: int = 0
@@ -489,6 +501,7 @@ def compute_calinski_harabasz(X, labels):
     """Compat shim — returns 0.0 if sklearn can't compute; otherwise sklearn.metrics.calinski_harabasz_score."""
     try:
         from sklearn.metrics import calinski_harabasz_score as _ch
+
         return float(_ch(X, labels))
     except Exception:
         return 0.0
@@ -499,6 +512,7 @@ def profile_clusters(X, labels, feature_names=None):
     Returns dict[int -> dict[str -> {mean,std,min,max}]]
     """
     import numpy as _np
+
     if feature_names is None:
         feature_names = [f"f{i}" for i in range(X.shape[1] if hasattr(X, "shape") else 0)]
     out = {}
@@ -510,8 +524,12 @@ def profile_clusters(X, labels, feature_names=None):
             continue
         sub = X[mask]
         out[int(lab)] = {
-            f: {"mean": float(sub[:, i].mean()), "std": float(sub[:, i].std()),
-                "min": float(sub[:, i].min()), "max": float(sub[:, i].max())}
+            f: {
+                "mean": float(sub[:, i].mean()),
+                "std": float(sub[:, i].std()),
+                "min": float(sub[:, i].min()),
+                "max": float(sub[:, i].max()),
+            }
             for i, f in enumerate(feature_names)
         }
     return out
@@ -520,10 +538,13 @@ def profile_clusters(X, labels, feature_names=None):
 def cluster_sizes(labels) -> Dict[int, int]:
     """Compat shim."""
     import collections
+
     return dict(collections.Counter(int(x) for x in labels))
 
 
-def build_naming_seeds(profiles: Dict[int, Dict[str, Any]], template_prefix: str = "cluster") -> Dict[int, str]:
+def build_naming_seeds(
+    profiles: Dict[int, Dict[str, Any]], template_prefix: str = "cluster"
+) -> Dict[int, str]:
     """Compat shim — deterministic naming: top-3 most-distinguishing feature names."""
     out = {}
     for cid, feats in profiles.items():
@@ -543,7 +564,14 @@ def result_payload(result, payload_type: str = "graph") -> Dict[str, Any]:
     }
 
 
-def run_clustering(X, algorithm: str = "kmeans", n_clusters: int = 4, standardize: bool = True, random_state: int = 0, **kwargs) -> ClusteringResult:
+def run_clustering(
+    X,
+    algorithm: str = "kmeans",
+    n_clusters: int = 4,
+    standardize: bool = True,
+    random_state: int = 0,
+    **kwargs,
+) -> ClusteringResult:
     """Compat shim — convenience wrapper around run_kmeans / run_dbscan / run_hierarchical."""
     arr = __import__("numpy").asarray(X)
     if algorithm == "dbscan":
@@ -551,7 +579,11 @@ def run_clustering(X, algorithm: str = "kmeans", n_clusters: int = 4, standardiz
     elif algorithm == "hierarchical":
         labels = run_hierarchical(arr, n_clusters=n_clusters, **kwargs)
     else:
-        labels = run_kmeans(arr, n_clusters=n_clusters, random_state=random_state).tolist() if hasattr(run_kmeans(arr, n_clusters=n_clusters, random_state=random_state), "tolist") else list(run_kmeans(arr, n_clusters=n_clusters, random_state=random_state))
+        labels = (
+            run_kmeans(arr, n_clusters=n_clusters, random_state=random_state).tolist()
+            if hasattr(run_kmeans(arr, n_clusters=n_clusters, random_state=random_state), "tolist")
+            else list(run_kmeans(arr, n_clusters=n_clusters, random_state=random_state))
+        )
     return ClusteringResult(
         labels=labels,
         algorithm=algorithm,
@@ -561,9 +593,12 @@ def run_clustering(X, algorithm: str = "kmeans", n_clusters: int = 4, standardiz
     )
 
 
-def run_hierarchical(X, n_clusters: int = 4, linkage: str = "ward", random_state: int = 0, **kwargs):
+def run_hierarchical(
+    X, n_clusters: int = 4, linkage: str = "ward", random_state: int = 0, **kwargs
+):
     """Compat shim — sklearn AgglomerativeClustering wrapper."""
     from sklearn.cluster import AgglomerativeClustering
+
     arr = __import__("numpy").asarray(X)
     return list(AgglomerativeClustering(n_clusters=n_clusters, linkage=linkage).fit_predict(arr))
 
@@ -571,7 +606,11 @@ def run_hierarchical(X, n_clusters: int = 4, linkage: str = "ward", random_state
 def segmentation_template(profiles, seeds, total_samples, shares=None):
     """Compat shim — return summary dict for marketing-style segmentation payload."""
     if shares is None:
-        shares = {cid: round(v["share"], 3) for cid, v in profiles.items()} if False else {cid: 1.0 / max(1, len(profiles)) for cid in profiles}
+        shares = (
+            {cid: round(v["share"], 3) for cid, v in profiles.items()}
+            if False
+            else {cid: 1.0 / max(1, len(profiles)) for cid in profiles}
+        )
     return {
         "type": "segmentation",
         "total_samples": total_samples,

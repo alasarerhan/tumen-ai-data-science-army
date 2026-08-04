@@ -12,10 +12,15 @@ PowerAnalysisAgent.
 Node type: ``data.diff``
 """
 
-from typing import (Dict, Optional, Tuple)  # noqa: E402
 import logging  # noqa: E402, F401
-from typing import Any  # noqa: E402, F401
+from typing import (  # noqa: E402
+    Any,  # noqa: E402, F401
+    Dict,
+    Optional,
+    Tuple,
+)
 
+import pandas as pd  # noqa: E402, F401
 from langchain.tools import tool  # noqa: E402, F401
 from langchain_core.messages import AIMessage, BaseMessage  # noqa: E402, F401
 from langgraph.graph import END, START, StateGraph  # noqa: E402, F401
@@ -24,10 +29,6 @@ from langgraph.types import Checkpointer  # noqa: E402, F401
 from typing_extensions import Annotated, Sequence, TypedDict  # noqa: E402, F401
 
 from ai_data_science_team.templates import BaseAgent  # noqa: E402, F401
-from ai_data_science_team.utils.regex import format_agent_name  # noqa: E402, F401
-
-import pandas as pd  # noqa: E402, F401
-
 from ai_data_science_team.tools.data_diff import (  # noqa: E402, F401
     diff_payload,
     diff_summary,
@@ -36,7 +37,7 @@ from ai_data_science_team.tools.data_diff import (  # noqa: E402, F401
     profile_columns,
     schema_delta,
 )
-
+from ai_data_science_team.utils.regex import format_agent_name  # noqa: E402, F401
 
 logger = logging.getLogger(__name__)
 
@@ -48,6 +49,7 @@ NODE_TYPE = "data.dif"
 # Tool wrappers
 # ---------------------------------------------------------------------------
 
+
 @tool(response_format="content_and_artifact")
 def profile_columns_wrapped(df: pd.DataFrame) -> Tuple[str, dict]:
     """Tool wrapper for ``profile_columns``.
@@ -57,7 +59,7 @@ def profile_columns_wrapped(df: pd.DataFrame) -> Tuple[str, dict]:
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: j13_profile_columns")
-    kwargs = {'df': df}
+    kwargs = {"df": df}
     try:
         result = profile_columns(**kwargs)
     except Exception as exc:
@@ -85,7 +87,7 @@ def numeric_shift_wrapped(left: pd.Series, right: pd.Series) -> Tuple[str, dict]
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: j13_numeric_shift")
-    kwargs = {'left': left, 'right': right}
+    kwargs = {"left": left, "right": right}
     try:
         result = numeric_shift(**kwargs)
     except Exception as exc:
@@ -113,7 +115,7 @@ def schema_delta_wrapped(left: pd.DataFrame, right: pd.DataFrame) -> Tuple[str, 
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: j13_schema_delta")
-    kwargs = {'left': left, 'right': right}
+    kwargs = {"left": left, "right": right}
     try:
         result = schema_delta(**kwargs)
     except Exception as exc:
@@ -141,7 +143,7 @@ def key_set_diff_wrapped(left: pd.DataFrame, right: pd.DataFrame, key: str) -> T
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: j13_key_set_diff")
-    kwargs = {'left': left, 'right': right, 'key': key}
+    kwargs = {"left": left, "right": right, "key": key}
     try:
         result = key_set_diff(**kwargs)
     except Exception as exc:
@@ -169,7 +171,7 @@ def diff_summary_wrapped(left: pd.DataFrame, right: pd.DataFrame) -> Tuple[str, 
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: j13_diff_summary")
-    kwargs = {'left': left, 'right': right}
+    kwargs = {"left": left, "right": right}
     try:
         result = diff_summary(**kwargs)
     except Exception as exc:
@@ -197,7 +199,7 @@ def diff_payload_wrapped(left: pd.DataFrame, right: pd.DataFrame) -> Tuple[str, 
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: j13_diff_payload")
-    kwargs = {'left': left, 'right': right}
+    kwargs = {"left": left, "right": right}
     try:
         result = diff_payload(**kwargs)
     except Exception as exc:
@@ -269,7 +271,12 @@ def make_data_diff_agent(
     def run_react_agent(state: GraphState):
         logger.info("    * RUN REACT AGENT FOR J13")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
-        messages = [("system", "You are the J13 agent. Use the available tools to complete the user's request.")] + list(base)
+        messages = [
+            (
+                "system",
+                "You are the J13 agent. Use the available tools to complete the user's request.",
+            )
+        ] + list(base)
         input_payload = {"messages": messages}
         return react_agent.invoke(input_payload, invoke_react_agent_kwargs)
 
@@ -288,7 +295,9 @@ def make_data_diff_agent(
             last_ai = AIMessage(content=getattr(internal[-1], "content", ""), name=AGENT_NAME)
         tool_calls = []
         for msg in internal:
-            name = getattr(getattr(msg, "tool_call_id", None), "name", None) or getattr(msg, "name", None)
+            name = getattr(getattr(msg, "tool_call_id", None), "name", None) or getattr(
+                msg, "name", None
+            )
             if name:
                 tool_calls.append(name)
         if log_tool_calls and tool_calls:
@@ -356,6 +365,7 @@ class DataDiffAgent(BaseAgent):
         if not self.response or "messages" not in self.response:
             return None
         from IPython.display import Markdown as _Markdown  # noqa: E402, F401
+
         for msg in reversed(self.response.get("messages", [])):
             content = getattr(msg, "content", "")
             if content:

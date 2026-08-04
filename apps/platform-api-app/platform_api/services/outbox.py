@@ -49,9 +49,10 @@ from __future__ import annotations
 import json
 import logging
 import uuid
+from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any
 
 from prometheus_client import Gauge
 from sqlalchemy import DateTime, Index, String, Text, func, select, update
@@ -115,6 +116,7 @@ class OutboxEvent(Base):
     Events are stored in the database within the same transaction
     as the aggregate change, ensuring atomicity.
     """
+
     __tablename__ = "outbox_events"
     __table_args__ = (
         Index("ix_outbox_events_status_created", "status", "created_at"),
@@ -123,9 +125,7 @@ class OutboxEvent(Base):
         Index("ix_outbox_events_tenant_status_created", "tenant_id", "status", "created_at"),
     )
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     tenant_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True)
     workspace_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True)
     aggregate_type: Mapped[str] = mapped_column(String(100), nullable=False)
@@ -138,15 +138,11 @@ class OutboxEvent(Base):
     retry_count: Mapped[int] = mapped_column(default=0, nullable=False)
     max_retries: Mapped[int] = mapped_column(default=5, nullable=False)
     last_error: Mapped[str | None] = mapped_column(Text, nullable=True)
-    next_retry_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    next_retry_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC)
     )
-    published_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
 class OutboxService:
@@ -169,7 +165,7 @@ class OutboxService:
         aggregate_type: str,
         aggregate_id: str,
         event_type: str,
-        payload: Optional[Dict[str, Any]] = None,
+        payload: dict[str, Any] | None = None,
         max_retries: int = 5,
         tenant_id: uuid.UUID | str | None = None,
         workspace_id: uuid.UUID | str | None = None,
@@ -217,7 +213,10 @@ class OutboxService:
         self._db.flush()
         logger.debug(
             "Added outbox event: id=%s, type=%s, aggregate=%s/%s",
-            event.id, event_type, aggregate_type, aggregate_id,
+            event.id,
+            event_type,
+            aggregate_type,
+            aggregate_id,
         )
         return event
 
@@ -253,7 +252,9 @@ class OutboxService:
             recovered += 1
             logger.warning(
                 "Recovered stuck event: id=%s, type=%s, was processing since %s",
-                event.id, event.event_type, event.created_at,
+                event.id,
+                event.event_type,
+                event.created_at,
             )
 
         if recovered > 0:
@@ -266,7 +267,7 @@ class OutboxService:
         self,
         limit: int = DEFAULT_BATCH_SIZE,
         batch_size: int = DEFAULT_BATCH_SIZE,
-    ) -> List[OutboxEvent]:
+    ) -> list[OutboxEvent]:
         """Acquire pending events for processing (DESTRUCTIVE READ).
 
         WARNING: This method MUTATES database state and COMMITS the transaction.
@@ -287,7 +288,7 @@ class OutboxService:
         -------
         list[OutboxEvent]
             List of pending events marked as 'processing'.
-        
+
         Raises
         ------
         ValueError
@@ -333,13 +334,14 @@ class OutboxService:
         self,
         limit: int = DEFAULT_BATCH_SIZE,
         batch_size: int = DEFAULT_BATCH_SIZE,
-    ) -> List[OutboxEvent]:
+    ) -> list[OutboxEvent]:
         """DEPRECATED: Use acquire_pending_events() instead.
 
         This method is deprecated because it mutates database state despite
         being named 'get'. Use acquire_pending_events() for clarity.
         """
         import warnings
+
         warnings.warn(
             "get_pending_events() is deprecated. Use acquire_pending_events() "
             "to make the destructive read behavior explicit.",
@@ -386,13 +388,17 @@ class OutboxService:
         if retry and event.retry_count < event.max_retries:
             event.status = OutboxEventStatus.pending
             backoff = min(
-                settings.webhook_backoff_base_seconds * (2 ** event.retry_count),
+                settings.webhook_backoff_base_seconds * (2**event.retry_count),
                 settings.webhook_backoff_max_seconds,
             )
             event.next_retry_at = datetime.now(UTC) + timedelta(seconds=backoff)
             logger.warning(
                 "Event failed (will retry in %.1fs): id=%s, attempt=%d/%d, error=%s",
-                backoff, event.id, event.retry_count, event.max_retries, error[:200],
+                backoff,
+                event.id,
+                event.retry_count,
+                event.max_retries,
+                error[:200],
             )
             self._db.add(event)
             self._db.flush()
@@ -405,12 +411,16 @@ class OutboxService:
             if moved_to_dlq:
                 logger.error(
                     "Event moved to DLQ: id=%s, attempts=%d, error=%s",
-                    event.id, event.retry_count, error[:200],
+                    event.id,
+                    event.retry_count,
+                    error[:200],
                 )
             else:
                 logger.error(
                     "Event failed (no more retries): id=%s, attempts=%d, error=%s",
-                    event.id, event.retry_count, error[:200],
+                    event.id,
+                    event.retry_count,
+                    error[:200],
                 )
             self._db.flush()
             return moved_to_dlq
@@ -448,13 +458,15 @@ class OutboxService:
             self._db.add(dlq_entry)
             logger.warning(
                 "Event moved to DLQ: original_id=%s, event_type=%s",
-                event.id, event.event_type,
+                event.id,
+                event.event_type,
             )
             return True
         except Exception as e:
             logger.error(
                 "Failed to move event to DLQ: event_id=%s, error=%s",
-                event.id, str(e),
+                event.id,
+                str(e),
             )
             return False
 
@@ -463,7 +475,7 @@ class OutboxService:
         limit: int = 100,
         unreviewed_only: bool = True,
         tenant_id: uuid.UUID | str | None = None,
-    ) -> List:
+    ) -> list:
         """Get events from the dead letter queue.
 
         Parameters
@@ -530,7 +542,8 @@ class OutboxService:
             except json.JSONDecodeError as e:
                 logger.error(
                     "Failed to parse payload JSON for DLQ event %s, marking as corrupted: %s",
-                    dlq_event_id, e,
+                    dlq_event_id,
+                    e,
                 )
                 dlq_event.reviewed = True
                 dlq_event.reviewed_at = datetime.now(UTC)
@@ -558,11 +571,12 @@ class OutboxService:
 
         logger.info(
             "Replayed DLQ event: dlq_id=%s, new_event_id=%s",
-            dlq_event_id, new_event.id,
+            dlq_event_id,
+            new_event.id,
         )
         return new_event
 
-    def get_queue_stats(self, tenant_id: uuid.UUID | str | None = None) -> Dict[str, int]:
+    def get_queue_stats(self, tenant_id: uuid.UUID | str | None = None) -> dict[str, int]:
         """Get queue statistics for monitoring.
 
         Returns
@@ -575,15 +589,11 @@ class OutboxService:
         if isinstance(tenant_id, str):
             tenant_id = uuid.UUID(tenant_id)
 
-        pending_query = select(func.count()).where(
-            OutboxEvent.status == OutboxEventStatus.pending
-        )
+        pending_query = select(func.count()).where(OutboxEvent.status == OutboxEventStatus.pending)
         processing_query = select(func.count()).where(
             OutboxEvent.status == OutboxEventStatus.processing
         )
-        failed_query = select(func.count()).where(
-            OutboxEvent.status == OutboxEventStatus.failed
-        )
+        failed_query = select(func.count()).where(OutboxEvent.status == OutboxEventStatus.failed)
         dlq_query = select(func.count()).where(OutboxDlq.reviewed.is_(False))
 
         if tenant_id is not None:
@@ -619,7 +629,7 @@ class OutboxService:
         self,
         publisher: Callable[[OutboxEvent], Any],
         batch_size: int = 10,
-    ) -> Dict[str, int]:
+    ) -> dict[str, int]:
         """Process pending events with the given publisher.
 
         Parameters
@@ -689,20 +699,21 @@ async def prefect_event_publisher(event: OutboxEvent) -> None:
         )
         logger.info(
             "Created Prefect flow run: flow_run_id=%s, event_id=%s",
-            flow_run_id, event.id,
+            flow_run_id,
+            event.id,
         )
     else:
         logger.debug("Ignoring event type: %s", event.event_type)
 
 
 __all__ = [
+    "OUTBOX_DLQ_GAUGE",
+    "OUTBOX_FAILED_GAUGE",
+    "OUTBOX_PENDING_GAUGE",
+    "OUTBOX_PROCESSING_GAUGE",
+    "OUTBOX_STUCK_GAUGE",
     "OutboxEvent",
     "OutboxEventStatus",
     "OutboxService",
     "prefect_event_publisher",
-    "OUTBOX_PENDING_GAUGE",
-    "OUTBOX_PROCESSING_GAUGE",
-    "OUTBOX_FAILED_GAUGE",
-    "OUTBOX_DLQ_GAUGE",
-    "OUTBOX_STUCK_GAUGE",
 ]

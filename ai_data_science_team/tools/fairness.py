@@ -14,7 +14,6 @@ from typing import Any, Dict, List, Optional, Sequence  # noqa: E402, F401
 import numpy as np  # noqa: E402, F401
 import pandas as pd  # noqa: E402, F401
 
-
 FOUR_FIFTHS = 0.8
 
 
@@ -34,9 +33,11 @@ def per_group_metrics(
 ) -> pd.DataFrame:
     """Per-group base rates + selection/TPR/FPR."""
     df = pd.DataFrame(
-        {"y_true": np.asarray(y_true).astype(int),
-         "y_pred": np.asarray(y_pred).astype(int),
-         "group": list(sensitive)},
+        {
+            "y_true": np.asarray(y_true).astype(int),
+            "y_pred": np.asarray(y_pred).astype(int),
+            "group": list(sensitive),
+        },
     )
     rows = []
     for g, sub in df.groupby("group"):
@@ -69,9 +70,7 @@ def demographic_parity_difference(group_df: pd.DataFrame) -> float:
     """Max selection_rate − min selection_rate across groups."""
     if "selection_rate" not in group_df.columns or group_df.empty:
         return float("nan")
-    return float(
-        group_df["selection_rate"].max() - group_df["selection_rate"].min()
-    )
+    return float(group_df["selection_rate"].max() - group_df["selection_rate"].min())
 
 
 def demographic_parity_ratio(group_df: pd.DataFrame) -> float:
@@ -111,9 +110,7 @@ def violates_four_fifths(
     if mx == 0:
         return {str(r.group): False for r in group_df.itertuples()}
     for row in group_df.itertuples():
-        rates[str(row.group)] = (
-            (row.selection_rate / mx) < threshold
-        )
+        rates[str(row.group)] = (row.selection_rate / mx) < threshold
     return rates
 
 
@@ -132,14 +129,20 @@ def simulate_threshold_mitigation(
     thresholds that equalise the selection rate to ``target_rate``
     (default: unmitigated average)."""
     df = pd.DataFrame(
-        {"y_true": np.asarray(y_true).astype(int),
-         "y_proba": np.asarray(y_pred_proba, dtype=float),
-         "group": list(sensitive)},
+        {
+            "y_true": np.asarray(y_true).astype(int),
+            "y_proba": np.asarray(y_pred_proba, dtype=float),
+            "group": list(sensitive),
+        },
     )
     if df.empty:
-        return pd.DataFrame(columns=[
-            "group", "threshold", "selection_rate",
-        ])
+        return pd.DataFrame(
+            columns=[
+                "group",
+                "threshold",
+                "selection_rate",
+            ]
+        )
     if target_rate is None:
         target_rate = float(df["y_proba"].mean())
     rows = []
@@ -182,8 +185,7 @@ class FairnessReport:
             "eod": self.eod,
             "four_fifths_violations": self.four_fifths_violations,
             "mitigated": (
-                self.mitigated.to_dict(orient="records")
-                if self.mitigated is not None else None
+                self.mitigated.to_dict(orient="records") if self.mitigated is not None else None
             ),
             "recommendations": list(self.recommendations),
         }
@@ -212,13 +214,14 @@ def audit_fairness(
 
     mitigated: Optional[pd.DataFrame] = None
     if y_proba is not None:
-        mitigated = simulate_threshold_mitigation(
-            y_true, y_proba, sensitive
-        )
+        mitigated = simulate_threshold_mitigation(y_true, y_proba, sensitive)
 
     recs = _make_recommendations(
-        dpd=dpd, dpr=dpr, eod=eod,
-        violations=violations, sensitive_column=sensitive_column,
+        dpd=dpd,
+        dpr=dpr,
+        eod=eod,
+        violations=violations,
+        sensitive_column=sensitive_column,
     )
     return FairnessReport(
         group_metrics=gm,
@@ -247,20 +250,11 @@ def _make_recommendations(
             "Consider reweighing or threshold optimisation."
         )
     if not (np.isnan(dpd)) and dpd > 0.1:
-        out.append(
-            "Demographic parity difference > 0.1; "
-            "review training-data balance."
-        )
+        out.append("Demographic parity difference > 0.1; review training-data balance.")
     if not (np.isnan(eod)) and eod > 0.1:
-        out.append(
-            "Equalised-odds gap > 0.1; "
-            "consider equalised-odds post-processing."
-        )
+        out.append("Equalised-odds gap > 0.1; consider equalised-odds post-processing.")
     if not (np.isnan(dpr)) and dpr < 0.8:
-        out.append(
-            "Selection-rate ratio < 0.8 (4/5 rule); "
-            "rebalance or mitigate."
-        )
+        out.append("Selection-rate ratio < 0.8 (4/5 rule); rebalance or mitigate.")
     if not out:
         out.append(
             f"No fairness issues detected for sensitive attribute"
@@ -280,5 +274,3 @@ __all__ = [
     "FairnessReport",
     "audit_fairness",
 ]
-
-

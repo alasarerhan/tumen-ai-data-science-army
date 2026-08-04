@@ -52,7 +52,9 @@ class TestBayesDecision:
         a = beta_posterior(successes=80, failures=920)
         b = beta_posterior(successes=10, failures=990)
         out = bayes_decision(
-            a, b, prob_b_better_threshold=0.90,
+            a,
+            b,
+            prob_b_better_threshold=0.90,
             expected_loss_threshold=1.0,
         )
         assert out["decision"] == "stay_with_a"

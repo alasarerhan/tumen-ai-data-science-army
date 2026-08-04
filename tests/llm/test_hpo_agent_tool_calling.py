@@ -35,7 +35,8 @@ def test_suggest_default_search_space_real(llm_or_skip, llm_model):
     tool = suggest_default_search_space_wrapped
     result, _ = _assert_result(
         _drive_tool_call(
-            llm_model, tool,
+            llm_model,
+            tool,
             "suggest_default_search_space tool'unu TEK çağrı ile çağır. "
             "engine='xgboost', task_type='classification'.",
         ),

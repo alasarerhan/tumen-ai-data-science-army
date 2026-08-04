@@ -16,10 +16,9 @@ TG2 burada birden fazla katmanı birlikte çalıştırır:
 Atlamak için:
     python -m pytest tests/ -m "not integration"
 """
+
 from __future__ import annotations
 
-
-from _llm import make_chat_model  # noqa: F401
 import io
 import json
 import sqlite3
@@ -27,6 +26,7 @@ from pathlib import Path
 
 import pandas as pd
 import pytest
+from _llm import make_chat_model  # noqa: F401
 
 pytestmark = pytest.mark.integration
 
@@ -288,23 +288,38 @@ def test_mcp_sql_full_session(disk_sqlite: str) -> None:
 
     # 3. tools/call — list_sources
     r = srv.handle_request(
-        {"jsonrpc": "2.0", "id": 3, "method": "tools/call",
-         "params": {"name": "list_sources", "arguments": {}}}
+        {
+            "jsonrpc": "2.0",
+            "id": 3,
+            "method": "tools/call",
+            "params": {"name": "list_sources", "arguments": {}},
+        }
     )
     assert "products" in r["result"]["content"][0]["text"]
 
     # 4. tools/call — read_source products
     r = srv.handle_request(
-        {"jsonrpc": "2.0", "id": 4, "method": "tools/call",
-         "params": {"name": "read_source", "arguments": {"source": "main.products", "max_rows": 2}}}
+        {
+            "jsonrpc": "2.0",
+            "id": 4,
+            "method": "tools/call",
+            "params": {
+                "name": "read_source",
+                "arguments": {"source": "main.products", "max_rows": 2},
+            },
+        }
     )
     csv_text = r["result"]["content"][0]["text"]
     assert "Widget" in csv_text or "Gadget" in csv_text  # 2 rows from 3
 
     # 5. tools/call — connector_health
     r = srv.handle_request(
-        {"jsonrpc": "2.0", "id": 5, "method": "tools/call",
-         "params": {"name": "connector_health", "arguments": {}}}
+        {
+            "jsonrpc": "2.0",
+            "id": 5,
+            "method": "tools/call",
+            "params": {"name": "connector_health", "arguments": {}},
+        }
     )
     health = json.loads(r["result"]["content"][0]["text"])
     assert health["status"] == "ok"
@@ -323,12 +338,23 @@ def test_mcp_sql_io_loop(disk_sqlite: str) -> None:
     conn = SQLConnector(disk_sqlite)
     conn.connect()
 
-    requests_ndjson = "\n".join([
-        json.dumps({"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {}}),
-        json.dumps({"jsonrpc": "2.0", "id": 2, "method": "tools/list"}),
-        json.dumps({"jsonrpc": "2.0", "id": 3, "method": "tools/call",
-                    "params": {"name": "list_sources", "arguments": {}}}),
-    ]) + "\n"
+    requests_ndjson = (
+        "\n".join(
+            [
+                json.dumps({"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {}}),
+                json.dumps({"jsonrpc": "2.0", "id": 2, "method": "tools/list"}),
+                json.dumps(
+                    {
+                        "jsonrpc": "2.0",
+                        "id": 3,
+                        "method": "tools/call",
+                        "params": {"name": "list_sources", "arguments": {}},
+                    }
+                ),
+            ]
+        )
+        + "\n"
+    )
 
     in_stream = io.StringIO(requests_ndjson)
     out_stream = io.StringIO()
@@ -361,8 +387,12 @@ def test_mcp_csv_resources_read_uri(csv_dir: Path) -> None:
     srv = MCPServer(connector=conn)
 
     r = srv.handle_request(
-        {"jsonrpc": "2.0", "id": 1, "method": "resources/read",
-         "params": {"uri": "connector://local_file/costs.csv"}}
+        {
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "resources/read",
+            "params": {"uri": "connector://local_file/costs.csv"},
+        }
     )
     text = r["result"]["contents"][0]["text"]
     assert "cost" in text
@@ -404,6 +434,7 @@ def test_cli_parser_db_flag() -> None:
 def test_cross_connector_pipeline(tmp_path: Path) -> None:
     """Chain: read CSV with LocalFileConnector → write summary to SQLite → read back."""
     import sqlalchemy as sa
+
     from ai_data_science_team.connectors import LocalFileConnector, SQLConnector
 
     # Step 1 — create CSV data

@@ -25,7 +25,7 @@ CI/CD
 """
 import json  # noqa: E402, F401
 import textwrap  # noqa: E402, F401
-from decimal import Decimal, ROUND_HALF_UP  # noqa: E402, F401
+from decimal import ROUND_HALF_UP, Decimal  # noqa: E402, F401
 from typing import Any, Dict, List, Tuple  # noqa: E402, F401
 
 from langchain.tools import tool  # noqa: E402, F401
@@ -33,6 +33,7 @@ from langchain.tools import tool  # noqa: E402, F401
 # ---------------------------------------------------------------------------
 # Internal helpers
 # ---------------------------------------------------------------------------
+
 
 def _indent(text: str, spaces: int = 2) -> str:
     return textwrap.indent(text, " " * spaces)
@@ -44,20 +45,20 @@ def _indent(text: str, spaces: int = 2) -> str:
 
 # Catalogue used by scaffold + cost estimation
 _TERRAFORM_PROVIDERS: Dict[str, str] = {
-    "aws":     "Amazon Web Services — EC2, S3, RDS, Lambda, EKS, …",
+    "aws": "Amazon Web Services — EC2, S3, RDS, Lambda, EKS, …",
     "azurerm": "Microsoft Azure — VMs, Blob, AKS, Functions, …",
-    "google":  "Google Cloud Platform — GCE, GCS, GKE, Cloud Run, …",
+    "google": "Google Cloud Platform — GCE, GCS, GKE, Cloud Run, …",
     "kubernetes": "Kubernetes cluster resources (Deployments, Services, …)",
-    "helm":    "Helm chart releases on Kubernetes",
-    "docker":  "Docker container images and networks",
-    "github":  "GitHub repositories, teams, branch protection rules",
+    "helm": "Helm chart releases on Kubernetes",
+    "docker": "Docker container images and networks",
+    "github": "GitHub repositories, teams, branch protection rules",
     "datadog": "Datadog monitors, dashboards, SLOs",
-    "random":  "Utility — random IDs, pets, UUIDs",
-    "null":    "Utility — triggers and local provisioners",
+    "random": "Utility — random IDs, pets, UUIDs",
+    "null": "Utility — triggers and local provisioners",
 }
 
 _RESOURCE_TEMPLATES: Dict[str, str] = {
-    "aws_instance": '''\
+    "aws_instance": """\
 resource "aws_instance" "{name}" {{
   ami           = var.ami_id
   instance_type = "{size}"
@@ -68,8 +69,8 @@ resource "aws_instance" "{name}" {{
     Environment = var.environment
     ManagedBy   = "terraform"
   }}
-}}''',
-    "aws_s3_bucket": '''\
+}}""",
+    "aws_s3_bucket": """\
 resource "aws_s3_bucket" "{name}" {{
   bucket = "{name}-${{var.environment}}"
 
@@ -85,8 +86,8 @@ resource "aws_s3_bucket_versioning" "{name}_versioning" {{
   versioning_configuration {{
     status = "Enabled"
   }}
-}}''',
-    "aws_rds_instance": '''\
+}}""",
+    "aws_rds_instance": """\
 resource "aws_db_instance" "{name}" {{
   identifier        = "{name}-${{var.environment}}"
   engine            = "postgres"
@@ -103,8 +104,8 @@ resource "aws_db_instance" "{name}" {{
     Environment = var.environment
     ManagedBy   = "terraform"
   }}
-}}''',
-    "aws_lambda_function": '''\
+}}""",
+    "aws_lambda_function": """\
 resource "aws_lambda_function" "{name}" {{
   function_name = "{name}-${{var.environment}}"
   runtime       = "python3.11"
@@ -123,8 +124,8 @@ resource "aws_lambda_function" "{name}" {{
     Environment = var.environment
     ManagedBy   = "terraform"
   }}
-}}''',
-    "google_compute_instance": '''\
+}}""",
+    "google_compute_instance": """\
 resource "google_compute_instance" "{name}" {{
   name         = "{name}-${{var.environment}}"
   machine_type = "{size}"
@@ -145,8 +146,8 @@ resource "google_compute_instance" "{name}" {{
     environment = var.environment
     managed_by  = "terraform"
   }}
-}}''',
-    "azurerm_virtual_machine": '''\
+}}""",
+    "azurerm_virtual_machine": """\
 resource "azurerm_linux_virtual_machine" "{name}" {{
   name                = "{name}-${{var.environment}}"
   resource_group_name = azurerm_resource_group.main.name
@@ -173,11 +174,11 @@ resource "azurerm_linux_virtual_machine" "{name}" {{
     environment = var.environment
     managed_by  = "terraform"
   }}
-}}''',
+}}""",
 }
 
 # Fallback generic template
-_GENERIC_HCL_TEMPLATE = '''\
+_GENERIC_HCL_TEMPLATE = """\
 resource "{resource_type}" "{name}" {{
   # TODO: configure {resource_type} attributes
   # Provider: {provider}
@@ -188,16 +189,44 @@ resource "{resource_type}" "{name}" {{
     Environment = var.environment
     ManagedBy   = "terraform"
   }}
-}}'''
+}}"""
 
 # Monthly cost lookup table (USD, approximate) - using Decimal for monetary precision
 _COST_TABLE: Dict[str, Dict[str, Decimal]] = {
-    "aws_instance": {"micro": Decimal("8.50"), "small": Decimal("17.00"), "medium": Decimal("34.00"), "large": Decimal("68.00"), "xlarge": Decimal("136.00")},
-    "aws_s3_bucket": {"small": Decimal("2.50"), "medium": Decimal("10.00"), "large": Decimal("50.00")},
-    "aws_rds_instance": {"micro": Decimal("15.00"), "small": Decimal("30.00"), "medium": Decimal("60.00"), "large": Decimal("120.00")},
-    "aws_lambda_function": {"small": Decimal("0.50"), "medium": Decimal("2.00"), "large": Decimal("8.00")},
-    "google_compute_instance": {"micro": Decimal("7.00"), "small": Decimal("14.00"), "medium": Decimal("28.00"), "large": Decimal("56.00")},
-    "azurerm_virtual_machine": {"small": Decimal("20.00"), "medium": Decimal("40.00"), "large": Decimal("80.00")},
+    "aws_instance": {
+        "micro": Decimal("8.50"),
+        "small": Decimal("17.00"),
+        "medium": Decimal("34.00"),
+        "large": Decimal("68.00"),
+        "xlarge": Decimal("136.00"),
+    },
+    "aws_s3_bucket": {
+        "small": Decimal("2.50"),
+        "medium": Decimal("10.00"),
+        "large": Decimal("50.00"),
+    },
+    "aws_rds_instance": {
+        "micro": Decimal("15.00"),
+        "small": Decimal("30.00"),
+        "medium": Decimal("60.00"),
+        "large": Decimal("120.00"),
+    },
+    "aws_lambda_function": {
+        "small": Decimal("0.50"),
+        "medium": Decimal("2.00"),
+        "large": Decimal("8.00"),
+    },
+    "google_compute_instance": {
+        "micro": Decimal("7.00"),
+        "small": Decimal("14.00"),
+        "medium": Decimal("28.00"),
+        "large": Decimal("56.00"),
+    },
+    "azurerm_virtual_machine": {
+        "small": Decimal("20.00"),
+        "medium": Decimal("40.00"),
+        "large": Decimal("80.00"),
+    },
 }
 
 _SIZE_MAP = {
@@ -248,8 +277,7 @@ def scaffold_terraform_resource(
 
     text = (
         f"# Terraform resource: {resource_type}.{name}\n"
-        f"# Provider: {provider}  |  Region: {region}  |  Size: {size}\n\n"
-        + hcl
+        f"# Provider: {provider}  |  Region: {region}  |  Size: {size}\n\n" + hcl
     )
 
     artifact: Dict[str, Any] = {
@@ -294,7 +322,7 @@ def estimate_monthly_cost(
         Resource size tier: ``micro | small | medium | large | xlarge``.
     region : str
         Cloud region (affects pricing in real providers; used as label here).
-    
+
     Returns
     -------
     tuple
@@ -365,10 +393,13 @@ def validate_hcl_syntax(hcl: str) -> Tuple[str, Dict[str, Any]]:
         errors.append(f"Unclosed brace block: {depth} `{{` without matching `}}`.")
 
     # Basic keyword presence
-    if "resource" not in hcl and "data" not in hcl and "variable" not in hcl and "output" not in hcl:
-        warnings.append(
-            "No recognized top-level block (resource, data, variable, output) found."
-        )
+    if (
+        "resource" not in hcl
+        and "data" not in hcl
+        and "variable" not in hcl
+        and "output" not in hcl
+    ):
+        warnings.append("No recognized top-level block (resource, data, variable, output) found.")
 
     # Unclosed string (odd number of double-quotes per line)
     for i, line in enumerate(hcl.splitlines(), 1):
@@ -376,7 +407,7 @@ def validate_hcl_syntax(hcl: str) -> Tuple[str, Dict[str, Any]]:
         if stripped.startswith("#"):
             continue
         if stripped.count('"') % 2 != 0:
-            errors.append(f"Line {i}: odd number of `\"` — possible unclosed string.")
+            errors.append(f'Line {i}: odd number of `"` — possible unclosed string.')
 
     valid = len(errors) == 0
     if valid:
@@ -454,11 +485,14 @@ def generate_dockerfile(
         Override the default start command.  Leave empty to use the default.
     """
     lang = language.lower()
-    cfg = _DOCKERFILE_BASES.get(lang, {
-        "base": f"{lang}:{version}",
-        "install": f"# install {lang} dependencies",
-        "start": "./entrypoint.sh",
-    })
+    cfg = _DOCKERFILE_BASES.get(
+        lang,
+        {
+            "base": f"{lang}:{version}",
+            "install": f"# install {lang} dependencies",
+            "start": "./entrypoint.sh",
+        },
+    )
     base_image = cfg["base"].format(version=version)
     install_cmd = cfg["install"]
     start_cmd = start_command or cfg["start"]
@@ -501,7 +535,7 @@ USER appuser
 EXPOSE {port}
 ENV PORT={port}
 
-CMD ["node", "{start_cmd.replace('node ', '')}"]
+CMD ["node", "{start_cmd.replace("node ", "")}"]
 """
     else:
         dockerfile = f"""\
@@ -589,7 +623,10 @@ def generate_docker_compose_yaml(services_json: str) -> Tuple[str, Dict[str, Any
         lines.append("")
 
     compose_yaml = "\n".join(lines)
-    text = f"# docker-compose.yml — {len(services)} service(s): {', '.join(service_names)}\n\n" + compose_yaml
+    text = (
+        f"# docker-compose.yml — {len(services)} service(s): {', '.join(service_names)}\n\n"
+        + compose_yaml
+    )
 
     artifact: Dict[str, Any] = {
         "service_count": len(services),
@@ -759,9 +796,7 @@ def generate_github_actions_workflow(
     for trig in trigger_list:
         if trig in ("push", "pull_request"):
             branch_yaml = "\n".join(f"      - {b}" for b in branch_list)
-            on_block_parts.append(
-                f"  {trig}:\n    branches:\n{branch_yaml}"
-            )
+            on_block_parts.append(f"  {trig}:\n    branches:\n{branch_yaml}")
         else:
             on_block_parts.append(f"  {trig}:")
 

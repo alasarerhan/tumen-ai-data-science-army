@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-
 from typing import Any
 
 from .merge_support import parse_list_value
@@ -25,9 +24,7 @@ def execute_merge_plan(dfs: list[Any], merge_cfg: dict[str, Any], last_human: st
         except Exception:
             axis = 0
         ignore_index = bool(merge_cfg.get("ignore_index", True))
-        merged_df = pd.concat(
-            dfs, axis=axis, ignore_index=(ignore_index if axis == 0 else False)
-        )
+        merged_df = pd.concat(dfs, axis=axis, ignore_index=(ignore_index if axis == 0 else False))
         merge_meta.update({"axis": axis, "ignore_index": ignore_index})
         merge_code_lines.append(
             f"df = pd.concat([{', '.join([f'df_{i}' for i in range(len(dfs))])}], axis={axis}, ignore_index={ignore_index if axis == 0 else False})"
@@ -48,11 +45,7 @@ def execute_merge_plan(dfs: list[Any], merge_cfg: dict[str, Any], last_human: st
     right_on = parse_list_value(merge_cfg.get("right_on"))
     suffixes_raw = str(merge_cfg.get("suffixes") or "_x,_y")
     suffixes_parts = [part.strip() for part in suffixes_raw.split(",") if part.strip()]
-    suffixes = (
-        (suffixes_parts[0], suffixes_parts[1])
-        if len(suffixes_parts) >= 2
-        else ("_x", "_y")
-    )
+    suffixes = (suffixes_parts[0], suffixes_parts[1]) if len(suffixes_parts) >= 2 else ("_x", "_y")
 
     if not on_cols and not (left_on and right_on):
         common = set(dfs[0].columns)

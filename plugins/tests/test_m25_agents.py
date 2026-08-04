@@ -26,6 +26,7 @@ Skip LLM tests:
 Run only integration:
     pytest tests/test_m25_agents.py -v -m integration
 """
+
 from __future__ import annotations
 
 import json
@@ -137,7 +138,9 @@ def llm():
 # ---------------------------------------------------------------------------
 _MOCK_POST = {"id": 1, "title": "Test Post", "body": "Hello world", "userId": 1}
 _MOCK_POSTS = [{"id": i, "title": f"Post {i}", "userId": 1} for i in range(1, 101)]  # 100 items
-_MOCK_USERS = [{"id": i, "name": f"User {i}", "email": f"user{i}@example.com"} for i in range(1, 11)]
+_MOCK_USERS = [
+    {"id": i, "name": f"User {i}", "email": f"user{i}@example.com"} for i in range(1, 11)
+]
 _MOCK_TODO = {"id": 1, "title": "Test todo", "completed": False, "userId": 1}
 
 
@@ -178,6 +181,7 @@ def local_api_server():
     thread.start()
     yield f"http://127.0.0.1:{port}"
     server.shutdown()
+
 
 # ===========================================================================
 # TG1 — Unit tests (no LLM, tool .func() calls)
@@ -737,7 +741,9 @@ class TestM25E2E:
         from ai_data_science_team.templates import BaseAgent
 
         assert issubclass(APIConnectorAgent, BaseAgent), "APIConnectorAgent must extend BaseAgent"
-        assert issubclass(DocumentParserAgent, BaseAgent), "DocumentParserAgent must extend BaseAgent"
+        assert issubclass(DocumentParserAgent, BaseAgent), (
+            "DocumentParserAgent must extend BaseAgent"
+        )
         assert issubclass(ModelServingAgent, BaseAgent), "ModelServingAgent must extend BaseAgent"
 
     def test_tool_modules_importable(self):
@@ -748,7 +754,9 @@ class TestM25E2E:
 
         assert len(API_TOOLS) >= 3
         assert len(PARSER_TOOLS) >= 3
-        assert len(SERVING_TOOLS) >= 4   # load_model, run_inference, health_check, get_serving_params
+        assert (
+            len(SERVING_TOOLS) >= 4
+        )  # load_model, run_inference, health_check, get_serving_params
 
     def test_parse_then_serve_pipeline(self, html_content, classification_model_path, churn_df):
         """Tool-level pipeline: parse HTML doc → save text → load model → run inference."""

@@ -35,6 +35,8 @@ def get_artifact_storage_backend() -> ArtifactStorageBackend:
         return ArtifactStorageBackend(backend=backend, root=settings.artifact_storage_s3_bucket)
     if backend == "gcs":
         if not settings.artifact_storage_gcs_bucket:
-            raise ValidationError("ARTIFACT_STORAGE_GCS_BUCKET is required for gcs artifact storage")
+            raise ValidationError(
+                "ARTIFACT_STORAGE_GCS_BUCKET is required for gcs artifact storage"
+            )
         return ArtifactStorageBackend(backend=backend, root=settings.artifact_storage_gcs_bucket)
     raise ValidationError("ARTIFACT_STORAGE_BACKEND must be one of: local, s3, gcs")

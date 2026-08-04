@@ -12,9 +12,13 @@ PowerAnalysisAgent.
 Node type: ``feature.register``
 """
 
-from typing import (Dict, Optional, Tuple)  # noqa: E402
 import logging  # noqa: E402, F401
-from typing import Any  # noqa: E402, F401
+from typing import (  # noqa: E402
+    Any,  # noqa: E402, F401
+    Dict,
+    Optional,
+    Tuple,
+)
 
 from langchain.tools import tool  # noqa: E402, F401
 from langchain_core.messages import AIMessage, BaseMessage  # noqa: E402, F401
@@ -24,10 +28,6 @@ from langgraph.types import Checkpointer  # noqa: E402, F401
 from typing_extensions import Annotated, Sequence, TypedDict  # noqa: E402, F401
 
 from ai_data_science_team.templates import BaseAgent  # noqa: E402, F401
-from ai_data_science_team.utils.regex import format_agent_name  # noqa: E402, F401
-
-
-
 from ai_data_science_team.tools.feature_store import (  # noqa: E402, F401
     FeatureStore,
     FreshnessRecord,
@@ -41,7 +41,7 @@ from ai_data_science_team.tools.feature_store import (  # noqa: E402, F401
     search_features,
     version_sort_key,
 )
-
+from ai_data_science_team.utils.regex import format_agent_name  # noqa: E402, F401
 
 logger = logging.getLogger(__name__)
 
@@ -53,6 +53,7 @@ NODE_TYPE = "feature.register"
 # Tool wrappers
 # ---------------------------------------------------------------------------
 
+
 @tool(response_format="content_and_artifact")
 def register_feature_wrapped(store: FeatureStore) -> Tuple[str, dict]:
     """Tool wrapper for ``register_feature``.
@@ -62,7 +63,7 @@ def register_feature_wrapped(store: FeatureStore) -> Tuple[str, dict]:
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: d3_register_feature")
-    kwargs = {'store': store}
+    kwargs = {"store": store}
     try:
         result = register_feature(**kwargs)
     except Exception as exc:
@@ -90,7 +91,7 @@ def search_features_wrapped(store: FeatureStore) -> Tuple[str, dict]:
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: d3_search_features")
-    kwargs = {'store': store}
+    kwargs = {"store": store}
     try:
         result = search_features(**kwargs)
     except Exception as exc:
@@ -118,7 +119,7 @@ def version_sort_key_wrapped(version: str) -> Tuple[str, dict]:
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: d3_version_sort_key")
-    kwargs = {'version': version}
+    kwargs = {"version": version}
     try:
         result = version_sort_key(**kwargs)
     except Exception as exc:
@@ -146,7 +147,7 @@ def latest_version_wrapped(store: FeatureStore, name: str) -> Tuple[str, dict]:
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: d3_latest_version")
-    kwargs = {'store': store, 'name': name}
+    kwargs = {"store": store, "name": name}
     try:
         result = latest_version(**kwargs)
     except Exception as exc:
@@ -202,7 +203,7 @@ def probe_freshness_wrapped(record: FreshnessRecord) -> Tuple[str, dict]:
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: d3_probe_freshness")
-    kwargs = {'record': record}
+    kwargs = {"record": record}
     try:
         result = probe_freshness(**kwargs)
     except Exception as exc:
@@ -230,7 +231,7 @@ def bulk_probe_freshness_wrapped(records: Sequence[FreshnessRecord]) -> Tuple[st
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: d3_bulk_probe_freshness")
-    kwargs = {'records': records}
+    kwargs = {"records": records}
     try:
         result = bulk_probe_freshness(**kwargs)
     except Exception as exc:
@@ -258,7 +259,7 @@ def attach_lineage_wrapped(store: FeatureStore) -> Tuple[str, dict]:
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: d3_attach_lineage")
-    kwargs = {'store': store}
+    kwargs = {"store": store}
     try:
         result = attach_lineage(**kwargs)
     except Exception as exc:
@@ -286,7 +287,7 @@ def catalog_payload_wrapped(store: FeatureStore, feature_ids: Sequence[str]) -> 
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: d3_catalog_payload")
-    kwargs = {'store': store, 'feature_ids': feature_ids}
+    kwargs = {"store": store, "feature_ids": feature_ids}
     try:
         result = catalog_payload(**kwargs)
     except Exception as exc:
@@ -361,7 +362,12 @@ def make_feature_store_agent(
     def run_react_agent(state: GraphState):
         logger.info("    * RUN REACT AGENT FOR D3")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
-        messages = [("system", "You are the D3 agent. Use the available tools to complete the user's request.")] + list(base)
+        messages = [
+            (
+                "system",
+                "You are the D3 agent. Use the available tools to complete the user's request.",
+            )
+        ] + list(base)
         input_payload = {"messages": messages}
         return react_agent.invoke(input_payload, invoke_react_agent_kwargs)
 
@@ -380,7 +386,9 @@ def make_feature_store_agent(
             last_ai = AIMessage(content=getattr(internal[-1], "content", ""), name=AGENT_NAME)
         tool_calls = []
         for msg in internal:
-            name = getattr(getattr(msg, "tool_call_id", None), "name", None) or getattr(msg, "name", None)
+            name = getattr(getattr(msg, "tool_call_id", None), "name", None) or getattr(
+                msg, "name", None
+            )
             if name:
                 tool_calls.append(name)
         if log_tool_calls and tool_calls:
@@ -448,6 +456,7 @@ class FeatureStoreAgent(BaseAgent):
         if not self.response or "messages" not in self.response:
             return None
         from IPython.display import Markdown as _Markdown  # noqa: E402, F401
+
         for msg in reversed(self.response.get("messages", [])):
             content = getattr(msg, "content", "")
             if content:

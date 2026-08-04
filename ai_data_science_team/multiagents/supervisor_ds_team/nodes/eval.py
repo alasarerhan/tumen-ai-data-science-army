@@ -13,8 +13,7 @@ from typing import Any, Callable  # noqa: E402, F401
 
 from langchain_core.messages import AIMessage  # noqa: E402, F401
 
-from ai_data_science_team.multiagents.supervisor import (  # noqa: E402, F401
-    SupervisorDSState)
+from ai_data_science_team.multiagents.supervisor import SupervisorDSState  # noqa: E402, F401
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +21,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class EvalNodeDeps:
     """Dependencies for the eval node."""
+
     model_evaluation_agent: Any
     ensure_df: Any  # was _ensure_df
     get_active_data: Any  # was _get_active_data
@@ -51,7 +51,8 @@ def make_node_eval(deps: EvalNodeDeps) -> Callable[[SupervisorDSState], dict]:
                 "messages": [
                     AIMessage(
                         content="No dataset is available for evaluation. Load data and train a model first.",
-                        name="model_evaluation_agent")
+                        name="model_evaluation_agent",
+                    )
                 ],
                 "last_worker": "Model_Evaluation_Agent",
             }
@@ -61,19 +62,19 @@ def make_node_eval(deps: EvalNodeDeps) -> Callable[[SupervisorDSState], dict]:
             messages=before_msgs,
             data_raw=active_df,
             model_artifacts=model_artifacts,
-            target_variable=state.get("target_variable"))
+            target_variable=state.get("target_variable"),
+        )
         response = deps.model_evaluation_agent.response or {}
         merged = deps.merge_messages(before_msgs, response)
-        merged["messages"] = deps.tag_messages(
-            merged.get("messages"), "model_evaluation_agent"
-        )
+        merged["messages"] = deps.tag_messages(merged.get("messages"), "model_evaluation_agent")
         eval_artifacts = response.get("eval_artifacts")
         plotly_graph = response.get("plotly_graph")
         if isinstance(eval_artifacts, dict) and eval_artifacts.get("error"):
             merged["messages"].append(
                 AIMessage(
                     content="Model evaluation error:\n" + str(eval_artifacts.get("error")),
-                    name="model_evaluation_agent")
+                    name="model_evaluation_agent",
+                )
             )
         return {
             **merged,
@@ -88,9 +89,7 @@ def make_node_eval(deps: EvalNodeDeps) -> Callable[[SupervisorDSState], dict]:
             "last_worker": "Model_Evaluation_Agent",
         }
 
-
     return node_eval
-
 
 
 __all__ = ["EvalNodeDeps", "make_node_eval"]

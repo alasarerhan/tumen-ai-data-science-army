@@ -4,7 +4,6 @@ Tests for ``ai_data_science_team.tools.retrain_orchestrator`` (G2 tool layer).
 
 from __future__ import annotations
 
-
 from ai_data_science_team.tools.retrain_orchestrator import (
     build_audit_trail,
     build_policy,
@@ -143,11 +142,15 @@ class TestDecideAction:
         assert out["should_trigger"] is False
 
     def test_returned_payload_includes_action(self):
-        policy = build_policy(
-            {"name": "p", "triggers": [{"kind": "drift", "feature_drift": True}]}
-        )
+        policy = build_policy({"name": "p", "triggers": [{"kind": "drift", "feature_drift": True}]})
         out = decide_action(_no_drift_signal(), policy)
-        for key in ("should_trigger", "action", "triggered_by", "policy_name", "require_hitl_approval"):
+        for key in (
+            "should_trigger",
+            "action",
+            "triggered_by",
+            "policy_name",
+            "require_hitl_approval",
+        ):
             assert key in out
 
 

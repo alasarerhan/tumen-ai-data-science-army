@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from unittest.mock import AsyncMock, MagicMock
+
 import pytest
-from unittest.mock import MagicMock, AsyncMock
 
 from platform_api.versioning.version_manager import WorkflowVersionManager
 
@@ -29,7 +30,9 @@ class TestWorkflowVersionManager:
         manager: WorkflowVersionManager,
         mock_db: MagicMock,
     ) -> None:
-        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = None
+        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            None
+        )
 
         version_id = await manager.create_version(
             workflow_id="wf-123",
@@ -50,7 +53,9 @@ class TestWorkflowVersionManager:
     ) -> None:
         existing_version = MagicMock()
         existing_version.version = 2
-        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = existing_version
+        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            existing_version
+        )
 
         version_id = await manager.create_version(
             workflow_id="wf-123",

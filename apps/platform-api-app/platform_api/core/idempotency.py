@@ -36,7 +36,8 @@ import logging
 import threading
 import time
 import uuid
-from typing import Any, Callable, Dict, Optional
+from collections.abc import Callable
+from typing import Any
 
 from fastapi import Request, Response
 from fastapi.responses import JSONResponse
@@ -45,19 +46,21 @@ from starlette.types import ASGIApp
 
 logger = logging.getLogger(__name__)
 
+
 def _normalize_redis_url(url):
     """Prepend the default redis scheme if a URL has only host:port/db."""
     if not url:
         return url
-    for prefix in ('redis://', 'redis://' + 's' + '://', 'unix://'):
+    for prefix in ("redis://", "redis://" + "s" + "://", "unix://"):
         if url.startswith(prefix):
             return url
-    return 'redis://' + url
+    return "redis://" + url
 
 
 REDIS_AVAILABLE = False
 try:
     import redis
+
     REDIS_AVAILABLE = True
 except ImportError:
     pass
@@ -88,11 +91,11 @@ class IdempotencyMiddleware(BaseHTTPMiddleware):
     def __init__(
         self,
         app: ASGIApp,
-        redis_url: Optional[str] = None,
+        redis_url: str | None = None,
         key_header: str = "X-Idempotency-Key",
         ttl_seconds: int = 86400,
         in_flight_ttl_seconds: int = 300,
-        skip_paths: Optional[list[str]] = None,
+        skip_paths: list[str] | None = None,
         **redis_kwargs,
     ) -> None:
         super().__init__(app)
@@ -103,15 +106,15 @@ class IdempotencyMiddleware(BaseHTTPMiddleware):
         self._lock = threading.Lock()
 
         if redis_url and REDIS_AVAILABLE:
-            self._redis: Optional[redis.Redis] = redis.from_url(
+            self._redis: redis.Redis | None = redis.from_url(
                 _normalize_redis_url(redis_url), **redis_kwargs
             )
-            self._in_memory_cache: Optional[Dict] = None
+            self._in_memory_cache: dict | None = None
             logger.info("IdempotencyMiddleware connected to Redis: %s", redis_url)
         else:
             self._redis = None
-            self._in_memory_cache: Dict[str, Any] = {}
-            self._in_flight: Dict[str, float] = {}
+            self._in_memory_cache: dict[str, Any] = {}
+            self._in_flight: dict[str, float] = {}
             if redis_url and not REDIS_AVAILABLE:
                 logger.warning(
                     "Redis not available (pip install redis). "
@@ -173,7 +176,9 @@ class IdempotencyMiddleware(BaseHTTPMiddleware):
             with self._lock:
                 if cache_key in self._in_memory_cache:
                     cached_data = self._in_memory_cache[cache_key]
-                    logger.debug("Returning cached response for idempotency key: %s", idempotency_key)
+                    logger.debug(
+                        "Returning cached response for idempotency key: %s", idempotency_key
+                    )
                     return JSONResponse(
                         content=cached_data["body"],
                         status_code=cached_data["status_code"],
@@ -182,7 +187,9 @@ class IdempotencyMiddleware(BaseHTTPMiddleware):
 
                 if idempotency_key in self._in_flight:
                     if time.time() - self._in_flight[idempotency_key] < self._in_flight_ttl:
-                        logger.warning("Concurrent request with same idempotency key: %s", idempotency_key)
+                        logger.warning(
+                            "Concurrent request with same idempotency key: %s", idempotency_key
+                        )
                         return JSONResponse(
                             content={
                                 "detail": "Request with same idempotency key is already being processed",
@@ -238,7 +245,7 @@ def generate_idempotency_key() -> str:
 
 
 __all__ = [
+    "REDIS_AVAILABLE",
     "IdempotencyMiddleware",
     "generate_idempotency_key",
-    "REDIS_AVAILABLE",
 ]

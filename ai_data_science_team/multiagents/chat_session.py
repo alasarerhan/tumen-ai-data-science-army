@@ -58,7 +58,6 @@ from typing import Any, Dict, List, Literal, Optional  # noqa: E402, F401
 
 import pandas as pd  # noqa: E402, F401
 
-
 # ---------------------------------------------------------------------------
 # Data models
 # ---------------------------------------------------------------------------
@@ -88,9 +87,7 @@ class ChatMessage:
     content: str
     artifact: Optional[Dict[str, Any]] = None
     agent_used: Optional[str] = None
-    timestamp: datetime = field(
-        default_factory=lambda: datetime.now(timezone.utc)
-    )
+    timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 @dataclass
@@ -114,9 +111,7 @@ class ChatSession:
     session_id: str
     messages: List[ChatMessage] = field(default_factory=list)
     datasets: Dict[str, pd.DataFrame] = field(default_factory=dict)
-    created_at: datetime = field(
-        default_factory=lambda: datetime.now(timezone.utc)
-    )
+    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     metadata: Dict[str, Any] = field(default_factory=dict)
 
 

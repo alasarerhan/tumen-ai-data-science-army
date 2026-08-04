@@ -25,8 +25,7 @@ class TestBuild:
     def test_missing_bucket(self):
         with pytest.raises(ValueError):
             h6.build_object_storage_connector(
-                h6.ConnectorConfig(name="x", kind="object_storage",
-                                    params={"provider": "s3"})
+                h6.ConnectorConfig(name="x", kind="object_storage", params={"provider": "s3"})
             )
 
     def test_unknown_provider(self):
@@ -48,11 +47,13 @@ class TestBehaviors:
 
     def test_list_registered(self):
         c = h6.build_object_storage_connector(_cfg())
-        c.register_objects([
-            {"key": "logs/2026-01.csv", "size": 100},
-            {"key": "logs/2026-02.csv", "size": 200},
-            {"key": "models/v1.bin", "size": 1_000_000},
-        ])
+        c.register_objects(
+            [
+                {"key": "logs/2026-01.csv", "size": 100},
+                {"key": "logs/2026-02.csv", "size": 200},
+                {"key": "models/v1.bin", "size": 1_000_000},
+            ]
+        )
         keys = [o["key"] for o in c.list_objects(prefix="logs/")]
         assert keys == ["logs/2026-01.csv", "logs/2026-02.csv"]
 
@@ -83,4 +84,3 @@ class TestBehaviors:
         u = c.signed_url("k1")
         assert "bk" in u
         assert "k1" in u
-

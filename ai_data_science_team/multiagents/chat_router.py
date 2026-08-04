@@ -39,7 +39,6 @@ import re  # noqa: E402, F401
 from dataclasses import dataclass, field  # noqa: E402, F401
 from typing import Dict, List, Optional, Tuple  # noqa: E402, F401
 
-
 # ---------------------------------------------------------------------------
 # Routing table
 # ---------------------------------------------------------------------------
@@ -49,70 +48,191 @@ from typing import Dict, List, Optional, Tuple  # noqa: E402, F401
 INTENT_MAP: Dict[str, List[str]] = {
     "pandas_data_analyst": [
         # Turkish
-        "analiz", "istatistik", "dağılım", "korelasyon", "pivot", "özet",
-        "gruplama", "gruple", "sayım", "ortalama", "median", "standart sapma",
-        "filtrele", "göster", "listele", "en çok", "en az", "sırala",
-        "karşılaştır", "histogram", "bar",
+        "analiz",
+        "istatistik",
+        "dağılım",
+        "korelasyon",
+        "pivot",
+        "özet",
+        "gruplama",
+        "gruple",
+        "sayım",
+        "ortalama",
+        "median",
+        "standart sapma",
+        "filtrele",
+        "göster",
+        "listele",
+        "en çok",
+        "en az",
+        "sırala",
+        "karşılaştır",
+        "histogram",
+        "bar",
         # English
-        "analyze", "analysis", "summarize", "statistics", "distribution",
-        "correlation", "group by", "count", "average", "mean", "std",
-        "aggregate", "filter", "show", "list", "top", "bottom", "sort",
-        "rank", "compare", "bar chart", "scatter",
+        "analyze",
+        "analysis",
+        "summarize",
+        "statistics",
+        "distribution",
+        "correlation",
+        "group by",
+        "count",
+        "average",
+        "mean",
+        "std",
+        "aggregate",
+        "filter",
+        "show",
+        "list",
+        "top",
+        "bottom",
+        "sort",
+        "rank",
+        "compare",
+        "bar chart",
+        "scatter",
     ],
     "eda_tools_agent": [
         # Turkish
-        "eda", "keşif", "keşifsel", "profil", "profilleme", "eksik veri",
-        "sweetviz", "dtale", "veri kalite genel", "genel bakış", "betimleyici",
+        "eda",
+        "keşif",
+        "keşifsel",
+        "profil",
+        "profilleme",
+        "eksik veri",
+        "sweetviz",
+        "dtale",
+        "veri kalite genel",
+        "genel bakış",
+        "betimleyici",
         # English
-        "eda", "exploratory", "explore", "profile", "missing data",
-        "missing values", "sweetviz", "dtale", "overview", "descriptive",
+        "eda",
+        "exploratory",
+        "explore",
+        "profile",
+        "missing data",
+        "missing values",
+        "sweetviz",
+        "dtale",
+        "overview",
+        "descriptive",
     ],
     "sql_data_analyst": [
         # Turkish
-        "sql", "veritabanı", "veri tabanı", "tablo sorgu", "join", "where",
-        "select", "database",
+        "sql",
+        "veritabanı",
+        "veri tabanı",
+        "tablo sorgu",
+        "join",
+        "where",
+        "select",
+        "database",
         # English
-        "sql", "database", "query", "join", "select", "where", "from",
-        "sqlite", "postgres", "mysql", "db query",
+        "sql",
+        "database",
+        "query",
+        "join",
+        "select",
+        "where",
+        "from",
+        "sqlite",
+        "postgres",
+        "mysql",
+        "db query",
     ],
     "data_cleaning_agent": [
         # Turkish
-        "temizle", "temizlik", "eksik doldur", "impute", "aykırı kaldır",
-        "duplikat", "tekrar eden", "bozuk veri", "düzelt", "normalize et",
+        "temizle",
+        "temizlik",
+        "eksik doldur",
+        "impute",
+        "aykırı kaldır",
+        "duplikat",
+        "tekrar eden",
+        "bozuk veri",
+        "düzelt",
+        "normalize et",
         # English
-        "clean data", "cleaning", "impute", "imputation", "remove duplicates",
-        "outlier removal", "fix data", "normalize data",
+        "clean data",
+        "cleaning",
+        "impute",
+        "imputation",
+        "remove duplicates",
+        "outlier removal",
+        "fix data",
+        "normalize data",
     ],
     "document_parser_agent": [
         # Turkish
-        "url", "web sitesi", "sayfayı çek", "scraping", "pdf oku", "belge oku",
-        "döküman", "html sayfası",
+        "url",
+        "web sitesi",
+        "sayfayı çek",
+        "scraping",
+        "pdf oku",
+        "belge oku",
+        "döküman",
+        "html sayfası",
         # English
-        "url", "web scraping", "scrape", "pdf", "document", "html", "parse",
-        "download page", "fetch url", "webpage",
+        "url",
+        "web scraping",
+        "scrape",
+        "pdf",
+        "document",
+        "html",
+        "parse",
+        "download page",
+        "fetch url",
+        "webpage",
     ],
     "api_connector_agent": [
         # Turkish
-        "rest api", "api çağır", "endpoint", "webhook", "http isteği",
+        "rest api",
+        "api çağır",
+        "endpoint",
+        "webhook",
+        "http isteği",
         # English
-        "api", "rest api", "endpoint", "webhook", "http request",
-        "json endpoint", "call api",
+        "api",
+        "rest api",
+        "endpoint",
+        "webhook",
+        "http request",
+        "json endpoint",
+        "call api",
     ],
     "model_serving_agent": [
         # Turkish
-        "tahmin yap", "inference", "modeli uygula", "sınıflandır",
-        "modeli yükle", "modeli çalıştır",
+        "tahmin yap",
+        "inference",
+        "modeli uygula",
+        "sınıflandır",
+        "modeli yükle",
+        "modeli çalıştır",
         # English
-        "predict", "inference", "run model", "serve model",
-        "classification predict", "regression predict", "load model",
+        "predict",
+        "inference",
+        "run model",
+        "serve model",
+        "classification predict",
+        "regression predict",
+        "load model",
     ],
     "anomaly_detection_agent": [
         # Turkish
-        "anomali", "aykırı değer", "outlier tespiti", "fraud tespiti",
-        "anormallik", "normal dışı",
+        "anomali",
+        "aykırı değer",
+        "outlier tespiti",
+        "fraud tespiti",
+        "anormallik",
+        "normal dışı",
         # English
-        "anomaly", "anomalies", "outlier detection", "fraud detection",
-        "abnormal", "detect anomalies",
+        "anomaly",
+        "anomalies",
+        "outlier detection",
+        "fraud detection",
+        "abnormal",
+        "detect anomalies",
     ],
 }
 
@@ -258,9 +378,7 @@ class IntentRouter:
                 scores[agent_name] = hits
         return scores
 
-    def _best_from_scores(
-        self, scores: Dict[str, int]
-    ) -> Tuple[Optional[str], int, int]:
+    def _best_from_scores(self, scores: Dict[str, int]) -> Tuple[Optional[str], int, int]:
         """Return *(best_agent, best_score, total_hits)*."""
         if not scores:
             return None, 0, 0
@@ -268,9 +386,7 @@ class IntentRouter:
         best = max(scores, key=lambda k: scores[k])
         return best, scores[best], total
 
-    def _llm_route(
-        self, message: str, keyword_scores: Dict[str, int]
-    ) -> RouterDecision:
+    def _llm_route(self, message: str, keyword_scores: Dict[str, int]) -> RouterDecision:
         """Call the LLM classifier and map its output to a known agent name."""
         agent_names = list(self._map.keys())
         prompt = (

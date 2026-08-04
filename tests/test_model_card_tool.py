@@ -88,4 +88,3 @@ class TestRender:
         out = f4.render_pdf(c)
         # No weasyprint installed in this env → bytes are HTML.
         assert b"<html" in out
-

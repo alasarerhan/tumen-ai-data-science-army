@@ -1,4 +1,5 @@
 """Tests for J6 Responsible AI Dashboard tool."""
+
 from __future__ import annotations
 
 import pytest
@@ -35,7 +36,8 @@ class TestComputeFairness:
             j6.compute_fairness(
                 protected_attribute="g",
                 group_labels=["M", "F"],
-                y_true=[1, 0, 1], y_pred=[1, 0],
+                y_true=[1, 0, 1],
+                y_pred=[1, 0],
             )
 
 
@@ -78,7 +80,8 @@ class TestDiscoverErrorSlices:
         for i in range(50):  # tenure<3 group
             y_pred_t[i] = 0  # all wrong
         slices = j6.discover_error_slices(
-            y_true=y_true, y_pred=y_pred_t,
+            y_true=y_true,
+            y_pred=y_pred_t,
             feature_values=feature_values,
             min_slice_n=10,
         )
@@ -92,7 +95,8 @@ class TestDiscoverErrorSlices:
         # All groups share same 30% error rate → no lift → no slice
         y_pred = ([0] * 15 + [1] * 35) * 2  # each 50-sample group has 15 errors
         slices = j6.discover_error_slices(
-            y_true=y_true, y_pred=y_pred,
+            y_true=y_true,
+            y_pred=y_pred,
             feature_values={"x": ["a"] * 50 + ["b"] * 50},
             min_slice_n=10,
         )
@@ -102,7 +106,8 @@ class TestDiscoverErrorSlices:
         y_true = [1] * 100
         y_pred = [0] * 100
         slices = j6.discover_error_slices(
-            y_true=y_true, y_pred=y_pred,
+            y_true=y_true,
+            y_pred=y_pred,
             feature_values={"x": ["a"] * 5 + ["b"] * 95},
             min_slice_n=10,
         )
@@ -153,7 +158,7 @@ class TestBuildDashboard:
 
     def test_payload_round_trip_json(self):
         import json
+
         d = j6.build_dashboard(model_id="m1")
         p = j6.dashboard_payload(d)
         json.dumps(p)  # must not raise
-

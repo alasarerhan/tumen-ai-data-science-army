@@ -5,7 +5,6 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
-
 RoleRequirement = Literal["member", "workspace_admin", "tenant_admin", "system"]
 RiskLevel = Literal["low", "medium", "high"]
 

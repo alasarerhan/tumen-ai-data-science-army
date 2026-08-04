@@ -22,6 +22,7 @@ Coverage:
  14. replicas sanity       — replicaCount >= 1
  15. securityContext drop ALL — capabilities.drop contains "ALL"
 """
+
 from __future__ import annotations
 
 import re
@@ -128,8 +129,14 @@ class TestValuesCompleteness:
             assert self.v["db"][field], f"db.{field} must not be empty"
 
     def test_config_has_all_api_settings(self):
-        for key in ("API_HOST", "API_PORT", "DEPLOYMENT_PROFILE", "AUTH_MODE", "OIDC_ISSUER",
-                    "TENANT_WRITE_QUOTA_PER_MINUTE"):
+        for key in (
+            "API_HOST",
+            "API_PORT",
+            "DEPLOYMENT_PROFILE",
+            "AUTH_MODE",
+            "OIDC_ISSUER",
+            "TENANT_WRITE_QUOTA_PER_MINUTE",
+        ):
             assert key in self.v["config"], f"config.{key} missing from values.yaml"
 
 
@@ -275,9 +282,7 @@ class TestProbeConsistency:
 
     def test_liveness_probe_uses_http_port_name(self):
         port = self.v["livenessProbe"]["httpGet"]["port"]
-        assert port == "http", (
-            f"livenessProbe.httpGet.port='{port}' should be 'http' (named port)"
-        )
+        assert port == "http", f"livenessProbe.httpGet.port='{port}' should be 'http' (named port)"
 
     def test_readiness_probe_uses_http_port_name(self):
         port = self.v["readinessProbe"]["httpGet"]["port"]
@@ -304,14 +309,8 @@ class TestConfigKeysInDeployment:
 
     def test_all_config_keys_referenced_in_deployment(self):
         """Every key in values.yaml 'config' section must be referenced in the deployment."""
-        missing = [
-            key
-            for key in self.v["config"]
-            if f"key: {key}" not in self.deploy_text
-        ]
-        assert missing == [], (
-            f"config keys not referenced in deployment.yaml env block: {missing}"
-        )
+        missing = [key for key in self.v["config"] if f"key: {key}" not in self.deploy_text]
+        assert missing == [], f"config keys not referenced in deployment.yaml env block: {missing}"
 
     def test_no_orphaned_env_keys_in_deployment(self):
         """Env keys hard-coded in deployment.yaml should be in values.yaml config."""
@@ -339,9 +338,7 @@ class TestPrometheusAnnotations:
 
     def test_metrics_path_annotation_present(self):
         path = self.v["podAnnotations"].get("prometheus.io/path")
-        assert path and path.startswith("/"), (
-            f"prometheus.io/path='{path}' — must start with '/'"
-        )
+        assert path and path.startswith("/"), f"prometheus.io/path='{path}' — must start with '/'"
 
     def test_metrics_path_is_slash_metrics(self):
         assert self.v["podAnnotations"]["prometheus.io/path"] == "/metrics"
@@ -379,9 +376,7 @@ _VALID_SERVICE_TYPES = {"ClusterIP", "NodePort", "LoadBalancer", "ExternalName"}
 def test_service_type_is_valid():
     v = _values()
     stype = v["service"]["type"]
-    assert stype in _VALID_SERVICE_TYPES, (
-        f"service.type='{stype}' is not a valid K8s Service type"
-    )
+    assert stype in _VALID_SERVICE_TYPES, f"service.type='{stype}' is not a valid K8s Service type"
 
 
 # ---------------------------------------------------------------------------
@@ -405,7 +400,9 @@ class TestBundledPostgres:
         assert "size" in pg["storage"]
         size = pg["storage"]["size"]
         # must end with a storage unit
-        assert re.match(r"^\d+[KMGTP]i$", size), f"postgres.storage.size='{size}' is not a valid K8s quantity"
+        assert re.match(r"^\d+[KMGTP]i$", size), (
+            f"postgres.storage.size='{size}' is not a valid K8s quantity"
+        )
 
     def test_postgres_bundled_is_disabled_by_default(self):
         """Bundled postgres must be opt-in (enabled: false by default)."""

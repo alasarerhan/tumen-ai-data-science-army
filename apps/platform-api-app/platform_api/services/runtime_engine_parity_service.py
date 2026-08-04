@@ -104,7 +104,9 @@ def build_runtime_engine_parity_report() -> dict[str, Any]:
         backoff_base=0,
         graceful_degradation=False,
     )
-    cancel_result = cancel_engine.run(spec=spec, session_id=cancel_session_id, scenario="supervised", context={})
+    cancel_result = cancel_engine.run(
+        spec=spec, session_id=cancel_session_id, scenario="supervised", context={}
+    )
 
     step_logs = [
         {
@@ -156,7 +158,9 @@ def build_runtime_engine_parity_report() -> dict[str, Any]:
             "status": "not_runtime_replacement",
             "target_contract": "Prefect/scheduler remains canonical for schedules",
             "covered": True,
-            "records": [{"decision": "RuntimeEngine parity harness does not promote scheduler behavior"}],
+            "records": [
+                {"decision": "RuntimeEngine parity harness does not promote scheduler behavior"}
+            ],
         },
     }
     checks = {

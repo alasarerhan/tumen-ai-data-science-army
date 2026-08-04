@@ -43,14 +43,14 @@ pytestmark = pytest.mark.llm
 # 1. PURE: model-driven tool'lar
 # ---------------------------------------------------------------------------
 
+
 def test_version_sort_key_real(llm_or_skip, llm_model):
     tool = version_sort_key_wrapped
     _content, _ = _assert_result(
         _drive_tool_call(
             llm_model,
             tool,
-            "version_sort_key_wrapped tool'unu TEK çağrı ile çağır; "
-            "version='v2.10.3' ver.",
+            "version_sort_key_wrapped tool'unu TEK çağrı ile çağır; version='v2.10.3' ver.",
         ),
         tool.name,
     )
@@ -62,8 +62,7 @@ def test_check_consistency_real(llm_or_skip, llm_model):
         _drive_tool_call(
             llm_model,
             tool,
-            "check_consistency_wrapped tool'unu TEK çağrı ile çağır; "
-            "parametresiz çağır.",
+            "check_consistency_wrapped tool'unu TEK çağrı ile çağır; parametresiz çağır.",
         ),
         tool.name,
     )
@@ -72,6 +71,7 @@ def test_check_consistency_real(llm_or_skip, llm_model):
 # ---------------------------------------------------------------------------
 # 2. STATEFUL: FeatureStore / FreshnessRecord
 # ---------------------------------------------------------------------------
+
 
 def _fresh_store() -> FeatureStore:
     return FeatureStore()
@@ -130,16 +130,28 @@ def test_latest_version_real():
     """latest_version: aynı name'in en yüksek version'ını döner."""
     store = _fresh_store()
     register_feature(
-        store, name="score", dtype="float", transform="x",
-        owner="a", version="1.0.0",
+        store,
+        name="score",
+        dtype="float",
+        transform="x",
+        owner="a",
+        version="1.0.0",
     )
     register_feature(
-        store, name="score", dtype="float", transform="x",
-        owner="a", version="1.2.0",
+        store,
+        name="score",
+        dtype="float",
+        transform="x",
+        owner="a",
+        version="1.2.0",
     )
     register_feature(
-        store, name="score", dtype="float", transform="x",
-        owner="a", version="1.10.0",
+        store,
+        name="score",
+        dtype="float",
+        transform="x",
+        owner="a",
+        version="1.10.0",
     )
     latest = latest_version(store, name="score")
     assert latest is not None
@@ -177,7 +189,9 @@ def test_attach_lineage_real():
     store = _seed_store()
     f = store.definitions[0]
     out = attach_lineage(
-        store, feature_id=f.feature_id, lineage_node_id="node-42",
+        store,
+        feature_id=f.feature_id,
+        lineage_node_id="node-42",
     )
     assert out.lineage_node_id == "node-42"
 

@@ -37,17 +37,17 @@ import json
 import logging
 import uuid
 from datetime import UTC, datetime
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from prometheus_client import Counter, Gauge
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from platform_api.core.config import settings
 from platform_api.core.circuit_breaker import (
     CircuitBreakerConfig,
     DistributedCircuitBreaker,
 )
+from platform_api.core.config import settings
 from platform_api.db.models import WorkflowSpec
 
 logger = logging.getLogger(__name__)
@@ -115,11 +115,11 @@ class WorkflowSchedulerService:
     async def create_scheduled_deployment(
         self,
         workflow_spec: WorkflowSpec,
-        cron: Optional[str] = None,
+        cron: str | None = None,
         timezone: str = "UTC",
-        parameters: Optional[Dict[str, Any]] = None,
+        parameters: dict[str, Any] | None = None,
         enabled: bool = True,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Create or update a Prefect deployment for scheduled execution.
 
         Parameters
@@ -176,7 +176,9 @@ class WorkflowSchedulerService:
                     deployment_id = existing["id"]
                     logger.info(
                         "Updating existing deployment: name=%s, id=%s, cron=%s",
-                        deployment_name, deployment_id, effective_cron,
+                        deployment_name,
+                        deployment_id,
+                        effective_cron,
                     )
                 else:
                     flow_name = f"workflow-{workflow_spec.name}"
@@ -195,7 +197,9 @@ class WorkflowSchedulerService:
                     )
                     logger.info(
                         "Created new deployment: name=%s, id=%s, cron=%s",
-                        deployment_name, deployment_id, effective_cron,
+                        deployment_name,
+                        deployment_id,
+                        effective_cron,
                     )
 
             PREFECT_CIRCUIT_BREAKER.record_success()
@@ -215,7 +219,8 @@ class WorkflowSchedulerService:
             PREFECT_CIRCUIT_BREAKER.record_failure()
             logger.error(
                 "Timeout creating deployment for workflow %s after %ds",
-                workflow_spec.name, settings.prefect_api_timeout_seconds,
+                workflow_spec.name,
+                settings.prefect_api_timeout_seconds,
             )
             raise RuntimeError("Prefect API timeout. Please try again.")
         except Exception:
@@ -226,7 +231,7 @@ class WorkflowSchedulerService:
             )
             raise RuntimeError("Failed to create scheduled deployment") from None
 
-    async def _find_deployment_by_name(self, client, name: str) -> Optional[Dict]:
+    async def _find_deployment_by_name(self, client, name: str) -> dict | None:
         """Find an existing deployment by name."""
         try:
             deployments = await asyncio.wait_for(
@@ -238,7 +243,11 @@ class WorkflowSchedulerService:
                     return {"id": str(dep.id), "name": dep.name}
             return None
         except asyncio.TimeoutError:
-            logger.error("Timeout finding deployment %s after %ds", name, settings.prefect_api_timeout_seconds)
+            logger.error(
+                "Timeout finding deployment %s after %ds",
+                name,
+                settings.prefect_api_timeout_seconds,
+            )
             raise RuntimeError(f"Prefect API timeout while finding deployment {name}")
         except Exception as e:
             logger.error("Error finding deployment %s: %s", name, e)
@@ -251,7 +260,7 @@ class WorkflowSchedulerService:
         deployment_name: str,
         cron: str,
         timezone: str,
-        parameters: Dict[str, Any],
+        parameters: dict[str, Any],
     ) -> str:
         """Create a new Prefect deployment with schedule."""
         try:
@@ -274,7 +283,11 @@ class WorkflowSchedulerService:
             return str(deployment.id)
 
         except asyncio.TimeoutError:
-            logger.error("Timeout creating deployment %s after %ds", deployment_name, settings.prefect_api_timeout_seconds)
+            logger.error(
+                "Timeout creating deployment %s after %ds",
+                deployment_name,
+                settings.prefect_api_timeout_seconds,
+            )
             raise RuntimeError(f"Prefect API timeout while creating deployment {deployment_name}")
         except Exception as e:
             logger.error("Failed to create deployment: %s", e)
@@ -285,7 +298,7 @@ class WorkflowSchedulerService:
         *,
         workspace_id: uuid.UUID | str | None = None,
         tenant_id: uuid.UUID | str | None = None,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """List all scheduled workflow deployments.
 
         Returns
@@ -312,9 +325,13 @@ class WorkflowSchedulerService:
                 result = []
                 for dep in deployments:
                     dep_parameters = dep.parameters or {}
-                    if workspace_id is not None and str(dep_parameters.get("workspace_id")) != str(workspace_id):
+                    if workspace_id is not None and str(dep_parameters.get("workspace_id")) != str(
+                        workspace_id
+                    ):
                         continue
-                    if tenant_id is not None and str(dep_parameters.get("tenant_id")) != str(tenant_id):
+                    if tenant_id is not None and str(dep_parameters.get("tenant_id")) != str(
+                        tenant_id
+                    ):
                         continue
                     schedule_info = None
                     if dep.schedule:
@@ -324,22 +341,26 @@ class WorkflowSchedulerService:
                             "timezone": getattr(dep.schedule, "timezone", None),
                         }
 
-                    result.append({
-                        "id": str(dep.id),
-                        "name": dep.name,
-                        "flow_name": dep.flow_name,
-                        "schedule": schedule_info,
-                        "parameters": dep_parameters,
-                        "created": dep.created.isoformat() if dep.created else None,
-                        "updated": dep.updated.isoformat() if dep.updated else None,
-                    })
+                    result.append(
+                        {
+                            "id": str(dep.id),
+                            "name": dep.name,
+                            "flow_name": dep.flow_name,
+                            "schedule": schedule_info,
+                            "parameters": dep_parameters,
+                            "created": dep.created.isoformat() if dep.created else None,
+                            "updated": dep.updated.isoformat() if dep.updated else None,
+                        }
+                    )
 
                 PREFECT_CIRCUIT_BREAKER.record_success()
                 return result
 
         except asyncio.TimeoutError:
             PREFECT_CIRCUIT_BREAKER.record_failure()
-            logger.error("Timeout listing deployments after %ds", settings.prefect_api_timeout_seconds)
+            logger.error(
+                "Timeout listing deployments after %ds", settings.prefect_api_timeout_seconds
+            )
             return []
         except Exception:
             PREFECT_CIRCUIT_BREAKER.record_failure()
@@ -349,8 +370,8 @@ class WorkflowSchedulerService:
     async def trigger_scheduled_workflow(
         self,
         workflow_spec_id: uuid.UUID,
-        parameters: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, Any]:
+        parameters: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         """Manually trigger a scheduled workflow.
 
         Parameters
@@ -385,9 +406,7 @@ class WorkflowSchedulerService:
                 },
             )
 
-            WORKFLOW_TRIGGER_TOTAL.labels(
-                workflow_name=workflow_spec.name, status="success"
-            ).inc()
+            WORKFLOW_TRIGGER_TOTAL.labels(workflow_name=workflow_spec.name, status="success").inc()
 
             return {
                 "flow_run_id": flow_run_id,
@@ -396,9 +415,7 @@ class WorkflowSchedulerService:
             }
 
         except Exception as e:
-            WORKFLOW_TRIGGER_TOTAL.labels(
-                workflow_name=workflow_spec.name, status="failed"
-            ).inc()
+            WORKFLOW_TRIGGER_TOTAL.labels(workflow_name=workflow_spec.name, status="failed").inc()
             logger.error("Failed to trigger workflow %s: %s", workflow_spec.name, e)
             raise
 
@@ -408,7 +425,7 @@ class WorkflowSchedulerService:
         *,
         workspace_id: uuid.UUID | str,
         tenant_id: uuid.UUID | str | None = None,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Pause a scheduled deployment.
 
         Parameters
@@ -452,7 +469,11 @@ class WorkflowSchedulerService:
             }
 
         except asyncio.TimeoutError:
-            logger.error("Timeout pausing deployment %s after %ds", deployment_id, settings.prefect_api_timeout_seconds)
+            logger.error(
+                "Timeout pausing deployment %s after %ds",
+                deployment_id,
+                settings.prefect_api_timeout_seconds,
+            )
             raise RuntimeError(f"Prefect API timeout while pausing deployment {deployment_id}")
         except Exception as e:
             logger.error("Failed to pause deployment %s: %s", deployment_id, e)
@@ -464,7 +485,7 @@ class WorkflowSchedulerService:
         *,
         workspace_id: uuid.UUID | str,
         tenant_id: uuid.UUID | str | None = None,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Resume a paused scheduled deployment.
 
         Parameters
@@ -508,7 +529,11 @@ class WorkflowSchedulerService:
             }
 
         except asyncio.TimeoutError:
-            logger.error("Timeout resuming deployment %s after %ds", deployment_id, settings.prefect_api_timeout_seconds)
+            logger.error(
+                "Timeout resuming deployment %s after %ds",
+                deployment_id,
+                settings.prefect_api_timeout_seconds,
+            )
             raise RuntimeError(f"Prefect API timeout while resuming deployment {deployment_id}")
         except Exception as e:
             logger.error("Failed to resume deployment %s: %s", deployment_id, e)
@@ -519,7 +544,7 @@ class WorkflowSchedulerService:
         *,
         tenant_id: uuid.UUID | str,
         workspace_id: uuid.UUID | str | None = None,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Delete scheduled deployments owned by a tenant or workspace."""
         if not self._prefect_available:
             logger.info("Prefect unavailable; skipping scheduled deployment cleanup")
@@ -567,7 +592,7 @@ class WorkflowSchedulerService:
         *,
         workspace_id: uuid.UUID | str,
         tenant_id: uuid.UUID | str | None = None,
-    ) -> Optional[Dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         deployments = await self.list_scheduled_deployments(
             workspace_id=workspace_id,
             tenant_id=tenant_id,
@@ -579,8 +604,8 @@ class WorkflowSchedulerService:
 
 
 __all__ = [
-    "WorkflowSchedulerService",
     "WORKFLOW_SCHEDULED_TOTAL",
-    "WORKFLOW_TRIGGER_TOTAL",
     "WORKFLOW_SCHEDULE_GAUGE",
+    "WORKFLOW_TRIGGER_TOTAL",
+    "WorkflowSchedulerService",
 ]

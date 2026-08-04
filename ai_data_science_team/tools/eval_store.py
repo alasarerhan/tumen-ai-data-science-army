@@ -143,12 +143,15 @@ def summarise_over_datasets(
     model_id: str,
     metric: str,
 ) -> Dict[str, float]:
-    vals = [
-        r.metrics[metric] for r in store.by_model(model_id) if metric in r.metrics
-    ]
+    vals = [r.metrics[metric] for r in store.by_model(model_id) if metric in r.metrics]
     if not vals:
-        return {"n": 0.0, "mean": float("nan"), "min": float("nan"),
-                "max": float("nan"), "std": float("nan")}
+        return {
+            "n": 0.0,
+            "mean": float("nan"),
+            "min": float("nan"),
+            "max": float("nan"),
+            "std": float("nan"),
+        }
     arr = list(vals)
     n = len(arr)
     mean = sum(arr) / n
@@ -182,5 +185,3 @@ def slice_by_feature(
             for m, v in s.metrics.items():
                 bucket[m] = bucket.get(m, 0.0) + v
     return out
-
-

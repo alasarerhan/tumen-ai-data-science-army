@@ -39,8 +39,8 @@ import asyncio
 import logging
 import os
 import uuid
+from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
-from typing import Callable, Dict, Optional
 
 from prometheus_client import Counter, Gauge, Histogram
 from sqlalchemy import or_, select, update
@@ -144,16 +144,16 @@ class SchedulerService:
         )
         if resolved_max_concurrent_jobs < 1:
             raise ValueError("max_concurrent_jobs must be at least 1")
-        
+
         self._db = db
         self._leader_ttl = leader_ttl_seconds
         self._poll_interval = poll_interval_seconds
         self._max_concurrent_jobs = resolved_max_concurrent_jobs
         self._leader_id = f"{os.getpid()}-{uuid.uuid4().hex[:8]}"
         self._running = False
-        self._task: Optional[asyncio.Task] = None
-        self._handlers: Dict[str, Callable] = {}
-        self._job_timeouts: Dict[str, int] = {}
+        self._task: asyncio.Task | None = None
+        self._handlers: dict[str, Callable] = {}
+        self._job_timeouts: dict[str, int] = {}
         self._is_leader = False
         self._active_tasks: set = set()
 
@@ -162,10 +162,10 @@ class SchedulerService:
         job_name: str,
         job_type: str,
         handler: Callable,
-        cron_expression: Optional[str] = None,
-        interval_seconds: Optional[int] = None,
+        cron_expression: str | None = None,
+        interval_seconds: int | None = None,
         enabled: bool = True,
-        stuck_timeout_seconds: Optional[int] = None,
+        stuck_timeout_seconds: int | None = None,
     ) -> ScheduledJob:
         """Register or update a scheduled job.
 
@@ -192,7 +192,7 @@ class SchedulerService:
         -------
         ScheduledJob
             The registered job record.
-        
+
         Raises
         ------
         ValueError
@@ -203,13 +203,13 @@ class SchedulerService:
                 f"interval_seconds must be at least {MIN_INTERVAL_SECONDS} second(s), "
                 f"got {interval_seconds}"
             )
-        
+
         if not job_name or not job_name.strip():
             raise ValueError("job_name cannot be empty")
-        
+
         if not job_type or not job_type.strip():
             raise ValueError("job_type cannot be empty")
-        
+
         self._handlers[job_name] = handler
         self._job_timeouts[job_name] = stuck_timeout_seconds or STUCK_JOB_THRESHOLD_SECONDS
 
@@ -225,9 +225,7 @@ class SchedulerService:
             job.interval_seconds = interval_seconds
             job.enabled = enabled
             if not job.next_run_at:
-                job.next_run_at = self._calculate_next_run(
-                    cron_expression, interval_seconds, now
-                )
+                job.next_run_at = self._calculate_next_run(cron_expression, interval_seconds, now)
         else:
             next_run = self._calculate_next_run(cron_expression, interval_seconds, now)
             job = ScheduledJob(
@@ -243,14 +241,16 @@ class SchedulerService:
         self._db.flush()
         logger.info(
             "Registered scheduled job: name=%s, type=%s, next_run=%s",
-            job_name, job_type, job.next_run_at,
+            job_name,
+            job_type,
+            job.next_run_at,
         )
         return job
 
     def _calculate_next_run(
         self,
-        cron_expression: Optional[str],
-        interval_seconds: Optional[int],
+        cron_expression: str | None,
+        interval_seconds: int | None,
         from_time: datetime,
     ) -> datetime:
         """Calculate the next run time for a job."""
@@ -259,6 +259,7 @@ class SchedulerService:
         if cron_expression:
             try:
                 from croniter import croniter
+
                 cron = croniter(cron_expression, from_time)
                 return cron.get_next(datetime)
             except ImportError:
@@ -283,10 +284,10 @@ class SchedulerService:
             .where(
                 (ScheduledJob.enabled),
                 (
-                    (ScheduledJob.leader_id is None) |
-                    (ScheduledJob.leader_id == self._leader_id) |
-                    (ScheduledJob.leader_expires_at < now)
-                )
+                    (ScheduledJob.leader_id is None)
+                    | (ScheduledJob.leader_id == self._leader_id)
+                    | (ScheduledJob.leader_expires_at < now)
+                ),
             )
             .values(leader_id=self._leader_id, leader_expires_at=expiry)
             .returning(ScheduledJob.id)
@@ -383,9 +384,13 @@ class SchedulerService:
 
         except asyncio.TimeoutError:
             job.last_run_status = "timeout"
-            job.last_run_error = f"Job timed out after {settings.scheduler_job_timeout_seconds} seconds"
+            job.last_run_error = (
+                f"Job timed out after {settings.scheduler_job_timeout_seconds} seconds"
+            )
             SCHEDULER_JOBS_TOTAL.labels(job_name=job_name, status="timeout").inc()
-            logger.error("Job timed out: %s after %ds", job_name, settings.scheduler_job_timeout_seconds)
+            logger.error(
+                "Job timed out: %s after %ds", job_name, settings.scheduler_job_timeout_seconds
+            )
         except Exception as e:
             job.last_run_status = "failed"
             job.last_run_error = str(e)[:1000]
@@ -420,10 +425,10 @@ class SchedulerService:
 
     async def _recover_stuck_jobs(self) -> int:
         """Recover jobs stuck in 'running' state.
-        
+
         Jobs that have been in 'running' state for longer than
         STUCK_JOB_THRESHOLD_SECONDS are reset to 'failed'.
-        
+
         Returns
         -------
         int
@@ -431,7 +436,7 @@ class SchedulerService:
         """
         now = datetime.now(UTC)
         threshold = now - timedelta(seconds=STUCK_JOB_THRESHOLD_SECONDS)
-        
+
         stuck_jobs = list(
             self._db.execute(
                 select(ScheduledJob).where(
@@ -440,11 +445,13 @@ class SchedulerService:
                 )
             ).scalars()
         )
-        
+
         recovered = 0
         for job in stuck_jobs:
             job.last_run_status = "failed"
-            job.last_run_error = f"Job recovered after being stuck for >{STUCK_JOB_THRESHOLD_SECONDS}s"
+            job.last_run_error = (
+                f"Job recovered after being stuck for >{STUCK_JOB_THRESHOLD_SECONDS}s"
+            )
             job.next_run_at = self._calculate_next_run(
                 job.cron_expression,
                 job.interval_seconds,
@@ -454,13 +461,14 @@ class SchedulerService:
             recovered += 1
             logger.warning(
                 "Recovered stuck job: %s (was running since %s)",
-                job.job_name, job.last_run_at,
+                job.job_name,
+                job.last_run_at,
             )
-        
+
         if recovered > 0:
             self._db.commit()
             SCHEDULER_STUCK_JOBS_GAUGE.set(recovered)
-        
+
         return recovered
 
     async def _scheduler_loop(self) -> None:
@@ -479,8 +487,7 @@ class SchedulerService:
                     due_job_ids = [
                         row[0]
                         for row in self._db.execute(
-                            select(ScheduledJob.id)
-                            .where(
+                            select(ScheduledJob.id).where(
                                 ScheduledJob.enabled,
                                 ScheduledJob.next_run_at <= now,
                                 or_(
@@ -615,7 +622,10 @@ async def _process_outbox_job(db: Session) -> None:
     if stats["published"] > 0 or stats["dlq"] > 0:
         logger.info(
             "Outbox processing: published=%d, retried=%d, failed=%d, dlq=%d",
-            stats["published"], stats["retried"], stats["failed"], stats["dlq"],
+            stats["published"],
+            stats["retried"],
+            stats["failed"],
+            stats["dlq"],
         )
 
 
@@ -631,19 +641,20 @@ async def _monitor_dlq_job(db: Session) -> None:
     if stats["dlq"] >= dlq_threshold:
         logger.error(
             "DLQ ALERT: %d events in DLQ (threshold=%d)",
-            stats["dlq"], dlq_threshold,
+            stats["dlq"],
+            dlq_threshold,
         )
 
     outbox.update_metrics()
 
 
 __all__ = [
-    "SchedulerService",
-    "create_default_scheduler",
     "SCHEDULER_JOBS_TOTAL",
     "SCHEDULER_JOB_DURATION",
     "SCHEDULER_LEADER_GAUGE",
     "SCHEDULER_QUEUE_DEPTH",
-    "SCHEDULER_STUCK_JOBS_GAUGE",
     "SCHEDULER_RUNNING_JOBS_GAUGE",
+    "SCHEDULER_STUCK_JOBS_GAUGE",
+    "SchedulerService",
+    "create_default_scheduler",
 ]

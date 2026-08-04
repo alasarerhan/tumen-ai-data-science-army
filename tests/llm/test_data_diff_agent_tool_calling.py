@@ -42,20 +42,24 @@ def _invoke_wrapper(wrapped, /, **kwargs):
 
 def _toy_df_a() -> pd.DataFrame:
     """Sol taraf: 20 satır, 3 kolon (id, value, label)."""
-    return pd.DataFrame({
-        "id": list(range(20)),
-        "value": np.arange(20, dtype=float),
-        "label": ["a" if i % 2 == 0 else "b" for i in range(20)],
-    })
+    return pd.DataFrame(
+        {
+            "id": list(range(20)),
+            "value": np.arange(20, dtype=float),
+            "label": ["a" if i % 2 == 0 else "b" for i in range(20)],
+        }
+    )
 
 
 def _toy_df_b() -> pd.DataFrame:
     """Sağ taraf: 18 satır (id 2–19), 3 kolon, value 1.0 offset."""
-    return pd.DataFrame({
-        "id": list(range(2, 20)),
-        "value": np.arange(2, 20, dtype=float) + 1.0,
-        "label": ["a" if i % 2 == 0 else "b" for i in range(2, 20)],
-    })
+    return pd.DataFrame(
+        {
+            "id": list(range(2, 20)),
+            "value": np.arange(2, 20, dtype=float) + 1.0,
+            "label": ["a" if i % 2 == 0 else "b" for i in range(2, 20)],
+        }
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -84,7 +88,9 @@ def test_numeric_shift_real():
     a = pd.Series(np.arange(20, dtype=float))
     b = pd.Series(np.arange(20, dtype=float) + 1.0)
     content, artifact = _invoke_wrapper(
-        numeric_shift_wrapped, left=a, right=b,
+        numeric_shift_wrapped,
+        left=a,
+        right=b,
     )
     assert "ok" in content
     result = artifact["result"]
@@ -102,7 +108,9 @@ def test_schema_delta_real():
     left = pd.DataFrame({"a": [1, 2], "b": [3, 4]})
     right = pd.DataFrame({"a": [1, 2], "c": [5, 6]})
     content, artifact = _invoke_wrapper(
-        schema_delta_wrapped, left=left, right=right,
+        schema_delta_wrapped,
+        left=left,
+        right=right,
     )
     assert "ok" in content
     added, removed, common = artifact["result"]
@@ -121,7 +129,10 @@ def test_key_set_diff_real():
     left = _toy_df_a()
     right = _toy_df_b()
     content, artifact = _invoke_wrapper(
-        key_set_diff_wrapped, left=left, right=right, key="id",
+        key_set_diff_wrapped,
+        left=left,
+        right=right,
+        key="id",
     )
     assert "ok" in content
     added_keys, removed_keys = artifact["result"]
@@ -139,12 +150,15 @@ def test_diff_summary_real():
     left = _toy_df_a()
     right = _toy_df_b()
     content, artifact = _invoke_wrapper(
-        diff_summary_wrapped, left=left, right=right,
+        diff_summary_wrapped,
+        left=left,
+        right=right,
     )
     assert "ok" in content
     result = artifact["result"]
     assert result.rows_left == 20
     assert result.rows_right == 18
+
 
 # ---------------------------------------------------------------------------
 # 6. diff_payload_wrapped — DataFrame → UI-ready JSON payload
@@ -156,7 +170,9 @@ def test_diff_payload_real():
     left = _toy_df_a()
     right = _toy_df_b()
     content, artifact = _invoke_wrapper(
-        diff_payload_wrapped, left=left, right=right,
+        diff_payload_wrapped,
+        left=left,
+        right=right,
     )
     assert "ok" in content
     result = artifact["result"]

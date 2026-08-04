@@ -72,9 +72,7 @@ class TestValidateLayout:
         )
         # bypass add_panel checks: mutate directly
         dash.panels[0].width = 3  # now overlaps with the second
-        assert any(
-            "overlap" in issue for issue in validate_layout(dash)
-        )
+        assert any("overlap" in issue for issue in validate_layout(dash))
 
 
 class TestShareToken:
@@ -124,6 +122,7 @@ class TestRenderSnapshot:
     def test_layout_issues_included(self):
         # Add an out-of-bounds panel via Panel class.
         from ai_data_science_team.tools.dashboard import Panel
+
         dash = make_dashboard("k", [])
         dash.panels.append(
             Panel(

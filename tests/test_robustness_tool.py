@@ -69,7 +69,12 @@ class TestEvaluateRobustness:
     def test_clean_equals_baseline(self):
         X, y = _toy()
         res = f5.evaluate_robustness(
-            "stub", _predict, X, y, replicates=3, seed=0,
+            "stub",
+            _predict,
+            X,
+            y,
+            replicates=3,
+            seed=0,
         )
         # All clean scenarios at replicate 0 have delta == 0.
         clean_row = res.summary.loc["clean"]
@@ -78,7 +83,12 @@ class TestEvaluateRobustness:
     def test_replicate_count(self):
         X, y = _toy()
         res = f5.evaluate_robustness(
-            "stub", _predict, X, y, replicates=5, seed=0,
+            "stub",
+            _predict,
+            X,
+            y,
+            replicates=5,
+            seed=0,
         )
         assert res.matrix.shape[1] == 5
         assert res.metadata["replicates"] == 5
@@ -95,7 +105,11 @@ class TestEvaluateRobustness:
         X, y = _toy()
         custom = [f5.Scenario("noop", lambda X, y: X)]
         res = f5.evaluate_robustness(
-            "stub", _predict, X, y, scenarios=custom, replicates=1,
+            "stub",
+            _predict,
+            X,
+            y,
+            scenarios=custom,
+            replicates=1,
         )
         assert list(res.summary.index) == ["noop"]
-

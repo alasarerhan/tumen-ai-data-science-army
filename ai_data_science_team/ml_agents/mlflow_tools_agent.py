@@ -1,48 +1,43 @@
-from typing_extensions import Any, Optional, Annotated, Sequence, Dict, TypedDict
-
-
-
 import logging
+
+from typing_extensions import Annotated, Any, Dict, Optional, Sequence, TypedDict
 
 logger = logging.getLogger(__name__)
 import pandas as pd  # noqa: E402, F401
-
 from IPython.display import Markdown  # noqa: E402, F401
-
-from langchain_core.messages import BaseMessage, AIMessage  # noqa: E402, F401
-
 from langchain.agents import create_agent  # noqa: E402, F401
+from langchain_core.messages import AIMessage, BaseMessage  # noqa: E402, F401
+from langgraph.graph import END, START, StateGraph  # noqa: E402, F401
 from langgraph.graph.message import add_messages  # noqa: E402, F401
 from langgraph.types import Checkpointer  # noqa: E402, F401
-from langgraph.graph import START, END, StateGraph  # noqa: E402, F401
 
 from ai_data_science_team.templates import BaseAgent  # noqa: E402, F401
-from ai_data_science_team.utils.regex import format_agent_name  # noqa: E402, F401
 from ai_data_science_team.tools.mlflow import (  # noqa: E402, F401
-    mlflow_search_experiments,
-    mlflow_search_runs,
     mlflow_create_experiment,
-    mlflow_set_tags,
-    mlflow_log_params,
-    mlflow_log_metrics,
-    mlflow_log_table,
-    mlflow_log_dict,
-    mlflow_log_figure,
-    mlflow_log_artifact,
-    mlflow_predict_from_run_id,
-    mlflow_launch_ui,
-    mlflow_stop_ui,
-    mlflow_list_artifacts,
     mlflow_download_artifacts,
-    mlflow_list_registered_models,
-    mlflow_search_registered_models,
     mlflow_get_model_version_details,
     mlflow_get_run_details,
-    mlflow_transition_model_version_stage,
+    mlflow_launch_ui,
+    mlflow_list_artifacts,
+    mlflow_list_registered_models,
+    mlflow_log_artifact,
+    mlflow_log_dict,
+    mlflow_log_figure,
+    mlflow_log_metrics,
+    mlflow_log_params,
+    mlflow_log_table,
+    mlflow_predict_from_run_id,
+    mlflow_search_experiments,
+    mlflow_search_registered_models,
+    mlflow_search_runs,
+    mlflow_set_tags,
+    mlflow_stop_ui,
     mlflow_tracking_info,
+    mlflow_transition_model_version_stage,
     mlflow_ui_status,
 )
 from ai_data_science_team.utils.messages import get_tool_call_names  # noqa: E402, F401
+from ai_data_science_team.utils.regex import format_agent_name  # noqa: E402, F401
 
 AGENT_NAME = "mlflow_tools_agent"
 
@@ -208,9 +203,7 @@ class MLflowToolsAgent(BaseAgent):
         self.response = response
         return None
 
-    def invoke_agent(
-        self, user_instructions: str = None, data_raw: pd.DataFrame = None, **kwargs
-    ):
+    def invoke_agent(self, user_instructions: str = None, data_raw: pd.DataFrame = None, **kwargs):
         """
         Runs the agent with the given user instructions.
 
@@ -439,12 +432,7 @@ def make_mlflow_tools_agent(
             rows = records[: max_rows if max_rows and max_rows > 0 else len(records)]
             header = "| " + " | ".join(cols) + " |"
             sep = "| " + " | ".join(["---"] * len(cols)) + " |"
-            body = [
-                "| "
-                + " | ".join(_escape_md_cell(r.get(c)) for c in cols)
-                + " |"
-                for r in rows
-            ]
+            body = ["| " + " | ".join(_escape_md_cell(r.get(c)) for c in cols) + " |" for r in rows]
             return "\n".join([header, sep] + body)
 
         if not internal_messages:
@@ -473,11 +461,11 @@ def make_mlflow_tools_agent(
             art = getattr(msg, "artifact", None)
             name = getattr(msg, "name", None)
             if art is not None:
-                key = name or f"artifact_{len(artifacts)+1}"
+                key = name or f"artifact_{len(artifacts) + 1}"
                 artifacts[key] = art
                 last_tool_artifact = art
             elif isinstance(msg, dict) and "artifact" in msg:
-                key = msg.get("name") or f"artifact_{len(artifacts)+1}"
+                key = msg.get("name") or f"artifact_{len(artifacts) + 1}"
                 artifacts[key] = msg["artifact"]
                 last_tool_artifact = msg["artifact"]
 
@@ -514,7 +502,9 @@ def make_mlflow_tools_agent(
             runs_art = art.get("mlflow_search_runs")
             if isinstance(runs_art, dict) and isinstance(runs_art.get("runs"), list):
                 runs = runs_art.get("runs") or []
-                count = runs_art.get("count") if isinstance(runs_art.get("count"), int) else len(runs)
+                count = (
+                    runs_art.get("count") if isinstance(runs_art.get("count"), int) else len(runs)
+                )
                 max_results = runs_art.get("max_results")
                 header = (
                     f"Showing {count} most recent run(s) (max_results={max_results})."
@@ -542,7 +532,9 @@ def make_mlflow_tools_agent(
 
             return "\n\n".join([p for p in parts if isinstance(p, str) and p.strip()]) or None
 
-        formatted = _format_artifacts_table(artifacts) or _format_artifacts_table(last_tool_artifact)
+        formatted = _format_artifacts_table(artifacts) or _format_artifacts_table(
+            last_tool_artifact
+        )
         last_ai_message = AIMessage(
             content=formatted or last_ai_content,
             name=AGENT_NAME,

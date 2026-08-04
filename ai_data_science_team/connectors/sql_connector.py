@@ -66,6 +66,7 @@ class SQLConnector(DataConnector):
     def description(self) -> str:
         try:
             import sqlalchemy as sa  # noqa: E402, F401
+
             safe_url = sa.make_url(self._connection_string).render_as_string(hide_password=True)
         except Exception as e:
             logger.warning("Failed to render safe URL for SQL connector: %s", e)
@@ -91,9 +92,7 @@ class SQLConnector(DataConnector):
                         c.execute(sa.text("SELECT 1"))
                     return
                 except Exception as e:
-                    logger.warning(
-                        "Existing SQL connection validation failed, reconnecting: %s", e
-                    )
+                    logger.warning("Existing SQL connection validation failed, reconnecting: %s", e)
                     self._engine = None
                     self._inspector = None
 
@@ -139,6 +138,7 @@ class SQLConnector(DataConnector):
         """Return rich schema metadata (delegates to the existing helper)."""
         self._ensure_connected()
         from ai_data_science_team.tools.sql import get_database_metadata  # noqa: E402, F401
+
         return get_database_metadata(self._engine, n_samples=n_samples)
 
     # ------------------------------------------------------------------
@@ -209,6 +209,7 @@ class SQLConnector(DataConnector):
         try:
             self._ensure_connected()
             import sqlalchemy as sa  # noqa: E402, F401
+
             with self._engine.connect() as c:
                 c.execute(sa.text("SELECT 1"))
             return {
@@ -249,6 +250,7 @@ class SQLConnector(DataConnector):
         def sql_schema() -> str:
             """Return database schema metadata as a JSON string."""
             import json  # noqa: E402, F401
+
             meta = connector.get_metadata(n_samples=3)
             return json.dumps(meta, default=str, indent=2)
 
@@ -285,11 +287,11 @@ class SQLConnector(DataConnector):
 
     def _sanitize_where_clause(self, where: str) -> str:
         """Validate WHERE clause for safe usage.
-        
+
         SECURITY: This method validates that the WHERE clause contains only
         safe characters and patterns. For user-provided values, ALWAYS use
         where_params parameter for parameterized queries.
-        
+
         Allowed patterns:
         - Column names (alphanumeric + underscore)
         - Comparison operators: =, <>, <, >, <=, >=, !=, LIKE, IN, BETWEEN
@@ -297,33 +299,45 @@ class SQLConnector(DataConnector):
         - Parentheses for grouping
         - Parameterized placeholders: :param_name, ?, %s
         - IS NULL, IS NOT NULL
-        
+
         Raises ValueError if potentially dangerous patterns are detected.
         """
         if not where or not isinstance(where, str):
             raise ValueError("WHERE clause must be a non-empty string")
-        
+
         import re  # noqa: E402, F401
-        
+
         dangerous_patterns = [
-            ";", "--", "/*", "*/",
-            "DROP", "DELETE", "INSERT", "UPDATE",
-            "TRUNCATE", "ALTER", "CREATE", "EXEC", "EXECUTE",
-            "xp_", "sp_", "UNION", "INTO", "OUTFILE", "LOAD_FILE"
+            ";",
+            "--",
+            "/*",
+            "*/",
+            "DROP",
+            "DELETE",
+            "INSERT",
+            "UPDATE",
+            "TRUNCATE",
+            "ALTER",
+            "CREATE",
+            "EXEC",
+            "EXECUTE",
+            "xp_",
+            "sp_",
+            "UNION",
+            "INTO",
+            "OUTFILE",
+            "LOAD_FILE",
         ]
         where_upper = where.upper()
         for pattern in dangerous_patterns:
             if pattern in where_upper:
                 raise ValueError(f"Potentially dangerous SQL pattern detected: {pattern}")
-        
-        safe_pattern = re.compile(
-            r'^[\w\s\.\,\(\)=<>!\'":\?\%\*\-]+$',
-            re.IGNORECASE
-        )
+
+        safe_pattern = re.compile(r'^[\w\s\.\,\(\)=<>!\'":\?\%\*\-]+$', re.IGNORECASE)
         if not safe_pattern.match(where):
             raise ValueError(
                 "WHERE clause contains invalid characters. "
                 "Only alphanumeric, comparison operators, and placeholders are allowed."
             )
-        
+
         return where

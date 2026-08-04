@@ -41,6 +41,7 @@ pytestmark = pytest.mark.llm
 # Yardımcılar: gerçek Pydantic/dataclass state nesneleri
 # ---------------------------------------------------------------------------
 
+
 def _policy() -> RiskPolicy:
     return RiskPolicy()
 
@@ -96,10 +97,13 @@ def _audit_with(model_id: str, action: str = "promotion.evaluate") -> AuditLog:
 # 9 STATEFUL tool'un gerçek testleri
 # ---------------------------------------------------------------------------
 
+
 def test_assign_risk_real():
     """assign_risk: RiskAssignment döner."""
     out = assign_risk(
-        model_id="m1", risk_class="high", assigned_by="alice",
+        model_id="m1",
+        risk_class="high",
+        assigned_by="alice",
         rationale="financial impact",
     )
     assert isinstance(out, RiskAssignment)
@@ -205,16 +209,22 @@ def test_promotion_gate_real():
     items, checklist = _checklist(passed=True)
     audit = AuditLog()
     out = promotion_gate(
-        risk=risk, chain=chain, checklist=checklist,
-        policy=_policy(), audit=audit,
+        risk=risk,
+        chain=chain,
+        checklist=checklist,
+        policy=_policy(),
+        audit=audit,
     )
     assert out["model_id"] == "model-1"
     assert out["allowed"] is True
     assert out["reasons"] == []
     # Chain eksik → reasons uyarısı
     out2 = promotion_gate(
-        risk=risk, chain=_chain_partial(), checklist=checklist,
-        policy=_policy(), audit=audit,
+        risk=risk,
+        chain=_chain_partial(),
+        checklist=checklist,
+        policy=_policy(),
+        audit=audit,
     )
     assert out2["allowed"] is False
     assert any("approval chain" in r for r in out2["reasons"])

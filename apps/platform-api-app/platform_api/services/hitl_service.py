@@ -20,7 +20,10 @@ def _parse_uuid(value: uuid.UUID | str, label: str) -> uuid.UUID:
 
 
 def _normalize_hitl_not_found_error(exc: Exception) -> Exception:
-    if getattr(exc, "status_code", None) == 404 and getattr(exc, "detail", None) == "HitlApproval not found":
+    if (
+        getattr(exc, "status_code", None) == 404
+        and getattr(exc, "detail", None) == "HitlApproval not found"
+    ):
         return NotFoundError("HITL approval not found")
     return exc
 
@@ -38,7 +41,9 @@ def list_hitl_approvals(
     return list(db.execute(q).scalars())
 
 
-def get_hitl_approval(db: Session, *, approval_id: uuid.UUID, workspace_id: uuid.UUID) -> HitlApproval:
+def get_hitl_approval(
+    db: Session, *, approval_id: uuid.UUID, workspace_id: uuid.UUID
+) -> HitlApproval:
     """Get a HITL approval by ID, ensuring it belongs to the specified workspace.
 
     Security: workspace_id filter is applied IN the query (not post-fetch)
@@ -106,7 +111,9 @@ def approve_hitl(
         db.refresh(item)
         logger.warning(
             "HITL approval race condition detected: approval_id=%s, current_status=%s, attempted_by_user=%s",
-            item.id, item.status, reviewer_user_id,
+            item.id,
+            item.status,
+            reviewer_user_id,
         )
         raise ConflictError(
             f"Approval already in state: {item.status}. Concurrent modification detected."
@@ -144,7 +151,9 @@ def reject_hitl(
         db.refresh(item)
         logger.warning(
             "HITL approval race condition detected: approval_id=%s, current_status=%s, attempted_by_user=%s",
-            item.id, item.status, reviewer_user_id,
+            item.id,
+            item.status,
+            reviewer_user_id,
         )
         raise ConflictError(
             f"Approval already in state: {item.status}. Concurrent modification detected."

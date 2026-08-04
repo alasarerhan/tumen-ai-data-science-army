@@ -7,7 +7,6 @@ list, refresh trigger, and basic DAX eval.
 
 from typing import Any, Dict, List, Mapping, Sequence  # noqa: E402, F401
 
-
 from ai_data_science_team.tools.snowflake import (  # noqa: E402, F401
     BaseConnector,
     ConnectorConfig,
@@ -25,9 +24,7 @@ class PowerBIConnector(BaseConnector):
         self.config.require("client_id")
         self.config.require("client_secret")
         if not self.config.get("workspace_id") and not self.config.get("workspace_name"):
-            raise ConnectorError(
-                "Power BI requires either 'workspace_id' or 'workspace_name'"
-            )
+            raise ConnectorError("Power BI requires either 'workspace_id' or 'workspace_name'")
 
     def check_connection(self) -> Dict[str, Any]:
         out = super().check_connection()
@@ -52,8 +49,11 @@ class PowerBIConnector(BaseConnector):
         cache = getattr(self, "_dataset_cache", None)
         if cache is None:
             return [
-                {"id": "ds-1", "name": "SalesCube", "workspace_id":
-                    self.config.get("workspace_id", "ws-1")},
+                {
+                    "id": "ds-1",
+                    "name": "SalesCube",
+                    "workspace_id": self.config.get("workspace_id", "ws-1"),
+                },
             ]
         return cache
 
@@ -67,7 +67,7 @@ class PowerBIConnector(BaseConnector):
             "type": "full",
         }
 
-    def sample_query(self, query: str = "EVALUATE ROW(\"x\", 1)") -> List[Dict[str, Any]]:
+    def sample_query(self, query: str = 'EVALUATE ROW("x", 1)') -> List[Dict[str, Any]]:
         if not query.strip().lower().startswith("evaluate"):
             raise ConnectorError("only DAX EVALUATE queries allowed as probes")
         return [{"x": "x", "value": 1}]

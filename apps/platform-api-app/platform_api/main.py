@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
@@ -11,7 +12,6 @@ from platform_api.core.idempotency import IdempotencyMiddleware
 from platform_api.core.observability import configure_logging, setup_observability
 from platform_api.core.rate_limit import RateLimitMiddleware
 from platform_api.core.request_size_limit import RequestSizeLimitMiddleware
-from platform_api.runtime import lifespan
 from platform_api.routes.admin import router as admin_router
 from platform_api.routes.artifacts import router as artifacts_router
 from platform_api.routes.auth import router as auth_router
@@ -33,8 +33,9 @@ from platform_api.routes.runs import router as runs_router
 from platform_api.routes.scheduler import router as scheduler_router
 from platform_api.routes.strategy import router as strategy_router
 from platform_api.routes.versioning import router as versioning_router
-from platform_api.routes.workflows import router as workflows_router
 from platform_api.routes.workflow_node_types import router as workflow_node_types_router
+from platform_api.routes.workflows import router as workflows_router
+from platform_api.runtime import lifespan
 
 logger = logging.getLogger(__name__)
 
@@ -114,7 +115,14 @@ def _register_middlewares(app: FastAPI) -> None:
         allow_origins=origins,
         allow_credentials=True,
         allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-        allow_headers=["Authorization", "Content-Type", "X-CSRF-Token", "X-User-Id", "X-Request-Id", "If-Match"],
+        allow_headers=[
+            "Authorization",
+            "Content-Type",
+            "X-CSRF-Token",
+            "X-User-Id",
+            "X-Request-Id",
+            "If-Match",
+        ],
     )
 
 

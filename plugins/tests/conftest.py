@@ -14,6 +14,7 @@ We force pytest to import the modernized nested package by stubbing
 nested dir. We also add the legacy `ai_data_science_team` (for plugins
 subpackages) and the repo root (for .env loading).
 """
+
 from __future__ import annotations
 
 import sys
@@ -31,6 +32,7 @@ _PLUGINS_DIR = _REPO_ROOT / "plugins"
 # Load .env from the actual repo root (parent of ai_data_science_team/).
 try:
     from dotenv import load_dotenv
+
     load_dotenv(_REPO_ROOT.parent / ".env", override=False)
 except ImportError:
     pass
@@ -46,9 +48,9 @@ for p in (_REPO_ROOT.parent, _REPO_ROOT, _PLUGINS_DIR, _PLUGINS_DIR / "tests", _
 # that `ai_data_science_team.plugins.*` resolves to the sibling plugins/.
 _pkg = types.ModuleType("ai_data_science_team")
 _pkg.__path__ = [
-    str(_NESTED_PKG),      # modernized — put FIRST so submodules are picked
-                            # from the nested dir, not the legacy.
-    str(_REPO_ROOT),       # legacy (for ai_data_science_team.plugins, etc.)
+    str(_NESTED_PKG),  # modernized — put FIRST so submodules are picked
+    # from the nested dir, not the legacy.
+    str(_REPO_ROOT),  # legacy (for ai_data_science_team.plugins, etc.)
 ]  # type: ignore[attr-defined]
 _pkg.__package__ = "ai_data_science_team"
 _pkg.__spec__ = None  # type: ignore[assignment]

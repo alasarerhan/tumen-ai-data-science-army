@@ -1,20 +1,16 @@
 from __future__ import annotations
 
-
 # BUSINESS SCIENCE UNIVERSITY
 # AI DATA SCIENCE TEAM
 # ***
 # * Agents: Model Evaluation Agent
-
-from typing import Any, Optional, Sequence, Dict
+from typing import Any, Dict, Optional, Sequence
 
 import pandas as pd
-
-from langchain_core.messages import BaseMessage, AIMessage
+from langchain_core.messages import AIMessage, BaseMessage
 
 from ai_data_science_team.templates import BaseAgent
 from ai_data_science_team.utils.messages import get_last_user_message_content
-
 
 AGENT_NAME = "model_evaluation_agent"
 
@@ -128,7 +124,9 @@ class ModelEvaluationAgent(BaseAgent):
         best_model_id = None
         if isinstance(model_artifacts, dict):
             model_path = model_artifacts.get("model_path") or model_artifacts.get("modelPath")
-            best_model_id = model_artifacts.get("best_model_id") or model_artifacts.get("bestModelId")
+            best_model_id = model_artifacts.get("best_model_id") or model_artifacts.get(
+                "bestModelId"
+            )
 
         df = data_raw.copy()
         y = df[target_variable]
@@ -239,16 +237,16 @@ class ModelEvaluationAgent(BaseAgent):
 
         if task_type == "classification":
             try:
+                import plotly.graph_objects as go  # noqa: E402, F401
                 from sklearn.metrics import (  # noqa: E402, F401
                     accuracy_score,
+                    confusion_matrix,
+                    f1_score,
                     precision_score,
                     recall_score,
-                    f1_score,
                     roc_auc_score,
-                    confusion_matrix,
                     roc_curve,
                 )
-                import plotly.graph_objects as go  # noqa: E402, F401
 
                 y_true = y_true.astype(str)
                 y_pred = preds.get("predict")
@@ -266,7 +264,9 @@ class ModelEvaluationAgent(BaseAgent):
                     metrics.update(
                         {
                             "precision": float(
-                                precision_score(y_true, y_pred, pos_label=pos_label, zero_division=0)
+                                precision_score(
+                                    y_true, y_pred, pos_label=pos_label, zero_division=0
+                                )
                             ),
                             "recall": float(
                                 recall_score(y_true, y_pred, pos_label=pos_label, zero_division=0)
@@ -286,8 +286,18 @@ class ModelEvaluationAgent(BaseAgent):
                         auc = float(roc_auc_score((y_true == pos_label).astype(int), y_score))
                         fpr, tpr, _ = roc_curve((y_true == pos_label).astype(int), y_score)
                         roc_fig = go.Figure()
-                        roc_fig.add_trace(go.Scatter(x=fpr, y=tpr, mode="lines", name=f"ROC (AUC={auc:.3f})"))
-                        roc_fig.add_trace(go.Scatter(x=[0, 1], y=[0, 1], mode="lines", name="Chance", line=dict(dash="dash")))
+                        roc_fig.add_trace(
+                            go.Scatter(x=fpr, y=tpr, mode="lines", name=f"ROC (AUC={auc:.3f})")
+                        )
+                        roc_fig.add_trace(
+                            go.Scatter(
+                                x=[0, 1],
+                                y=[0, 1],
+                                mode="lines",
+                                name="Chance",
+                                line=dict(dash="dash"),
+                            )
+                        )
                         roc_fig.update_layout(
                             title="ROC Curve (Holdout)",
                             xaxis_title="False Positive Rate",
@@ -299,7 +309,11 @@ class ModelEvaluationAgent(BaseAgent):
                     metrics["auc"] = auc
 
                 cm = confusion_matrix(y_true, y_pred, labels=labels)
-                cm_df = pd.DataFrame(cm, index=[f"true:{label}" for label in labels], columns=[f"pred:{label}" for label in labels])
+                cm_df = pd.DataFrame(
+                    cm,
+                    index=[f"true:{label}" for label in labels],
+                    columns=[f"pred:{label}" for label in labels],
+                )
 
                 cm_fig = go.Figure(
                     data=go.Heatmap(
@@ -339,9 +353,13 @@ class ModelEvaluationAgent(BaseAgent):
                 summary_lines.append(f"Evaluation failed: {e}")
         else:
             try:
-                from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score  # noqa: E402, F401
                 import numpy as np  # noqa: E402, F401
                 import plotly.express as px  # noqa: E402, F401
+                from sklearn.metrics import (  # noqa: E402, F401
+                    mean_absolute_error,
+                    mean_squared_error,
+                    r2_score,
+                )
 
                 y_true = y_true.astype(float)
                 y_pred = preds.get("predict")
@@ -356,7 +374,9 @@ class ModelEvaluationAgent(BaseAgent):
 
                 resid = (y_true - y_pred).rename("residual")
                 plot_df = pd.DataFrame({"y_true": y_true, "y_pred": y_pred, "residual": resid})
-                fig = px.scatter(plot_df, x="y_pred", y="residual", title="Residuals vs Predicted (Holdout)")
+                fig = px.scatter(
+                    plot_df, x="y_pred", y="residual", title="Residuals vs Predicted (Holdout)"
+                )
                 fig.update_layout(xaxis_title="Predicted", yaxis_title="Residual")
                 plotly_graph = fig.to_dict()
 

@@ -78,7 +78,9 @@ def _fernet() -> Fernet:
     key_material = settings.data_source_secret_key.strip()
     if not key_material:
         if settings.is_production_profile():
-            raise RuntimeError("DATA_SOURCE_SECRET_KEY is required before storing data source secrets")
+            raise RuntimeError(
+                "DATA_SOURCE_SECRET_KEY is required before storing data source secrets"
+            )
         key_material = f"local-dev:{settings.database_url}:{settings.deployment_profile}"
     digest = hashlib.sha256(key_material.encode("utf-8")).digest()
     return Fernet(base64.urlsafe_b64encode(digest))

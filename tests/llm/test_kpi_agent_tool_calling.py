@@ -55,9 +55,10 @@ def test_define_kpi_real(llm_or_skip, llm_model):
     tool = define_kpi_wrapped
     result, _ = _assert_result(
         _drive_tool_call(
-            llm_model, tool,
+            llm_model,
+            tool,
             "Bir KPI tanımla: name='avg_latency_ms', code='import statistics; "
-            "return statistics.mean([float(r.get(\"latency_ms\", 0)) for r in rows])'. "
+            'return statistics.mean([float(r.get("latency_ms", 0)) for r in rows])\'. '
             "define_kpi tool'unu TEK çağrı ile çağır (name ve code parametrelerini ver).",
         ),
         tool.name,
@@ -72,7 +73,8 @@ def test_compute_schedule_real(llm_or_skip, llm_model):
     tool = compute_schedule_wrapped
     result, _ = _assert_result(
         _drive_tool_call(
-            llm_model, tool,
+            llm_model,
+            tool,
             "compute_schedule tool'unu TEK çağrı ile çağır (parametresiz, boş dict ver).",
         ),
         tool.name,
@@ -98,7 +100,8 @@ def test_record_period_real(llm_or_skip, llm_model):
     }
     result, _ = _assert_result(
         _drive_tool_call(
-            llm_model, tool,
+            llm_model,
+            tool,
             "record_period tool'unu TEK çağrı ile çağır. kpi = " + json.dumps(kpi),
         ),
         tool.name,
@@ -107,16 +110,15 @@ def test_record_period_real(llm_or_skip, llm_model):
     if "ok" in s:
         pass
     else:
-        assert "failed" in s or "history" in s, (
-            f"record_period beklenmeyen hata: {s[:200]}"
-        )
+        assert "failed" in s or "history" in s, f"record_period beklenmeyen hata: {s[:200]}"
 
 
 def test_make_history_real(llm_or_skip, llm_model):
     tool = make_history_wrapped
     result, _ = _assert_result(
         _drive_tool_call(
-            llm_model, tool,
+            llm_model,
+            tool,
             "make_history tool'unu TEK çağrı ile çağır. kpi_id='kpi_demo'.",
         ),
         tool.name,
@@ -129,7 +131,8 @@ def test_build_alarm_real(llm_or_skip, llm_model):
     tool = build_alarm_wrapped
     result, _ = _assert_result(
         _drive_tool_call(
-            llm_model, tool,
+            llm_model,
+            tool,
             "build_alarm tool'unu TEK çağrı ile çağır. kpi_id='kpi_alarm_demo'.",
         ),
         tool.name,
@@ -147,7 +150,8 @@ def test_check_alarm_real(llm_or_skip, llm_model):
     }
     result, _ = _assert_result(
         _drive_tool_call(
-            llm_model, tool,
+            llm_model,
+            tool,
             "check_alarm tool'unu TEK çağrı ile çağır. rule = " + json.dumps(rule),
         ),
         tool.name,
@@ -167,9 +171,9 @@ def test_sparkline_points_real(llm_or_skip, llm_model):
     tool = sparkline_points_wrapped
     result, _ = _assert_result(
         _drive_tool_call(
-            llm_model, tool,
-            "sparkline_points tool'unu TEK çağrı ile çağır. "
-            "values=[1.0, 2.5, 3.7, 4.1, 5.9], n=4.",
+            llm_model,
+            tool,
+            "sparkline_points tool'unu TEK çağrı ile çağır. values=[1.0, 2.5, 3.7, 4.1, 5.9], n=4.",
         ),
         tool.name,
     )

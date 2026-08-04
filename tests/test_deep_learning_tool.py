@@ -103,8 +103,12 @@ class TestTrainMLPClassifier:
     def test_regression_mode(self, small_binary_data):
         X, y = small_binary_data
         out = e3.train_mlp_classifier(
-            X, y.astype(float), task_type="regression",
-            hidden=(8, 4), epochs=3, val_split=0.3,
+            X,
+            y.astype(float),
+            task_type="regression",
+            hidden=(8, 4),
+            epochs=3,
+            val_split=0.3,
         )
         assert out["meta"]["task_type"] == "regression"
         assert out["meta"]["n_classes"] == 0
@@ -114,8 +118,12 @@ class TestTrainMLPClassifier:
         X = rng.normal(size=(80, 4))
         y = rng.binomial(1, 0.5, size=80)
         out = e3.train_mlp_classifier(
-            X, y, epochs=50, early_stopping_patience=1,
-            lr_patience=0, val_split=0.3,
+            X,
+            y,
+            epochs=50,
+            early_stopping_patience=1,
+            lr_patience=0,
+            val_split=0.3,
         )
         assert out["early_stopped"] is True
 
@@ -124,8 +132,12 @@ class TestTrainMLPClassifier:
         X = rng.normal(size=(200, 6))
         y = (X[:, 0] - 0.3 * X[:, 2] > 0).astype(int)
         out = e3.train_mlp_classifier(
-            X, y, hidden=(32, 16), epochs=20,
-            val_split=0.3, early_stopping_patience=10,
+            X,
+            y,
+            hidden=(32, 16),
+            epochs=20,
+            val_split=0.3,
+            early_stopping_patience=10,
         )
         train_losses = [p["train_loss"] for p in out["loss_curve"]]
         assert min(train_losses) <= train_losses[0] * 1.5
@@ -137,7 +149,9 @@ class TestTrainMLPClassifier:
     def test_unknown_task(self):
         with pytest.raises(ValueError):
             e3.train_mlp_classifier(
-                np.zeros((10, 3)), np.zeros(10), task_type="nlp",
+                np.zeros((10, 3)),
+                np.zeros(10),
+                task_type="nlp",
             )
 
 
@@ -145,7 +159,13 @@ class TestTrainLstmForecaster:
     def test_basic(self, small_lstm_data):
         X, y = small_lstm_data
         out = e3.train_lstm_forecaster(
-            X, y, hidden=8, layers=1, horizon=1, epochs=3, verbose=False,
+            X,
+            y,
+            hidden=8,
+            layers=1,
+            horizon=1,
+            epochs=3,
+            verbose=False,
         )
         assert "model" in out
         assert "loss_curve" in out
@@ -154,4 +174,3 @@ class TestTrainLstmForecaster:
     def test_invalid_dim(self):
         with pytest.raises(ValueError):
             e3.train_lstm_forecaster(np.zeros((10, 3)), np.zeros((10, 1)))
-

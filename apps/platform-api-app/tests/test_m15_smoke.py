@@ -9,6 +9,7 @@ Run with helm available:
 Run in CI without helm (all skip):
     pytest tests/test_m15_smoke.py -v
 """
+
 from __future__ import annotations
 
 import shutil
@@ -72,9 +73,7 @@ def test_helm_lint_passes():
 def test_helm_lint_no_errors_in_output():
     """helm lint stdout must not contain the word 'Error'."""
     result = _run(_HELM, "lint", str(_CHART), *_HELM_SECRET_OVERRIDE)
-    assert "Error" not in result.stdout, (
-        f"helm lint reported errors:\n{result.stdout}"
-    )
+    assert "Error" not in result.stdout, f"helm lint reported errors:\n{result.stdout}"
 
 
 # ---------------------------------------------------------------------------
@@ -95,25 +94,21 @@ def test_helm_template_renders_without_error():
 def test_helm_template_contains_deployment():
     """Rendered output must include at least one Deployment kind."""
     result = _run(_HELM, "template", "platform-test", str(_CHART), *_HELM_SECRET_OVERRIDE)
-    assert "kind: Deployment" in result.stdout, (
-        "No Deployment found in rendered Helm templates"
-    )
+    assert "kind: Deployment" in result.stdout, "No Deployment found in rendered Helm templates"
 
 
 @skip_no_helm
 def test_helm_template_contains_service():
     """Rendered output must include at least one Service kind."""
     result = _run(_HELM, "template", "platform-test", str(_CHART), *_HELM_SECRET_OVERRIDE)
-    assert "kind: Service" in result.stdout, (
-        "No Service found in rendered Helm templates"
-    )
+    assert "kind: Service" in result.stdout, "No Service found in rendered Helm templates"
 
 
 @skip_no_helm
 def test_helm_template_contains_configmap_or_secret():
     """Rendered output must include a ConfigMap or Secret."""
     result = _run(_HELM, "template", "platform-test", str(_CHART), *_HELM_SECRET_OVERRIDE)
-    assert ("kind: ConfigMap" in result.stdout or "kind: Secret" in result.stdout), (
+    assert "kind: ConfigMap" in result.stdout or "kind: Secret" in result.stdout, (
         "No ConfigMap or Secret found in rendered Helm templates"
     )
 
@@ -122,14 +117,17 @@ def test_helm_template_contains_configmap_or_secret():
 def test_helm_template_with_custom_values():
     """helm template with custom replicas and image tag must succeed."""
     result = _run(
-        _HELM, "template", "platform-test", str(_CHART),
+        _HELM,
+        "template",
+        "platform-test",
+        str(_CHART),
         *_HELM_SECRET_OVERRIDE,
-        "--set", "replicaCount=2",
-        "--set", "image.tag=v1.2.3",
+        "--set",
+        "replicaCount=2",
+        "--set",
+        "image.tag=v1.2.3",
     )
-    assert result.returncode == 0, (
-        f"helm template with custom values failed:\n{result.stderr}"
-    )
+    assert result.returncode == 0, f"helm template with custom values failed:\n{result.stderr}"
 
 
 @skip_no_helm
@@ -168,10 +166,16 @@ def test_kind_cluster_create_and_helm_install():
     try:
         # helm install with --wait (up to 120 s)
         install = _run(
-            _HELM, "install", "platform-smoke", str(_CHART),
+            _HELM,
+            "install",
+            "platform-smoke",
+            str(_CHART),
             *_HELM_SECRET_OVERRIDE,
-            "--kube-context", f"kind-{cluster_name}",
-            "--wait", "--timeout", "120s",
+            "--kube-context",
+            f"kind-{cluster_name}",
+            "--wait",
+            "--timeout",
+            "120s",
             check=False,
         )
         assert install.returncode == 0, (
@@ -181,12 +185,12 @@ def test_kind_cluster_create_and_helm_install():
         # Basic health probe via kubectl port-forward would go here.
         # For now we verify the release is listed.
         ls = _run(
-            _HELM, "list",
-            "--kube-context", f"kind-{cluster_name}",
+            _HELM,
+            "list",
+            "--kube-context",
+            f"kind-{cluster_name}",
         )
-        assert "platform-smoke" in ls.stdout, (
-            "Installed release not found in helm list output"
-        )
+        assert "platform-smoke" in ls.stdout, "Installed release not found in helm list output"
 
     finally:
         _run(_KIND, "delete", "cluster", "--name", cluster_name, check=False)

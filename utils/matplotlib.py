@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from PIL import Image
 
 
-def matplotlib_from_base64(encoded: str, title: str = None, figsize: tuple = (8,6)):
+def matplotlib_from_base64(encoded: str, title: str = None, figsize: tuple = (8, 6)):
     """
     Converts a based64-encoded image to a matplotlib plot and display it
 
@@ -17,7 +17,7 @@ def matplotlib_from_base64(encoded: str, title: str = None, figsize: tuple = (8,
             A title for the plot. Default is None.
         figsize: tuple, optional
             Figure size (width, length) for the plot. Default is (8,6)
-    
+
     Returns
     --------
     fig, ax:tuple
@@ -34,11 +34,11 @@ def matplotlib_from_base64(encoded: str, title: str = None, figsize: tuple = (8,
     img = Image.open(buf)
 
     #! Create a matplotlib figure and axis
-    fig,ax = plt.subplots(figsize=figsize)
+    fig, ax = plt.subplots(figsize=figsize)
 
     #! Display the image
     ax.imshow(img)
-    ax.axis('off')
+    ax.axis("off")
 
     if title:
         ax.set_title(title)
@@ -46,4 +46,4 @@ def matplotlib_from_base64(encoded: str, title: str = None, figsize: tuple = (8,
     #! Show the plot
     plt.show()
 
-    return fig,ax
+    return fig, ax

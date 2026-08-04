@@ -33,7 +33,11 @@ from ai_data_science_team.tool_registry import (  # noqa: E402, F401
     parameters={
         "data": ToolParameter(type="object", description="Input DataFrame as dict", required=True),
         "column": ToolParameter(type="string", description="Column to filter on", required=True),
-        "operator": ToolParameter(type="string", description="Comparison operator: ==, !=, >, <, >=, <=, in, not_in, contains", required=True),
+        "operator": ToolParameter(
+            type="string",
+            description="Comparison operator: ==, !=, >, <, >=, <=, in, not_in, contains",
+            required=True,
+        ),
         "value": ToolParameter(type="any", description="Value to compare against", required=True),
     },
     returns="Filtered DataFrame as dict",
@@ -105,8 +109,15 @@ def filter_rows(
     description="Select specific columns from a DataFrame.",
     parameters={
         "data": ToolParameter(type="object", description="Input DataFrame as dict", required=True),
-        "columns": ToolParameter(type="array", description="List of column names to select", required=True),
-        "exclude": ToolParameter(type="boolean", description="If True, exclude specified columns", required=False, default=False),
+        "columns": ToolParameter(
+            type="array", description="List of column names to select", required=True
+        ),
+        "exclude": ToolParameter(
+            type="boolean",
+            description="If True, exclude specified columns",
+            required=False,
+            default=False,
+        ),
     },
     returns="DataFrame with selected columns as dict",
     namespace="core.wrangling",
@@ -149,7 +160,9 @@ def select_columns(
     description="Rename columns in a DataFrame.",
     parameters={
         "data": ToolParameter(type="object", description="Input DataFrame as dict", required=True),
-        "mapping": ToolParameter(type="object", description="Dict mapping old names to new names", required=True),
+        "mapping": ToolParameter(
+            type="object", description="Dict mapping old names to new names", required=True
+        ),
     },
     returns="DataFrame with renamed columns as dict",
     namespace="core.wrangling",
@@ -185,8 +198,14 @@ def rename_columns(
     parameters={
         "data": ToolParameter(type="object", description="Input DataFrame as dict", required=True),
         "group_by": ToolParameter(type="array", description="Columns to group by", required=True),
-        "agg_column": ToolParameter(type="string", description="Column to aggregate", required=True),
-        "agg_func": ToolParameter(type="string", description="Aggregation function: sum, mean, count, min, max, std, var", required=True),
+        "agg_column": ToolParameter(
+            type="string", description="Column to aggregate", required=True
+        ),
+        "agg_func": ToolParameter(
+            type="string",
+            description="Aggregation function: sum, mean, count, min, max, std, var",
+            required=True,
+        ),
     },
     returns="Aggregated DataFrame as dict",
     namespace="core.wrangling",
@@ -253,7 +272,12 @@ def aggregate_data(
         "left": ToolParameter(type="object", description="Left DataFrame as dict", required=True),
         "right": ToolParameter(type="object", description="Right DataFrame as dict", required=True),
         "on": ToolParameter(type="array", description="Column(s) to join on", required=True),
-        "how": ToolParameter(type="string", description="Join type: inner, left, right, outer", required=False, default="inner"),
+        "how": ToolParameter(
+            type="string",
+            description="Join type: inner, left, right, outer",
+            required=False,
+            default="inner",
+        ),
     },
     returns="Merged DataFrame as dict",
     namespace="core.wrangling",
@@ -296,9 +320,17 @@ def merge_datasets(
     description="Pivot or melt a DataFrame for reshaping.",
     parameters={
         "data": ToolParameter(type="object", description="Input DataFrame as dict", required=True),
-        "operation": ToolParameter(type="string", description="Operation: pivot or melt", required=True),
-        "index": ToolParameter(type="array", description="Columns for index (pivot) or id_vars (melt)", required=False),
-        "columns": ToolParameter(type="array", description="Columns for columns (pivot) or value_vars (melt)", required=False),
+        "operation": ToolParameter(
+            type="string", description="Operation: pivot or melt", required=True
+        ),
+        "index": ToolParameter(
+            type="array", description="Columns for index (pivot) or id_vars (melt)", required=False
+        ),
+        "columns": ToolParameter(
+            type="array",
+            description="Columns for columns (pivot) or value_vars (melt)",
+            required=False,
+        ),
         "values": ToolParameter(type="string", description="Column for values", required=False),
     },
     returns="Reshaped DataFrame as dict",
@@ -344,7 +376,9 @@ def pivot_data(
     elif operation == "melt":
         id_vars = index if isinstance(index, list) else [index] if index else None
         value_vars = columns if isinstance(columns, list) else [columns] if columns else None
-        result = df.melt(id_vars=id_vars, value_vars=value_vars, var_name="variable", value_name="value")
+        result = df.melt(
+            id_vars=id_vars, value_vars=value_vars, var_name="variable", value_name="value"
+        )
     else:
         raise ValueError(f"Unknown operation: {operation}")
 
@@ -357,8 +391,14 @@ def pivot_data(
     parameters={
         "data": ToolParameter(type="object", description="Input DataFrame as dict", required=True),
         "column": ToolParameter(type="string", description="Column to transform", required=True),
-        "transform": ToolParameter(type="string", description="Transform type: log, sqrt, abs, negate, uppercase, lowercase, strip", required=True),
-        "new_column": ToolParameter(type="string", description="Name for new column (optional)", required=False),
+        "transform": ToolParameter(
+            type="string",
+            description="Transform type: log, sqrt, abs, negate, uppercase, lowercase, strip",
+            required=True,
+        ),
+        "new_column": ToolParameter(
+            type="string", description="Name for new column (optional)", required=False
+        ),
     },
     returns="Transformed DataFrame as dict",
     namespace="core.wrangling",

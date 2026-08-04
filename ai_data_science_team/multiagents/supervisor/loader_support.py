@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-
 import re
 from typing import Any
 
@@ -33,9 +32,7 @@ def extract_loader_artifact_results(
     load_file_ok_items: list[tuple[str, Any]] = []
 
     for key, value in artifacts_map.items():
-        if str(key).startswith("list_directory") or str(key).startswith(
-            "search_files_by_pattern"
-        ):
+        if str(key).startswith("list_directory") or str(key).startswith("search_files_by_pattern"):
             dir_listing = value
             break
 
@@ -109,10 +106,6 @@ def collect_loader_errors(loader_artifacts: Any) -> list[str]:
             if value.get("status") == "error" and value.get("error"):
                 errors.append(f"{key}: {value.get('error')}")
             for filename, info in value.items():
-                if (
-                    isinstance(info, dict)
-                    and info.get("status") == "error"
-                    and info.get("error")
-                ):
+                if isinstance(info, dict) and info.get("status") == "error" and info.get("error"):
                     errors.append(f"{filename}: {info.get('error')}")
     return errors

@@ -3,10 +3,10 @@
 Tool tests call ``.func()`` directly (no LLM required).
 Agent construction tests use a deterministic FakeChatModel stub.
 """
+
 from __future__ import annotations
 
 import json
-
 
 # ===========================================================================
 # Fake LLM helper
@@ -25,9 +25,7 @@ def _fake_llm():
             return "fake"
 
         def _generate(self, messages, stop=None, _run_manager=None, **kw) -> ChatResult:
-            return ChatResult(
-                generations=[ChatGeneration(message=LCAIMessage(content="Done."))]
-            )
+            return ChatResult(generations=[ChatGeneration(message=LCAIMessage(content="Done."))])
 
         def bind_tools(self, tools, **kw):
             return self
@@ -172,27 +170,27 @@ def test_estimate_cost_artifact_keys():
 # validate_hcl_syntax
 # ===========================================================================
 
-_VALID_HCL = '''\
+_VALID_HCL = """\
 resource "aws_instance" "web" {
   ami           = var.ami_id
   instance_type = "t3.small"
   tags = {
     Name = "web"
   }
-}'''
+}"""
 
-_UNCLOSED_BRACE_HCL = '''\
+_UNCLOSED_BRACE_HCL = """\
 resource "aws_instance" "web" {
   ami = var.ami_id
   tags = {
     Name = "web"
-'''
+"""
 
-_UNCLOSED_STRING_HCL = '''\
+_UNCLOSED_STRING_HCL = """\
 resource "aws_instance" "web" {
   ami = var.ami_id
   name = "not closed
-}'''
+}"""
 
 
 def test_validate_hcl_valid():
@@ -285,10 +283,12 @@ def test_dockerfile_artifact_keys():
 # generate_docker_compose_yaml
 # ===========================================================================
 
-_SERVICES_JSON = json.dumps([
-    {"name": "api", "image": "myapp:1.0", "port": 8000, "env": {"DEBUG": "false"}},
-    {"name": "db", "image": "postgres:15", "port": 5432},
-])
+_SERVICES_JSON = json.dumps(
+    [
+        {"name": "api", "image": "myapp:1.0", "port": 8000, "env": {"DEBUG": "false"}},
+        {"name": "db", "image": "postgres:15", "port": 5432},
+    ]
+)
 
 
 def test_docker_compose_service_count():
@@ -589,7 +589,9 @@ def test_cicd_agent_update_params_rebuilds_graph():
 
 def test_all_three_agents_have_distinct_graphs():
     from ai_data_science_team.agents.cloudops_agents import (
-        IaCAgent, ContainerizationAgent, CICDAgent
+        CICDAgent,
+        ContainerizationAgent,
+        IaCAgent,
     )
 
     llm = _fake_llm()

@@ -1,33 +1,27 @@
-from typing_extensions import Any, Optional, Annotated, Sequence, Dict, TypedDict
-import pandas as pd
-
-
-
 import logging
+
+import pandas as pd
+from typing_extensions import Annotated, Any, Dict, Optional, Sequence, TypedDict
 
 logger = logging.getLogger(__name__)
 from IPython.display import Markdown  # noqa: E402, F401
-
-from langchain_core.messages import BaseMessage, AIMessage  # noqa: E402, F401
-
 from langchain.agents import create_agent  # noqa: E402, F401
+from langchain_core.messages import AIMessage, BaseMessage  # noqa: E402, F401
+from langgraph.graph import END, START, StateGraph  # noqa: E402, F401
 from langgraph.graph.message import add_messages  # noqa: E402, F401
-from langgraph.graph import START, END, StateGraph  # noqa: E402, F401
 from langgraph.types import Checkpointer  # noqa: E402, F401
 
 from ai_data_science_team.templates import BaseAgent  # noqa: E402, F401
-from ai_data_science_team.utils.regex import format_agent_name  # noqa: E402, F401
-
 from ai_data_science_team.tools.eda import (  # noqa: E402, F401
-    explain_data,
     describe_dataset,
-    visualize_missing,
+    explain_data,
     generate_correlation_funnel,
-    generate_sweetviz_report,
     generate_dtale_report,
+    generate_sweetviz_report,
+    visualize_missing,
 )
 from ai_data_science_team.utils.messages import get_tool_call_names  # noqa: E402, F401
-
+from ai_data_science_team.utils.regex import format_agent_name  # noqa: E402, F401
 
 AGENT_NAME = "exploratory_data_analyst_agent"
 
@@ -119,9 +113,7 @@ class EDAToolsAgent(BaseAgent):
         self.response = response
         return None
 
-    def invoke_agent(
-        self, user_instructions: str = None, data_raw: pd.DataFrame = None, **kwargs
-    ):
+    def invoke_agent(self, user_instructions: str = None, data_raw: pd.DataFrame = None, **kwargs):
         """
         Synchronously runs the agent with user instructions and data.
 
@@ -234,9 +226,7 @@ class EDAToolsAgent(BaseAgent):
                         and isinstance(v["describe_df"], dict)
                     ):
                         converted[k] = pd.DataFrame.from_dict(v["describe_df"]).T
-                    elif isinstance(v, dict) and all(
-                        isinstance(val, dict) for val in v.values()
-                    ):
+                    elif isinstance(v, dict) and all(isinstance(val, dict) for val in v.values()):
                         converted[k] = pd.DataFrame(v).T
                     elif isinstance(v, dict):
                         converted[k] = pd.DataFrame(v)
@@ -342,9 +332,7 @@ def make_eda_tools_agent(
         else:
             try:
                 n_rows: int | str = (
-                    len(next(iter(data_raw.values())))
-                    if isinstance(data_raw, dict)
-                    else "?"
+                    len(next(iter(data_raw.values()))) if isinstance(data_raw, dict) else "?"
                 )
             except Exception:
                 n_rows = "?"
@@ -421,9 +409,7 @@ def make_eda_tools_agent(
                     if "describe_df_flat" in last_tool_artifact and isinstance(
                         last_tool_artifact["describe_df_flat"], dict
                     ):
-                        df_preview = pd.DataFrame(
-                            last_tool_artifact["describe_df_flat"]
-                        ).head()
+                        df_preview = pd.DataFrame(last_tool_artifact["describe_df_flat"]).head()
                         summary_snippet = df_preview.to_markdown(index=False)
                     # Try legacy describe_df
                     elif "describe_df" in last_tool_artifact and isinstance(

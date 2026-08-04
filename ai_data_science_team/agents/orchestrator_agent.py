@@ -61,12 +61,23 @@ Usage
     logger.info(orch.get_ai_message())
     logger.info(orch.get_run_result())
 """
-from typing import (Callable, Dict, List, Optional, Sequence)  # noqa: E402
 import json  # noqa: E402, F401
 import logging  # noqa: E402, F401
-from typing import Any  # noqa: E402, F401
+from typing import (  # noqa: E402
+    Any,  # noqa: E402, F401
+    Callable,
+    Dict,
+    List,
+    Optional,
+    Sequence,
+)
 
-from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage  # noqa: E402, F401
+from langchain_core.messages import (  # noqa: E402, F401
+    AIMessage,
+    BaseMessage,
+    HumanMessage,
+    SystemMessage,
+)
 from langgraph.graph import END, START, StateGraph  # noqa: E402, F401
 from langgraph.graph.message import add_messages  # noqa: E402, F401
 from typing_extensions import Annotated, TypedDict  # noqa: E402, F401
@@ -78,11 +89,14 @@ except ImportError:
 
 from ai_data_science_team.agent_registry import AgentRegistry  # noqa: E402, F401
 from ai_data_science_team.context_store import ContextStore  # noqa: E402, F401
-from ai_data_science_team.runtime_engine import RuntimeEngine, RunResult  # noqa: E402, F401
+from ai_data_science_team.runtime_engine import RunResult, RuntimeEngine  # noqa: E402, F401
 from ai_data_science_team.signals import SignalStore, get_signal_store  # noqa: E402, F401
 from ai_data_science_team.templates import BaseAgent  # noqa: E402, F401
-from ai_data_science_team.workflow_resolver import WorkflowResolver, validate_spec  # noqa: E402, F401
 from ai_data_science_team.utils.regex import format_agent_name  # noqa: E402, F401
+from ai_data_science_team.workflow_resolver import (  # noqa: E402, F401
+    WorkflowResolver,
+    validate_spec,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -172,10 +186,7 @@ def _build_orchestrator_graph(
 
         if errors:
             log.append(f"WorkflowSpec validation errors: {errors}")
-            msg = (
-                "⚠️ **WorkflowSpec issues detected:**\n"
-                + "\n".join(f"- {e}" for e in errors)
-            )
+            msg = "⚠️ **WorkflowSpec issues detected:**\n" + "\n".join(f"- {e}" for e in errors)
         else:
             step_count = len(resolved_spec.get("steps", []))
             log.append(
@@ -378,6 +389,7 @@ class OrchestratorAgent(BaseAgent):
         log: bool = False,
     ) -> None:
         import uuid  # noqa: E402, F401
+
         self._params = {
             "model": model,
             "agent_executor": agent_executor or _default_agent_executor,
@@ -388,9 +400,7 @@ class OrchestratorAgent(BaseAgent):
             "context_store": context_store or ContextStore(),
             "session_id": session_id or str(uuid.uuid4()),
             "registry_catalog": (
-                registry_catalog
-                if registry_catalog is not None
-                else AgentRegistry.to_catalog()
+                registry_catalog if registry_catalog is not None else AgentRegistry.to_catalog()
             ),
             "max_retries": max_retries,
             "backoff_base": backoff_base,

@@ -42,12 +42,15 @@ logger = logging.getLogger(__name__)
 try:
     from platform_api.tenant_context import get_current_tenant_id  # noqa: E402, F401
 except ImportError:  # pragma: no cover - platform API may be unavailable in standalone use
+
     def get_current_tenant_id() -> Any:
         return None
+
 
 REDIS_AVAILABLE = False
 try:
     import redis  # noqa: E402, F401
+
     REDIS_AVAILABLE = True
 except ImportError:
     pass
@@ -112,8 +115,7 @@ class AgentCache:
             self._redis = None
             if redis_url and not REDIS_AVAILABLE:
                 logger.warning(
-                    "Redis not available (pip install redis). "
-                    "Using in-memory agent cache."
+                    "Redis not available (pip install redis). Using in-memory agent cache."
                 )
 
     def _tenant_namespace(self, tenant_id: Any | None = None) -> str:
@@ -315,7 +317,8 @@ class AgentCache:
             with self._lock:
                 pattern_prefix = self._cache_pattern()[:-1]
                 keys_to_delete = [
-                    cache_key for cache_key in self._memory_cache
+                    cache_key
+                    for cache_key in self._memory_cache
                     if cache_key.startswith(pattern_prefix)
                 ]
                 for cache_key in keys_to_delete:
@@ -339,7 +342,8 @@ class AgentCache:
         deleted = 0
         with self._lock:
             keys_to_delete = [
-                cache_key for cache_key in self._memory_cache
+                cache_key
+                for cache_key in self._memory_cache
                 if cache_key.startswith(pattern_prefix)
             ]
             for cache_key in keys_to_delete:
@@ -518,6 +522,7 @@ def cached_agent_call(
             return result
 
         return wrapper
+
     return decorator
 
 

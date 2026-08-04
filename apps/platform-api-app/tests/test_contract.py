@@ -16,14 +16,17 @@ Or run as pytest:
 Best Practices Reference:
 https://schemathesis.readthedocs.io/
 """
+
 from __future__ import annotations
 
 import os
+
 import pytest
 
 try:
     import schemathesis
     from schemathesis import DataGenerationMethod
+
     SCHEMATHESIS_AVAILABLE = True
 except ImportError:
     SCHEMATHESIS_AVAILABLE = False
@@ -59,20 +62,25 @@ if SCHEMATHESIS_AVAILABLE:
         response = case.call(base_url=BASE_URL)
         case.validate_response(response)
 
-    @pytest.mark.parametrize("endpoint", [
-        "/healthz",
-        "/health",
-        "/metrics",
-    ])
+    @pytest.mark.parametrize(
+        "endpoint",
+        [
+            "/healthz",
+            "/health",
+            "/metrics",
+        ],
+    )
     def test_health_endpoints_schema(endpoint):
         """Test health and metrics endpoints return valid responses."""
         import httpx
+
         response = httpx.get(f"{BASE_URL}{endpoint}")
         assert response.status_code == 200
 
     def test_openapi_schema_is_valid():
         """Verify OpenAPI schema can be fetched and parsed."""
         import httpx
+
         response = httpx.get(f"{BASE_URL}/openapi.json")
         assert response.status_code == 200
         schema_data = response.json()
@@ -83,6 +91,7 @@ if SCHEMATHESIS_AVAILABLE:
     def test_openapi_has_required_endpoints():
         """Verify all expected endpoints are documented."""
         import httpx
+
         response = httpx.get(f"{BASE_URL}/openapi.json")
         schema_data = response.json()
         paths = schema_data.get("paths", {})

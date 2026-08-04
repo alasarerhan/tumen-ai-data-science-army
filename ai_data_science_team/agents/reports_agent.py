@@ -12,9 +12,14 @@ PowerAnalysisAgent.
 Node type: ``report.render``
 """
 
-from typing import (Dict, Optional, Tuple)  # noqa: E402
 import logging  # noqa: E402, F401
-from typing import Any  # noqa: E402, F401
+from typing import (  # noqa: E402
+    Any,  # noqa: E402, F401
+    Dict,
+    Mapping,  # noqa: E402, F401
+    Optional,
+    Tuple,
+)
 
 from langchain.tools import tool  # noqa: E402, F401
 from langchain_core.messages import AIMessage, BaseMessage  # noqa: E402, F401
@@ -24,17 +29,13 @@ from langgraph.types import Checkpointer  # noqa: E402, F401
 from typing_extensions import Annotated, Sequence, TypedDict  # noqa: E402, F401
 
 from ai_data_science_team.templates import BaseAgent  # noqa: E402, F401
-from ai_data_science_team.utils.regex import format_agent_name  # noqa: E402, F401
-
-from typing import Mapping  # noqa: E402, F401
-
 from ai_data_science_team.tools.reports import (  # noqa: E402, F401
     build_report,
     compute_schedule,
     get_template,
     render_markdown,
 )
-
+from ai_data_science_team.utils.regex import format_agent_name  # noqa: E402, F401
 
 logger = logging.getLogger(__name__)
 
@@ -46,6 +47,7 @@ NODE_TYPE = "report.render"
 # Tool wrappers
 # ---------------------------------------------------------------------------
 
+
 @tool(response_format="content_and_artifact")
 def get_template_wrapped(template_id: str) -> Tuple[str, dict]:
     """Tool wrapper for ``get_template``.
@@ -55,7 +57,7 @@ def get_template_wrapped(template_id: str) -> Tuple[str, dict]:
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: c5_get_template")
-    kwargs = {'template_id': template_id}
+    kwargs = {"template_id": template_id}
     try:
         result = get_template(**kwargs)
     except Exception as exc:
@@ -83,7 +85,7 @@ def build_report_wrapped(template_id: str) -> Tuple[str, dict]:
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: c5_build_report")
-    kwargs = {'template_id': template_id}
+    kwargs = {"template_id": template_id}
     try:
         result = build_report(**kwargs)
     except Exception as exc:
@@ -103,7 +105,9 @@ def build_report_wrapped(template_id: str) -> Tuple[str, dict]:
 
 
 @tool(response_format="content_and_artifact")
-def compute_schedule_wrapped(period: str, starting_at_epoch: float, n_runs: int) -> Tuple[str, dict]:
+def compute_schedule_wrapped(
+    period: str, starting_at_epoch: float, n_runs: int
+) -> Tuple[str, dict]:
     """Tool wrapper for ``compute_schedule``.
 
     Return the next ``n_runs`` schedule timestamps (epoch seconds).
@@ -111,7 +115,7 @@ def compute_schedule_wrapped(period: str, starting_at_epoch: float, n_runs: int)
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: c5_compute_schedule")
-    kwargs = {'period': period, 'starting_at_epoch': starting_at_epoch, 'n_runs': n_runs}
+    kwargs = {"period": period, "starting_at_epoch": starting_at_epoch, "n_runs": n_runs}
     try:
         result = compute_schedule(**kwargs)
     except Exception as exc:
@@ -139,7 +143,7 @@ def render_markdown_wrapped(report: Mapping[str, Any]) -> Tuple[str, dict]:
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: c5_render_markdown")
-    kwargs = {'report': report}
+    kwargs = {"report": report}
     try:
         result = render_markdown(**kwargs)
     except Exception as exc:
@@ -209,7 +213,12 @@ def make_reports_agent(
     def run_react_agent(state: GraphState):
         logger.info("    * RUN REACT AGENT FOR C5")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
-        messages = [("system", "You are the C5 agent. Use the available tools to complete the user's request.")] + list(base)
+        messages = [
+            (
+                "system",
+                "You are the C5 agent. Use the available tools to complete the user's request.",
+            )
+        ] + list(base)
         input_payload = {"messages": messages}
         return react_agent.invoke(input_payload, invoke_react_agent_kwargs)
 
@@ -228,7 +237,9 @@ def make_reports_agent(
             last_ai = AIMessage(content=getattr(internal[-1], "content", ""), name=AGENT_NAME)
         tool_calls = []
         for msg in internal:
-            name = getattr(getattr(msg, "tool_call_id", None), "name", None) or getattr(msg, "name", None)
+            name = getattr(getattr(msg, "tool_call_id", None), "name", None) or getattr(
+                msg, "name", None
+            )
             if name:
                 tool_calls.append(name)
         if log_tool_calls and tool_calls:
@@ -296,6 +307,7 @@ class ReportGeneratorAgent(BaseAgent):
         if not self.response or "messages" not in self.response:
             return None
         from IPython.display import Markdown as _Markdown  # noqa: E402, F401
+
         for msg in reversed(self.response.get("messages", [])):
             content = getattr(msg, "content", "")
             if content:

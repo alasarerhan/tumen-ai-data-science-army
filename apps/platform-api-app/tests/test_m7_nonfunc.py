@@ -15,6 +15,7 @@ Dependency CVE allow-list:
     on the *verifying* side; signature verification is unaffected per the
     advisory). Acknowledged and tracked.
 """
+
 from __future__ import annotations
 
 import json
@@ -93,8 +94,7 @@ def test_bandit_medium_findings_are_expected():
     _EXPECTED_MEDIUM_TESTS = {"B104"}  # hardcoded bind to 0.0.0.0 — intentional default
     report = _run_bandit()
     medium = [
-        f for f in report.get("results", [])
-        if f.get("issue_severity", "").upper() == "MEDIUM"
+        f for f in report.get("results", []) if f.get("issue_severity", "").upper() == "MEDIUM"
     ]
     unexpected = [f for f in medium if f["test_id"] not in _EXPECTED_MEDIUM_TESTS]
     if unexpected:
@@ -124,9 +124,13 @@ def _run_pip_audit() -> list[dict]:
     """Run pip-audit on requirements.txt and return list of vulnerable packages."""
     result = subprocess.run(
         [
-            _PYTHON, "-m", "pip_audit",
-            "--format", "json",
-            "-r", str(_REQUIREMENTS_FILE),
+            _PYTHON,
+            "-m",
+            "pip_audit",
+            "--format",
+            "json",
+            "-r",
+            str(_REQUIREMENTS_FILE),
         ],
         capture_output=True,
         text=True,
@@ -156,9 +160,7 @@ def _run_pip_audit() -> list[dict]:
 def test_pip_audit_no_unacknowledged_cves():
     """All known CVEs must be in the _ACCEPTED_CVES allow-list."""
     findings = _run_pip_audit()
-    unacknowledged = [
-        f for f in findings if f["cve_id"] not in _ACCEPTED_CVES
-    ]
+    unacknowledged = [f for f in findings if f["cve_id"] not in _ACCEPTED_CVES]
     if unacknowledged:
         details = "\n".join(
             f"  [{f['cve_id']}] {f['package']}=={f['version']} — {f['description'][:120]}"
@@ -271,7 +273,12 @@ def test_create_workflow_p99_under_slo(_perf_client):
             t0 = time.perf_counter()
             r = client.post(
                 "/v1/workflows",
-                json={"workspace_id": ws_id, "name": f"perf-flow-{i}", "spec": spec, "publish": False},
+                json={
+                    "workspace_id": ws_id,
+                    "name": f"perf-flow-{i}",
+                    "spec": spec,
+                    "publish": False,
+                },
             )
             latencies_ms.append((time.perf_counter() - t0) * 1000)
             assert r.status_code == 200

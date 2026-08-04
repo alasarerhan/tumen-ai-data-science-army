@@ -11,7 +11,6 @@ import uuid  # noqa: E402, F401
 from dataclasses import dataclass, field  # noqa: E402, F401
 from typing import Any, Dict, List, Mapping, Optional, Sequence  # noqa: E402, F401
 
-
 VALID_RISK_CLASSES = {"low", "medium", "high"}
 
 
@@ -25,9 +24,11 @@ def _now() -> float:
 
 # ----- Risk classification -------------------------------------------------
 
+
 @dataclass
 class RiskPolicy:
     """Required number of approvers per risk class."""
+
     min_approvers_low: int = 1
     min_approvers_medium: int = 1
     min_approvers_high: int = 2
@@ -50,9 +51,7 @@ def assign_risk(
     rationale: str = "",
 ) -> RiskAssignment:
     if risk_class not in VALID_RISK_CLASSES:
-        raise ValueError(
-            f"risk_class must be one of {sorted(VALID_RISK_CLASSES)}"
-        )
+        raise ValueError(f"risk_class must be one of {sorted(VALID_RISK_CLASSES)}")
     return RiskAssignment(
         model_id=model_id,
         risk_class=risk_class,
@@ -73,6 +72,7 @@ def required_approvers(risk_class: str, policy: RiskPolicy) -> int:
 
 
 # ----- Approval chain ------------------------------------------------------
+
 
 @dataclass
 class ApprovalStep:
@@ -95,7 +95,9 @@ class ApprovalChain:
 
 
 def start_approval_chain(
-    *, model_id: str, required_steps: Sequence[Mapping[str, Any]],
+    *,
+    model_id: str,
+    required_steps: Sequence[Mapping[str, Any]],
     chain_id: Optional[str] = None,
 ) -> ApprovalChain:
     if not required_steps:
@@ -132,8 +134,7 @@ def approve_step(
         raise ValueError(f"step already approved by {target.approver_id}")
     if target.required_role != approver_role:
         raise ValueError(
-            f"approver_role {approver_role!r} does not match "
-            f"required_role {target.required_role!r}"
+            f"approver_role {approver_role!r} does not match required_role {target.required_role!r}"
         )
     target.approver_id = approver_id
     target.approved_at = _now()
@@ -153,6 +154,7 @@ def chain_progress(chain: ApprovalChain) -> Dict[str, Any]:
 
 
 # ----- Checklist engine ----------------------------------------------------
+
 
 @dataclass
 class ChecklistItem:
@@ -175,14 +177,13 @@ class ChecklistEvaluation:
 
     @property
     def failed_required_ids(self) -> List[str]:
-        return [
-            it.check_id for it in self.items
-            if it.required and not it.passed
-        ]
+        return [it.check_id for it in self.items if it.required and not it.passed]
 
 
 def build_checklist(
-    *, model_id: str, items: Sequence[Mapping[str, Any]],
+    *,
+    model_id: str,
+    items: Sequence[Mapping[str, Any]],
 ) -> List[ChecklistItem]:
     return [
         ChecklistItem(
@@ -197,7 +198,9 @@ def build_checklist(
 
 
 def evaluate_checklist(
-    *, model_id: str, items: Sequence[ChecklistItem],
+    *,
+    model_id: str,
+    items: Sequence[ChecklistItem],
 ) -> ChecklistEvaluation:
     required_pass = sum(1 for it in items if it.required and it.passed)
     required_failed = sum(1 for it in items if it.required and not it.passed)
@@ -216,6 +219,7 @@ def evaluate_checklist(
 
 # ----- Audit log -----------------------------------------------------------
 
+
 @dataclass
 class AuditEntry:
     timestamp: float
@@ -229,8 +233,7 @@ class AuditEntry:
 class AuditLog:
     entries: List[AuditEntry] = field(default_factory=list)
 
-    def record(self, *, actor: str, action: str, target: str,
-               detail: str = "") -> AuditEntry:
+    def record(self, *, actor: str, action: str, target: str, detail: str = "") -> AuditEntry:
         e = AuditEntry(
             timestamp=_now(),
             actor=actor,
@@ -242,7 +245,9 @@ class AuditLog:
         return e
 
     def filter(
-        self, *, action: Optional[str] = None,
+        self,
+        *,
+        action: Optional[str] = None,
         target: Optional[str] = None,
     ) -> List[AuditEntry]:
         out = list(self.entries)
@@ -254,7 +259,9 @@ class AuditLog:
 
 
 def render_audit_report(
-    log: AuditLog, *, model_id: str,
+    log: AuditLog,
+    *,
+    model_id: str,
 ) -> Dict[str, Any]:
     entries = log.filter(target=model_id)
     return {
@@ -266,12 +273,14 @@ def render_audit_report(
                 "actor": e.actor,
                 "action": e.action,
                 "detail": e.detail,
-            } for e in entries
+            }
+            for e in entries
         ],
     }
 
 
 # ----- Gate (combining risk + chain + checklist) --------------------------
+
 
 def promotion_gate(
     *,
@@ -292,13 +301,9 @@ def promotion_gate(
     need = required_approvers(risk.risk_class, policy)
     n_approved = sum(1 for s in chain.steps if s.approver_id is not None)
     if n_approved < need:
-        reasons.append(
-            f"approval chain incomplete: {n_approved}/{need} required"
-        )
+        reasons.append(f"approval chain incomplete: {n_approved}/{need} required")
     if not checklist.passed:
-        reasons.append(
-            f"checklist failed: {checklist.failed_required_ids}"
-        )
+        reasons.append(f"checklist failed: {checklist.failed_required_ids}")
     allowed = len(reasons) == 0
     if allowed:
         audit.record(
@@ -311,5 +316,3 @@ def promotion_gate(
         "allowed": allowed,
         "reasons": reasons,
     }
-
-

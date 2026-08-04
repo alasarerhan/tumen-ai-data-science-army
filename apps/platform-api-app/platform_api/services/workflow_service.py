@@ -9,12 +9,17 @@ from sqlalchemy import and_, func, or_, select, text
 from sqlalchemy.orm import Session
 
 from platform_api.authz.policy import can_admin_workspace
+from platform_api.core.service_errors import (
+    ConflictError,
+    ForbiddenError,
+    NotFoundError,
+    ValidationError,
+)
 from platform_api.db.models import WorkflowSpec, Workspace, WorkspaceMembership
 from platform_api.db.tenant_query import TenantQuery
-from platform_api.core.service_errors import ConflictError, ForbiddenError, NotFoundError, ValidationError
+from platform_api.services.quota_service import enforce_tenant_write_quota
 from platform_api.services.workflow_chain_validator import inspect_workflow_spec
 from platform_api.services.workflow_ir_service import validate_workflow_ir_v2
-from platform_api.services.quota_service import enforce_tenant_write_quota
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +37,9 @@ _LEGACY_TOOL_AGENT_MAP: dict[str, str] = {
 
 
 def _normalize_spec_for_validation(spec: dict, *, workflow_name: str | None = None) -> dict:
-    effective_spec = spec if spec.get("name") or not workflow_name else {**spec, "name": workflow_name}
+    effective_spec = (
+        spec if spec.get("name") or not workflow_name else {**spec, "name": workflow_name}
+    )
     steps = effective_spec.get("steps")
     if not isinstance(steps, list):
         return effective_spec
@@ -77,8 +84,14 @@ def build_workflow_validation_summary(spec: dict, *, workflow_name: str | None =
         "status": status,
         "error_count": len(errors),
         "warning_count": len(warnings),
-        "errors": [str(error.get("message", "")).strip() for error in errors if error.get("message")],
-        "warnings": [str(warning.get("message", "")).strip() for warning in warnings if warning.get("message")],
+        "errors": [
+            str(error.get("message", "")).strip() for error in errors if error.get("message")
+        ],
+        "warnings": [
+            str(warning.get("message", "")).strip()
+            for warning in warnings
+            if warning.get("message")
+        ],
     }
 
 
@@ -92,9 +105,13 @@ def _lock_workflow_version_counter(db: Session, *, workspace_id: uuid.UUID, name
     )
 
 
-def _authorized_workspace(db: Session, *, workspace_id: str, user_id: uuid.UUID) -> tuple[Workspace, WorkspaceMembership]:
+def _authorized_workspace(
+    db: Session, *, workspace_id: str, user_id: uuid.UUID
+) -> tuple[Workspace, WorkspaceMembership]:
     workspace_uuid = TenantQuery._parse_uuid(workspace_id, "workspace_id")
-    workspace = db.execute(select(Workspace).where(Workspace.id == workspace_uuid)).scalar_one_or_none()
+    workspace = db.execute(
+        select(Workspace).where(Workspace.id == workspace_uuid)
+    ).scalar_one_or_none()
     if workspace is None:
         raise NotFoundError("Workspace not found")
 
@@ -332,7 +349,9 @@ def list_workflow_specs(
                     )
             except ValueError:
                 pass
-        stmt = stmt.order_by(WorkflowSpec.created_at.desc(), WorkflowSpec.id.desc()).limit(limit + 1)
+        stmt = stmt.order_by(WorkflowSpec.created_at.desc(), WorkflowSpec.id.desc()).limit(
+            limit + 1
+        )
         return list(db.execute(stmt).scalars())
 
     return query.list(limit=limit, cursor=cursor)

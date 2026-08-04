@@ -10,12 +10,15 @@ from langgraph.prebuilt.chat_agent_executor import AgentState
 from langgraph.types import Checkpointer
 
 from ai_data_science_team.templates import BaseAgent
-from ai_data_science_team.tools.eda import (describe_dataset, explain_data,
-                                            generate_correlation_funnel,
-                                            generate_dtale_report,
-                                            generate_sweetviz_report,
-                                            generate_ydata_report,
-                                            visualize_missing)
+from ai_data_science_team.tools.eda import (
+    describe_dataset,
+    explain_data,
+    generate_correlation_funnel,
+    generate_dtale_report,
+    generate_sweetviz_report,
+    generate_ydata_report,
+    visualize_missing,
+)
 from ai_data_science_team.utils.messages import get_tool_call_names
 from ai_data_science_team.utils.regex import format_agent_name
 
@@ -104,9 +107,7 @@ class EDAToolsAgent(BaseAgent):
         self.response = response
         return None
 
-    def invoke_agent(
-        self, user_instructions: str = None, data_raw: pd.DataFrame = None, **kwargs
-    ):
+    def invoke_agent(self, user_instructions: str = None, data_raw: pd.DataFrame = None, **kwargs):
         """
         Synchronously runs the agent with user instructions and data.
 
@@ -239,7 +240,9 @@ def make_eda_tools_agent(
                 break
             elif isinstance(msg, dict) and "artifact" in msg and msg["artifact"] is not None:
                 last_tool_artifact = msg["artifact"]
-                print(f"    * DEBUG: Found artifact (dict) at message {i}: {type(last_tool_artifact)}")
+                print(
+                    f"    * DEBUG: Found artifact (dict) at message {i}: {type(last_tool_artifact)}"
+                )
                 break
 
         print(f"    * DEBUG: Final artifact type: {type(last_tool_artifact)}")

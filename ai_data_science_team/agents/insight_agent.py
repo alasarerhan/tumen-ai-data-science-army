@@ -12,10 +12,15 @@ PowerAnalysisAgent.
 Node type: ``insight.mine``
 """
 
-from typing import (Dict, Optional, Tuple)  # noqa: E402
 import logging  # noqa: E402, F401
-from typing import Any  # noqa: E402, F401
+from typing import (  # noqa: E402
+    Any,  # noqa: E402, F401
+    Dict,
+    Optional,
+    Tuple,
+)
 
+import pandas as pd  # noqa: E402, F401
 from langchain.tools import tool  # noqa: E402, F401
 from langchain_core.messages import AIMessage, BaseMessage  # noqa: E402, F401
 from langgraph.graph import END, START, StateGraph  # noqa: E402, F401
@@ -24,10 +29,6 @@ from langgraph.types import Checkpointer  # noqa: E402, F401
 from typing_extensions import Annotated, Sequence, TypedDict  # noqa: E402, F401
 
 from ai_data_science_team.templates import BaseAgent  # noqa: E402, F401
-from ai_data_science_team.utils.regex import format_agent_name  # noqa: E402, F401
-
-import pandas as pd  # noqa: E402, F401
-
 from ai_data_science_team.tools.insight import (  # noqa: E402, F401
     find_anomalies,
     find_class_imbalance,
@@ -37,7 +38,7 @@ from ai_data_science_team.tools.insight import (  # noqa: E402, F401
     find_strong_correlations,
     mine_insights,
 )
-
+from ai_data_science_team.utils.regex import format_agent_name  # noqa: E402, F401
 
 logger = logging.getLogger(__name__)
 
@@ -49,6 +50,7 @@ NODE_TYPE = "insight.mine"
 # Tool wrappers
 # ---------------------------------------------------------------------------
 
+
 @tool(response_format="content_and_artifact")
 def find_anomalies_wrapped(df: pd.DataFrame) -> Tuple[str, dict]:
     """Tool wrapper for ``find_anomalies``.
@@ -58,7 +60,7 @@ def find_anomalies_wrapped(df: pd.DataFrame) -> Tuple[str, dict]:
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: c1_find_anomalies")
-    kwargs = {'df': df}
+    kwargs = {"df": df}
     try:
         result = find_anomalies(**kwargs)
     except Exception as exc:
@@ -86,7 +88,7 @@ def find_strong_correlations_wrapped(df: pd.DataFrame) -> Tuple[str, dict]:
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: c1_find_strong_correlations")
-    kwargs = {'df': df}
+    kwargs = {"df": df}
     try:
         result = find_strong_correlations(**kwargs)
     except Exception as exc:
@@ -114,7 +116,7 @@ def find_skewness_wrapped(df: pd.DataFrame) -> Tuple[str, dict]:
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: c1_find_skewness")
-    kwargs = {'df': df}
+    kwargs = {"df": df}
     try:
         result = find_skewness(**kwargs)
     except Exception as exc:
@@ -142,7 +144,7 @@ def find_missing_patterns_wrapped(df: pd.DataFrame) -> Tuple[str, dict]:
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: c1_find_missing_patterns")
-    kwargs = {'df': df}
+    kwargs = {"df": df}
     try:
         result = find_missing_patterns(**kwargs)
     except Exception as exc:
@@ -170,7 +172,7 @@ def find_class_imbalance_wrapped(df: pd.DataFrame) -> Tuple[str, dict]:
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: c1_find_class_imbalance")
-    kwargs = {'df': df}
+    kwargs = {"df": df}
     try:
         result = find_class_imbalance(**kwargs)
     except Exception as exc:
@@ -198,7 +200,7 @@ def find_constants_and_outliers_wrapped(df: pd.DataFrame) -> Tuple[str, dict]:
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: c1_find_constants_and_outliers")
-    kwargs = {'df': df}
+    kwargs = {"df": df}
     try:
         result = find_constants_and_outliers(**kwargs)
     except Exception as exc:
@@ -226,7 +228,7 @@ def mine_insights_wrapped(df: pd.DataFrame) -> Tuple[str, dict]:
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: c1_mine_insights")
-    kwargs = {'df': df}
+    kwargs = {"df": df}
     try:
         result = mine_insights(**kwargs)
     except Exception as exc:
@@ -299,7 +301,12 @@ def make_insight_agent(
     def run_react_agent(state: GraphState):
         logger.info("    * RUN REACT AGENT FOR C1")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
-        messages = [("system", "You are the C1 agent. Use the available tools to complete the user's request.")] + list(base)
+        messages = [
+            (
+                "system",
+                "You are the C1 agent. Use the available tools to complete the user's request.",
+            )
+        ] + list(base)
         input_payload = {"messages": messages}
         return react_agent.invoke(input_payload, invoke_react_agent_kwargs)
 
@@ -318,7 +325,9 @@ def make_insight_agent(
             last_ai = AIMessage(content=getattr(internal[-1], "content", ""), name=AGENT_NAME)
         tool_calls = []
         for msg in internal:
-            name = getattr(getattr(msg, "tool_call_id", None), "name", None) or getattr(msg, "name", None)
+            name = getattr(getattr(msg, "tool_call_id", None), "name", None) or getattr(
+                msg, "name", None
+            )
             if name:
                 tool_calls.append(name)
         if log_tool_calls and tool_calls:
@@ -386,6 +395,7 @@ class InsightMiningAgent(BaseAgent):
         if not self.response or "messages" not in self.response:
             return None
         from IPython.display import Markdown as _Markdown  # noqa: E402, F401
+
         for msg in reversed(self.response.get("messages", [])):
             content = getattr(msg, "content", "")
             if content:

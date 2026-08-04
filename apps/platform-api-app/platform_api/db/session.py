@@ -57,9 +57,9 @@ def get_db() -> Generator[Session, None, None]:
 @contextmanager
 def atomic_transaction(db: Session) -> Generator[Session, None, None]:
     """Context manager for atomic database transactions.
-    
+
     Automatically commits on success, rolls back on exception.
-    
+
     Usage:
         with atomic_transaction(db) as session:
             session.add(obj)

@@ -1,14 +1,14 @@
 from __future__ import annotations
 
-import uuid
 import json
+import uuid
 
 from sqlalchemy import and_, or_, select
 from sqlalchemy.orm import Session
 
+from platform_api.core.service_errors import ForbiddenError, NotFoundError, ValidationError
 from platform_api.db.models import Artifact, WorkflowRun, Workspace, WorkspaceMembership
 from platform_api.db.tenant_query import TenantQuery
-from platform_api.core.service_errors import ForbiddenError, NotFoundError, ValidationError
 
 
 def _parse_uuid(value: uuid.UUID | str, label: str) -> uuid.UUID:
@@ -22,7 +22,9 @@ def _authorized_workspace(
     user_id: uuid.UUID,
 ) -> Workspace:
     workspace_uuid = _parse_uuid(workspace_id, "workspace_id")
-    workspace = db.execute(select(Workspace).where(Workspace.id == workspace_uuid)).scalar_one_or_none()
+    workspace = db.execute(
+        select(Workspace).where(Workspace.id == workspace_uuid)
+    ).scalar_one_or_none()
     if workspace is None:
         raise NotFoundError("Workspace not found")
 
@@ -138,7 +140,9 @@ def list_artifacts_for_workspace(
         stmt = stmt.where(Artifact.kind == kind)
 
     if workflow_run_id:
-        stmt = stmt.where(Artifact.workflow_run_id == _parse_uuid(workflow_run_id, "workflow_run_id"))
+        stmt = stmt.where(
+            Artifact.workflow_run_id == _parse_uuid(workflow_run_id, "workflow_run_id")
+        )
 
     stmt = stmt.order_by(Artifact.created_at.desc(), Artifact.id.desc())
 

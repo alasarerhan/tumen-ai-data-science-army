@@ -11,6 +11,6 @@ from platform_api.discovery.agent_discovery import AgentDiscoveryService
 from platform_api.discovery.categories import AGENT_CATEGORIES
 
 __all__ = [
-    "AgentDiscoveryService",
     "AGENT_CATEGORIES",
+    "AgentDiscoveryService",
 ]

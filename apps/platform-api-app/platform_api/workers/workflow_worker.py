@@ -11,11 +11,11 @@ from sqlalchemy import select
 from platform_api.core.config import settings
 from platform_api.db.models import WorkflowNodeExecution, WorkflowRun
 from platform_api.db.session import SessionLocal
-from platform_api.services.artifact_service import create_system_artifact_record
 from platform_api.services.agent_execution_trace_service import (
     complete_agent_execution_trace,
     start_agent_execution_trace,
 )
+from platform_api.services.artifact_service import create_system_artifact_record
 from platform_api.services.signal_service import emit_signal
 from platform_api.services.workflow_node_executor_service import (
     NodeExecutionContext,
@@ -34,7 +34,12 @@ def register_node_executor(node_type: str, executor: NodeExecutor) -> None:
 
 
 class WorkflowWorker:
-    def __init__(self, *, consumer_name: str = "workflow-worker", node_executors: dict[str, NodeExecutor] | None = None) -> None:
+    def __init__(
+        self,
+        *,
+        consumer_name: str = "workflow-worker",
+        node_executors: dict[str, NodeExecutor] | None = None,
+    ) -> None:
         self.consumer_name = consumer_name
         default_executors = get_default_node_executors()
         if node_executors is not None:
@@ -43,7 +48,9 @@ class WorkflowWorker:
         self.node_executors = default_executors
 
     def run_once(self) -> dict[str, Any]:
-        redis_url = settings.workflow_queue_redis_url.strip() or settings.agent_cache_redis_url.strip()
+        redis_url = (
+            settings.workflow_queue_redis_url.strip() or settings.agent_cache_redis_url.strip()
+        )
         if not redis_url:
             return {"processed": False, "reason": "workflow_queue_not_configured"}
 
@@ -68,18 +75,28 @@ class WorkflowWorker:
         except ValueError:
             return {"status": "invalid_run_id"}
         with SessionLocal() as db:
-            run = db.execute(select(WorkflowRun).where(WorkflowRun.id == parsed_run_id)).scalar_one_or_none()
+            run = db.execute(
+                select(WorkflowRun).where(WorkflowRun.id == parsed_run_id)
+            ).scalar_one_or_none()
             if run is None:
                 return {"status": "not_found"}
             nodes = list(
                 db.execute(
                     select(WorkflowNodeExecution)
                     .where(WorkflowNodeExecution.workflow_run_id == run.id)
-                    .order_by(WorkflowNodeExecution.execution_index.asc(), WorkflowNodeExecution.created_at.asc())
+                    .order_by(
+                        WorkflowNodeExecution.execution_index.asc(),
+                        WorkflowNodeExecution.created_at.asc(),
+                    )
                 ).scalars()
             )
             if not nodes:
-                return {"status": "processed", "run_status": run.status, "nodes_seen": 0, "nodes_executed": 0}
+                return {
+                    "status": "processed",
+                    "run_status": run.status,
+                    "nodes_seen": 0,
+                    "nodes_executed": 0,
+                }
             executed = 0
             run.status = "RUNNING"
             if run.started_at is None:
@@ -94,7 +111,9 @@ class WorkflowWorker:
                     break
             refreshed_nodes = list(
                 db.execute(
-                    select(WorkflowNodeExecution).where(WorkflowNodeExecution.workflow_run_id == run.id)
+                    select(WorkflowNodeExecution).where(
+                        WorkflowNodeExecution.workflow_run_id == run.id
+                    )
                 ).scalars()
             )
             terminal_statuses = {node.status for node in refreshed_nodes}
@@ -115,7 +134,12 @@ class WorkflowWorker:
                     created_by_user_id=run.requested_by_user_id,
                 )
             db.commit()
-            return {"status": "processed", "run_status": run.status, "nodes_seen": len(nodes), "nodes_executed": executed}
+            return {
+                "status": "processed",
+                "run_status": run.status,
+                "nodes_seen": len(nodes),
+                "nodes_executed": executed,
+            }
 
     def _execute_node(self, db, run: WorkflowRun, node: WorkflowNodeExecution) -> str:
         now = datetime.now(UTC)
@@ -163,8 +187,10 @@ class WorkflowWorker:
 
         try:
             output = executor(NodeExecutionContext(db=db, run=run, node=node))
-        except Exception as exc:  # noqa: BLE001 - worker must persist executor failures
-            logger.exception("Workflow node execution failed: run_id=%s node_id=%s", run.id, node.node_id)
+        except Exception as exc:
+            logger.exception(
+                "Workflow node execution failed: run_id=%s node_id=%s", run.id, node.node_id
+            )
             node.status = "failed"
             node.error = str(exc)
             node.finished_at = datetime.now(UTC)
@@ -198,7 +224,9 @@ class WorkflowWorker:
                 kind=str(artifact_payload["artifact_type"]),
                 uri=str(artifact_payload["uri"]),
                 produced_by_node_id=node.node_id,
-                parent_artifact_ids=[str(item) for item in artifact_payload.get("parent_artifact_ids", [])],
+                parent_artifact_ids=[
+                    str(item) for item in artifact_payload.get("parent_artifact_ids", [])
+                ],
                 created_by_user_id=run.requested_by_user_id,
             )
             produced_artifact_ids.append(str(artifact.id))

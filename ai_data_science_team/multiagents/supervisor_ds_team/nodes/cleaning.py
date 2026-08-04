@@ -16,7 +16,8 @@ from langchain_core.messages import AIMessage  # noqa: E402, F401
 from ai_data_science_team.multiagents.supervisor import (  # noqa: E402, F401
     SupervisorDSState,
     append_agent_feedback,
-    register_python_transform_dataset)
+    register_python_transform_dataset,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -24,6 +25,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class CleaningNodeDeps:
     """Dependencies for the cleaning node."""
+
     data_cleaning_agent: Any
     ensure_dataset_registry: Any  # was _ensure_dataset_registry
     ensure_df: Any  # was _ensure_df
@@ -58,26 +60,25 @@ def make_node_cleaning(deps: CleaningNodeDeps) -> Callable[[SupervisorDSState], 
                     "data_sql",
                     "data_cleaned",
                     "feature_data",
-                ])
+                ],
+            )
         )
         if deps.is_empty_df(active_df):
             return {
                 "messages": [
                     AIMessage(
                         content="No dataset is available to clean. Load a file (or run a SQL query) first.",
-                        name="data_cleaning_agent")
+                        name="data_cleaning_agent",
+                    )
                 ],
                 "last_worker": "Data_Cleaning_Agent",
             }
         deps.data_cleaning_agent.invoke_messages(
-            messages=before_msgs,
-            user_instructions=last_human,
-            data_raw=active_df)
+            messages=before_msgs, user_instructions=last_human, data_raw=active_df
+        )
         response = deps.data_cleaning_agent.response or {}
         merged = deps.merge_messages(before_msgs, response)
-        merged["messages"] = deps.tag_messages(
-            merged.get("messages"), "data_cleaning_agent"
-        )
+        merged["messages"] = deps.tag_messages(merged.get("messages"), "data_cleaning_agent")
         append_agent_feedback(
             merged,
             agent_name="data_cleaning_agent",
@@ -87,7 +88,8 @@ def make_node_cleaning(deps: CleaningNodeDeps) -> Callable[[SupervisorDSState], 
             extra_text="Cleaning/imputation completed.",
             error_text=response.get("data_cleaner_error"),
             error_log_path=response.get("data_cleaner_error_log_path"),
-            error_prefix="Data cleaning error")
+            error_prefix="Data cleaning error",
+        )
         data_cleaned = response.get("data_cleaned")
         if data_cleaned is not None:
             try:
@@ -105,7 +107,8 @@ def make_node_cleaning(deps: CleaningNodeDeps) -> Callable[[SupervisorDSState], 
                     parent_id=active_dataset_id,
                     error_text=response.get("data_cleaner_error"),
                     error_log_path=response.get("data_cleaner_error_log_path"),
-                    summary=response.get("data_cleaning_summary"))
+                    summary=response.get("data_cleaning_summary"),
+                )
             except Exception:
                 pass
         downstream_resets = (
@@ -132,16 +135,10 @@ def make_node_cleaning(deps: CleaningNodeDeps) -> Callable[[SupervisorDSState], 
                 "data_cleaning": data_cleaned,
                 "data_cleaning_details": {
                     "data_cleaner_function": response.get("data_cleaner_function"),
-                    "data_cleaner_function_path": response.get(
-                        "data_cleaner_function_path"
-                    ),
-                    "data_cleaner_function_name": response.get(
-                        "data_cleaner_function_name"
-                    ),
+                    "data_cleaner_function_path": response.get("data_cleaner_function_path"),
+                    "data_cleaner_function_name": response.get("data_cleaner_function_name"),
                     "data_cleaner_error": response.get("data_cleaner_error"),
-                    "data_cleaner_error_log_path": response.get(
-                        "data_cleaner_error_log_path"
-                    ),
+                    "data_cleaner_error_log_path": response.get("data_cleaner_error_log_path"),
                     "data_cleaning_summary": response.get("data_cleaning_summary"),
                     "recommended_steps": response.get("recommended_steps"),
                 },
@@ -150,9 +147,7 @@ def make_node_cleaning(deps: CleaningNodeDeps) -> Callable[[SupervisorDSState], 
             **downstream_resets,
         }
 
-
     return node_cleaning
-
 
 
 __all__ = ["CleaningNodeDeps", "make_node_cleaning"]

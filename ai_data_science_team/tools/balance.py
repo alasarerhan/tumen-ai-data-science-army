@@ -13,7 +13,6 @@ from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple  # noqa: 
 
 import numpy as np  # noqa: E402, F401
 
-
 VALID_STRATEGIES = {"smote", "undersampling", "class_weight", "threshold_tuning", "none"}
 
 
@@ -26,6 +25,7 @@ def _now() -> float:
 
 
 # ----- Class distribution --------------------------------------------------
+
 
 @dataclass
 class ClassDistribution:
@@ -45,8 +45,11 @@ def class_distribution(y: Sequence[Any]) -> ClassDistribution:
     n_classes = len(counts)
     if n_classes == 0 or n == 0:
         return ClassDistribution(
-            counts=counts, n=n, n_classes=n_classes,
-            majority_count=0, minority_count=0,
+            counts=counts,
+            n=n,
+            n_classes=n_classes,
+            majority_count=0,
+            minority_count=0,
             imbalance_ratio=1.0,
         )
     sorted_counts = sorted(counts.values(), reverse=True)
@@ -54,14 +57,18 @@ def class_distribution(y: Sequence[Any]) -> ClassDistribution:
     minority = sorted_counts[-1]
     ir = majority / minority if minority > 0 else float("inf")
     return ClassDistribution(
-        counts=counts, n=n, n_classes=n_classes,
-        majority_count=majority, minority_count=minority,
+        counts=counts,
+        n=n,
+        n_classes=n_classes,
+        majority_count=majority,
+        minority_count=minority,
         imbalance_ratio=ir,
     )
 
 
 def is_imbalanced(
-    dist: ClassDistribution, *,
+    dist: ClassDistribution,
+    *,
     threshold: float = 1.5,
     severe_threshold: float = 10.0,
 ) -> Dict[str, Any]:
@@ -82,6 +89,7 @@ def is_imbalanced(
 
 
 # ----- Strategy selection --------------------------------------------------
+
 
 def select_strategy(
     dist: ClassDistribution,
@@ -146,7 +154,9 @@ def select_strategy(
 
 
 def _build_rationale(
-    primary: str, verdict: Mapping[str, Any], n: int,
+    primary: str,
+    verdict: Mapping[str, Any],
+    n: int,
 ) -> str:
     ir = verdict["imbalance_ratio"]
     if primary == "smote":
@@ -175,6 +185,7 @@ def _build_rationale(
 
 # ----- Per-strategy impact estimation -------------------------------------
 
+
 def estimate_strategy_impact(
     dist: ClassDistribution,
     strategy: str,
@@ -188,9 +199,7 @@ def estimate_strategy_impact(
     * threshold_tuning: no sample change.
     """
     if strategy not in VALID_STRATEGIES:
-        raise ValueError(
-            f"strategy must be one of {sorted(VALID_STRATEGIES)}"
-        )
+        raise ValueError(f"strategy must be one of {sorted(VALID_STRATEGIES)}")
     if dist.n == 0 or dist.n_classes == 0:
         return {
             "strategy": strategy,
@@ -214,10 +223,7 @@ def estimate_strategy_impact(
         after = {"n": new_n, "imbalance_ratio": 1.0}
         effective = True
     elif strategy == "class_weight":
-        weights = {
-            cls: dist.n / (dist.n_classes * count)
-            for cls, count in dist.counts.items()
-        }
+        weights = {cls: dist.n / (dist.n_classes * count) for cls, count in dist.counts.items()}
         after = {
             "n": dist.n,
             "imbalance_ratio": dist.imbalance_ratio,
@@ -239,6 +245,7 @@ def estimate_strategy_impact(
 
 
 # ----- PR-AUC recommendation ----------------------------------------------
+
 
 @dataclass
 class PRAUCRecommendation:
@@ -271,6 +278,7 @@ def recommend_metrics(
 
 # ----- Sampling helpers ----------------------------------------------------
 
+
 def undersample_indices(
     y: Sequence[Any],
     *,
@@ -295,9 +303,7 @@ def undersample_indices(
     if target_majority >= len(majority_indices):
         keep_majority = list(majority_indices)
     else:
-        keep_majority = list(
-            rng.choice(majority_indices, size=target_majority, replace=False)
-        )
+        keep_majority = list(rng.choice(majority_indices, size=target_majority, replace=False))
     out = list(keep_majority)
     for cls in sorted_classes[1:]:
         out.extend(counts[cls])
@@ -310,13 +316,11 @@ def class_weight(y: Sequence[Any]) -> Dict[Any, float]:
     dist = class_distribution(y)
     if dist.n == 0 or dist.n_classes == 0:
         return {}
-    return {
-        cls: dist.n / (dist.n_classes * count)
-        for cls, count in dist.counts.items()
-    }
+    return {cls: dist.n / (dist.n_classes * count) for cls, count in dist.counts.items()}
 
 
 # ----- Apply (resampled row indices) ---------------------------------------
+
 
 @dataclass
 class SamplingReport:
@@ -337,13 +341,13 @@ def apply_strategy(
     random_state: Optional[int] = 42,
 ) -> SamplingReport:
     if strategy not in VALID_STRATEGIES:
-        raise ValueError(
-            f"strategy must be one of {sorted(VALID_STRATEGIES)}"
-        )
+        raise ValueError(f"strategy must be one of {sorted(VALID_STRATEGIES)}")
     dist = class_distribution(y)
     if strategy == "undersampling":
         idx = undersample_indices(
-            y, target_ratio=target_ratio, random_state=random_state,
+            y,
+            target_ratio=target_ratio,
+            random_state=random_state,
         )
         kept_y = [y[i] for i in idx]
         return SamplingReport(
@@ -364,13 +368,13 @@ def apply_strategy(
         resampled_distribution=dict(dist.counts),
         kept_indices=list(range(dist.n)),
         rationale=(
-            "No resampling; impact is at training time (sample "
-            "weights or decision threshold)."
+            "No resampling; impact is at training time (sample weights or decision threshold)."
         ),
     )
 
 
 # ----- Dashboard payload ---------------------------------------------------
+
 
 def balance_payload(
     dist: ClassDistribution,
@@ -405,5 +409,3 @@ def balance_payload(
             "secondary": metrics.secondary_metrics,
         },
     }
-
-

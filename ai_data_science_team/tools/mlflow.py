@@ -1,9 +1,10 @@
-from typing_extensions import Optional, Union, List, Annotated, Dict, Any
-from langgraph.prebuilt import InjectedState
-from langchain.tools import tool
-import psutil
-
 import logging
+
+import psutil
+from langchain.tools import tool
+from langgraph.prebuilt import InjectedState
+from typing_extensions import Annotated, Any, Dict, List, Optional, Union
+
 logger = logging.getLogger(__name__)
 
 
@@ -30,9 +31,7 @@ def _records_to_md_table(records: list[dict], columns: list[str], max_rows: int 
     rows = records[: max_rows if max_rows and max_rows > 0 else len(records)]
     header = "| " + " | ".join(cols) + " |"
     sep = "| " + " | ".join(["---"] * len(cols)) + " |"
-    body = [
-        "| " + " | ".join(_escape_md_cell(r.get(c)) for c in cols) + " |" for r in rows
-    ]
+    body = ["| " + " | ".join(_escape_md_cell(r.get(c)) for c in cols) + " |" for r in rows]
     return "\n".join([header, sep] + body)
 
 
@@ -51,8 +50,9 @@ def _resolve_active_run(
     - If a matching active run exists, reuse it.
     - If a different active run exists, end it and start/resume the requested run.
     """
-    import mlflow  # noqa: E402, F401
     from contextlib import nullcontext  # noqa: E402, F401
+
+    import mlflow  # noqa: E402, F401
 
     if tracking_uri:
         mlflow.set_tracking_uri(tracking_uri)
@@ -202,7 +202,10 @@ def mlflow_log_table(
     ) as run:
         mlflow.log_table(df, artifact_file=artifact_file)
         rid = getattr(run.info, "run_id", None) if run else run_id
-    return ("Table logged.", {"run_id": rid, "artifact_file": artifact_file, "shape": tuple(df.shape)})
+    return (
+        "Table logged.",
+        {"run_id": rid, "artifact_file": artifact_file, "shape": tuple(df.shape)},
+    )
 
 
 @tool(response_format="content_and_artifact")
@@ -251,8 +254,9 @@ def mlflow_log_figure(
         Destination artifact file path, e.g. "plots/viz.html" or "plots/viz.json".
     """
     logger.info("    * Tool: mlflow_log_figure")
-    import mlflow  # noqa: E402, F401
     import json  # noqa: E402, F401
+
+    import mlflow  # noqa: E402, F401
     import plotly.io as pio  # noqa: E402, F401
 
     fig = None
@@ -289,8 +293,9 @@ def mlflow_log_artifact(
     Log a local file or directory to MLflow (using mlflow.log_artifact(s)).
     """
     logger.info("    * Tool: mlflow_log_artifact")
-    import mlflow  # noqa: E402, F401
     import os  # noqa: E402, F401
+
+    import mlflow  # noqa: E402, F401
 
     with _resolve_active_run(
         run_id=run_id,
@@ -307,6 +312,7 @@ def mlflow_log_artifact(
         "Artifact logged.",
         {"run_id": rid, "local_path": local_path, "artifact_path": artifact_path},
     )
+
 
 @tool(response_format="content_and_artifact")
 def mlflow_search_experiments(
@@ -460,7 +466,7 @@ def mlflow_search_runs(
             if start_ms is not None and end_ms is not None:
                 duration_s = max(0.0, (end_ms - start_ms) / 1000.0)
         except Exception:
-                duration_s = None
+            duration_s = None
 
         rid = getattr(run.info, "run_id", None)
         metrics = dict(getattr(run.data, "metrics", {}) or {})
@@ -484,7 +490,9 @@ def mlflow_search_runs(
             "end_time": _ms_to_iso(end_ms),
             "duration_seconds": duration_s,
             "has_model": has_model,
-            "model_uri": f"runs:/{rid}/model" if (has_model and isinstance(rid, str) and rid) else None,
+            "model_uri": f"runs:/{rid}/model"
+            if (has_model and isinstance(rid, str) and rid)
+            else None,
             "params_preview": _kv_preview(params),
             "metrics_preview": _kv_preview(metrics),
         }
@@ -494,9 +502,7 @@ def mlflow_search_runs(
             run_record["params"] = params
             run_record["tags"] = tags
 
-        records.append(
-            run_record
-        )
+        records.append(run_record)
 
     table = _records_to_md_table(
         records,
@@ -615,9 +621,7 @@ def mlflow_predict_from_run_id(
         # fallback
         preds_str = str(preds)
         artifact_dict = {"predictions": preds_str}
-        message = (
-            f"Predictions returned (unrecognized type). Example: {preds_str[:100]}..."
-        )
+        message = f"Predictions returned (unrecognized type). Example: {preds_str[:100]}..."
 
     return (message, artifact_dict)
 
@@ -675,9 +679,7 @@ def _find_free_port(start_port: int, host: str) -> int:
             # If bind succeeds, it's free
             return port_candidate
 
-    raise OSError(
-        f"No available ports found in the range {start_port}-{start_port + 999}"
-    )
+    raise OSError(f"No available ports found in the range {start_port}-{start_port + 999}")
 
 
 @tool(response_format="content")
@@ -794,8 +796,9 @@ def mlflow_download_artifacts(
         (summary_message, artifact_dict)
     """
     logger.info("    * Tool: mlflow_download_artifacts")
-    from mlflow.tracking import MlflowClient  # noqa: E402, F401
     import os  # noqa: E402, F401
+
+    from mlflow.tracking import MlflowClient  # noqa: E402, F401
 
     client = MlflowClient(tracking_uri=tracking_uri)
     local_path = client.download_artifacts(run_id, path or "", dst_path)
@@ -974,8 +977,8 @@ def mlflow_get_run_details(
     Retrieve run info, params, metrics, tags, and a shallow artifact listing.
     """
     logger.info("    * Tool: mlflow_get_run_details")
-    from mlflow.tracking import MlflowClient  # noqa: E402, F401
     import pandas as pd  # noqa: E402, F401
+    from mlflow.tracking import MlflowClient  # noqa: E402, F401
 
     client = MlflowClient(tracking_uri=tracking_uri, registry_uri=registry_uri)
     run = client.get_run(run_id)
@@ -985,8 +988,7 @@ def mlflow_get_run_details(
     # Shallow artifact listing at root
     artifacts = client.list_artifacts(run_id, "")
     artifacts_data = [
-        {"path": a.path, "is_dir": a.is_dir, "file_size": a.file_size}
-        for a in artifacts
+        {"path": a.path, "is_dir": a.is_dir, "file_size": a.file_size} for a in artifacts
     ]
 
     flattened = {
@@ -1089,9 +1091,5 @@ def mlflow_ui_status(port: int = 5000) -> tuple:
         listening = []
 
     running = any(p["pid"] in listening for p in ui_procs) if ui_procs else bool(listening)
-    msg = (
-        f"MLflow UI {'appears to be running' if running else 'not detected'} "
-        f"on port {port}."
-    )
+    msg = f"MLflow UI {'appears to be running' if running else 'not detected'} on port {port}."
     return msg, {"ui_processes": ui_procs, "listening_pids_on_port": listening}
-

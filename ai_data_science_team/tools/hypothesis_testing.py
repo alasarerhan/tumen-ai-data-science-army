@@ -27,7 +27,6 @@ from typing import Any, Dict, List, Optional, Sequence, Tuple  # noqa: E402, F40
 
 import numpy as np  # noqa: E402, F401
 
-
 # ---------------------------------------------------------------------------
 # Recommendation engine
 # ---------------------------------------------------------------------------
@@ -86,9 +85,7 @@ def recommend_test(
     """
     arr = np.asarray(list(values), dtype=float).ravel()
     if arr.size < 2:
-        raise ValueError(
-            "values must contain at least two observations"
-        )
+        raise ValueError("values must contain at least two observations")
     normal = _is_normal_shapiro_safe(arr)
     if comparison is not None:
         cmp = np.asarray(list(comparison), dtype=float).ravel()
@@ -193,9 +190,7 @@ def _welch_ttest(a: np.ndarray, b: np.ndarray, alternative: str) -> Tuple[float,
         from scipy.stats import t as t_dist  # noqa: E402, F401
 
         # Welch–Satterthwaite d.o.f.
-        df = (va / na + vb / nb) ** 2 / (
-            (va / na) ** 2 / (na - 1) + (vb / nb) ** 2 / (nb - 1)
-        )
+        df = (va / na + vb / nb) ** 2 / ((va / na) ** 2 / (na - 1) + (vb / nb) ** 2 / (nb - 1))
         if alternative == "two-sided":
             p = float(2 * (1 - t_dist.cdf(abs(t), df=df)))
         elif alternative == "greater":
@@ -208,7 +203,7 @@ def _welch_ttest(a: np.ndarray, b: np.ndarray, alternative: str) -> Tuple[float,
 
         z = t
         if alternative == "two-sided":
-            p = (1 - erf(abs(z) / sqrt(2)))
+            p = 1 - erf(abs(z) / sqrt(2))
         elif alternative == "greater":
             p = 0.5 * (1 - erf(z / sqrt(2)))
         else:
@@ -220,9 +215,7 @@ def _cohens_d(a: np.ndarray, b: np.ndarray) -> float:
     ma, mb = float(np.mean(a)), float(np.mean(b))
     sa, sb = float(np.std(a, ddof=1)), float(np.std(b, ddof=1))
     na, nb = a.size, b.size
-    sp = math.sqrt(
-        ((na - 1) * sa ** 2 + (nb - 1) * sb ** 2) / max(na + nb - 2, 1)
-    )
+    sp = math.sqrt(((na - 1) * sa**2 + (nb - 1) * sb**2) / max(na + nb - 2, 1))
     if sp == 0:
         return 0.0
     return float((ma - mb) / sp)
@@ -238,9 +231,7 @@ def run_test(
 ) -> Dict[str, Any]:
     """Execute the chosen hypothesis test (after :func:`recommend_test`)."""
     if alt not in {"two-sided", "greater", "less"}:
-        raise ValueError(
-            f"alt must be one of two-sided/greater/less, got {alt!r}"
-        )
+        raise ValueError(f"alt must be one of two-sided/greater/less, got {alt!r}")
     arr = np.asarray(list(values), dtype=float).ravel()
     if arr.size < 2:
         raise ValueError("values too small")
@@ -287,7 +278,7 @@ def run_test(
 
         z = t
         if alt == "two-sided":
-            p = (1 - erf(abs(z) / sqrt(2)))
+            p = 1 - erf(abs(z) / sqrt(2))
         elif alt == "greater":
             p = 0.5 * (1 - erf(z / sqrt(2)))
         else:
@@ -354,5 +345,3 @@ __all__ = [
     "run_test",
     "interpret_result",
 ]
-
-

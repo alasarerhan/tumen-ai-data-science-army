@@ -12,9 +12,13 @@ PowerAnalysisAgent.
 Node type: ``deploy.shadow``
 """
 
-from typing import (Dict, Optional, Tuple)  # noqa: E402
 import logging  # noqa: E402, F401
-from typing import Any  # noqa: E402, F401
+from typing import (  # noqa: E402
+    Any,  # noqa: E402, F401
+    Dict,
+    Optional,
+    Tuple,
+)
 
 from langchain.tools import tool  # noqa: E402, F401
 from langchain_core.messages import AIMessage, BaseMessage  # noqa: E402, F401
@@ -24,9 +28,6 @@ from langgraph.types import Checkpointer  # noqa: E402, F401
 from typing_extensions import Annotated, Sequence, TypedDict  # noqa: E402, F401
 
 from ai_data_science_team.templates import BaseAgent  # noqa: E402, F401
-from ai_data_science_team.utils.regex import format_agent_name  # noqa: E402, F401
-
-
 from ai_data_science_team.tools.shadow_canary import (  # noqa: E402, F401
     DeploymentStore,
     evaluate_rollback,
@@ -36,7 +37,7 @@ from ai_data_science_team.tools.shadow_canary import (  # noqa: E402, F401
     start_deployment,
     summarise_deployment,
 )
-
+from ai_data_science_team.utils.regex import format_agent_name  # noqa: E402, F401
 
 logger = logging.getLogger(__name__)
 
@@ -48,6 +49,7 @@ NODE_TYPE = "deploy.shadow"
 # Tool wrappers
 # ---------------------------------------------------------------------------
 
+
 @tool(response_format="content_and_artifact")
 def start_deployment_wrapped(store: DeploymentStore) -> Tuple[str, dict]:
     """Tool wrapper for ``start_deployment``.
@@ -57,7 +59,7 @@ def start_deployment_wrapped(store: DeploymentStore) -> Tuple[str, dict]:
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: j11_start_deployment")
-    kwargs = {'store': store}
+    kwargs = {"store": store}
     try:
         result = start_deployment(**kwargs)
     except Exception as exc:
@@ -85,7 +87,7 @@ def record_live_sample_wrapped(store: DeploymentStore, deployment_id: str) -> Tu
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: j11_record_live_sample")
-    kwargs = {'store': store, 'deployment_id': deployment_id}
+    kwargs = {"store": store, "deployment_id": deployment_id}
     try:
         result = record_live_sample(**kwargs)
     except Exception as exc:
@@ -113,7 +115,7 @@ def evaluate_rollback_wrapped(store: DeploymentStore, deployment_id: str) -> Tup
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: j11_evaluate_rollback")
-    kwargs = {'store': store, 'deployment_id': deployment_id}
+    kwargs = {"store": store, "deployment_id": deployment_id}
     try:
         result = evaluate_rollback(**kwargs)
     except Exception as exc:
@@ -133,7 +135,9 @@ def evaluate_rollback_wrapped(store: DeploymentStore, deployment_id: str) -> Tup
 
 
 @tool(response_format="content_and_artifact")
-def mark_status_wrapped(store: DeploymentStore, deployment_id: str, status: str) -> Tuple[str, dict]:
+def mark_status_wrapped(
+    store: DeploymentStore, deployment_id: str, status: str
+) -> Tuple[str, dict]:
     """Tool wrapper for ``mark_status``.
 
     See underlying tool module.
@@ -141,7 +145,7 @@ def mark_status_wrapped(store: DeploymentStore, deployment_id: str, status: str)
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: j11_mark_status")
-    kwargs = {'store': store, 'deployment_id': deployment_id, 'status': status}
+    kwargs = {"store": store, "deployment_id": deployment_id, "status": status}
     try:
         result = mark_status(**kwargs)
     except Exception as exc:
@@ -169,7 +173,7 @@ def summarise_deployment_wrapped(store: DeploymentStore, deployment_id: str) -> 
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: j11_summarise_deployment")
-    kwargs = {'store': store, 'deployment_id': deployment_id}
+    kwargs = {"store": store, "deployment_id": deployment_id}
     try:
         result = summarise_deployment(**kwargs)
     except Exception as exc:
@@ -197,7 +201,7 @@ def list_deployments_wrapped(store: DeploymentStore) -> Tuple[str, dict]:
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: j11_list_deployments")
-    kwargs = {'store': store}
+    kwargs = {"store": store}
     try:
         result = list_deployments(**kwargs)
     except Exception as exc:
@@ -269,7 +273,12 @@ def make_shadow_canary_agent(
     def run_react_agent(state: GraphState):
         logger.info("    * RUN REACT AGENT FOR J11")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
-        messages = [("system", "You are the J11 agent. Use the available tools to complete the user's request.")] + list(base)
+        messages = [
+            (
+                "system",
+                "You are the J11 agent. Use the available tools to complete the user's request.",
+            )
+        ] + list(base)
         input_payload = {"messages": messages}
         return react_agent.invoke(input_payload, invoke_react_agent_kwargs)
 
@@ -288,7 +297,9 @@ def make_shadow_canary_agent(
             last_ai = AIMessage(content=getattr(internal[-1], "content", ""), name=AGENT_NAME)
         tool_calls = []
         for msg in internal:
-            name = getattr(getattr(msg, "tool_call_id", None), "name", None) or getattr(msg, "name", None)
+            name = getattr(getattr(msg, "tool_call_id", None), "name", None) or getattr(
+                msg, "name", None
+            )
             if name:
                 tool_calls.append(name)
         if log_tool_calls and tool_calls:
@@ -356,6 +367,7 @@ class ShadowCanaryAgent(BaseAgent):
         if not self.response or "messages" not in self.response:
             return None
         from IPython.display import Markdown as _Markdown  # noqa: E402, F401
+
         for msg in reversed(self.response.get("messages", [])):
             content = getattr(msg, "content", "")
             if content:

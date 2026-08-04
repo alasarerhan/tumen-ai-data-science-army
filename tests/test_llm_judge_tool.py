@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-
 import ai_data_science_team.tools.llm_judge as f6
 
 
@@ -71,7 +70,8 @@ class TestJudgeOutput:
         # 0-length text → 0; weighted overall stays 0.
         # But not 1 unless we fill text.  Construct a clean case.
         s2 = f6.judge_output(
-            "A long report. " * 100, "",
+            "A long report. " * 100,
+            "",
             weights=(0.0, 1.0, 0.0),
         )
         assert s2.overall <= 1.0
@@ -79,8 +79,11 @@ class TestJudgeOutput:
     def test_to_dict(self):
         d = f6.judge_output("ok", "").to_dict()
         for k in (
-            "correctness", "faithfulness", "code_quality",
-            "overall", "recommendation",
+            "correctness",
+            "faithfulness",
+            "code_quality",
+            "overall",
+            "recommendation",
         ):
             assert k in d
 
@@ -95,4 +98,3 @@ class TestJudgeBatch:
         scores = f6.judge_batch(items)
         assert len(scores) == 3
         assert all(isinstance(s, f6.JudgeScore) for s in scores)
-

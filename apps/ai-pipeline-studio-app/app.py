@@ -7,22 +7,23 @@ Command:
 
 from __future__ import annotations
 
-import re
-import uuid
-import os
-import json
 import inspect
+import json
+import os
+import re
 import shutil
-from openai import OpenAI
+import uuid
+
 import pandas as pd
-import sqlalchemy as sql
 import plotly.colors as pc
 import plotly.io as pio
+import sqlalchemy as sql
 import streamlit as st
 import streamlit.components.v1 as components
-from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
 from langchain_community.chat_message_histories import StreamlitChatMessageHistory
+from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
 from langchain_openai import ChatOpenAI
+from openai import OpenAI
 
 from ai_data_science_team.utils.sandbox import run_code_sandboxed_subprocess
 
@@ -31,22 +32,6 @@ try:
 except Exception:  # pragma: no cover - optional dependency
     ChatOllama = None
 from langgraph.checkpoint.memory import MemorySaver
-
-from ai_data_science_team.agents.data_loader_tools_agent import DataLoaderToolsAgent
-from ai_data_science_team.agents.data_wrangling_agent import DataWranglingAgent
-from ai_data_science_team.agents.data_cleaning_agent import DataCleaningAgent
-from ai_data_science_team.ds_agents.eda_tools_agent import EDAToolsAgent
-from ai_data_science_team.agents.data_visualization_agent import DataVisualizationAgent
-from ai_data_science_team.agents.sql_database_agent import SQLDatabaseAgent
-from ai_data_science_team.agents.feature_engineering_agent import (
-    FeatureEngineeringAgent,
-)
-from ai_data_science_team.agents.workflow_planner_agent import WorkflowPlannerAgent
-from ai_data_science_team.ml_agents.h2o_ml_agent import H2OMLAgent
-from ai_data_science_team.ml_agents.mlflow_tools_agent import MLflowToolsAgent
-from ai_data_science_team.ml_agents.model_evaluation_agent import ModelEvaluationAgent
-from ai_data_science_team.multiagents.supervisor_ds_team import make_supervisor_ds_team
-from ai_data_science_team.utils.pipeline import build_pipeline_snapshot
 from pipeline_studio_runtime import (
     _apply_branch_ui_action,
     _build_children_index,
@@ -64,6 +49,22 @@ from pipeline_studio_runtime import (
     _topological_order_for_stale_set,
 )
 
+from ai_data_science_team.agents.data_cleaning_agent import DataCleaningAgent
+from ai_data_science_team.agents.data_loader_tools_agent import DataLoaderToolsAgent
+from ai_data_science_team.agents.data_visualization_agent import DataVisualizationAgent
+from ai_data_science_team.agents.data_wrangling_agent import DataWranglingAgent
+from ai_data_science_team.agents.feature_engineering_agent import (
+    FeatureEngineeringAgent,
+)
+from ai_data_science_team.agents.sql_database_agent import SQLDatabaseAgent
+from ai_data_science_team.agents.workflow_planner_agent import WorkflowPlannerAgent
+from ai_data_science_team.ds_agents.eda_tools_agent import EDAToolsAgent
+from ai_data_science_team.ml_agents.h2o_ml_agent import H2OMLAgent
+from ai_data_science_team.ml_agents.mlflow_tools_agent import MLflowToolsAgent
+from ai_data_science_team.ml_agents.model_evaluation_agent import ModelEvaluationAgent
+from ai_data_science_team.multiagents.supervisor_ds_team import make_supervisor_ds_team
+from ai_data_science_team.utils.pipeline import build_pipeline_snapshot
+
 APP_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 TITLE = "AI Pipeline Studio"
 LOGO_PATH = os.path.join(APP_ROOT, "img", "ai_pipeline_studio_logo.png")
@@ -76,7 +77,7 @@ st.markdown(
         [
             "<style>",
             "@media (min-width: 1100px) {",
-            "  [data-testid=\"stDialog\"] [role=\"dialog\"] {",
+            '  [data-testid="stDialog"] [role="dialog"] {',
             "    width: calc(100vw - 2rem) !important;",
             "    max-width: calc(100vw - 2rem) !important;",
             "  }",
@@ -120,9 +121,7 @@ PIPELINE_STUDIO_DATASET_STORE_VERSION = 1
 PIPELINE_STUDIO_DATASET_STORE_PATH = os.path.join(
     APP_ROOT, "pipeline_store", "pipeline_studio_dataset_store.json"
 )
-PIPELINE_STUDIO_DATASET_STORE_DIR = os.path.join(
-    APP_ROOT, "pipeline_store", "pipeline_datasets"
-)
+PIPELINE_STUDIO_DATASET_STORE_DIR = os.path.join(APP_ROOT, "pipeline_store", "pipeline_datasets")
 PIPELINE_STUDIO_DATASET_STORE_MAX_ITEMS = 0
 PIPELINE_STUDIO_DATASET_CACHE_MAX_ITEMS_DEFAULT = 5
 PIPELINE_STUDIO_DATASET_CACHE_MAX_MB_DEFAULT = 500
@@ -138,9 +137,7 @@ PIPELINE_STUDIO_PROFILE_SAMPLE_MAX_ROWS = 5_000
 PIPELINE_STUDIO_PROFILE_SAMPLE_MAX_COLS = 200
 PIPELINE_STUDIO_UI_PREVIEW_MAX_ROWS = 200
 PIPELINE_STUDIO_PROJECTS_VERSION = 1
-PIPELINE_STUDIO_PROJECTS_DIR = os.path.join(
-    APP_ROOT, "pipeline_store", "pipeline_projects"
-)
+PIPELINE_STUDIO_PROJECTS_DIR = os.path.join(APP_ROOT, "pipeline_store", "pipeline_projects")
 PIPELINE_STUDIO_PROJECTS_MAX_ITEMS = 25
 PIPELINE_STUDIO_HISTORY_MAX_ITEMS = 25
 PIPELINE_STUDIO_ARTIFACT_GROUPS = {
@@ -189,12 +186,8 @@ def _pipeline_studio_build_pipelines_from_team_state(team_state: dict) -> dict:
         return {}
     return {
         "model": build_pipeline_snapshot(ds, active_dataset_id=active_id),
-        "active": build_pipeline_snapshot(
-            ds, active_dataset_id=active_id, target="active"
-        ),
-        "latest": build_pipeline_snapshot(
-            ds, active_dataset_id=active_id, target="latest"
-        ),
+        "active": build_pipeline_snapshot(ds, active_dataset_id=active_id, target="active"),
+        "latest": build_pipeline_snapshot(ds, active_dataset_id=active_id, target="latest"),
     }
 
 
@@ -219,16 +212,12 @@ def _pipeline_studio_undo_last_action() -> None:
             return
 
         prev_active = action.get("prev_active_dataset_id")
-        prev_active = (
-            prev_active if isinstance(prev_active, str) and prev_active else None
-        )
+        prev_active = prev_active if isinstance(prev_active, str) and prev_active else None
 
         remove_ids: list[str] = []
         if action_type == "create_dataset":
             dataset_id = action.get("dataset_id")
-            dataset_id = (
-                dataset_id if isinstance(dataset_id, str) and dataset_id else None
-            )
+            dataset_id = dataset_id if isinstance(dataset_id, str) and dataset_id else None
             if dataset_id:
                 remove_ids = [dataset_id]
         else:
@@ -282,9 +271,7 @@ def _pipeline_studio_undo_last_action() -> None:
             active_now = active_now if isinstance(active_now, str) else None
             if prev_active and prev_active in datasets:
                 team_state["active_dataset_id"] = prev_active
-            elif active_now in remove_set or (
-                active_now and active_now not in datasets
-            ):
+            elif active_now in remove_set or (active_now and active_now not in datasets):
                 # pick newest by created_ts
                 best_id = None
                 best_ts = -1.0
@@ -315,9 +302,7 @@ def _pipeline_studio_undo_last_action() -> None:
 
             # Update persisted registry (best effort).
             try:
-                pipelines_new = _pipeline_studio_build_pipelines_from_team_state(
-                    team_state
-                )
+                pipelines_new = _pipeline_studio_build_pipelines_from_team_state(team_state)
                 ds_new = team_state.get("datasets")
                 ds_new = ds_new if isinstance(ds_new, dict) else {}
                 _update_pipeline_registry_store_for_pipelines(
@@ -368,9 +353,7 @@ def _pipeline_studio_redo_last_action() -> None:
         entries_by_id: dict[str, dict] = {}
         if action_type == "create_dataset":
             dataset_id = action.get("dataset_id")
-            dataset_id = (
-                dataset_id if isinstance(dataset_id, str) and dataset_id else None
-            )
+            dataset_id = dataset_id if isinstance(dataset_id, str) and dataset_id else None
             dataset_entry = action.get("dataset_entry")
             dataset_entry = dataset_entry if isinstance(dataset_entry, dict) else None
             if dataset_id and dataset_entry is not None:
@@ -383,9 +366,7 @@ def _pipeline_studio_redo_last_action() -> None:
             eby = action.get("dataset_entries_by_id")
             eby = eby if isinstance(eby, dict) else {}
             entries_by_id = {
-                str(k): v
-                for k, v in eby.items()
-                if isinstance(k, str) and isinstance(v, dict)
+                str(k): v for k, v in eby.items() if isinstance(k, str) and isinstance(v, dict)
             }
 
         if not dataset_ids or any(did not in entries_by_id for did in dataset_ids):
@@ -459,8 +440,7 @@ def _load_pipeline_studio_code_drafts_store() -> dict:
                     store.update(
                         {
                             "version": int(
-                                data.get("version")
-                                or PIPELINE_STUDIO_CODE_DRAFTS_VERSION
+                                data.get("version") or PIPELINE_STUDIO_CODE_DRAFTS_VERSION
                             ),
                             "by_fingerprint": data.get("by_fingerprint") or {},
                         }
@@ -492,16 +472,12 @@ def _save_pipeline_studio_code_drafts_store(store: dict) -> None:
                 ts = 0.0
                 if isinstance(rec, dict):
                     try:
-                        ts = float(
-                            rec.get("updated_ts") or rec.get("created_ts") or 0.0
-                        )
+                        ts = float(rec.get("updated_ts") or rec.get("created_ts") or 0.0)
                     except Exception:
                         ts = 0.0
                 items.append((ts, str(fp)))
             items.sort(reverse=True)
-            keep = {
-                fp for _ts, fp in items[: int(PIPELINE_STUDIO_CODE_DRAFTS_MAX_ITEMS)]
-            }
+            keep = {fp for _ts, fp in items[: int(PIPELINE_STUDIO_CODE_DRAFTS_MAX_ITEMS)]}
             by_fp = {fp: by_fp[fp] for fp in keep if fp in by_fp}
             store["by_fingerprint"] = by_fp
 
@@ -620,9 +596,7 @@ def _pipeline_studio_load_project_manifest(*, project_dir: str) -> dict | None:
     return manifest if isinstance(manifest, dict) else None
 
 
-def _pipeline_studio_write_project_manifest(
-    *, project_dir: str, manifest: dict
-) -> bool:
+def _pipeline_studio_write_project_manifest(*, project_dir: str, manifest: dict) -> bool:
     try:
         import tempfile
 
@@ -630,9 +604,7 @@ def _pipeline_studio_write_project_manifest(
         if not project_dir or not isinstance(manifest, dict):
             return False
         manifest_path = os.path.join(project_dir, "manifest.json")
-        fd, tmp_path = tempfile.mkstemp(
-            prefix="._manifest_", suffix=".json", dir=project_dir
-        )
+        fd, tmp_path = tempfile.mkstemp(prefix="._manifest_", suffix=".json", dir=project_dir)
         try:
             with os.fdopen(fd, "w", encoding="utf-8") as f:
                 json.dump(manifest, f, indent=2, default=str)
@@ -814,15 +786,11 @@ def _pipeline_studio_save_project_metadata(
 ) -> None:
     dir_name = dir_name.strip() if isinstance(dir_name, str) else ""
     if not dir_name:
-        st.session_state["pipeline_studio_project_notice"] = (
-            "Error: Select a project to update."
-        )
+        st.session_state["pipeline_studio_project_notice"] = "Error: Select a project to update."
         return
     project_dir = os.path.join(PIPELINE_STUDIO_PROJECTS_DIR, dir_name)
     if not os.path.isdir(project_dir):
-        st.session_state["pipeline_studio_project_notice"] = (
-            "Error: Project not found on disk."
-        )
+        st.session_state["pipeline_studio_project_notice"] = "Error: Project not found on disk."
         return
     clean_tags = [t.strip() for t in tags if isinstance(t, str) and t.strip()]
     _pipeline_studio_update_project_manifest(
@@ -841,21 +809,15 @@ def _pipeline_studio_save_project_metadata(
 def _pipeline_studio_convert_project_to_metadata_only(*, dir_name: str) -> None:
     dir_name = dir_name.strip() if isinstance(dir_name, str) else ""
     if not dir_name:
-        st.session_state["pipeline_studio_project_notice"] = (
-            "Error: Select a project to convert."
-        )
+        st.session_state["pipeline_studio_project_notice"] = "Error: Select a project to convert."
         return
     project_dir = os.path.join(PIPELINE_STUDIO_PROJECTS_DIR, dir_name)
     if not os.path.isdir(project_dir):
-        st.session_state["pipeline_studio_project_notice"] = (
-            "Error: Project not found on disk."
-        )
+        st.session_state["pipeline_studio_project_notice"] = "Error: Project not found on disk."
         return
     manifest = _pipeline_studio_load_project_manifest(project_dir=project_dir)
     if not isinstance(manifest, dict):
-        st.session_state["pipeline_studio_project_notice"] = (
-            "Error: Manifest not found."
-        )
+        st.session_state["pipeline_studio_project_notice"] = "Error: Manifest not found."
         return
     team = manifest.get("team_state")
     team = team if isinstance(team, dict) else {}
@@ -895,9 +857,7 @@ def _pipeline_studio_convert_project_to_metadata_only(*, dir_name: str) -> None:
 def _pipeline_studio_bulk_delete_projects(dir_names: list[str]) -> None:
     dir_names = [d for d in (dir_names or []) if isinstance(d, str) and d.strip()]
     if not dir_names:
-        st.session_state["pipeline_studio_project_notice"] = (
-            "Error: Select project(s) to delete."
-        )
+        st.session_state["pipeline_studio_project_notice"] = "Error: Select project(s) to delete."
         return
     deleted = 0
     errors: list[str] = []
@@ -916,9 +876,7 @@ def _pipeline_studio_bulk_delete_projects(dir_names: list[str]) -> None:
             f"Deleted {deleted} project(s). Errors: {', '.join(errors)}"
         )
     else:
-        st.session_state["pipeline_studio_project_notice"] = (
-            f"Deleted {deleted} project(s)."
-        )
+        st.session_state["pipeline_studio_project_notice"] = f"Deleted {deleted} project(s)."
 
 
 def _pipeline_studio_list_projects() -> list[dict]:
@@ -940,9 +898,7 @@ def _pipeline_studio_list_projects() -> list[dict]:
             if not isinstance(manifest, dict):
                 continue
             try:
-                saved_ts = float(
-                    manifest.get("saved_ts") or manifest.get("created_ts") or 0.0
-                )
+                saved_ts = float(manifest.get("saved_ts") or manifest.get("created_ts") or 0.0)
             except Exception:
                 saved_ts = 0.0
             try:
@@ -965,8 +921,7 @@ def _pipeline_studio_list_projects() -> list[dict]:
                 data_mode = (
                     "full"
                     if any(
-                        isinstance(rec, dict) and rec.get("data_path")
-                        for rec in ds_meta.values()
+                        isinstance(rec, dict) and rec.get("data_path") for rec in ds_meta.values()
                     )
                     else "metadata_only"
                 )
@@ -1045,9 +1000,7 @@ def _pipeline_studio_save_project(
             project_dir = project_dir.strip()
             os.makedirs(project_dir, exist_ok=True)
             dir_name = os.path.basename(project_dir.rstrip(os.sep)) or "project"
-            existing_manifest = _pipeline_studio_load_project_manifest(
-                project_dir=project_dir
-            )
+            existing_manifest = _pipeline_studio_load_project_manifest(project_dir=project_dir)
             if isinstance(existing_manifest, dict):
                 existing_dir = existing_manifest.get("dir_name")
                 if isinstance(existing_dir, str) and existing_dir:
@@ -1167,9 +1120,7 @@ def _pipeline_studio_save_project(
             except Exception:
                 pass
             try:
-                flow_layout_by_ph[ph] = _get_persisted_pipeline_studio_flow_layout(
-                    pipeline_hash=ph
-                )
+                flow_layout_by_ph[ph] = _get_persisted_pipeline_studio_flow_layout(pipeline_hash=ph)
             except Exception:
                 pass
 
@@ -1203,9 +1154,7 @@ def _pipeline_studio_save_project(
 
         manifest = {
             "version": PIPELINE_STUDIO_PROJECTS_VERSION,
-            "name": name.strip()
-            if isinstance(name, str) and name.strip()
-            else dir_name,
+            "name": name.strip() if isinstance(name, str) and name.strip() else dir_name,
             "saved_ts": time.time(),
             "dir_name": dir_name,
             "data_mode": "full" if include_data else "metadata_only",
@@ -1228,9 +1177,7 @@ def _pipeline_studio_save_project(
             manifest["created_ts"] = prev_created_ts
 
         manifest_path = os.path.join(project_dir, "manifest.json")
-        fd, tmp_path = tempfile.mkstemp(
-            prefix="._manifest_", suffix=".json", dir=project_dir
-        )
+        fd, tmp_path = tempfile.mkstemp(prefix="._manifest_", suffix=".json", dir=project_dir)
         try:
             with os.fdopen(fd, "w", encoding="utf-8") as f:
                 json.dump(manifest, f, indent=2, default=str)
@@ -1305,9 +1252,7 @@ def _pipeline_studio_load_project(*, project_dir: str, rehydrate: bool = True) -
                     except Exception:
                         df = None
                 else:
-                    missing_files.append(
-                        {"dataset_id": did, "data_path": rel_path, "format": fmt}
-                    )
+                    missing_files.append({"dataset_id": did, "data_path": rel_path, "format": fmt})
             entry["data"] = df
             if isinstance(df, pd.DataFrame):
                 loaded_data_files += 1
@@ -1397,11 +1342,9 @@ def _pipeline_studio_load_project(*, project_dir: str, rehydrate: bool = True) -
             if not code:
                 return None
             inferred = _infer_first_def_name(code)
-            fn_name_hint = (
-                fn_name_hint.strip() if isinstance(fn_name_hint, str) else None
-            )
+            fn_name_hint = fn_name_hint.strip() if isinstance(fn_name_hint, str) else None
             function_name = fn_name_hint or inferred or "transform"
-            
+
             result, error = run_code_sandboxed_subprocess(
                 code_snippet=code,
                 function_name=function_name,
@@ -1410,14 +1353,14 @@ def _pipeline_studio_load_project(*, project_dir: str, rehydrate: bool = True) -
                 memory_limit_mb=512,
                 data_format="dataframe",
             )
-            
+
             if error:
                 st.warning(f"Code execution error: {error}")
                 return None
-            
+
             if result is None:
                 return None
-            
+
             try:
                 if isinstance(result, dict):
                     return pd.DataFrame.from_dict(result)
@@ -1427,16 +1370,14 @@ def _pipeline_studio_load_project(*, project_dir: str, rehydrate: bool = True) -
                 return None
             return None
 
-        def _exec_merge(
-            *, code: str, parents: list[pd.DataFrame]
-        ) -> pd.DataFrame | None:
+        def _exec_merge(*, code: str, parents: list[pd.DataFrame]) -> pd.DataFrame | None:
             code = code if isinstance(code, str) else ""
             code = code.strip()
             if not code:
                 return None
-            
+
             parents_data = [df.to_dict() for df in parents]
-            
+
             result, error = run_code_sandboxed_subprocess(
                 code_snippet=code,
                 function_name="merge",
@@ -1445,14 +1386,14 @@ def _pipeline_studio_load_project(*, project_dir: str, rehydrate: bool = True) -
                 memory_limit_mb=512,
                 data_format="dataframe_list",
             )
-            
+
             if error:
                 st.warning(f"Merge execution error: {error}")
                 return None
-            
+
             if result is None:
                 return None
-            
+
             try:
                 if isinstance(result, dict):
                     return pd.DataFrame.from_dict(result)
@@ -1513,8 +1454,8 @@ def _pipeline_studio_load_project(*, project_dir: str, rehydrate: bool = True) -
                     rehydrate_stats["missing_sources"] += 1
                     continue
                 entry_obj["data"] = df_root
-                shape, cols, schema, schema_hash, fingerprint = (
-                    _pipeline_studio_dataset_meta(df_root)
+                shape, cols, schema, schema_hash, fingerprint = _pipeline_studio_dataset_meta(
+                    df_root
                 )
                 entry_obj["shape"] = shape
                 entry_obj["columns"] = cols
@@ -1589,8 +1530,8 @@ def _pipeline_studio_load_project(*, project_dir: str, rehydrate: bool = True) -
                     rehydrate_stats["transform_failures"] += 1
                     continue
                 entry_obj["data"] = out_df
-                shape, cols, schema, schema_hash, fingerprint = (
-                    _pipeline_studio_dataset_meta(out_df)
+                shape, cols, schema, schema_hash, fingerprint = _pipeline_studio_dataset_meta(
+                    out_df
                 )
                 entry_obj["shape"] = shape
                 entry_obj["columns"] = cols
@@ -1602,9 +1543,7 @@ def _pipeline_studio_load_project(*, project_dir: str, rehydrate: bool = True) -
 
             return datasets_map, rehydrate_stats
 
-        missing_data = any(
-            _coerce_entry_df(entry_obj) is None for entry_obj in datasets.values()
-        )
+        missing_data = any(_coerce_entry_df(entry_obj) is None for entry_obj in datasets.values())
         if bool(rehydrate) and (metadata_only or missing_data):
             datasets, rehydrate_stats = _rehydrate_datasets(datasets)
 
@@ -1613,9 +1552,7 @@ def _pipeline_studio_load_project(*, project_dir: str, rehydrate: bool = True) -
         new_team_state = dict(prev)
         new_team_state["datasets"] = datasets
         data_ids = [
-            did
-            for did, entry_obj in datasets.items()
-            if _coerce_entry_df(entry_obj) is not None
+            did for did, entry_obj in datasets.items() if _coerce_entry_df(entry_obj) is not None
         ]
         if active_id and active_id in datasets:
             if data_ids and active_id not in data_ids:
@@ -1677,9 +1614,7 @@ def _pipeline_studio_load_project(*, project_dir: str, rehydrate: bool = True) -
 
         # Recompute registry from loaded datasets (keeps prior UI state if present).
         try:
-            pipelines_new = _pipeline_studio_build_pipelines_from_team_state(
-                new_team_state
-            )
+            pipelines_new = _pipeline_studio_build_pipelines_from_team_state(new_team_state)
             _update_pipeline_registry_store_for_pipelines(
                 pipelines=pipelines_new, datasets=datasets
             )
@@ -1806,6 +1741,7 @@ def _pipeline_studio_dataset_meta(
     """
     try:
         import hashlib
+
         import pandas as _pd
         from pandas.util import hash_pandas_object
 
@@ -1822,11 +1758,7 @@ def _pipeline_studio_dataset_meta(
             for c in col_order[:PIPELINE_STUDIO_SCHEMA_PREVIEW_MAX_COLS]
         ]
         schema_str = "|".join(f"{r['name']}:{r['dtype']}" for r in schema)
-        schema_hash = (
-            hashlib.sha256(schema_str.encode("utf-8")).hexdigest()
-            if schema_str
-            else None
-        )
+        schema_hash = hashlib.sha256(schema_str.encode("utf-8")).hexdigest() if schema_str else None
 
         df_sample = (
             data.reindex(columns=col_order)
@@ -1871,9 +1803,7 @@ def _pipeline_studio_register_dataset(
     ts = time.time()
     normalized_parents: list[str] = []
     if isinstance(parent_ids, list):
-        normalized_parents.extend(
-            [str(p) for p in parent_ids if isinstance(p, str) and p]
-        )
+        normalized_parents.extend([str(p) for p in parent_ids if isinstance(p, str) and p])
     if isinstance(parent_id, str) and parent_id and parent_id not in normalized_parents:
         normalized_parents.insert(0, parent_id)
     normalized_parents = [p for p in normalized_parents if p]
@@ -1923,17 +1853,14 @@ def _load_pipeline_studio_pipeline_registry_store() -> dict:
         out_dir = os.path.dirname(PIPELINE_STUDIO_PIPELINE_REGISTRY_PATH) or "."
         os.makedirs(out_dir, exist_ok=True)
         if os.path.exists(PIPELINE_STUDIO_PIPELINE_REGISTRY_PATH):
-            with open(
-                PIPELINE_STUDIO_PIPELINE_REGISTRY_PATH, "r", encoding="utf-8"
-            ) as f:
+            with open(PIPELINE_STUDIO_PIPELINE_REGISTRY_PATH, "r", encoding="utf-8") as f:
                 data = json.load(f)
             if isinstance(data, dict):
                 if isinstance(data.get("by_pipeline_hash"), dict):
                     store.update(
                         {
                             "version": int(
-                                data.get("version")
-                                or PIPELINE_STUDIO_PIPELINE_REGISTRY_VERSION
+                                data.get("version") or PIPELINE_STUDIO_PIPELINE_REGISTRY_VERSION
                             ),
                             "by_pipeline_hash": data.get("by_pipeline_hash") or {},
                         }
@@ -1965,17 +1892,12 @@ def _save_pipeline_studio_pipeline_registry_store(store: dict) -> None:
                 ts = 0.0
                 if isinstance(rec, dict):
                     try:
-                        ts = float(
-                            rec.get("updated_ts") or rec.get("created_ts") or 0.0
-                        )
+                        ts = float(rec.get("updated_ts") or rec.get("created_ts") or 0.0)
                     except Exception:
                         ts = 0.0
                 items.append((ts, str(ph)))
             items.sort(reverse=True)
-            keep = {
-                ph
-                for _ts, ph in items[: int(PIPELINE_STUDIO_PIPELINE_REGISTRY_MAX_ITEMS)]
-            }
+            keep = {ph for _ts, ph in items[: int(PIPELINE_STUDIO_PIPELINE_REGISTRY_MAX_ITEMS)]}
             by_ph = {ph: by_ph[ph] for ph in keep if ph in by_ph}
             store["by_pipeline_hash"] = by_ph
 
@@ -1985,9 +1907,7 @@ def _save_pipeline_studio_pipeline_registry_store(store: dict) -> None:
 
         out_dir = os.path.dirname(PIPELINE_STUDIO_PIPELINE_REGISTRY_PATH) or "."
         os.makedirs(out_dir, exist_ok=True)
-        fd, tmp_path = tempfile.mkstemp(
-            prefix="._pipeline_registry_", suffix=".json", dir=out_dir
-        )
+        fd, tmp_path = tempfile.mkstemp(prefix="._pipeline_registry_", suffix=".json", dir=out_dir)
         try:
             with os.fdopen(fd, "w", encoding="utf-8") as f:
                 json.dump(store, f, indent=2, default=str)
@@ -2025,23 +1945,17 @@ def _pipeline_studio_registry_signature(record: dict) -> str:
     ).hexdigest()
 
 
-def _pipeline_studio_get_registry_ui(
-    *, pipeline_hash: str
-) -> tuple[set[str], set[str]]:
+def _pipeline_studio_get_registry_ui(*, pipeline_hash: str) -> tuple[set[str], set[str]]:
     try:
         rec = _get_persisted_pipeline_registry(pipeline_hash=pipeline_hash)
         ui = rec.get("ui") if isinstance(rec.get("ui"), dict) else {}
         hidden_ids = ui.get("hidden_ids")
         deleted_ids = ui.get("deleted_ids")
         hidden_set = {
-            str(x)
-            for x in (hidden_ids if isinstance(hidden_ids, list) else [])
-            if str(x).strip()
+            str(x) for x in (hidden_ids if isinstance(hidden_ids, list) else []) if str(x).strip()
         }
         deleted_set = {
-            str(x)
-            for x in (deleted_ids if isinstance(deleted_ids, list) else [])
-            if str(x).strip()
+            str(x) for x in (deleted_ids if isinstance(deleted_ids, list) else []) if str(x).strip()
         }
         return hidden_set, deleted_set
     except Exception:
@@ -2075,9 +1989,7 @@ def _pipeline_studio_set_registry_ui(
         }
         deleted_set = {
             str(x)
-            for x in (
-                deleted_ids if isinstance(deleted_ids, (list, set, tuple)) else []
-            )
+            for x in (deleted_ids if isinstance(deleted_ids, (list, set, tuple)) else [])
             if str(x).strip()
         }
 
@@ -2104,8 +2016,8 @@ def _build_pipeline_registry_record(
     artifacts_by_dataset_id: dict | None,
     ui: dict | None = None,
 ) -> dict:
-    import time
     import hashlib
+    import time
 
     pipeline = pipeline if isinstance(pipeline, dict) else {}
     datasets = datasets if isinstance(datasets, dict) else {}
@@ -2114,9 +2026,7 @@ def _build_pipeline_registry_record(
     )
 
     pipeline_hash = pipeline.get("pipeline_hash")
-    pipeline_hash = (
-        pipeline_hash if isinstance(pipeline_hash, str) and pipeline_hash else None
-    )
+    pipeline_hash = pipeline_hash if isinstance(pipeline_hash, str) and pipeline_hash else None
 
     lineage = pipeline.get("lineage")
     lineage = lineage if isinstance(lineage, list) else []
@@ -2239,18 +2149,10 @@ def _build_pipeline_registry_record(
     hidden_ids = ui.get("hidden_ids")
     deleted_ids = ui.get("deleted_ids")
     hidden_clean = sorted(
-        {
-            str(x)
-            for x in (hidden_ids if isinstance(hidden_ids, list) else [])
-            if str(x).strip()
-        }
+        {str(x) for x in (hidden_ids if isinstance(hidden_ids, list) else []) if str(x).strip()}
     )
     deleted_clean = sorted(
-        {
-            str(x)
-            for x in (deleted_ids if isinstance(deleted_ids, list) else [])
-            if str(x).strip()
-        }
+        {str(x) for x in (deleted_ids if isinstance(deleted_ids, list) else []) if str(x).strip()}
     )
 
     record: dict = {
@@ -2259,9 +2161,7 @@ def _build_pipeline_registry_record(
         "target_dataset_id": pipeline.get("target_dataset_id"),
         "active_dataset_id": pipeline.get("active_dataset_id"),
         "model_dataset_id": pipeline.get("model_dataset_id"),
-        "inputs": pipeline.get("inputs")
-        if isinstance(pipeline.get("inputs"), list)
-        else [],
+        "inputs": pipeline.get("inputs") if isinstance(pipeline.get("inputs"), list) else [],
         "lineage": [
             {k: v for k, v in (x or {}).items() if k != "script"}
             for x in lineage
@@ -2275,16 +2175,12 @@ def _build_pipeline_registry_record(
         },
         "updated_ts": time.time(),
     }
-    sig = hashlib.sha1(
-        json.dumps(record, sort_keys=True, default=str).encode("utf-8")
-    ).hexdigest()
+    sig = hashlib.sha1(json.dumps(record, sort_keys=True, default=str).encode("utf-8")).hexdigest()
     record["signature"] = sig
     return record
 
 
-def _update_pipeline_registry_store_for_pipelines(
-    *, pipelines: dict, datasets: dict
-) -> None:
+def _update_pipeline_registry_store_for_pipelines(*, pipelines: dict, datasets: dict) -> None:
     """
     Persist a lightweight semantic registry keyed by pipeline_hash for each pipeline snapshot.
     """
@@ -2310,9 +2206,7 @@ def _update_pipeline_registry_store_for_pipelines(
                 continue
             pipeline_hash = pipe.get("pipeline_hash")
             pipeline_hash = (
-                pipeline_hash
-                if isinstance(pipeline_hash, str) and pipeline_hash.strip()
-                else None
+                pipeline_hash if isinstance(pipeline_hash, str) and pipeline_hash.strip() else None
             )
             if not pipeline_hash:
                 continue
@@ -2378,8 +2272,7 @@ def _load_pipeline_studio_artifact_store() -> dict:
                     store.update(
                         {
                             "version": int(
-                                data.get("version")
-                                or PIPELINE_STUDIO_ARTIFACT_STORE_VERSION
+                                data.get("version") or PIPELINE_STUDIO_ARTIFACT_STORE_VERSION
                             ),
                             "by_fingerprint": data.get("by_fingerprint") or {},
                         }
@@ -2388,9 +2281,8 @@ def _load_pipeline_studio_artifact_store() -> dict:
                 else:
                     store["by_fingerprint"] = data
             # If we loaded from legacy, migrate to the new location best-effort.
-            if (
-                source_path == PIPELINE_STUDIO_ARTIFACT_STORE_LEGACY_PATH
-                and not os.path.exists(PIPELINE_STUDIO_ARTIFACT_STORE_PATH)
+            if source_path == PIPELINE_STUDIO_ARTIFACT_STORE_LEGACY_PATH and not os.path.exists(
+                PIPELINE_STUDIO_ARTIFACT_STORE_PATH
             ):
                 _save_pipeline_studio_artifact_store(store)
     except Exception:
@@ -2418,16 +2310,12 @@ def _save_pipeline_studio_artifact_store(store: dict) -> None:
                 ts = 0.0
                 if isinstance(rec, dict):
                     try:
-                        ts = float(
-                            rec.get("updated_ts") or rec.get("created_ts") or 0.0
-                        )
+                        ts = float(rec.get("updated_ts") or rec.get("created_ts") or 0.0)
                     except Exception:
                         ts = 0.0
                 items.append((ts, fp))
             items.sort(reverse=True)
-            keep = {
-                fp for _ts, fp in items[: int(PIPELINE_STUDIO_ARTIFACT_STORE_MAX_ITEMS)]
-            }
+            keep = {fp for _ts, fp in items[: int(PIPELINE_STUDIO_ARTIFACT_STORE_MAX_ITEMS)]}
             by_fp = {fp: by_fp[fp] for fp in keep if fp in by_fp}
             store["by_fingerprint"] = by_fp
 
@@ -2454,9 +2342,7 @@ def _save_pipeline_studio_artifact_store(store: dict) -> None:
         pass
 
 
-def _update_pipeline_studio_artifact_store_for_dataset(
-    dataset_id: str, artifacts: dict
-) -> None:
+def _update_pipeline_studio_artifact_store_for_dataset(dataset_id: str, artifacts: dict) -> None:
     """
     Merge artifacts for a dataset into the persisted store, keyed by dataset fingerprint when available.
     """
@@ -2476,9 +2362,7 @@ def _update_pipeline_studio_artifact_store_for_dataset(
         entry = entry if isinstance(entry, dict) else {}
 
         fingerprint = entry.get("fingerprint")
-        fingerprint = (
-            fingerprint if isinstance(fingerprint, str) and fingerprint else None
-        )
+        fingerprint = fingerprint if isinstance(fingerprint, str) and fingerprint else None
         if not fingerprint:
             return
 
@@ -2488,17 +2372,11 @@ def _update_pipeline_studio_artifact_store_for_dataset(
         rec = by_fp.get(fingerprint) if isinstance(by_fp.get(fingerprint), dict) else {}
         rec_art = rec.get("artifacts") if isinstance(rec.get("artifacts"), dict) else {}
         rec_art.update(artifacts)
-        incoming_keys = {
-            str(k)
-            for k in artifacts.keys()
-            if isinstance(k, str) and str(k).strip()
-        }
+        incoming_keys = {str(k) for k in artifacts.keys() if isinstance(k, str) and str(k).strip()}
         if incoming_keys:
             cleared_keys = rec.get("cleared_keys")
             cleared_keys = (
-                {str(x) for x in cleared_keys}
-                if isinstance(cleared_keys, list)
-                else set()
+                {str(x) for x in cleared_keys} if isinstance(cleared_keys, list) else set()
             )
             cleared_keys = {k for k in cleared_keys if k}
             if cleared_keys:
@@ -2587,8 +2465,7 @@ def _load_pipeline_studio_dataset_store() -> dict:
                     store.update(
                         {
                             "version": int(
-                                data.get("version")
-                                or PIPELINE_STUDIO_DATASET_STORE_VERSION
+                                data.get("version") or PIPELINE_STUDIO_DATASET_STORE_VERSION
                             ),
                             "by_dataset_id": by_id,
                             "active_dataset_id": data.get("active_dataset_id"),
@@ -2665,10 +2542,7 @@ def _pipeline_studio_prune_dataset_cache(store: dict) -> dict:
             ts = 0.0
             try:
                 ts = float(
-                    rec.get("saved_ts")
-                    or rec.get("created_ts")
-                    or rec.get("created_at")
-                    or 0.0
+                    rec.get("saved_ts") or rec.get("created_ts") or rec.get("created_at") or 0.0
                 )
             except Exception:
                 ts = 0.0
@@ -2728,9 +2602,7 @@ def _persist_pipeline_studio_dataset_entry(
         if df is None:
             return
 
-        store = (
-            store if isinstance(store, dict) else _load_pipeline_studio_dataset_store()
-        )
+        store = store if isinstance(store, dict) else _load_pipeline_studio_dataset_store()
         by_id = store.get("by_dataset_id")
         by_id = by_id if isinstance(by_id, dict) else {}
 
@@ -2746,18 +2618,14 @@ def _persist_pipeline_studio_dataset_entry(
                 return
 
         os.makedirs(PIPELINE_STUDIO_DATASET_STORE_DIR, exist_ok=True)
-        cache_format = (
-            st.session_state.get("pipeline_dataset_cache_format") or "parquet"
-        )
+        cache_format = st.session_state.get("pipeline_dataset_cache_format") or "parquet"
         cache_format = str(cache_format).strip().lower()
 
         import tempfile
         import time
 
         data_format = "pickle"
-        rel_path = os.path.join(
-            "pipeline_store", "pipeline_datasets", f"{dataset_id}.pkl"
-        )
+        rel_path = os.path.join("pipeline_store", "pipeline_datasets", f"{dataset_id}.pkl")
         abs_path = os.path.join(APP_ROOT, rel_path)
 
         def _write_parquet(path: str) -> bool:
@@ -2777,9 +2645,7 @@ def _persist_pipeline_studio_dataset_entry(
             return False
 
         if cache_format == "parquet":
-            rel_path = os.path.join(
-                "pipeline_store", "pipeline_datasets", f"{dataset_id}.parquet"
-            )
+            rel_path = os.path.join("pipeline_store", "pipeline_datasets", f"{dataset_id}.parquet")
             abs_path = os.path.join(APP_ROOT, rel_path)
             fd, tmp_path = tempfile.mkstemp(
                 prefix="._dataset_",
@@ -2799,9 +2665,7 @@ def _persist_pipeline_studio_dataset_entry(
                         os.remove(tmp_path)
                 except Exception:
                     pass
-                rel_path = os.path.join(
-                    "pipeline_store", "pipeline_datasets", f"{dataset_id}.pkl"
-                )
+                rel_path = os.path.join("pipeline_store", "pipeline_datasets", f"{dataset_id}.pkl")
                 abs_path = os.path.join(APP_ROOT, rel_path)
                 fd, tmp_path = tempfile.mkstemp(
                     prefix="._dataset_",
@@ -2877,9 +2741,7 @@ def _persist_pipeline_studio_team_state(*, team_state: dict) -> None:
                 continue
             entry = entry if isinstance(entry, dict) else {}
             entry = {**entry, "id": entry.get("id") or did}
-            _persist_pipeline_studio_dataset_entry(
-                dataset_id=did, entry=entry, store=store
-            )
+            _persist_pipeline_studio_dataset_entry(dataset_id=did, entry=entry, store=store)
             by_id = store.get("by_dataset_id")
             by_id = by_id if isinstance(by_id, dict) else {}
 
@@ -3015,9 +2877,7 @@ def _pipeline_studio_get_artifact_clear_keys(*, dataset_id: str | None) -> set[s
     entry = datasets.get(dataset_id)
     entry = entry if isinstance(entry, dict) else {}
     fingerprint = entry.get("fingerprint")
-    fingerprint = (
-        fingerprint if isinstance(fingerprint, str) and fingerprint.strip() else None
-    )
+    fingerprint = fingerprint if isinstance(fingerprint, str) and fingerprint.strip() else None
     if fingerprint:
         store = _load_pipeline_studio_artifact_store()
         by_fp = store.get("by_fingerprint")
@@ -3030,9 +2890,7 @@ def _pipeline_studio_get_artifact_clear_keys(*, dataset_id: str | None) -> set[s
     return clears
 
 
-def _pipeline_studio_clear_dataset_artifacts(
-    *, dataset_id: str, keys: list[str]
-) -> None:
+def _pipeline_studio_clear_dataset_artifacts(*, dataset_id: str, keys: list[str]) -> None:
     dataset_id = dataset_id.strip() if isinstance(dataset_id, str) else ""
     if not dataset_id:
         st.session_state["pipeline_studio_artifact_notice"] = (
@@ -3043,15 +2901,11 @@ def _pipeline_studio_clear_dataset_artifacts(
         {
             str(k)
             for k in (keys or [])
-            if isinstance(k, str)
-            and str(k).strip()
-            and str(k) in PIPELINE_STUDIO_ARTIFACT_KEYS
+            if isinstance(k, str) and str(k).strip() and str(k) in PIPELINE_STUDIO_ARTIFACT_KEYS
         }
     )
     if not keys:
-        st.session_state["pipeline_studio_artifact_notice"] = (
-            "Error: Select artifacts to remove."
-        )
+        st.session_state["pipeline_studio_artifact_notice"] = "Error: Select artifacts to remove."
         return
 
     idx_map = st.session_state.get("pipeline_studio_artifacts")
@@ -3080,9 +2934,7 @@ def _pipeline_studio_clear_dataset_artifacts(
     entry = datasets.get(dataset_id)
     entry = entry if isinstance(entry, dict) else {}
     fingerprint = entry.get("fingerprint")
-    fingerprint = (
-        fingerprint if isinstance(fingerprint, str) and fingerprint.strip() else None
-    )
+    fingerprint = fingerprint if isinstance(fingerprint, str) and fingerprint.strip() else None
     if fingerprint:
         try:
             import time as _time
@@ -3113,9 +2965,7 @@ def _pipeline_studio_clear_dataset_artifacts(
     try:
         pipelines = _pipeline_studio_build_pipelines_from_team_state(team_state)
         datasets = datasets if isinstance(datasets, dict) else {}
-        _update_pipeline_registry_store_for_pipelines(
-            pipelines=pipelines, datasets=datasets
-        )
+        _update_pipeline_registry_store_for_pipelines(pipelines=pipelines, datasets=datasets)
     except Exception:
         pass
 
@@ -3153,8 +3003,7 @@ def _load_pipeline_studio_flow_layout_store() -> dict:
                     store.update(
                         {
                             "version": int(
-                                data.get("version")
-                                or PIPELINE_STUDIO_FLOW_LAYOUT_VERSION
+                                data.get("version") or PIPELINE_STUDIO_FLOW_LAYOUT_VERSION
                             ),
                             "by_pipeline_hash": data.get("by_pipeline_hash") or {},
                         }
@@ -3187,16 +3036,12 @@ def _save_pipeline_studio_flow_layout_store(store: dict) -> None:
                 ts = 0.0
                 if isinstance(rec, dict):
                     try:
-                        ts = float(
-                            rec.get("updated_ts") or rec.get("created_ts") or 0.0
-                        )
+                        ts = float(rec.get("updated_ts") or rec.get("created_ts") or 0.0)
                     except Exception:
                         ts = 0.0
                 items.append((ts, str(ph)))
             items.sort(reverse=True)
-            keep = {
-                ph for _ts, ph in items[: int(PIPELINE_STUDIO_FLOW_LAYOUT_MAX_ITEMS)]
-            }
+            keep = {ph for _ts, ph in items[: int(PIPELINE_STUDIO_FLOW_LAYOUT_MAX_ITEMS)]}
             by_ph = {ph: by_ph[ph] for ph in keep if ph in by_ph}
             store["by_pipeline_hash"] = by_ph
 
@@ -3389,20 +3234,12 @@ def _pipeline_studio_chat_context(*, include_code: bool = False) -> str:
         if isinstance(shape, (list, tuple)) and len(shape) == 2:
             shape_str = f"{shape[0]}x{shape[1]}"
 
-        prov = (
-            entry.get("provenance") if isinstance(entry.get("provenance"), dict) else {}
-        )
-        transform = (
-            prov.get("transform") if isinstance(prov.get("transform"), dict) else {}
-        )
-        _title, code_text, code_lang, kind = _pipeline_studio_transform_code_snippet(
-            transform
-        )
+        prov = entry.get("provenance") if isinstance(entry.get("provenance"), dict) else {}
+        transform = prov.get("transform") if isinstance(prov.get("transform"), dict) else {}
+        _title, code_text, code_lang, kind = _pipeline_studio_transform_code_snippet(transform)
 
         preserve_all = bool(st.session_state.get("pipeline_preserve_all_nodes", True))
-        preserve_studio = bool(
-            st.session_state.get("pipeline_preserve_studio_nodes", True)
-        )
+        preserve_studio = bool(st.session_state.get("pipeline_preserve_studio_nodes", True))
         locked_ids = st.session_state.get("pipeline_studio_locked_node_ids") or []
         locked_ids = [str(x) for x in locked_ids if isinstance(x, str) and x.strip()]
 
@@ -3416,9 +3253,7 @@ def _pipeline_studio_chat_context(*, include_code: bool = False) -> str:
             f"transform_kind: {kind}" if kind else None,
             f"shape: {shape_str}" if shape_str else None,
             "preserve_nodes: all" if preserve_all else None,
-            "preserve_nodes: studio_only"
-            if (not preserve_all and preserve_studio)
-            else None,
+            "preserve_nodes: studio_only" if (not preserve_all and preserve_studio) else None,
             f"locked_node_ids: {', '.join(locked_ids[:10])}" if locked_ids else None,
         ]
         lines = [x for x in lines if isinstance(x, str) and x.strip()]
@@ -3426,9 +3261,9 @@ def _pipeline_studio_chat_context(*, include_code: bool = False) -> str:
         if len(datasets) > 1:
             ordered = sorted(
                 datasets.items(),
-                key=lambda kv: float(kv[1].get("created_ts") or 0.0)
-                if isinstance(kv[1], dict)
-                else 0.0,
+                key=lambda kv: (
+                    float(kv[1].get("created_ts") or 0.0) if isinstance(kv[1], dict) else 0.0
+                ),
                 reverse=True,
             )
             lines.append(f"available_datasets: {len(datasets)}")
@@ -3607,24 +3442,18 @@ def _pipeline_studio_reset_project(*, clear_cache: bool, add_memory: bool) -> No
 def _pipeline_studio_delete_project(dir_name: str | None = None) -> None:
     dir_name = dir_name.strip() if isinstance(dir_name, str) else ""
     if not dir_name:
-        st.session_state["pipeline_studio_project_notice"] = (
-            "Error: Select a project to delete."
-        )
+        st.session_state["pipeline_studio_project_notice"] = "Error: Select a project to delete."
         return
     project_dir = os.path.join(PIPELINE_STUDIO_PROJECTS_DIR, dir_name)
     if not os.path.isdir(project_dir):
-        st.session_state["pipeline_studio_project_notice"] = (
-            "Error: Project not found on disk."
-        )
+        st.session_state["pipeline_studio_project_notice"] = "Error: Project not found on disk."
         return
     try:
         shutil.rmtree(project_dir)
     except Exception as exc:
         st.session_state["pipeline_studio_project_notice"] = f"Error: {exc}"
         return
-    st.session_state["pipeline_studio_project_notice"] = (
-        f"Deleted project `{dir_name}`."
-    )
+    st.session_state["pipeline_studio_project_notice"] = f"Deleted project `{dir_name}`."
     loaded_dir = st.session_state.get("pipeline_studio_loaded_project_dir")
     if isinstance(loaded_dir, str) and os.path.normpath(loaded_dir) == os.path.normpath(
         project_dir
@@ -3830,9 +3659,11 @@ def _normalize_db_target_to_sqlalchemy_url(
             return None, f"Invalid SQLAlchemy URL: {e}"
 
         # Avoid accidentally creating new sqlite files for typos.
-        if str(parsed.drivername or "").startswith(
-            "sqlite"
-        ) and parsed.database not in (None, "", ":memory:"):
+        if str(parsed.drivername or "").startswith("sqlite") and parsed.database not in (
+            None,
+            "",
+            ":memory:",
+        ):
             # database may be absolute or relative; interpret relative to cwd
             db_path = str(parsed.database)
             if not os.path.isabs(db_path):
@@ -3934,9 +3765,7 @@ def _parse_db_connect_command(prompt: str) -> dict | None:
     }
 
 
-def _replace_last_human_message(
-    messages: list[BaseMessage], new_content: str
-) -> list[BaseMessage]:
+def _replace_last_human_message(messages: list[BaseMessage], new_content: str) -> list[BaseMessage]:
     """
     Return a shallow-copied messages list with the last HumanMessage content replaced.
     """
@@ -4041,9 +3870,7 @@ def persist_pipeline_artifacts(
 
         base_dir = os.path.abspath(os.path.expanduser(base_dir))
         if os.path.exists(base_dir) and not os.path.isdir(base_dir):
-            return {
-                "error": f"Pipeline persist path exists and is not a directory: {base_dir}"
-            }
+            return {"error": f"Pipeline persist path exists and is not a directory: {base_dir}"}
 
         pipeline_hash = pipeline.get("pipeline_hash")
         model_id = pipeline.get("model_dataset_id") or pipeline.get("active_dataset_id")
@@ -4180,9 +4007,7 @@ def _pipeline_studio_ui_state(
     *, team_state: dict | None = None
 ) -> tuple[list[str], set[str], set[str], str, list[str]]:
     team_state = (
-        team_state
-        if isinstance(team_state, dict)
-        else st.session_state.get("team_state", {})
+        team_state if isinstance(team_state, dict) else st.session_state.get("team_state", {})
     )
     team_state = team_state if isinstance(team_state, dict) else {}
     datasets = team_state.get("datasets")
@@ -4193,19 +4018,13 @@ def _pipeline_studio_ui_state(
     target_key = _pipeline_studio_target_key_from_label(
         target_label if isinstance(target_label, str) else None
     )
-    pipe = build_pipeline_snapshot(
-        datasets, active_dataset_id=active_id, target=target_key
-    )
+    pipe = build_pipeline_snapshot(datasets, active_dataset_id=active_id, target=target_key)
     lineage = pipe.get("lineage") if isinstance(pipe, dict) else None
     lineage = lineage if isinstance(lineage, list) else []
-    node_ids = [
-        str(x.get("id")) for x in lineage if isinstance(x, dict) and x.get("id")
-    ]
+    node_ids = [str(x.get("id")) for x in lineage if isinstance(x, dict) and x.get("id")]
     pipeline_hash = pipe.get("pipeline_hash") if isinstance(pipe, dict) else None
     pipeline_hash = (
-        pipeline_hash.strip()
-        if isinstance(pipeline_hash, str) and pipeline_hash.strip()
-        else ""
+        pipeline_hash.strip() if isinstance(pipeline_hash, str) and pipeline_hash.strip() else ""
     )
     hidden_ids, deleted_ids = (
         _pipeline_studio_get_registry_ui(pipeline_hash=pipeline_hash)
@@ -4214,21 +4033,15 @@ def _pipeline_studio_ui_state(
     )
     hidden_ids = set(hidden_ids)
     deleted_ids = set(deleted_ids)
-    visible_ids = [
-        did for did in node_ids if did not in hidden_ids and did not in deleted_ids
-    ]
+    visible_ids = [did for did in node_ids if did not in hidden_ids and did not in deleted_ids]
     if not visible_ids and datasets:
         visible_ids = [
-            did
-            for did in datasets.keys()
-            if did not in hidden_ids and did not in deleted_ids
+            did for did in datasets.keys() if did not in hidden_ids and did not in deleted_ids
         ]
     return visible_ids, hidden_ids, deleted_ids, pipeline_hash, node_ids
 
 
-def _pick_latest_dataset_id(
-    datasets: dict, candidate_ids: set[str] | list[str]
-) -> str | None:
+def _pick_latest_dataset_id(datasets: dict, candidate_ids: set[str] | list[str]) -> str | None:
     datasets = datasets if isinstance(datasets, dict) else {}
     best_id = None
     best_ts = -1.0
@@ -4259,15 +4072,13 @@ def _sync_pipeline_targets_after_ui_change() -> None:
         datasets = datasets if isinstance(datasets, dict) else {}
         if not datasets:
             return
-        visible_ids, hidden_ids, deleted_ids, _p_hash, _node_ids = (
-            _pipeline_studio_ui_state(team_state=team_state)
+        visible_ids, hidden_ids, deleted_ids, _p_hash, _node_ids = _pipeline_studio_ui_state(
+            team_state=team_state
         )
         visible_set = set(visible_ids) if visible_ids else set(datasets.keys())
         if hidden_ids or deleted_ids:
             visible_set = {
-                did
-                for did in visible_set
-                if did not in hidden_ids and did not in deleted_ids
+                did for did in visible_set if did not in hidden_ids and did not in deleted_ids
             }
         active_id = team_state.get("active_dataset_id")
         active_id = active_id if isinstance(active_id, str) else None
@@ -4279,9 +4090,7 @@ def _sync_pipeline_targets_after_ui_change() -> None:
                 st.session_state["team_state"] = team_state
                 _persist_pipeline_studio_team_state(team_state=team_state)
         current_sel = st.session_state.get("pipeline_studio_node_id")
-        if visible_set and (
-            not isinstance(current_sel, str) or current_sel not in visible_set
-        ):
+        if visible_set and (not isinstance(current_sel, str) or current_sel not in visible_set):
             fallback = (
                 team_state.get("active_dataset_id")
                 if isinstance(team_state.get("active_dataset_id"), str)
@@ -4421,7 +4230,9 @@ with st.sidebar:
                 selected_dir_name = st.selectbox(
                     "Saved projects",
                     options=[""] + options,
-                    format_func=lambda x: "Select a project…" if not x else _fmt_project_dir(str(x)),
+                    format_func=lambda x: (
+                        "Select a project…" if not x else _fmt_project_dir(str(x))
+                    ),
                     key="pipeline_studio_sidebar_project_select",
                 )
                 rehydrate = st.checkbox(
@@ -4496,9 +4307,7 @@ with st.sidebar:
                 key_status = "bad"
                 st.error(f"Invalid API Key: {e}")
         else:
-            st.info(
-                "Please enter your OpenAI API key to proceed (or switch to Ollama)."
-            )
+            st.info("Please enter your OpenAI API key to proceed (or switch to Ollama).")
             st.stop()
 
         model_choice = st.selectbox(
@@ -4522,9 +4331,7 @@ with st.sidebar:
             )
             st.stop()
 
-        default_ollama_url = (
-            st.session_state.get("ollama_base_url") or "http://localhost:11434"
-        )
+        default_ollama_url = st.session_state.get("ollama_base_url") or "http://localhost:11434"
         default_ollama_model = st.session_state.get("ollama_model") or "llama3.1:8b"
         ollama_base_url = st.text_input(
             "Ollama base URL",
@@ -4544,20 +4351,18 @@ with st.sidebar:
 
         model_choice = ollama_model
 
-        if st.button(
-            "Check Ollama connection", width="stretch", key="ollama_check"
-        ):
+        if st.button("Check Ollama connection", width="stretch", key="ollama_check"):
             try:
-                from urllib.request import Request, urlopen
-                from urllib.parse import urlparse
-                import socket
                 import ipaddress
                 import json as _json
+                import socket
+                from urllib.parse import urlparse
+                from urllib.request import Request, urlopen
 
-                ALLOWED_OLLAMA_HOSTS = {'localhost', '127.0.0.1', '::1', 'host.docker.internal'}
-                
+                ALLOWED_OLLAMA_HOSTS = {"localhost", "127.0.0.1", "::1", "host.docker.internal"}
+
                 parsed = urlparse(ollama_base_url)
-                if parsed.scheme not in ('http', 'https'):
+                if parsed.scheme not in ("http", "https"):
                     st.error("Only HTTP/HTTPS URLs are allowed.")
                 elif not parsed.hostname:
                     st.error("Invalid URL: no hostname found.")
@@ -4565,7 +4370,9 @@ with st.sidebar:
                     try:
                         ip = socket.gethostbyname(parsed.hostname)
                         ip_obj = ipaddress.ip_address(ip)
-                        if (ip_obj.is_private or ip_obj.is_loopback) and parsed.hostname not in ALLOWED_OLLAMA_HOSTS:
+                        if (
+                            ip_obj.is_private or ip_obj.is_loopback
+                        ) and parsed.hostname not in ALLOWED_OLLAMA_HOSTS:
                             st.error("Access to internal hosts is not allowed.")
                         else:
                             url = f"{ollama_base_url.rstrip('/')}/api/tags"
@@ -4621,19 +4428,15 @@ with st.sidebar:
     datasets = team_state.get("datasets")
     datasets = datasets if isinstance(datasets, dict) else {}
     current_active_id = team_state.get("active_dataset_id")
-    current_active_id = (
-        current_active_id if isinstance(current_active_id, str) else None
-    )
+    current_active_id = current_active_id if isinstance(current_active_id, str) else None
     current_active_key = team_state.get("active_data_key")
-    visible_ids, ui_hidden_ids, ui_deleted_ids, _p_hash, _node_ids = (
-        _pipeline_studio_ui_state(team_state=team_state)
+    visible_ids, ui_hidden_ids, ui_deleted_ids, _p_hash, _node_ids = _pipeline_studio_ui_state(
+        team_state=team_state
     )
     visible_set = set(visible_ids) if visible_ids else set(datasets.keys())
     if ui_hidden_ids or ui_deleted_ids:
         visible_set = {
-            did
-            for did in visible_set
-            if did not in ui_hidden_ids and did not in ui_deleted_ids
+            did for did in visible_set if did not in ui_hidden_ids and did not in ui_deleted_ids
         }
     if visible_set and (not current_active_id or current_active_id not in visible_set):
         new_active = _pick_latest_dataset_id(datasets, visible_set)
@@ -4664,18 +4467,16 @@ with st.sidebar:
         st.caption(f"Current active dataset: `{current_active_key}`")
 
     if st.session_state.pop(ACTIVE_DATASET_OVERRIDE_SYNC_FLAG, False):
-        pending_override = st.session_state.pop(
-            ACTIVE_DATASET_OVERRIDE_PENDING_KEY, None
-        )
+        pending_override = st.session_state.pop(ACTIVE_DATASET_OVERRIDE_PENDING_KEY, None)
         pending_override = pending_override if pending_override is not None else ""
         st.session_state["active_dataset_id_override"] = pending_override
 
     if datasets:
         ordered = sorted(
             [(did, ent) for did, ent in datasets.items() if did in visible_set],
-            key=lambda kv: float(kv[1].get("created_ts") or 0.0)
-            if isinstance(kv[1], dict)
-            else 0.0,
+            key=lambda kv: (
+                float(kv[1].get("created_ts") or 0.0) if isinstance(kv[1], dict) else 0.0
+            ),
             reverse=True,
         )
         options = [""] + [did for did, _ in ordered]
@@ -4702,9 +4503,7 @@ with st.sidebar:
             help="Overrides which dataset is considered active for downstream steps (EDA/viz/wrangle/clean).",
             key="active_dataset_id_override",
         )
-        st.caption(
-            "For merges, use Pipeline Studio (create a node with multiple parents)."
-        )
+        st.caption("For merges, use Pipeline Studio (create a node with multiple parents).")
     else:
         st.session_state["active_dataset_id_override"] = ""
         st.selectbox(
@@ -4768,9 +4567,7 @@ with st.sidebar:
             disabled=not bool(persist_enabled),
         )
         cache_format = st.session_state.get("pipeline_dataset_cache_format")
-        cache_format = (
-            cache_format if cache_format in {"parquet", "pickle"} else "parquet"
-        )
+        cache_format = cache_format if cache_format in {"parquet", "pickle"} else "parquet"
         st.selectbox(
             "Dataset cache format",
             options=["parquet", "pickle"],
@@ -4808,9 +4605,7 @@ with st.sidebar:
             disabled=not bool(persist_enabled),
         )
     if st.session_state.get("last_pipeline_persist_dir"):
-        st.caption(
-            f"Last saved pipeline: `{st.session_state.get('last_pipeline_persist_dir')}`"
-        )
+        st.caption(f"Last saved pipeline: `{st.session_state.get('last_pipeline_persist_dir')}`")
 
     st.markdown("**Chat ↔ Pipeline context**")
     st.checkbox(
@@ -4841,13 +4636,9 @@ with st.sidebar:
     if "sql_url" not in st.session_state:
         st.session_state["sql_url"] = DEFAULT_SQL_URL
     if SQL_URL_INPUT_KEY not in st.session_state:
-        st.session_state[SQL_URL_INPUT_KEY] = st.session_state.get(
-            "sql_url", DEFAULT_SQL_URL
-        )
+        st.session_state[SQL_URL_INPUT_KEY] = st.session_state.get("sql_url", DEFAULT_SQL_URL)
     if st.session_state.pop(SQL_URL_SYNC_FLAG, False):
-        st.session_state[SQL_URL_INPUT_KEY] = st.session_state.get(
-            "sql_url", DEFAULT_SQL_URL
-        )
+        st.session_state[SQL_URL_INPUT_KEY] = st.session_state.get("sql_url", DEFAULT_SQL_URL)
 
     sql_url_input = st.text_input(
         "SQLAlchemy URL (optional)",
@@ -4877,8 +4668,7 @@ with st.sidebar:
     default_mlflow_artifact_root = os.path.abspath("mlflow_artifacts")
     mlflow_artifact_root = st.text_input(
         "MLflow artifact root (local path)",
-        value=st.session_state.get("mlflow_artifact_root")
-        or default_mlflow_artifact_root,
+        value=st.session_state.get("mlflow_artifact_root") or default_mlflow_artifact_root,
         key="mlflow_artifact_root_input",
         help=(
             "Where MLflow stores artifacts (models, tables, plots). "
@@ -4891,12 +4681,8 @@ with st.sidebar:
         key="mlflow_experiment_name_input",
     ).strip()
     st.session_state["enable_mlflow_logging"] = bool(enable_mlflow_logging)
-    st.session_state["mlflow_tracking_uri"] = (
-        mlflow_tracking_uri or ""
-    ).strip() or None
-    st.session_state["mlflow_artifact_root"] = (
-        mlflow_artifact_root or ""
-    ).strip() or None
+    st.session_state["mlflow_tracking_uri"] = (mlflow_tracking_uri or "").strip() or None
+    st.session_state["mlflow_artifact_root"] = (mlflow_artifact_root or "").strip() or None
     st.session_state["mlflow_experiment_name"] = (
         mlflow_experiment_name or ""
     ).strip() or "H2O AutoML"
@@ -4958,9 +4744,7 @@ def build_team(
     llm_provider = (llm_provider or "OpenAI").strip()
     if llm_provider.lower() == "ollama":
         if ChatOllama is None:
-            raise RuntimeError(
-                "Ollama provider selected but `langchain-ollama` is not installed."
-            )
+            raise RuntimeError("Ollama provider selected but `langchain-ollama` is not installed.")
         kwargs: dict[str, object] = {"model": model_name}
         base_url = (ollama_base_url or "").strip()
         if base_url:
@@ -4992,15 +4776,11 @@ def build_team(
             llm_kwargs["output_version"] = "responses/v1"
         llm = ChatOpenAI(**llm_kwargs)
     workflow_planner_agent = WorkflowPlannerAgent(llm)
-    data_loader_agent = DataLoaderToolsAgent(
-        llm, invoke_react_agent_kwargs={"recursion_limit": 4}
-    )
+    data_loader_agent = DataLoaderToolsAgent(llm, invoke_react_agent_kwargs={"recursion_limit": 4})
     data_wrangling_agent = DataWranglingAgent(llm, log=False)
     data_cleaning_agent = DataCleaningAgent(llm, log=False)
     eda_tools_agent = EDAToolsAgent(llm, log_tool_calls=True)
-    data_visualization_agent = DataVisualizationAgent(
-        llm, log=bool(debug_mode)
-    )
+    data_visualization_agent = DataVisualizationAgent(llm, log=bool(debug_mode))
     # SQL connection is optional; default to in-memory sqlite to satisfy constructor.
     resolved_sql_url = (sql_url or DEFAULT_SQL_URL).strip() or DEFAULT_SQL_URL
     engine_kwargs: dict = {}
@@ -5087,9 +4867,7 @@ def get_input_data():
             safe_name = os.path.basename(getattr(uploaded_file, "name", "upload.csv"))
             upload_dir = os.path.join("temp", "uploads")
             os.makedirs(upload_dir, exist_ok=True)
-            saved_path = os.path.abspath(
-                os.path.join(upload_dir, f"{digest}_{safe_name}")
-            )
+            saved_path = os.path.abspath(os.path.join(upload_dir, f"{digest}_{safe_name}"))
             if not os.path.exists(saved_path):
                 with open(saved_path, "wb") as f:
                     f.write(raw_bytes)
@@ -5131,17 +4909,11 @@ def get_input_data():
             datasets = datasets if isinstance(datasets, dict) else {}
 
             prov = provenance if isinstance(provenance, dict) else {}
-            prov_source = (
-                prov.get("source") if isinstance(prov.get("source"), str) else None
-            )
-            prov_sha = (
-                prov.get("sha256") if isinstance(prov.get("sha256"), str) else None
-            )
+            prov_source = prov.get("source") if isinstance(prov.get("source"), str) else None
+            prov_sha = prov.get("sha256") if isinstance(prov.get("sha256"), str) else None
             seed_key = (prov_sha or prov_source or "").strip() or None
             prev_seed_key = st.session_state.get("pipeline_studio_seed_key")
-            prev_seed_key = (
-                prev_seed_key.strip() if isinstance(prev_seed_key, str) else None
-            )
+            prev_seed_key = prev_seed_key.strip() if isinstance(prev_seed_key, str) else None
             is_new_selection = bool(seed_key and seed_key != prev_seed_key)
 
             match_id = None
@@ -5199,14 +4971,8 @@ def get_input_data():
                     )
                     st.session_state["team_state"] = new_state
                     try:
-                        pipelines_new = (
-                            _pipeline_studio_build_pipelines_from_team_state(new_state)
-                        )
-                        ds_new = (
-                            new_state.get("datasets")
-                            if isinstance(new_state, dict)
-                            else {}
-                        )
+                        pipelines_new = _pipeline_studio_build_pipelines_from_team_state(new_state)
+                        ds_new = new_state.get("datasets") if isinstance(new_state, dict) else {}
                         ds_new = ds_new if isinstance(ds_new, dict) else {}
                         _update_pipeline_registry_store_for_pipelines(
                             pipelines=pipelines_new, datasets=ds_new
@@ -5289,9 +5055,9 @@ def _render_analysis_detail(detail: dict, key_suffix: str) -> None:
         if datasets_now:
             ordered_now = sorted(
                 datasets_now.items(),
-                key=lambda kv: float(kv[1].get("created_ts") or 0.0)
-                if isinstance(kv[1], dict)
-                else 0.0,
+                key=lambda kv: (
+                    float(kv[1].get("created_ts") or 0.0) if isinstance(kv[1], dict) else 0.0
+                ),
                 reverse=True,
             )
             options_now = [did for did, _e in ordered_now if isinstance(did, str)]
@@ -5331,9 +5097,7 @@ def _render_analysis_detail(detail: dict, key_suffix: str) -> None:
                 selected_now = st.selectbox(
                     "Set active dataset",
                     options=options_now,
-                    index=options_now.index(active_now)
-                    if active_now in options_now
-                    else 0,
+                    index=options_now.index(active_now) if active_now in options_now else 0,
                     format_func=_fmt_dataset_now,
                     key=f"pipeline_active_pick_{key_suffix}",
                 )
@@ -5345,9 +5109,7 @@ def _render_analysis_detail(detail: dict, key_suffix: str) -> None:
                 ):
                     _set_active_dataset_now(selected_now)
             with cols[2]:
-                target_id = (
-                    pipe.get("target_dataset_id") if isinstance(pipe, dict) else None
-                )
+                target_id = pipe.get("target_dataset_id") if isinstance(pipe, dict) else None
                 if isinstance(target_id, str) and target_id in datasets_now:
                     if st.button(
                         "Use target",
@@ -5366,18 +5128,14 @@ def _render_analysis_detail(detail: dict, key_suffix: str) -> None:
                 st.caption(
                     "Active dataset override is set in the sidebar and may supersede this selection."
                 )
-            notice = st.session_state.pop(
-                f"pipeline_active_dataset_notice_{key_suffix}", None
-            )
+            notice = st.session_state.pop(f"pipeline_active_dataset_notice_{key_suffix}", None)
             if isinstance(notice, str) and notice.strip():
                 st.success(notice)
         if isinstance(pipe, dict) and pipe.get("lineage"):
             inputs = pipe.get("inputs") or []
             inputs_txt = ""
             if isinstance(inputs, list) and inputs:
-                inputs_txt = (
-                    f"  \n**Inputs:** {', '.join([f'`{i}`' for i in inputs if i])}"
-                )
+                inputs_txt = f"  \n**Inputs:** {', '.join([f'`{i}`' for i in inputs if i])}"
             target_display = (
                 "all"
                 if str(pipe.get("target") or "").strip().lower() == "all"
@@ -5436,19 +5194,14 @@ def _render_analysis_detail(detail: dict, key_suffix: str) -> None:
             fe_code = detail.get("feature_engineering_code")
             train_code = detail.get("model_training_code")
             pred_code = detail.get("prediction_code")
-            if any(
-                isinstance(x, str) and x.strip()
-                for x in (fe_code, train_code, pred_code)
-            ):
+            if any(isinstance(x, str) and x.strip() for x in (fe_code, train_code, pred_code)):
                 st.markdown("---")
                 st.markdown("**ML / Prediction Steps (best effort)**")
                 if isinstance(fe_code, str) and fe_code.strip():
                     with st.expander("Feature engineering code", expanded=False):
                         st.code(fe_code, language="python")
                 if isinstance(train_code, str) and train_code.strip():
-                    with st.expander(
-                        "Model training code (H2O AutoML)", expanded=False
-                    ):
+                    with st.expander("Model training code (H2O AutoML)", expanded=False):
                         st.code(train_code, language="python")
                 if isinstance(pred_code, str) and pred_code.strip():
                     with st.expander("Prediction code", expanded=False):
@@ -5558,11 +5311,7 @@ def _render_analysis_detail(detail: dict, key_suffix: str) -> None:
             st.warning(viz_warning)
         if graph_json:
             try:
-                payload = (
-                    json.dumps(graph_json)
-                    if isinstance(graph_json, dict)
-                    else graph_json
-                )
+                payload = json.dumps(graph_json) if isinstance(graph_json, dict) else graph_json
                 fig = _apply_streamlit_plot_style(pio.from_json(payload))
                 st.plotly_chart(
                     fig,
@@ -5576,9 +5325,7 @@ def _render_analysis_detail(detail: dict, key_suffix: str) -> None:
     # EDA Reports
     with tabs[5]:
         reports = detail.get("eda_reports") if isinstance(detail, dict) else None
-        sweetviz_file = (
-            reports.get("sweetviz_report_file") if isinstance(reports, dict) else None
-        )
+        sweetviz_file = reports.get("sweetviz_report_file") if isinstance(reports, dict) else None
         dtale_url = reports.get("dtale_url") if isinstance(reports, dict) else None
 
         if sweetviz_file:
@@ -5626,11 +5373,7 @@ def _render_analysis_detail(detail: dict, key_suffix: str) -> None:
             st.json(eval_art)
         if eval_graph:
             try:
-                payload = (
-                    json.dumps(eval_graph)
-                    if isinstance(eval_graph, dict)
-                    else eval_graph
-                )
+                payload = json.dumps(eval_graph) if isinstance(eval_graph, dict) else eval_graph
                 fig = _apply_streamlit_plot_style(pio.from_json(payload))
                 st.plotly_chart(
                     fig,
@@ -5695,15 +5438,12 @@ def _render_analysis_detail(detail: dict, key_suffix: str) -> None:
                             width="stretch",
                         )
                         if any(
-                            c in df.columns
-                            for c in ("params", "metrics", "tags", "artifact_uri")
+                            c in df.columns for c in ("params", "metrics", "tags", "artifact_uri")
                         ):
                             with st.expander("Raw run details", expanded=False):
                                 st.json(obj)
                         return
-                    if isinstance(obj, dict) and isinstance(
-                        obj.get("experiments"), list
-                    ):
+                    if isinstance(obj, dict) and isinstance(obj.get("experiments"), list):
                         df = pd.DataFrame(obj["experiments"])
                         preferred_cols = [
                             c
@@ -5733,8 +5473,7 @@ def _render_analysis_detail(detail: dict, key_suffix: str) -> None:
                 k in mlflow_art for k in ("runs", "experiments")
             ):
                 is_tool_map = all(
-                    isinstance(k, str) and k.startswith("mlflow_")
-                    for k in mlflow_art.keys()
+                    isinstance(k, str) and k.startswith("mlflow_") for k in mlflow_art.keys()
                 )
                 if is_tool_map:
                     for tool_name, tool_art in mlflow_art.items():
@@ -5788,9 +5527,7 @@ def _resolve_chat_target_dataset() -> tuple[str | None, str | None, dict]:
     team_state = team_state if isinstance(team_state, dict) else {}
     datasets = team_state.get("datasets")
     datasets = datasets if isinstance(datasets, dict) else {}
-    visible_ids, _ui_h, _ui_d, _p_hash, _node_ids = _pipeline_studio_ui_state(
-        team_state=team_state
-    )
+    visible_ids, _ui_h, _ui_d, _p_hash, _node_ids = _pipeline_studio_ui_state(team_state=team_state)
     visible_set = set(visible_ids) if visible_ids else set(datasets.keys())
     if not visible_set:
         visible_set = set(datasets.keys())
@@ -5811,9 +5548,7 @@ def _resolve_chat_target_dataset() -> tuple[str | None, str | None, dict]:
     return None, None, datasets
 
 
-chat_target_id, chat_target_source, chat_target_datasets = (
-    _resolve_chat_target_dataset()
-)
+chat_target_id, chat_target_source, chat_target_datasets = _resolve_chat_target_dataset()
 if chat_target_id and isinstance(chat_target_datasets, dict):
     entry = chat_target_datasets.get(chat_target_id)
     entry = entry if isinstance(entry, dict) else {}
@@ -5826,9 +5561,7 @@ if chat_target_id and isinstance(chat_target_datasets, dict):
     if isinstance(shape, (list, tuple)) and len(shape) == 2:
         meta_bits.append(f"{shape[0]}×{shape[1]}")
     meta_txt = f" ({', '.join(meta_bits)})" if meta_bits else ""
-    source_txt = (
-        f" - {str(chat_target_source).replace('_', ' ')}" if chat_target_source else ""
-    )
+    source_txt = f" - {str(chat_target_source).replace('_', ' ')}" if chat_target_source else ""
     st.markdown(
         "\n".join(
             [
@@ -5857,28 +5590,22 @@ else:
     st.caption("Chat target: Auto (supervisor active dataset)")
 
 team_state_for_chat = st.session_state.get("team_state", {})
-team_state_for_chat = (
-    team_state_for_chat if isinstance(team_state_for_chat, dict) else {}
-)
+team_state_for_chat = team_state_for_chat if isinstance(team_state_for_chat, dict) else {}
 datasets_for_chat = team_state_for_chat.get("datasets")
 datasets_for_chat = datasets_for_chat if isinstance(datasets_for_chat, dict) else {}
-visible_ids, ui_hidden_ids, ui_deleted_ids, _p_hash, _node_ids = (
-    _pipeline_studio_ui_state(team_state=team_state_for_chat)
+visible_ids, ui_hidden_ids, ui_deleted_ids, _p_hash, _node_ids = _pipeline_studio_ui_state(
+    team_state=team_state_for_chat
 )
 visible_set = set(visible_ids) if visible_ids else set(datasets_for_chat.keys())
 if ui_hidden_ids or ui_deleted_ids:
     visible_set = {
-        did
-        for did in visible_set
-        if did not in ui_hidden_ids and did not in ui_deleted_ids
+        did for did in visible_set if did not in ui_hidden_ids and did not in ui_deleted_ids
     }
 chat_dataset_options = [did for did in datasets_for_chat.keys() if did in visible_set]
 if chat_dataset_options:
     ordered_chat = sorted(
         [(did, datasets_for_chat.get(did)) for did in chat_dataset_options],
-        key=lambda kv: float(kv[1].get("created_ts") or 0.0)
-        if isinstance(kv[1], dict)
-        else 0.0,
+        key=lambda kv: float(kv[1].get("created_ts") or 0.0) if isinstance(kv[1], dict) else 0.0,
         reverse=True,
     )
     chat_dataset_options = [did for did, _e in ordered_chat]
@@ -5921,15 +5648,11 @@ if chat_dataset_options:
 
 pending_prompt = st.session_state.pop("chat_prompt_pending", None)
 pending_prompt = pending_prompt.strip() if isinstance(pending_prompt, str) else ""
-prompt = (
-    pending_prompt if pending_prompt else st.chat_input("Ask the data science team...")
-)
+prompt = pending_prompt if pending_prompt else st.chat_input("Ask the data science team...")
 if prompt:
     if llm_provider_selected == "OpenAI":
         if not resolved_api_key or key_status == "bad":
-            st.error(
-                "OpenAI API key is required and must be valid. Enter it in the sidebar."
-            )
+            st.error("OpenAI API key is required and must be valid. Enter it in the sidebar.")
             st.stop()
     else:
         if not resolved_ollama_model:
@@ -5984,15 +5707,10 @@ if prompt:
     if (
         team_prompt
         and bool(st.session_state.get("pipeline_chat_context_enabled", True))
-        and not (
-            isinstance(db_cmd, dict)
-            and db_cmd.get("action") in ("connect", "disconnect")
-        )
+        and not (isinstance(db_cmd, dict) and db_cmd.get("action") in ("connect", "disconnect"))
     ):
         ctx = _pipeline_studio_chat_context(
-            include_code=bool(
-                st.session_state.get("pipeline_chat_context_include_code", False)
-            )
+            include_code=bool(st.session_state.get("pipeline_chat_context_include_code", False))
         )
         if ctx:
             team_prompt = f"{team_prompt}\n\n{ctx}"
@@ -6024,9 +5742,7 @@ if prompt:
                     _strip_ui_marker_messages(msgs.messages), team_prompt
                 )
             )
-            active_dataset_override = (
-                st.session_state.get("active_dataset_id_override") or None
-            )
+            active_dataset_override = st.session_state.get("active_dataset_id_override") or None
             persisted = st.session_state.get("team_state", {})
             persisted = persisted if isinstance(persisted, dict) else {}
             if not active_dataset_override and chat_target_id:
@@ -6056,12 +5772,8 @@ if prompt:
                 "messages": input_messages,
                 "artifacts": {
                     "config": {
-                        "mlflow_tracking_uri": st.session_state.get(
-                            "mlflow_tracking_uri"
-                        ),
-                        "mlflow_artifact_root": st.session_state.get(
-                            "mlflow_artifact_root"
-                        ),
+                        "mlflow_tracking_uri": st.session_state.get("mlflow_tracking_uri"),
+                        "mlflow_artifact_root": st.session_state.get("mlflow_artifact_root"),
                         "mlflow_experiment_name": st.session_state.get(
                             "mlflow_experiment_name", "H2O AutoML"
                         ),
@@ -6096,9 +5808,7 @@ if prompt:
                 }
             if input_provenance:
                 invoke_payload["artifacts"]["input_dataset"] = input_provenance
-            sync_state = bool(
-                st.session_state.get("pipeline_sync_state_to_agents", True)
-            )
+            sync_state = bool(st.session_state.get("pipeline_sync_state_to_agents", True))
             if sync_state and persisted:
                 datasets_payload = (
                     _normalize_payload_datasets(persisted.get("datasets"))
@@ -6108,9 +5818,7 @@ if prompt:
                 if "datasets" in persisted:
                     invoke_payload["datasets"] = datasets_payload
                 if "active_dataset_id" in persisted:
-                    invoke_payload["active_dataset_id"] = persisted.get(
-                        "active_dataset_id"
-                    )
+                    invoke_payload["active_dataset_id"] = persisted.get("active_dataset_id")
                 if "active_data_key" in persisted:
                     invoke_payload["active_data_key"] = persisted.get("active_data_key")
             # Provide continuity when memory is disabled (no checkpointer).
@@ -6144,12 +5852,12 @@ if prompt:
             log_container = st.empty() if show_live_logs else None
             log_placeholder = None
 
-            import sys
             import io
-            from collections import deque
-            from contextlib import redirect_stdout, redirect_stderr
+            import sys
             import threading
             import time
+            from collections import deque
+            from contextlib import redirect_stderr, redirect_stdout
 
             class _TeeCapture(io.TextIOBase):
                 def __init__(
@@ -6204,19 +5912,13 @@ if prompt:
 
             def _run_with_stream() -> dict | None:
                 last_event = None
-                for event in team.stream(
-                    invoke_payload, config=run_config, stream_mode="values"
-                ):
+                for event in team.stream(invoke_payload, config=run_config, stream_mode="values"):
                     if not isinstance(event, dict):
                         continue
                     last_event = event
                     label = None
                     nxt = event.get("next")
-                    if (
-                        isinstance(nxt, str)
-                        and nxt.strip()
-                        and nxt.strip().upper() != "FINISH"
-                    ):
+                    if isinstance(nxt, str) and nxt.strip() and nxt.strip().upper() != "FINISH":
                         label = f"Routing → {nxt.strip()}"
                     elif (
                         isinstance(event.get("last_worker"), str)
@@ -6446,30 +6148,20 @@ if prompt:
                         if isinstance(normalized, dict) and existing:
                             merged = dict(normalized)
                             preserve_all = bool(
-                                st.session_state.get(
-                                    "pipeline_preserve_all_nodes", True
-                                )
+                                st.session_state.get("pipeline_preserve_all_nodes", True)
                             )
                             preserve_studio = bool(
-                                st.session_state.get(
-                                    "pipeline_preserve_studio_nodes", True
-                                )
+                                st.session_state.get("pipeline_preserve_studio_nodes", True)
                             )
                             protected_ids: set[str] = set()
-                            locked_ids = st.session_state.get(
-                                "pipeline_studio_locked_node_ids", []
-                            )
+                            locked_ids = st.session_state.get("pipeline_studio_locked_node_ids", [])
                             if isinstance(locked_ids, (list, set, tuple)):
                                 protected_ids |= {
-                                    str(x)
-                                    for x in locked_ids
-                                    if isinstance(x, str) and x
+                                    str(x) for x in locked_ids if isinstance(x, str) and x
                                 }
                             if preserve_all:
                                 protected_ids |= {
-                                    str(x)
-                                    for x in existing.keys()
-                                    if isinstance(x, str) and x
+                                    str(x) for x in existing.keys() if isinstance(x, str) and x
                                 }
                             elif preserve_studio:
                                 for did, entry in existing.items():
@@ -6477,9 +6169,7 @@ if prompt:
                                         protected_ids.add(did)
                             if protected_ids:
                                 if not preserve_all:
-                                    protected_ids = _collect_ancestor_ids(
-                                        existing, protected_ids
-                                    )
+                                    protected_ids = _collect_ancestor_ids(existing, protected_ids)
                                 for did in protected_ids:
                                     if did not in merged and did in existing:
                                         merged[did] = existing[did]
@@ -6492,9 +6182,7 @@ if prompt:
                     **(st.session_state.team_state or {}),
                     **state_updates,
                 }
-                _persist_pipeline_studio_team_state(
-                    team_state=st.session_state.team_state
-                )
+                _persist_pipeline_studio_team_state(team_state=st.session_state.team_state)
         except Exception:
             pass
 
@@ -6615,9 +6303,7 @@ if prompt:
                 elif isinstance(v, dict) and "plotly_graph" in v:
                     summary[k] = {"type": "plot", "note": "plotly figure returned"}
                 else:
-                    summary[k] = (
-                        v if isinstance(v, (str, int, float, list, dict)) else str(v)
-                    )
+                    summary[k] = v if isinstance(v, (str, int, float, list, dict)) else str(v)
             return summary
 
         def _truncate_code(
@@ -6638,9 +6324,7 @@ if prompt:
             if isinstance(result, dict) and isinstance(result.get("datasets"), dict)
             else {}
         )
-        active_dataset_id = (
-            result.get("active_dataset_id") if isinstance(result, dict) else None
-        )
+        active_dataset_id = result.get("active_dataset_id") if isinstance(result, dict) else None
 
         pipeline_model = (
             build_pipeline_snapshot(datasets_dict, active_dataset_id=active_dataset_id)
@@ -6673,14 +6357,8 @@ if prompt:
             entry = datasets_dict.get(did)
             if not isinstance(entry, dict):
                 return None
-            prov = (
-                entry.get("provenance")
-                if isinstance(entry.get("provenance"), dict)
-                else {}
-            )
-            transform = (
-                prov.get("transform") if isinstance(prov.get("transform"), dict) else {}
-            )
+            prov = entry.get("provenance") if isinstance(entry.get("provenance"), dict) else {}
+            transform = prov.get("transform") if isinstance(prov.get("transform"), dict) else {}
             if str(transform.get("kind") or "") != "python_function":
                 return None
             return _truncate_code(transform.get("function_code"))
@@ -6751,9 +6429,7 @@ if prompt:
             "feature_data_df": _to_df(result.get("feature_data")),
             # Only show artifacts produced during this invocation to avoid stale charts/models.
             "eda_reports": (
-                _extract_eda_reports(artifacts)
-                if "eda_tools_agent" in ran_agents
-                else None
+                _extract_eda_reports(artifacts) if "eda_tools_agent" in ran_agents else None
             ),
             "plotly_graph": (
                 artifacts.get("viz", {}).get("plotly_graph")
@@ -6805,10 +6481,7 @@ if prompt:
                     or artifacts.get("mlflow")
                     or artifacts.get("mlflow_log")
                 )
-                if (
-                    "mlflow_tools_agent" in ran_agents
-                    or "mlflow_logging_agent" in ran_agents
-                )
+                if ("mlflow_tools_agent" in ran_agents or "mlflow_logging_agent" in ran_agents)
                 else None
             ),
             # Store only a summarized version to avoid rendering huge payloads
@@ -6848,27 +6521,19 @@ if prompt:
                     detail["pipeline"],
                     base_dir=st.session_state.get("pipeline_persist_dir"),
                     overwrite=bool(st.session_state.get("pipeline_persist_overwrite")),
-                    include_sql=bool(
-                        st.session_state.get("pipeline_persist_include_sql", True)
-                    ),
+                    include_sql=bool(st.session_state.get("pipeline_persist_include_sql", True)),
                     sql_query=detail.get("sql_query_code"),
                     sql_executor=detail.get("sql_database_function"),
                 )
                 if isinstance(saved, dict) and saved.get("persisted_dir"):
                     detail["pipeline"]["persisted_dir"] = saved.get("persisted_dir")
                     detail["pipeline"]["persisted_spec_path"] = saved.get("spec_path")
-                    detail["pipeline"]["persisted_script_path"] = saved.get(
-                        "script_path"
-                    )
-                    detail["pipeline"]["persisted_sql_query_path"] = saved.get(
-                        "sql_query_path"
-                    )
+                    detail["pipeline"]["persisted_script_path"] = saved.get("script_path")
+                    detail["pipeline"]["persisted_sql_query_path"] = saved.get("sql_query_path")
                     detail["pipeline"]["persisted_sql_executor_path"] = saved.get(
                         "sql_executor_path"
                     )
-                    st.session_state.last_pipeline_persist_dir = saved.get(
-                        "persisted_dir"
-                    )
+                    st.session_state.last_pipeline_persist_dir = saved.get("persisted_dir")
                     if isinstance(detail.get("pipelines"), dict):
                         detail["pipelines"]["model"] = detail["pipeline"]
                 if isinstance(saved, dict) and saved.get("error"):
@@ -6914,17 +6579,13 @@ if prompt:
                 if detail.get("data_visualization_error") is not None:
                     cur["viz_error"] = {
                         "message": _safe_json(detail.get("data_visualization_error")),
-                        "log_path": _safe_json(
-                            detail.get("data_visualization_error_log_path")
-                        ),
+                        "log_path": _safe_json(detail.get("data_visualization_error_log_path")),
                         "turn_idx": idx,
                         "created_ts": ts,
                     }
                 if detail.get("data_visualization_warning") is not None:
                     cur["viz_warning"] = {
-                        "message": _safe_json(
-                            detail.get("data_visualization_warning")
-                        ),
+                        "message": _safe_json(detail.get("data_visualization_warning")),
                         "turn_idx": idx,
                         "created_ts": ts,
                     }
@@ -7017,9 +6678,7 @@ def _render_pipeline_studio() -> None:
         try:
             import time as _time
 
-            pipeline_hash = (
-                pipeline_hash.strip() if isinstance(pipeline_hash, str) else ""
-            )
+            pipeline_hash = pipeline_hash.strip() if isinstance(pipeline_hash, str) else ""
             root_id = root_id.strip() if isinstance(root_id, str) else ""
             if not pipeline_hash or not root_id:
                 return
@@ -7052,9 +6711,7 @@ def _render_pipeline_studio() -> None:
         except Exception:
             pass
 
-    def _pipeline_studio_soft_delete_branch(
-        *, pipeline_hash: str, root_id: str
-    ) -> None:
+    def _pipeline_studio_soft_delete_branch(*, pipeline_hash: str, root_id: str) -> None:
         _pipeline_studio_update_branch_visibility(
             pipeline_hash=pipeline_hash,
             root_id=root_id,
@@ -7103,11 +6760,7 @@ def _render_pipeline_studio() -> None:
             team_state = hard_delete_result.get("team_state")
             team_state = team_state if isinstance(team_state, dict) else {}
             branch_ids = hard_delete_result.get("branch_ids")
-            branch_ids = (
-                set(branch_ids)
-                if isinstance(branch_ids, (set, list, tuple))
-                else set()
-            )
+            branch_ids = set(branch_ids) if isinstance(branch_ids, (set, list, tuple)) else set()
             ds_new = team_state.get("datasets")
             ds_new = ds_new if isinstance(ds_new, dict) else {}
             active_id = team_state.get("active_dataset_id")
@@ -7122,9 +6775,7 @@ def _render_pipeline_studio() -> None:
                 else None
             )
             if p_hash_clean:
-                ui_h, ui_d = _pipeline_studio_get_registry_ui(
-                    pipeline_hash=p_hash_clean
-                )
+                ui_h, ui_d = _pipeline_studio_get_registry_ui(pipeline_hash=p_hash_clean)
                 ui_h = set(ui_h) - branch_ids
                 ui_d = set(ui_d) - branch_ids
                 _pipeline_studio_set_registry_ui(
@@ -7144,9 +6795,7 @@ def _render_pipeline_studio() -> None:
                 st.session_state["pipeline_studio_redo_stack"] = []
 
             try:
-                pipelines_new = _pipeline_studio_build_pipelines_from_team_state(
-                    team_state
-                )
+                pipelines_new = _pipeline_studio_build_pipelines_from_team_state(team_state)
                 _update_pipeline_registry_store_for_pipelines(
                     pipelines=pipelines_new, datasets=ds_new
                 )
@@ -7169,9 +6818,7 @@ def _render_pipeline_studio() -> None:
             )
             _sync_pipeline_targets_after_ui_change()
         except Exception as e:
-            st.session_state["pipeline_studio_history_notice"] = (
-                f"Hard delete failed: {e}"
-            )
+            st.session_state["pipeline_studio_history_notice"] = f"Hard delete failed: {e}"
 
     def _finalize_created_dataset(
         *,
@@ -7201,11 +6848,7 @@ def _render_pipeline_studio() -> None:
         try:
             ds_new = new_state.get("datasets") if isinstance(new_state, dict) else None
             ds_new = ds_new if isinstance(ds_new, dict) else {}
-            active_new = (
-                new_state.get("active_dataset_id")
-                if isinstance(new_state, dict)
-                else None
-            )
+            active_new = new_state.get("active_dataset_id") if isinstance(new_state, dict) else None
             active_new = active_new if isinstance(active_new, str) else None
             pipelines_new = {
                 "model": build_pipeline_snapshot(ds_new, active_dataset_id=active_new),
@@ -7216,9 +6859,7 @@ def _render_pipeline_studio() -> None:
                     ds_new, active_dataset_id=active_new, target="latest"
                 ),
             }
-            _update_pipeline_registry_store_for_pipelines(
-                pipelines=pipelines_new, datasets=ds_new
-            )
+            _update_pipeline_registry_store_for_pipelines(pipelines=pipelines_new, datasets=ds_new)
         except Exception:
             pass
         _persist_pipeline_studio_team_state(team_state=new_state)
@@ -7227,9 +6868,7 @@ def _render_pipeline_studio() -> None:
         st.session_state["pipeline_studio_run_success"] = new_id
         if isinstance(supersedes_node_id, str) and supersedes_node_id.strip():
             try:
-                ds_new = (
-                    new_state.get("datasets") if isinstance(new_state, dict) else None
-                )
+                ds_new = new_state.get("datasets") if isinstance(new_state, dict) else None
                 ds_new = ds_new if isinstance(ds_new, dict) else {}
                 child_idx = _build_children_index(ds_new)
                 stale_ids = sorted(_descendants(supersedes_node_id, child_idx))
@@ -7249,12 +6888,8 @@ def _render_pipeline_studio() -> None:
     ) -> None:
         try:
             child_id = child_id.strip() if isinstance(child_id, str) else ""
-            old_parent_id = (
-                old_parent_id.strip() if isinstance(old_parent_id, str) else ""
-            )
-            new_parent_id = (
-                new_parent_id.strip() if isinstance(new_parent_id, str) else ""
-            )
+            old_parent_id = old_parent_id.strip() if isinstance(old_parent_id, str) else ""
+            new_parent_id = new_parent_id.strip() if isinstance(new_parent_id, str) else ""
             if not child_id or not old_parent_id or not new_parent_id:
                 return
 
@@ -7277,13 +6912,9 @@ def _render_pipeline_studio() -> None:
                 )
                 return
 
-            new_parents = [
-                new_parent_id if pid == old_parent_id else pid for pid in parents
-            ]
+            new_parents = [new_parent_id if pid == old_parent_id else pid for pid in parents]
             if new_parent_id not in new_parents:
-                new_parents = [new_parent_id] + [
-                    pid for pid in parents if pid != old_parent_id
-                ]
+                new_parents = [new_parent_id] + [pid for pid in parents if pid != old_parent_id]
 
             updated = dict(entry_obj)
             updated["parent_ids"] = new_parents
@@ -7294,9 +6925,7 @@ def _render_pipeline_studio() -> None:
             team_state["datasets"] = datasets
             st.session_state["team_state"] = team_state
             try:
-                pipelines_new = _pipeline_studio_build_pipelines_from_team_state(
-                    team_state
-                )
+                pipelines_new = _pipeline_studio_build_pipelines_from_team_state(team_state)
                 _update_pipeline_registry_store_for_pipelines(
                     pipelines=pipelines_new, datasets=datasets
                 )
@@ -7330,9 +6959,7 @@ def _render_pipeline_studio() -> None:
             team_state = team_state if isinstance(team_state, dict) else {}
             prev_active_id = team_state.get("active_dataset_id")
             prev_active_id = (
-                prev_active_id
-                if isinstance(prev_active_id, str) and prev_active_id
-                else None
+                prev_active_id if isinstance(prev_active_id, str) and prev_active_id else None
             )
             datasets = team_state.get("datasets")
             datasets = datasets if isinstance(datasets, dict) else {}
@@ -7340,13 +6967,9 @@ def _render_pipeline_studio() -> None:
             entry_obj = entry_obj if isinstance(entry_obj, dict) else {}
 
             prov = (
-                entry_obj.get("provenance")
-                if isinstance(entry_obj.get("provenance"), dict)
-                else {}
+                entry_obj.get("provenance") if isinstance(entry_obj.get("provenance"), dict) else {}
             )
-            transform = (
-                prov.get("transform") if isinstance(prov.get("transform"), dict) else {}
-            )
+            transform = prov.get("transform") if isinstance(prov.get("transform"), dict) else {}
             kind = str(transform.get("kind") or "")
             if kind != "python_function":
                 st.session_state["pipeline_studio_run_error"] = (
@@ -7458,9 +7081,7 @@ def _render_pipeline_studio() -> None:
             team_state = team_state if isinstance(team_state, dict) else {}
             prev_active_id = team_state.get("active_dataset_id")
             prev_active_id = (
-                prev_active_id
-                if isinstance(prev_active_id, str) and prev_active_id
-                else None
+                prev_active_id if isinstance(prev_active_id, str) and prev_active_id else None
             )
             datasets = team_state.get("datasets")
             datasets = datasets if isinstance(datasets, dict) else {}
@@ -7545,9 +7166,7 @@ def _render_pipeline_studio() -> None:
         except Exception as e:
             error_text = str(e)
             if error_text == "Only single-statement queries are allowed.":
-                error_text = (
-                    "Only single-statement queries are allowed in Pipeline Studio."
-                )
+                error_text = "Only single-statement queries are allowed in Pipeline Studio."
             return None, error_text or "SQL validation failed."
 
     def _pipeline_studio_create_manual_sql_node(
@@ -7578,9 +7197,7 @@ def _render_pipeline_studio() -> None:
             team_state = team_state if isinstance(team_state, dict) else {}
             prev_active_id = team_state.get("active_dataset_id")
             prev_active_id = (
-                prev_active_id
-                if isinstance(prev_active_id, str) and prev_active_id
-                else None
+                prev_active_id if isinstance(prev_active_id, str) and prev_active_id else None
             )
 
             sql_url = st.session_state.get("sql_url", DEFAULT_SQL_URL)
@@ -7657,9 +7274,7 @@ def _render_pipeline_studio() -> None:
             st.session_state.pop("pipeline_studio_run_error", None)
             st.session_state.pop("pipeline_studio_run_success", None)
 
-            parent_ids = [
-                p for p in (parent_ids or []) if isinstance(p, str) and p.strip()
-            ]
+            parent_ids = [p for p in (parent_ids or []) if isinstance(p, str) and p.strip()]
             if len(parent_ids) < 2:
                 st.session_state["pipeline_studio_run_error"] = (
                     "Select at least two parent datasets to merge."
@@ -7670,9 +7285,7 @@ def _render_pipeline_studio() -> None:
             team_state = team_state if isinstance(team_state, dict) else {}
             prev_active_id = team_state.get("active_dataset_id")
             prev_active_id = (
-                prev_active_id
-                if isinstance(prev_active_id, str) and prev_active_id
-                else None
+                prev_active_id if isinstance(prev_active_id, str) and prev_active_id else None
             )
             datasets = team_state.get("datasets")
             datasets = datasets if isinstance(datasets, dict) else {}
@@ -7791,9 +7404,7 @@ def _render_pipeline_studio() -> None:
             team_state = team_state if isinstance(team_state, dict) else {}
             prev_active_id = team_state.get("active_dataset_id")
             prev_active_id = (
-                prev_active_id
-                if isinstance(prev_active_id, str) and prev_active_id
-                else None
+                prev_active_id if isinstance(prev_active_id, str) and prev_active_id else None
             )
             datasets = team_state.get("datasets")
             datasets = datasets if isinstance(datasets, dict) else {}
@@ -7801,13 +7412,9 @@ def _render_pipeline_studio() -> None:
             entry_obj = entry_obj if isinstance(entry_obj, dict) else {}
 
             prov = (
-                entry_obj.get("provenance")
-                if isinstance(entry_obj.get("provenance"), dict)
-                else {}
+                entry_obj.get("provenance") if isinstance(entry_obj.get("provenance"), dict) else {}
             )
-            transform = (
-                prov.get("transform") if isinstance(prov.get("transform"), dict) else {}
-            )
+            transform = prov.get("transform") if isinstance(prov.get("transform"), dict) else {}
             kind = str(transform.get("kind") or "")
             if kind != "python_merge":
                 st.session_state["pipeline_studio_run_error"] = (
@@ -7882,9 +7489,7 @@ def _render_pipeline_studio() -> None:
             label = label if isinstance(label, str) and label else node_id
 
             merge_meta = (
-                transform.get("merge")
-                if isinstance(transform.get("merge"), dict)
-                else None
+                transform.get("merge") if isinstance(transform.get("merge"), dict) else None
             )
 
             new_state, new_id = _pipeline_studio_register_dataset(
@@ -7933,9 +7538,7 @@ def _render_pipeline_studio() -> None:
             team_state = team_state if isinstance(team_state, dict) else {}
             prev_active_id = team_state.get("active_dataset_id")
             prev_active_id = (
-                prev_active_id
-                if isinstance(prev_active_id, str) and prev_active_id
-                else None
+                prev_active_id if isinstance(prev_active_id, str) and prev_active_id else None
             )
             datasets = team_state.get("datasets")
             datasets = datasets if isinstance(datasets, dict) else {}
@@ -7943,13 +7546,9 @@ def _render_pipeline_studio() -> None:
             entry_obj = entry_obj if isinstance(entry_obj, dict) else {}
 
             prov = (
-                entry_obj.get("provenance")
-                if isinstance(entry_obj.get("provenance"), dict)
-                else {}
+                entry_obj.get("provenance") if isinstance(entry_obj.get("provenance"), dict) else {}
             )
-            transform = (
-                prov.get("transform") if isinstance(prov.get("transform"), dict) else {}
-            )
+            transform = prov.get("transform") if isinstance(prov.get("transform"), dict) else {}
             kind = str(transform.get("kind") or "")
             if kind != "sql_query":
                 st.session_state["pipeline_studio_run_error"] = (
@@ -8017,9 +7616,7 @@ def _render_pipeline_studio() -> None:
         except Exception as e:
             st.session_state["pipeline_studio_run_error"] = str(e)
 
-    def _run_downstream_transforms(
-        superseded_node_id: str, replacement_node_id: str
-    ) -> None:
+    def _run_downstream_transforms(superseded_node_id: str, replacement_node_id: str) -> None:
         """
         Best-effort re-run of downstream transform nodes starting from `superseded_node_id`,
         using `replacement_node_id` as the new upstream input.
@@ -8029,14 +7626,10 @@ def _render_pipeline_studio() -> None:
             st.session_state.pop("pipeline_studio_run_success", None)
 
             superseded_node_id = (
-                superseded_node_id.strip()
-                if isinstance(superseded_node_id, str)
-                else ""
+                superseded_node_id.strip() if isinstance(superseded_node_id, str) else ""
             )
             replacement_node_id = (
-                replacement_node_id.strip()
-                if isinstance(replacement_node_id, str)
-                else ""
+                replacement_node_id.strip() if isinstance(replacement_node_id, str) else ""
             )
             if not superseded_node_id or not replacement_node_id:
                 return
@@ -8045,9 +7638,7 @@ def _render_pipeline_studio() -> None:
             team_state = team_state if isinstance(team_state, dict) else {}
             prev_active_id = team_state.get("active_dataset_id")
             prev_active_id = (
-                prev_active_id
-                if isinstance(prev_active_id, str) and prev_active_id
-                else None
+                prev_active_id if isinstance(prev_active_id, str) and prev_active_id else None
             )
             datasets = team_state.get("datasets")
             datasets = datasets if isinstance(datasets, dict) else {}
@@ -8103,16 +7694,8 @@ def _render_pipeline_studio() -> None:
             for did in order:
                 ent = datasets.get(did)
                 ent = ent if isinstance(ent, dict) else {}
-                prov = (
-                    ent.get("provenance")
-                    if isinstance(ent.get("provenance"), dict)
-                    else {}
-                )
-                transform = (
-                    prov.get("transform")
-                    if isinstance(prov.get("transform"), dict)
-                    else {}
-                )
+                prov = ent.get("provenance") if isinstance(ent.get("provenance"), dict) else {}
+                transform = prov.get("transform") if isinstance(prov.get("transform"), dict) else {}
                 kind = str(transform.get("kind") or "")
                 if kind not in {"python_function", "python_merge", "sql_query"}:
                     skipped.append(
@@ -8157,9 +7740,7 @@ def _render_pipeline_studio() -> None:
                         code = code if isinstance(code, str) else ""
                         code = code.strip()
                         if not code:
-                            skipped.append(
-                                {"node_id": did, "kind": kind, "reason": "missing_code"}
-                            )
+                            skipped.append({"node_id": did, "kind": kind, "reason": "missing_code"})
                             continue
                         if not mapped_parents:
                             skipped.append(
@@ -8206,7 +7787,9 @@ def _render_pipeline_studio() -> None:
                                     "kind": "python_function",
                                     "supersedes_dataset_id": did,
                                     "function_name": fn_name,
-                                    "function_code": code[:PIPELINE_STUDIO_TRANSFORM_CODE_MAX_CHARS],
+                                    "function_code": code[
+                                        :PIPELINE_STUDIO_TRANSFORM_CODE_MAX_CHARS
+                                    ],
                                     "code_sha256": transform.get("code_sha256"),
                                 },
                             },
@@ -8219,9 +7802,7 @@ def _render_pipeline_studio() -> None:
                         code = code if isinstance(code, str) else ""
                         code = code.strip()
                         if not code:
-                            skipped.append(
-                                {"node_id": did, "kind": kind, "reason": "missing_code"}
-                            )
+                            skipped.append({"node_id": did, "kind": kind, "reason": "missing_code"})
                             continue
                         if len(mapped_parents) < 2:
                             skipped.append(
@@ -8236,9 +7817,7 @@ def _render_pipeline_studio() -> None:
                         for pid in mapped_parents:
                             df_in = _safe_df_from_id(pid)
                             if df_in is None:
-                                raise ValueError(
-                                    f"Missing tabular data for parent `{pid}`."
-                                )
+                                raise ValueError(f"Missing tabular data for parent `{pid}`.")
                             parent_dfs.append(df_in)
                         out_df = _exec_python_merge_transform(
                             code=code,
@@ -8277,9 +7856,7 @@ def _render_pipeline_studio() -> None:
                         sql_code = sql_code if isinstance(sql_code, str) else ""
                         sql_code = _normalize_readonly_sql(sql_code)
                         sql_url = st.session_state.get("sql_url", DEFAULT_SQL_URL)
-                        sql_url = (
-                            sql_url or DEFAULT_SQL_URL
-                        ).strip() or DEFAULT_SQL_URL
+                        sql_url = (sql_url or DEFAULT_SQL_URL).strip() or DEFAULT_SQL_URL
                         out_df = pd.read_sql_query(sql_code, sql.create_engine(sql_url))
 
                         new_state, new_id = _pipeline_studio_register_dataset(
@@ -8295,7 +7872,9 @@ def _render_pipeline_studio() -> None:
                                 "transform": {
                                     "kind": "sql_query",
                                     "supersedes_dataset_id": did,
-                                    "sql_query_code": sql_code[:PIPELINE_STUDIO_TRANSFORM_CODE_MAX_CHARS],
+                                    "sql_query_code": sql_code[
+                                        :PIPELINE_STUDIO_TRANSFORM_CODE_MAX_CHARS
+                                    ],
                                     "sql_sha256": transform.get("sql_sha256"),
                                 },
                             },
@@ -8313,9 +7892,7 @@ def _render_pipeline_studio() -> None:
                         working_datasets if isinstance(working_datasets, dict) else {}
                     )
                     working_state["datasets"] = working_datasets
-                    working_state["active_dataset_id"] = new_state.get(
-                        "active_dataset_id"
-                    )
+                    working_state["active_dataset_id"] = new_state.get("active_dataset_id")
                     replacement_map[did] = new_id
                     created_ids.append(new_id)
                     created_entries_by_id[new_id] = (
@@ -8335,15 +7912,9 @@ def _render_pipeline_studio() -> None:
 
             # Persist semantic registry (best effort).
             try:
-                ds_new = (
-                    working_state.get("datasets")
-                    if isinstance(working_state, dict)
-                    else None
-                )
+                ds_new = working_state.get("datasets") if isinstance(working_state, dict) else None
                 ds_new = ds_new if isinstance(ds_new, dict) else {}
-                pipelines_new = _pipeline_studio_build_pipelines_from_team_state(
-                    working_state
-                )
+                pipelines_new = _pipeline_studio_build_pipelines_from_team_state(working_state)
                 if pipelines_new:
                     _update_pipeline_registry_store_for_pipelines(
                         pipelines=pipelines_new, datasets=ds_new
@@ -8417,18 +7988,12 @@ def _render_pipeline_studio() -> None:
         for d in reversed(details):
             if not isinstance(d, dict):
                 continue
-            pipelines = (
-                d.get("pipelines") if isinstance(d.get("pipelines"), dict) else {}
-            )
+            pipelines = d.get("pipelines") if isinstance(d.get("pipelines"), dict) else {}
             active_pipe = (
-                pipelines.get("active")
-                if isinstance(pipelines.get("active"), dict)
-                else None
+                pipelines.get("active") if isinstance(pipelines.get("active"), dict) else None
             )
             active_target_id = (
-                active_pipe.get("target_dataset_id")
-                if isinstance(active_pipe, dict)
-                else None
+                active_pipe.get("target_dataset_id") if isinstance(active_pipe, dict) else None
             )
             if active_target_id == dataset_id:
                 if require_key and not d.get(require_key):
@@ -8512,9 +8077,7 @@ def _render_pipeline_studio() -> None:
 
     if not studio_datasets:
         st.info("No pipeline yet. Load data and run a transform to build one.")
-        project_notice = st.session_state.pop(
-            "pipeline_studio_project_notice", None
-        )
+        project_notice = st.session_state.pop("pipeline_studio_project_notice", None)
         if isinstance(project_notice, str) and project_notice.strip():
             if project_notice.lower().startswith("error:"):
                 st.error(project_notice.replace("Error:", "", 1).strip())
@@ -8543,36 +8106,23 @@ def _render_pipeline_studio() -> None:
                 )
                 err = res.get("error")
                 if isinstance(err, str) and err:
-                    st.session_state["pipeline_studio_project_notice"] = (
-                        f"Error: {err}"
-                    )
+                    st.session_state["pipeline_studio_project_notice"] = f"Error: {err}"
                     return
                 saved_dir = res.get("project_dir")
                 if isinstance(saved_dir, str) and saved_dir:
-                    data_mode = (
-                        "metadata-only" if not bool(include_data) else "full"
-                    )
+                    data_mode = "metadata-only" if not bool(include_data) else "full"
                     if target_dir:
                         st.session_state["pipeline_studio_project_notice"] = (
                             f"Overwrote {data_mode} project at `{target_dir}`."
                         )
-                        st.session_state["pipeline_studio_loaded_project_dir"] = (
-                            target_dir
-                        )
+                        st.session_state["pipeline_studio_loaded_project_dir"] = target_dir
                     else:
                         st.session_state["pipeline_studio_project_notice"] = (
                             f"Saved {data_mode} project to `{saved_dir}`."
                         )
-                        current_loaded = st.session_state.get(
-                            "pipeline_studio_loaded_project_dir"
-                        )
-                        if not (
-                            isinstance(current_loaded, str)
-                            and current_loaded.strip()
-                        ):
-                            st.session_state["pipeline_studio_loaded_project_dir"] = (
-                                saved_dir
-                            )
+                        current_loaded = st.session_state.get("pipeline_studio_loaded_project_dir")
+                        if not (isinstance(current_loaded, str) and current_loaded.strip()):
+                            st.session_state["pipeline_studio_loaded_project_dir"] = saved_dir
                 else:
                     st.session_state["pipeline_studio_project_notice"] = (
                         "Error: Project save failed (unknown error)."
@@ -8593,10 +8143,7 @@ def _render_pipeline_studio() -> None:
                 )
 
             default_project_name = st.session_state.get("pipeline_studio_project_name")
-            if (
-                not isinstance(default_project_name, str)
-                or not default_project_name.strip()
-            ):
+            if not isinstance(default_project_name, str) or not default_project_name.strip():
                 default_project_name = "project"
             project_name = st.text_input(
                 "Project name",
@@ -8614,15 +8161,13 @@ def _render_pipeline_studio() -> None:
                 if loaded_project_dir
                 else None
             )
-            loaded_name = (
-                loaded_manifest.get("name")
-                if isinstance(loaded_manifest, dict)
-                else None
-            )
+            loaded_name = loaded_manifest.get("name") if isinstance(loaded_manifest, dict) else None
             loaded_name = (
                 loaded_name
                 if isinstance(loaded_name, str) and loaded_name.strip()
-                else os.path.basename(loaded_project_dir) if loaded_project_dir else None
+                else os.path.basename(loaded_project_dir)
+                if loaded_project_dir
+                else None
             )
             save_as_new = False
             if loaded_project_dir:
@@ -8662,12 +8207,8 @@ def _render_pipeline_studio() -> None:
             if not projects:
                 st.caption("No saved projects yet.")
             else:
-                dir_options = [
-                    p.get("dir_name") for p in projects if p.get("dir_name")
-                ]
-                dir_options = [
-                    x for x in dir_options if isinstance(x, str) and x
-                ]
+                dir_options = [p.get("dir_name") for p in projects if p.get("dir_name")]
+                dir_options = [x for x in dir_options if isinstance(x, str) and x]
 
                 def _fmt_project(dir_name: str) -> str:
                     rec = next(
@@ -8676,11 +8217,7 @@ def _render_pipeline_studio() -> None:
                     )
                     if not isinstance(rec, dict):
                         return dir_name
-                    label = (
-                        rec.get("name")
-                        if isinstance(rec.get("name"), str)
-                        else dir_name
-                    )
+                    label = rec.get("name") if isinstance(rec.get("name"), str) else dir_name
                     try:
                         ts = float(rec.get("saved_ts") or 0.0)
                     except Exception:
@@ -8737,18 +8274,14 @@ def _render_pipeline_studio() -> None:
             )
         else:
             meta_by_id = {
-                str(x.get("id")): x
-                for x in lineage
-                if isinstance(x, dict) and x.get("id")
+                str(x.get("id")): x for x in lineage if isinstance(x, dict) and x.get("id")
             }
             node_ids = [did for did in meta_by_id.keys() if did]
 
             left, right = st.columns([0.35, 0.65], gap="large")
 
             with left:
-                pipeline_hash = (
-                    pipe.get("pipeline_hash") if isinstance(pipe, dict) else None
-                )
+                pipeline_hash = pipe.get("pipeline_hash") if isinstance(pipe, dict) else None
                 pipeline_hash = (
                     pipeline_hash.strip()
                     if isinstance(pipeline_hash, str) and pipeline_hash.strip()
@@ -8761,29 +8294,25 @@ def _render_pipeline_studio() -> None:
                 )
                 if isinstance(pipe, dict):
                     target_id = pipe.get("target_dataset_id")
-                    if isinstance(target_id, str) and target_id in set(
-                        ui_hidden_ids
-                    ) | set(ui_deleted_ids):
+                    if isinstance(target_id, str) and target_id in set(ui_hidden_ids) | set(
+                        ui_deleted_ids
+                    ):
                         visible_ids = [
                             did
                             for did in node_ids
                             if did not in ui_hidden_ids and did not in ui_deleted_ids
                         ]
-                        fallback_id = _pick_latest_dataset_id(
-                            studio_datasets, visible_ids
-                        )
+                        fallback_id = _pick_latest_dataset_id(studio_datasets, visible_ids)
                         if fallback_id:
                             pipe = dict(pipe)
                             pipe["target_dataset_id"] = fallback_id
-                st.session_state["pipeline_studio_semantic_graph"] = (
-                    _build_pipeline_semantic_graph(
-                        pipeline_hash=pipeline_hash,
-                        node_ids=node_ids,
-                        meta_by_id=meta_by_id,
-                        datasets=studio_datasets,
-                        hidden_ids=set(ui_hidden_ids),
-                        deleted_ids=set(ui_deleted_ids),
-                    )
+                st.session_state["pipeline_studio_semantic_graph"] = _build_pipeline_semantic_graph(
+                    pipeline_hash=pipeline_hash,
+                    node_ids=node_ids,
+                    meta_by_id=meta_by_id,
+                    datasets=studio_datasets,
+                    hidden_ids=set(ui_hidden_ids),
+                    deleted_ids=set(ui_deleted_ids),
                 )
                 target_display = (
                     f"all ({len(studio_datasets)} datasets)"
@@ -8795,17 +8324,15 @@ def _render_pipeline_studio() -> None:
                     f"**Target dataset id:** `{target_display}`  \n"
                     f"**Active dataset id:** `{pipe.get('active_dataset_id')}`"
                 )
-                show_hidden_pick = bool(
-                    st.session_state.get("pipeline_studio_show_hidden", False)
-                )
+                show_hidden_pick = bool(st.session_state.get("pipeline_studio_show_hidden", False))
                 show_deleted_pick = bool(
                     st.session_state.get("pipeline_studio_show_deleted", False)
                 )
                 ordered_ids = sorted(
                     studio_datasets.items(),
-                    key=lambda kv: float(kv[1].get("created_ts") or 0.0)
-                    if isinstance(kv[1], dict)
-                    else 0.0,
+                    key=lambda kv: (
+                        float(kv[1].get("created_ts") or 0.0) if isinstance(kv[1], dict) else 0.0
+                    ),
                     reverse=True,
                 )
                 pick_ids = [
@@ -8860,14 +8387,10 @@ def _render_pipeline_studio() -> None:
 
                 if pick_ids:
                     default_pick = st.session_state.get("pipeline_studio_node_id")
-                    if (
-                        not isinstance(default_pick, str)
-                        or default_pick not in pick_ids
-                    ):
+                    if not isinstance(default_pick, str) or default_pick not in pick_ids:
                         default_pick = (
                             studio_active_id
-                            if isinstance(studio_active_id, str)
-                            and studio_active_id in pick_ids
+                            if isinstance(studio_active_id, str) and studio_active_id in pick_ids
                             else pick_ids[0]
                         )
                     pick_cols = st.columns([0.64, 0.18, 0.18], gap="small")
@@ -8875,9 +8398,7 @@ def _render_pipeline_studio() -> None:
                         picked_id = st.selectbox(
                             "Set active dataset",
                             options=pick_ids,
-                            index=pick_ids.index(default_pick)
-                            if default_pick in pick_ids
-                            else 0,
+                            index=pick_ids.index(default_pick) if default_pick in pick_ids else 0,
                             format_func=_fmt_studio_dataset,
                             key="pipeline_studio_active_picker",
                         )
@@ -8890,9 +8411,7 @@ def _render_pipeline_studio() -> None:
                             _set_active_dataset_studio(picked_id)
                     with pick_cols[2]:
                         target_id = (
-                            pipe.get("target_dataset_id")
-                            if isinstance(pipe, dict)
-                            else None
+                            pipe.get("target_dataset_id") if isinstance(pipe, dict) else None
                         )
                         if isinstance(target_id, str) and target_id in studio_datasets:
                             if st.button(
@@ -8947,24 +8466,18 @@ def _render_pipeline_studio() -> None:
                         active_now = None
                     suffix = " (set active)" if active_now == run_ok else ""
                     st.success(f"Created new dataset: `{run_ok}`{suffix}.")
-                history_notice = st.session_state.pop(
-                    "pipeline_studio_history_notice", None
-                )
+                history_notice = st.session_state.pop("pipeline_studio_history_notice", None)
                 if isinstance(history_notice, str) and history_notice.strip():
                     st.info(history_notice)
 
-                project_notice = st.session_state.pop(
-                    "pipeline_studio_project_notice", None
-                )
+                project_notice = st.session_state.pop("pipeline_studio_project_notice", None)
                 if isinstance(project_notice, str) and project_notice.strip():
                     if project_notice.lower().startswith("error:"):
                         st.error(project_notice.replace("Error:", "", 1).strip())
                     else:
                         st.success(project_notice)
 
-                artifact_notice = st.session_state.pop(
-                    "pipeline_studio_artifact_notice", None
-                )
+                artifact_notice = st.session_state.pop("pipeline_studio_artifact_notice", None)
                 if isinstance(artifact_notice, str) and artifact_notice.strip():
                     if artifact_notice.lower().startswith("error:"):
                         st.error(artifact_notice.replace("Error:", "", 1).strip())
@@ -8996,22 +8509,16 @@ def _render_pipeline_studio() -> None:
                         )
                         err = res.get("error")
                         if isinstance(err, str) and err:
-                            st.session_state["pipeline_studio_project_notice"] = (
-                                f"Error: {err}"
-                            )
+                            st.session_state["pipeline_studio_project_notice"] = f"Error: {err}"
                             return
                         saved_dir = res.get("project_dir")
                         if isinstance(saved_dir, str) and saved_dir:
-                            data_mode = (
-                                "metadata-only" if not bool(include_data) else "full"
-                            )
+                            data_mode = "metadata-only" if not bool(include_data) else "full"
                             if target_dir:
                                 st.session_state["pipeline_studio_project_notice"] = (
                                     f"Overwrote {data_mode} project at `{target_dir}`."
                                 )
-                                st.session_state[
-                                    "pipeline_studio_loaded_project_dir"
-                                ] = target_dir
+                                st.session_state["pipeline_studio_loaded_project_dir"] = target_dir
                             else:
                                 st.session_state["pipeline_studio_project_notice"] = (
                                     f"Saved {data_mode} project to `{saved_dir}`."
@@ -9019,13 +8526,10 @@ def _render_pipeline_studio() -> None:
                                 current_loaded = st.session_state.get(
                                     "pipeline_studio_loaded_project_dir"
                                 )
-                                if not (
-                                    isinstance(current_loaded, str)
-                                    and current_loaded.strip()
-                                ):
-                                    st.session_state[
-                                        "pipeline_studio_loaded_project_dir"
-                                    ] = saved_dir
+                                if not (isinstance(current_loaded, str) and current_loaded.strip()):
+                                    st.session_state["pipeline_studio_loaded_project_dir"] = (
+                                        saved_dir
+                                    )
                         else:
                             st.session_state["pipeline_studio_project_notice"] = (
                                 "Error: Project save failed (unknown error)."
@@ -9038,26 +8542,20 @@ def _render_pipeline_studio() -> None:
                                 "Error: Select a project to load."
                             )
                             return
-                        project_dir = os.path.join(
-                            PIPELINE_STUDIO_PROJECTS_DIR, dir_name
-                        )
+                        project_dir = os.path.join(PIPELINE_STUDIO_PROJECTS_DIR, dir_name)
                         res = _pipeline_studio_load_project(
                             project_dir=project_dir, rehydrate=bool(rehydrate)
                         )
                         err = res.get("error")
                         if isinstance(err, str) and err:
-                            st.session_state["pipeline_studio_project_notice"] = (
-                                f"Error: {err}"
-                            )
+                            st.session_state["pipeline_studio_project_notice"] = f"Error: {err}"
                             return
                         loaded_n = res.get("loaded_datasets")
                         data_mode = str(res.get("data_mode") or "full")
                         stats = res.get("rehydrate_stats")
                         stats = stats if isinstance(stats, dict) else {}
                         missing_files = res.get("missing_files")
-                        missing_files = (
-                            missing_files if isinstance(missing_files, list) else []
-                        )
+                        missing_files = missing_files if isinstance(missing_files, list) else []
                         data_files_loaded = int(res.get("data_files_loaded") or 0)
                         if data_mode == "metadata_only":
                             roots_loaded = int(stats.get("roots_loaded") or 0)
@@ -9071,16 +8569,10 @@ def _render_pipeline_studio() -> None:
                                         f"rehydrated {roots_loaded + transforms_run}"
                                     )
                                 if missing_sources:
-                                    suffix_bits.append(
-                                        f"missing sources: {missing_sources}"
-                                    )
+                                    suffix_bits.append(f"missing sources: {missing_sources}")
                                 if failures:
                                     suffix_bits.append(f"transform errors: {failures}")
-                                suffix = (
-                                    f" ({', '.join(suffix_bits)})"
-                                    if suffix_bits
-                                    else ""
-                                )
+                                suffix = f" ({', '.join(suffix_bits)})" if suffix_bits else ""
                                 st.session_state["pipeline_studio_project_notice"] = (
                                     f"Loaded metadata-only project: {int(loaded_n or 0)} dataset(s){suffix}."
                                 )
@@ -9091,16 +8583,10 @@ def _render_pipeline_studio() -> None:
                         else:
                             suffix_bits = []
                             if data_files_loaded:
-                                suffix_bits.append(
-                                    f"loaded {data_files_loaded} data file(s)"
-                                )
+                                suffix_bits.append(f"loaded {data_files_loaded} data file(s)")
                             if missing_files:
-                                suffix_bits.append(
-                                    f"missing data files: {len(missing_files)}"
-                                )
-                            suffix = (
-                                f" ({', '.join(suffix_bits)})" if suffix_bits else ""
-                            )
+                                suffix_bits.append(f"missing data files: {len(missing_files)}")
+                            suffix = f" ({', '.join(suffix_bits)})" if suffix_bits else ""
                             st.session_state["pipeline_studio_project_notice"] = (
                                 f"Loaded project: {int(loaded_n or 0)} dataset(s){suffix}."
                             )
@@ -9110,58 +8596,41 @@ def _render_pipeline_studio() -> None:
                             "data_files_loaded": data_files_loaded,
                             "missing_files": missing_files,
                         }
-                        st.session_state["pipeline_studio_loaded_project_dir"] = (
-                            project_dir
-                        )
+                        st.session_state["pipeline_studio_loaded_project_dir"] = project_dir
                         missing_sources = res.get("missing_sources")
                         missing_sources = (
                             missing_sources if isinstance(missing_sources, list) else []
                         )
-                        st.session_state["pipeline_studio_missing_sources"] = (
-                            missing_sources
-                        )
+                        st.session_state["pipeline_studio_missing_sources"] = missing_sources
                         st.session_state["pipeline_studio_autofollow_pending"] = True
-                        st.session_state["pipeline_studio_view_pending"] = (
-                            "Visual Editor"
-                        )
+                        st.session_state["pipeline_studio_view_pending"] = "Visual Editor"
 
-                    default_project_name = st.session_state.get(
-                        "pipeline_studio_project_name"
-                    )
+                    default_project_name = st.session_state.get("pipeline_studio_project_name")
                     if (
                         not isinstance(default_project_name, str)
                         or not default_project_name.strip()
                     ):
                         default_project_name = (
-                            f"pipeline_{pipeline_hash[:8]}"
-                            if pipeline_hash
-                            else "project"
+                            f"pipeline_{pipeline_hash[:8]}" if pipeline_hash else "project"
                         )
                     project_name = st.text_input(
                         "Project name",
                         value=default_project_name,
                         key="pipeline_studio_project_name",
                     )
-                    loaded_project_dir = st.session_state.get(
-                        "pipeline_studio_loaded_project_dir"
-                    )
+                    loaded_project_dir = st.session_state.get("pipeline_studio_loaded_project_dir")
                     loaded_project_dir = (
                         loaded_project_dir
-                        if isinstance(loaded_project_dir, str)
-                        and loaded_project_dir.strip()
+                        if isinstance(loaded_project_dir, str) and loaded_project_dir.strip()
                         else None
                     )
                     loaded_manifest = (
-                        _pipeline_studio_load_project_manifest(
-                            project_dir=loaded_project_dir
-                        )
+                        _pipeline_studio_load_project_manifest(project_dir=loaded_project_dir)
                         if loaded_project_dir
                         else None
                     )
                     loaded_name = (
-                        loaded_manifest.get("name")
-                        if isinstance(loaded_manifest, dict)
-                        else None
+                        loaded_manifest.get("name") if isinstance(loaded_manifest, dict) else None
                     )
                     loaded_name = (
                         loaded_name
@@ -9208,12 +8677,8 @@ def _render_pipeline_studio() -> None:
                     if not projects:
                         st.caption("No saved projects yet.")
                     else:
-                        dir_options = [
-                            p.get("dir_name") for p in projects if p.get("dir_name")
-                        ]
-                        dir_options = [
-                            x for x in dir_options if isinstance(x, str) and x
-                        ]
+                        dir_options = [p.get("dir_name") for p in projects if p.get("dir_name")]
+                        dir_options = [x for x in dir_options if isinstance(x, str) and x]
 
                         def _fmt_project(dir_name: str) -> str:
                             rec = next(
@@ -9223,9 +8688,7 @@ def _render_pipeline_studio() -> None:
                             if not isinstance(rec, dict):
                                 return dir_name
                             label = (
-                                rec.get("name")
-                                if isinstance(rec.get("name"), str)
-                                else dir_name
+                                rec.get("name") if isinstance(rec.get("name"), str) else dir_name
                             )
                             try:
                                 ts = float(rec.get("saved_ts") or 0.0)
@@ -9254,13 +8717,9 @@ def _render_pipeline_studio() -> None:
                             .lower()
                         )
                         selected_mode_label = (
-                            "metadata-only"
-                            if selected_mode == "metadata_only"
-                            else "full"
+                            "metadata-only" if selected_mode == "metadata_only" else "full"
                         )
-                        prev_selected = st.session_state.get(
-                            "pipeline_studio_project_select_prev"
-                        )
+                        prev_selected = st.session_state.get("pipeline_studio_project_select_prev")
                         if selected_project != prev_selected:
                             st.session_state["pipeline_studio_project_select_prev"] = (
                                 selected_project
@@ -9298,22 +8757,14 @@ def _render_pipeline_studio() -> None:
                     st.markdown("---")
                     st.markdown("**Project dashboard**")
                     projects = _pipeline_studio_list_projects()
-                    load_summary = st.session_state.get(
-                        "pipeline_studio_last_load_summary"
-                    )
+                    load_summary = st.session_state.get("pipeline_studio_last_load_summary")
                     if isinstance(load_summary, dict):
-                        mode = str(load_summary.get("data_mode") or "full").replace(
-                            "_", "-"
-                        )
+                        mode = str(load_summary.get("data_mode") or "full").replace("_", "-")
                         stats = load_summary.get("rehydrate_stats")
                         stats = stats if isinstance(stats, dict) else {}
                         missing_files = load_summary.get("missing_files")
-                        missing_files = (
-                            missing_files if isinstance(missing_files, list) else []
-                        )
-                        data_files_loaded = int(
-                            load_summary.get("data_files_loaded") or 0
-                        )
+                        missing_files = missing_files if isinstance(missing_files, list) else []
+                        data_files_loaded = int(load_summary.get("data_files_loaded") or 0)
                         stat_bits = []
                         if stats:
                             roots = int(stats.get("roots_loaded") or 0)
@@ -9328,39 +8779,29 @@ def _render_pipeline_studio() -> None:
                                 stat_bits.append(f"transform errors: {fails}")
                         if mode != "metadata-only":
                             if data_files_loaded:
-                                stat_bits.append(
-                                    f"loaded data files: {data_files_loaded}"
-                                )
+                                stat_bits.append(f"loaded data files: {data_files_loaded}")
                             if missing_files:
-                                stat_bits.append(
-                                    f"missing data files: {len(missing_files)}"
-                                )
+                                stat_bits.append(f"missing data files: {len(missing_files)}")
                         badge = f"Last load: {mode}"
                         if stat_bits:
                             badge = f"{badge} · {', '.join(stat_bits)}"
                         st.info(badge)
                     search_term = st.text_input(
                         "Search projects",
-                        value=st.session_state.get(
-                            "pipeline_studio_project_search", ""
-                        ),
+                        value=st.session_state.get("pipeline_studio_project_search", ""),
                         key="pipeline_studio_project_search",
                     )
                     show_archived = st.checkbox(
                         "Show archived projects",
                         value=bool(
-                            st.session_state.get(
-                                "pipeline_studio_project_show_archived", False
-                            )
+                            st.session_state.get("pipeline_studio_project_show_archived", False)
                         ),
                         key="pipeline_studio_project_show_archived",
                     )
                     show_sizes = st.checkbox(
                         "Show disk usage",
                         value=bool(
-                            st.session_state.get(
-                                "pipeline_studio_project_show_sizes", False
-                            )
+                            st.session_state.get("pipeline_studio_project_show_sizes", False)
                         ),
                         key="pipeline_studio_project_show_sizes",
                     )
@@ -9399,9 +8840,7 @@ def _render_pipeline_studio() -> None:
                         for rec in filtered_projects:
                             dir_path = rec.get("dir_path")
                             if isinstance(dir_path, str):
-                                rec["disk_bytes"] = _pipeline_studio_project_disk_usage(
-                                    dir_path
-                                )
+                                rec["disk_bytes"] = _pipeline_studio_project_disk_usage(dir_path)
 
                     def _sort_key(rec: dict) -> tuple:
                         if sort_by == "Name":
@@ -9428,12 +8867,8 @@ def _render_pipeline_studio() -> None:
                                     "name": rec.get("name") or rec.get("dir_name"),
                                     "mode": mode_badge,
                                     "datasets": int(rec.get("datasets_total") or 0),
-                                    "saved": _pipeline_studio_format_ts(
-                                        rec.get("saved_ts")
-                                    ),
-                                    "opened": _pipeline_studio_format_ts(
-                                        rec.get("last_opened_ts")
-                                    ),
+                                    "saved": _pipeline_studio_format_ts(rec.get("saved_ts")),
+                                    "opened": _pipeline_studio_format_ts(rec.get("last_opened_ts")),
                                     "tags": ", ".join(
                                         [
                                             t
@@ -9442,9 +8877,7 @@ def _render_pipeline_studio() -> None:
                                         ]
                                     ),
                                     "archived": bool(rec.get("archived")),
-                                    "size": _pipeline_studio_format_bytes(
-                                        rec.get("disk_bytes")
-                                    )
+                                    "size": _pipeline_studio_format_bytes(rec.get("disk_bytes"))
                                     if show_sizes
                                     else "-",
                                 }
@@ -9476,11 +8909,7 @@ def _render_pipeline_studio() -> None:
 
                         def _project_label(dir_name: str) -> str:
                             rec = next(
-                                (
-                                    p
-                                    for p in filtered_projects
-                                    if p.get("dir_name") == dir_name
-                                ),
+                                (p for p in filtered_projects if p.get("dir_name") == dir_name),
                                 None,
                             )
                             if not isinstance(rec, dict):
@@ -9492,14 +8921,10 @@ def _render_pipeline_studio() -> None:
                             return f"{name} ({mode}, {data_ct} datasets){archived}"
 
                         manage_options = [
-                            rec.get("dir_name")
-                            for rec in filtered_projects
-                            if rec.get("dir_name")
+                            rec.get("dir_name") for rec in filtered_projects if rec.get("dir_name")
                         ]
                         manage_options = [
-                            x
-                            for x in manage_options
-                            if isinstance(x, str) and x.strip()
+                            x for x in manage_options if isinstance(x, str) and x.strip()
                         ]
                         manage_choice = st.selectbox(
                             "Manage project",
@@ -9544,11 +8969,7 @@ def _render_pipeline_studio() -> None:
                                 key=f"pipeline_studio_project_meta_save_{manage_choice}",
                                 width="stretch",
                             ):
-                                tags_list = [
-                                    t.strip()
-                                    for t in tags_input.split(",")
-                                    if t.strip()
-                                ]
+                                tags_list = [t.strip() for t in tags_input.split(",") if t.strip()]
                                 _pipeline_studio_save_project_metadata(
                                     dir_name=manage_choice,
                                     tags=tags_list,
@@ -9571,13 +8992,13 @@ def _render_pipeline_studio() -> None:
                                 )
                                 err = res.get("error")
                                 if err:
-                                    st.session_state[
-                                        "pipeline_studio_project_notice"
-                                    ] = f"Error: {err}"
+                                    st.session_state["pipeline_studio_project_notice"] = (
+                                        f"Error: {err}"
+                                    )
                                 else:
-                                    st.session_state[
-                                        "pipeline_studio_project_notice"
-                                    ] = "Project renamed."
+                                    st.session_state["pipeline_studio_project_notice"] = (
+                                        "Project renamed."
+                                    )
 
                             dup_name = st.text_input(
                                 "Duplicate as",
@@ -9594,13 +9015,13 @@ def _render_pipeline_studio() -> None:
                                 )
                                 err = res.get("error")
                                 if err:
-                                    st.session_state[
-                                        "pipeline_studio_project_notice"
-                                    ] = f"Error: {err}"
+                                    st.session_state["pipeline_studio_project_notice"] = (
+                                        f"Error: {err}"
+                                    )
                                 else:
-                                    st.session_state[
-                                        "pipeline_studio_project_notice"
-                                    ] = "Project duplicated."
+                                    st.session_state["pipeline_studio_project_notice"] = (
+                                        "Project duplicated."
+                                    )
 
                             if st.button(
                                 "Convert to metadata-only",
@@ -9632,15 +9053,9 @@ def _render_pipeline_studio() -> None:
                             disabled=not (bulk_confirm and bulk_delete),
                         )
 
-                    missing_sources = st.session_state.get(
-                        "pipeline_studio_missing_sources"
-                    )
-                    missing_sources = (
-                        missing_sources if isinstance(missing_sources, list) else []
-                    )
-                    project_dir = st.session_state.get(
-                        "pipeline_studio_loaded_project_dir"
-                    )
+                    missing_sources = st.session_state.get("pipeline_studio_missing_sources")
+                    missing_sources = missing_sources if isinstance(missing_sources, list) else []
+                    project_dir = st.session_state.get("pipeline_studio_loaded_project_dir")
                     if missing_sources and isinstance(project_dir, str):
                         with st.expander("Relink missing sources", expanded=True):
                             st.caption(
@@ -9668,9 +9083,7 @@ def _render_pipeline_studio() -> None:
                                     did = rec.get("dataset_id")
                                     if not isinstance(did, str) or not did:
                                         continue
-                                    new_val = st.session_state.get(
-                                        f"pipeline_studio_relink_{did}"
-                                    )
+                                    new_val = st.session_state.get(f"pipeline_studio_relink_{did}")
                                     old_val = rec.get("source") or ""
                                     if (
                                         isinstance(new_val, str)
@@ -9688,26 +9101,20 @@ def _render_pipeline_studio() -> None:
                                 )
                                 err = res.get("error")
                                 if err:
-                                    st.session_state[
-                                        "pipeline_studio_project_notice"
-                                    ] = f"Error: {err}"
+                                    st.session_state["pipeline_studio_project_notice"] = (
+                                        f"Error: {err}"
+                                    )
                                 else:
-                                    st.session_state[
-                                        "pipeline_studio_project_notice"
-                                    ] = "Relinked sources and reloaded project."
+                                    st.session_state["pipeline_studio_project_notice"] = (
+                                        "Relinked sources and reloaded project."
+                                    )
                                 missing_next = res.get("missing_sources")
                                 missing_next = (
-                                    missing_next
-                                    if isinstance(missing_next, list)
-                                    else []
+                                    missing_next if isinstance(missing_next, list) else []
                                 )
-                                st.session_state["pipeline_studio_missing_sources"] = (
-                                    missing_next
-                                )
+                                st.session_state["pipeline_studio_missing_sources"] = missing_next
 
-                    project_dir = st.session_state.get(
-                        "pipeline_studio_loaded_project_dir"
-                    )
+                    project_dir = st.session_state.get("pipeline_studio_loaded_project_dir")
                     if isinstance(project_dir, str) and project_dir:
                         if st.button(
                             "Rehydrate now",
@@ -9719,41 +9126,27 @@ def _render_pipeline_studio() -> None:
                             )
                             err = res.get("error")
                             if err:
-                                st.session_state["pipeline_studio_project_notice"] = (
-                                    f"Error: {err}"
-                                )
+                                st.session_state["pipeline_studio_project_notice"] = f"Error: {err}"
                             else:
                                 st.session_state["pipeline_studio_project_notice"] = (
                                     "Rehydrated project."
                                 )
                             missing_next = res.get("missing_sources")
-                            missing_next = (
-                                missing_next if isinstance(missing_next, list) else []
-                            )
-                            st.session_state["pipeline_studio_missing_sources"] = (
-                                missing_next
-                            )
+                            missing_next = missing_next if isinstance(missing_next, list) else []
+                            st.session_state["pipeline_studio_missing_sources"] = missing_next
                             st.session_state["pipeline_studio_last_load_summary"] = {
                                 "data_mode": res.get("data_mode"),
                                 "rehydrate_stats": res.get("rehydrate_stats") or {},
                             }
 
-                        manifest = _pipeline_studio_load_project_manifest(
-                            project_dir=project_dir
-                        )
+                        manifest = _pipeline_studio_load_project_manifest(project_dir=project_dir)
                         team_state = (
-                            manifest.get("team_state")
-                            if isinstance(manifest, dict)
-                            else {}
+                            manifest.get("team_state") if isinstance(manifest, dict) else {}
                         )
                         datasets_meta = (
-                            team_state.get("datasets")
-                            if isinstance(team_state, dict)
-                            else {}
+                            team_state.get("datasets") if isinstance(team_state, dict) else {}
                         )
-                        datasets_meta = (
-                            datasets_meta if isinstance(datasets_meta, dict) else {}
-                        )
+                        datasets_meta = datasets_meta if isinstance(datasets_meta, dict) else {}
                         preview_sets = [
                             (did, meta)
                             for did, meta in datasets_meta.items()
@@ -9762,9 +9155,7 @@ def _render_pipeline_studio() -> None:
                             and meta.get("preview_data")
                         ]
                         if preview_sets:
-                            with st.expander(
-                                "Data previews (metadata-only)", expanded=False
-                            ):
+                            with st.expander("Data previews (metadata-only)", expanded=False):
                                 for did, meta in preview_sets:
                                     label = meta.get("label") or did
                                     st.caption(f"{label} ({did})")
@@ -9841,9 +9232,7 @@ def _render_pipeline_studio() -> None:
                         }
                         if not node_ids_clean:
                             return
-                        ui_h, ui_d = _pipeline_studio_get_registry_ui(
-                            pipeline_hash=p_hash
-                        )
+                        ui_h, ui_d = _pipeline_studio_get_registry_ui(pipeline_hash=p_hash)
                         ui_h = set(ui_h) | set(node_ids_clean)
                         _pipeline_studio_set_registry_ui(
                             pipeline_hash=p_hash,
@@ -9855,9 +9244,7 @@ def _render_pipeline_studio() -> None:
                         )
                         st.session_state["pipeline_studio_flow_fit_view_pending"] = True
                         if "pipeline_studio_flow_ts" in st.session_state:
-                            st.session_state["pipeline_studio_flow_ts"] = int(
-                                _time.time() * 1000
-                            )
+                            st.session_state["pipeline_studio_flow_ts"] = int(_time.time() * 1000)
                     except Exception:
                         pass
 
@@ -9894,14 +9281,10 @@ def _render_pipeline_studio() -> None:
                             )
                             if isinstance(skipped, list) and skipped:
                                 st.markdown("**Skipped**")
-                                st.dataframe(
-                                    pd.DataFrame(skipped), width="stretch"
-                                )
+                                st.dataframe(pd.DataFrame(skipped), width="stretch")
                             if isinstance(failed, list) and failed:
                                 st.markdown("**Failures**")
-                                st.dataframe(
-                                    pd.DataFrame(failed), width="stretch"
-                                )
+                                st.dataframe(pd.DataFrame(failed), width="stretch")
                             if pipeline_hash and stale_ids:
                                 st.markdown("---")
                                 st.button(
@@ -9926,28 +9309,18 @@ def _render_pipeline_studio() -> None:
                             args=(old_id, new_id),
                         )
 
-                last_mapping = st.session_state.get(
-                    "pipeline_studio_last_downstream_mapping"
-                )
+                last_mapping = st.session_state.get("pipeline_studio_last_downstream_mapping")
                 last_mapping = last_mapping if isinstance(last_mapping, dict) else {}
-                last_source = st.session_state.get(
-                    "pipeline_studio_last_downstream_source"
-                )
+                last_source = st.session_state.get("pipeline_studio_last_downstream_source")
                 last_source = last_source if isinstance(last_source, dict) else {}
                 if last_mapping:
                     with st.expander("Downstream replacements", expanded=False):
                         src_old = last_source.get("old_id")
                         src_new = last_source.get("new_id")
-                        src_old = (
-                            src_old if isinstance(src_old, str) and src_old else None
-                        )
-                        src_new = (
-                            src_new if isinstance(src_new, str) and src_new else None
-                        )
+                        src_old = src_old if isinstance(src_old, str) and src_old else None
+                        src_new = src_new if isinstance(src_new, str) and src_new else None
                         created_ids = last_source.get("created_ids")
-                        created_ids = (
-                            created_ids if isinstance(created_ids, list) else []
-                        )
+                        created_ids = created_ids if isinstance(created_ids, list) else []
                         if src_old and src_new:
                             st.caption(f"From `{src_old}` → `{src_new}`")
                         if created_ids:
@@ -9955,15 +9328,11 @@ def _render_pipeline_studio() -> None:
 
                         mapping_rows = [
                             {"old_id": str(k), "new_id": str(v)}
-                            for k, v in sorted(
-                                last_mapping.items(), key=lambda x: str(x[0])
-                            )
+                            for k, v in sorted(last_mapping.items(), key=lambda x: str(x[0]))
                             if isinstance(k, str) and isinstance(v, str) and k and v
                         ]
                         if mapping_rows:
-                            st.dataframe(
-                                pd.DataFrame(mapping_rows), width="stretch"
-                            )
+                            st.dataframe(pd.DataFrame(mapping_rows), width="stretch")
 
                         c_hide_stale, c_hide_old = st.columns(2)
                         with c_hide_stale:
@@ -10077,9 +9446,7 @@ def _render_pipeline_studio() -> None:
                 registry_bytes = None
                 try:
                     ph = pipeline_hash
-                    rec = (
-                        _get_persisted_pipeline_registry(pipeline_hash=ph) if ph else {}
-                    )
+                    rec = _get_persisted_pipeline_registry(pipeline_hash=ph) if ph else {}
                     if not rec:
                         rec = _build_pipeline_registry_record(
                             pipeline=pipe,
@@ -10089,9 +9456,7 @@ def _render_pipeline_studio() -> None:
                             ),
                         )
                     if isinstance(rec, dict) and rec:
-                        registry_bytes = json.dumps(rec, indent=2, default=str).encode(
-                            "utf-8"
-                        )
+                        registry_bytes = json.dumps(rec, indent=2, default=str).encode("utf-8")
                 except Exception:
                     registry_bytes = None
                 if registry_bytes:
@@ -10112,9 +9477,7 @@ def _render_pipeline_studio() -> None:
                         key="pipeline_studio_download_repro",
                     )
 
-                pending_node = st.session_state.pop(
-                    "pipeline_studio_node_id_pending", None
-                )
+                pending_node = st.session_state.pop("pipeline_studio_node_id_pending", None)
                 if (
                     isinstance(pending_node, str)
                     and pending_node
@@ -10133,13 +9496,9 @@ def _render_pipeline_studio() -> None:
                     "pipeline_studio_autofollow_pending", None
                 )
                 if pending_autofollow is not None:
-                    st.session_state["pipeline_studio_autofollow"] = bool(
-                        pending_autofollow
-                    )
+                    st.session_state["pipeline_studio_autofollow"] = bool(pending_autofollow)
 
-                auto_follow_default = bool(
-                    st.session_state.get("pipeline_studio_autofollow", True)
-                )
+                auto_follow_default = bool(st.session_state.get("pipeline_studio_autofollow", True))
                 auto_follow = st.checkbox(
                     "Auto-follow latest step",
                     value=auto_follow_default,
@@ -10149,17 +9508,13 @@ def _render_pipeline_studio() -> None:
 
                 show_hidden = st.checkbox(
                     "Show hidden steps",
-                    value=bool(
-                        st.session_state.get("pipeline_studio_show_hidden", False)
-                    ),
+                    value=bool(st.session_state.get("pipeline_studio_show_hidden", False)),
                     key="pipeline_studio_show_hidden",
                     help="Include hidden steps in the step selector and compare options.",
                 )
                 show_deleted = st.checkbox(
                     "Show deleted steps",
-                    value=bool(
-                        st.session_state.get("pipeline_studio_show_deleted", False)
-                    ),
+                    value=bool(st.session_state.get("pipeline_studio_show_deleted", False)),
                     key="pipeline_studio_show_deleted",
                     help="Include deleted steps in the step selector and compare options.",
                 )
@@ -10171,9 +9526,7 @@ def _render_pipeline_studio() -> None:
                 ]
                 if not selectable_node_ids:
                     selectable_node_ids = list(node_ids)
-                    st.warning(
-                        "All steps are hidden/deleted; showing all for selection."
-                    )
+                    st.warning("All steps are hidden/deleted; showing all for selection.")
 
                 # Keep selection valid and optionally auto-follow newest node.
                 if selectable_node_ids:
@@ -10181,10 +9534,7 @@ def _render_pipeline_studio() -> None:
                     current = st.session_state.get("pipeline_studio_node_id")
                     if auto_follow:
                         st.session_state["pipeline_studio_node_id"] = desired
-                    elif (
-                        not isinstance(current, str)
-                        or current not in selectable_node_ids
-                    ):
+                    elif not isinstance(current, str) or current not in selectable_node_ids:
                         st.session_state["pipeline_studio_node_id"] = desired
 
                 def _node_label(did: str) -> str:
@@ -10230,12 +9580,8 @@ def _render_pipeline_studio() -> None:
                             store = _load_pipeline_studio_artifact_store()
                             by_fp = store.get("by_fingerprint")
                             by_fp = by_fp if isinstance(by_fp, dict) else {}
-                            clears_map = st.session_state.get(
-                                "pipeline_studio_artifact_clears"
-                            )
-                            clears_map = (
-                                clears_map if isinstance(clears_map, dict) else {}
-                            )
+                            clears_map = st.session_state.get("pipeline_studio_artifact_clears")
+                            clears_map = clears_map if isinstance(clears_map, dict) else {}
                             artifact_fields = {
                                 "plotly_graph": "json",
                                 "viz_error": "message",
@@ -10247,18 +9593,12 @@ def _render_pipeline_studio() -> None:
                                 "mlflow_artifacts": "artifacts",
                             }
 
-                            def _clears_for_node(
-                                node_id: str, entry_obj: dict
-                            ) -> set[str]:
+                            def _clears_for_node(node_id: str, entry_obj: dict) -> set[str]:
                                 clears: set[str] = set()
                                 stored = clears_map.get(node_id)
                                 if isinstance(stored, list):
                                     clears.update(
-                                        [
-                                            str(x)
-                                            for x in stored
-                                            if isinstance(x, str) and x
-                                        ]
+                                        [str(x) for x in stored if isinstance(x, str) and x]
                                     )
                                 fp = entry_obj.get("fingerprint")
                                 fp = fp if isinstance(fp, str) and fp else None
@@ -10268,11 +9608,7 @@ def _render_pipeline_studio() -> None:
                                     stored = rec.get("cleared_keys")
                                     if isinstance(stored, list):
                                         clears.update(
-                                            [
-                                                str(x)
-                                                for x in stored
-                                                if isinstance(x, str) and x
-                                            ]
+                                            [str(x) for x in stored if isinstance(x, str) and x]
                                         )
                                 return clears
 
@@ -10305,9 +9641,7 @@ def _render_pipeline_studio() -> None:
                                     if isinstance(studio_datasets, dict)
                                     else None
                                 )
-                                entry_obj = (
-                                    entry_obj if isinstance(entry_obj, dict) else {}
-                                )
+                                entry_obj = entry_obj if isinstance(entry_obj, dict) else {}
                                 label = (
                                     entry_obj.get("label")
                                     or (meta_by_id.get(did) or {}).get("label")
@@ -10346,18 +9680,10 @@ def _render_pipeline_studio() -> None:
                                         "Select": False,
                                         "Node": f"{label} ({did})",
                                         "Stage": stage or "-",
-                                        "Chart": _flag(
-                                            PIPELINE_STUDIO_ARTIFACT_GROUPS["Chart"]
-                                        ),
-                                        "EDA": _flag(
-                                            PIPELINE_STUDIO_ARTIFACT_GROUPS["EDA"]
-                                        ),
-                                        "Model": _flag(
-                                            PIPELINE_STUDIO_ARTIFACT_GROUPS["Model"]
-                                        ),
-                                        "MLflow": _flag(
-                                            PIPELINE_STUDIO_ARTIFACT_GROUPS["MLflow"]
-                                        ),
+                                        "Chart": _flag(PIPELINE_STUDIO_ARTIFACT_GROUPS["Chart"]),
+                                        "EDA": _flag(PIPELINE_STUDIO_ARTIFACT_GROUPS["EDA"]),
+                                        "Model": _flag(PIPELINE_STUDIO_ARTIFACT_GROUPS["Model"]),
+                                        "MLflow": _flag(PIPELINE_STUDIO_ARTIFACT_GROUPS["MLflow"]),
                                     }
                                 )
 
@@ -10369,19 +9695,11 @@ def _render_pipeline_studio() -> None:
                                     hide_index=True,
                                     key="pipeline_studio_artifact_summary_editor",
                                     column_config={
-                                        "Select": st.column_config.CheckboxColumn(
-                                            "Select"
-                                        ),
-                                        "Chart": st.column_config.CheckboxColumn(
-                                            "Chart"
-                                        ),
+                                        "Select": st.column_config.CheckboxColumn("Select"),
+                                        "Chart": st.column_config.CheckboxColumn("Chart"),
                                         "EDA": st.column_config.CheckboxColumn("EDA"),
-                                        "Model": st.column_config.CheckboxColumn(
-                                            "Model"
-                                        ),
-                                        "MLflow": st.column_config.CheckboxColumn(
-                                            "MLflow"
-                                        ),
+                                        "Model": st.column_config.CheckboxColumn("Model"),
+                                        "MLflow": st.column_config.CheckboxColumn("MLflow"),
                                     },
                                     disabled=[
                                         "Node",
@@ -10395,15 +9713,11 @@ def _render_pipeline_studio() -> None:
                                 selected_ids = []
                                 if isinstance(edited_summary, pd.DataFrame):
                                     if "Select" in edited_summary.columns:
-                                        selected_rows = edited_summary[
-                                            edited_summary["Select"]
-                                        ]
+                                        selected_rows = edited_summary[edited_summary["Select"]]
                                     else:
                                         selected_rows = edited_summary.iloc[0:0]
                                     for node_label in selected_rows.get("Node", []).tolist():
-                                        m = re.search(
-                                            r"\(([^()]*)\)\s*$", str(node_label)
-                                        )
+                                        m = re.search(r"\(([^()]*)\)\s*$", str(node_label))
                                         if m:
                                             selected_ids.append(m.group(1))
                                 summary_groups = st.multiselect(
@@ -10439,33 +9753,23 @@ def _render_pipeline_studio() -> None:
                         )
 
                         def _clear_selected_artifacts() -> None:
-                            groups = st.session_state.get(
-                                "pipeline_studio_artifact_clear_groups"
-                            )
+                            groups = st.session_state.get("pipeline_studio_artifact_clear_groups")
                             groups = groups if isinstance(groups, list) else []
                             keys: list[str] = []
                             for group in groups:
-                                keys.extend(
-                                    PIPELINE_STUDIO_ARTIFACT_GROUPS.get(group, ())
-                                )
+                                keys.extend(PIPELINE_STUDIO_ARTIFACT_GROUPS.get(group, ()))
                             _pipeline_studio_clear_dataset_artifacts(
                                 dataset_id=selected_node_id, keys=keys
                             )
-                            st.session_state[
-                                "pipeline_studio_artifact_clear_groups"
-                            ] = []
+                            st.session_state["pipeline_studio_artifact_clear_groups"] = []
 
                         def _clear_all_artifacts() -> None:
                             _pipeline_studio_clear_dataset_artifacts(
                                 dataset_id=selected_node_id,
                                 keys=PIPELINE_STUDIO_ARTIFACT_KEYS,
                             )
-                            st.session_state[
-                                "pipeline_studio_artifact_clear_groups"
-                            ] = []
-                            st.session_state[
-                                "pipeline_studio_artifact_clear_all_confirm"
-                            ] = False
+                            st.session_state["pipeline_studio_artifact_clear_groups"] = []
+                            st.session_state["pipeline_studio_artifact_clear_all_confirm"] = False
 
                         c_clear_sel, c_clear_all = st.columns([0.6, 0.4])
                         with c_clear_sel:
@@ -10557,9 +9861,7 @@ def _render_pipeline_studio() -> None:
                             "stage": "sql",
                             "label": "sql_filter",
                             "desc": "Read-only SQL filter with LIMIT.",
-                            "code": (
-                                "SELECT *\nFROM my_table\nWHERE col_a > 0\nLIMIT 100\n"
-                            ),
+                            "code": ("SELECT *\nFROM my_table\nWHERE col_a > 0\nLIMIT 100\n"),
                         },
                         {
                             "id": "sql_aggregate",
@@ -10569,9 +9871,7 @@ def _render_pipeline_studio() -> None:
                             "label": "sql_aggregate",
                             "desc": "Read-only SQL aggregation.",
                             "code": (
-                                "SELECT category, COUNT(*) AS n\n"
-                                "FROM my_table\n"
-                                "GROUP BY category\n"
+                                "SELECT category, COUNT(*) AS n\nFROM my_table\nGROUP BY category\n"
                             ),
                         },
                         {
@@ -10593,9 +9893,7 @@ def _render_pipeline_studio() -> None:
                     template_choice = st.selectbox(
                         "Template",
                         options=template_ids,
-                        format_func=lambda tid: template_map.get(tid, {}).get(
-                            "title", tid
-                        ),
+                        format_func=lambda tid: template_map.get(tid, {}).get("title", tid),
                         key="pipeline_studio_template_choice",
                     )
                     chosen_template = template_map.get(template_choice)
@@ -10630,21 +9928,15 @@ def _render_pipeline_studio() -> None:
                         )
                         st.session_state["pipeline_studio_manual_confirm_run"] = False
                         if code_key:
-                            st.session_state[code_key] = (
-                                chosen_template.get("code") or ""
-                            )
+                            st.session_state[code_key] = chosen_template.get("code") or ""
                         if (
                             kind in {"python_function", "sql_query"}
                             and isinstance(selected_node_id, str)
                             and selected_node_id
                         ):
-                            st.session_state["pipeline_studio_manual_parent_id"] = (
-                                selected_node_id
-                            )
+                            st.session_state["pipeline_studio_manual_parent_id"] = selected_node_id
                         st.session_state["pipeline_studio_manual_node_open"] = True
-                        st.session_state["pipeline_studio_view_pending"] = (
-                            "Visual Editor"
-                        )
+                        st.session_state["pipeline_studio_view_pending"] = "Visual Editor"
                         st.session_state["pipeline_studio_history_notice"] = (
                             f"Loaded template: {chosen_template.get('title') or 'template'}."
                         )
@@ -10662,14 +9954,14 @@ def _render_pipeline_studio() -> None:
                     else:
                         ordered_ids = sorted(
                             studio_datasets.items(),
-                            key=lambda kv: float(kv[1].get("created_ts") or 0.0)
-                            if isinstance(kv[1], dict)
-                            else 0.0,
+                            key=lambda kv: (
+                                float(kv[1].get("created_ts") or 0.0)
+                                if isinstance(kv[1], dict)
+                                else 0.0
+                            ),
                             reverse=True,
                         )
-                        wizard_ids = [
-                            did for did, _e in ordered_ids if isinstance(did, str)
-                        ]
+                        wizard_ids = [did for did, _e in ordered_ids if isinstance(did, str)]
                         if not wizard_ids:
                             st.info("No datasets available.")
                         else:
@@ -10698,12 +9990,8 @@ def _render_pipeline_studio() -> None:
                                 format_func=_wiz_label,
                                 key="pipeline_studio_merge_left_id",
                             )
-                            right_options = [
-                                did for did in wizard_ids if did != left_id
-                            ]
-                            right_default = (
-                                right_options[0] if right_options else left_id
-                            )
+                            right_options = [did for did in wizard_ids if did != left_id]
+                            right_default = right_options[0] if right_options else left_id
                             right_id = st.selectbox(
                                 "Right dataset",
                                 options=right_options or wizard_ids,
@@ -10738,9 +10026,7 @@ def _render_pipeline_studio() -> None:
                             if op == "join":
                                 left_cols = _dataset_columns(left_id)
                                 right_cols = _dataset_columns(right_id)
-                                common_cols = [
-                                    c for c in left_cols if c in set(right_cols)
-                                ]
+                                common_cols = [c for c in left_cols if c in set(right_cols)]
                                 preferred = sorted(
                                     common_cols,
                                     key=lambda c: (
@@ -10832,12 +10118,10 @@ def _render_pipeline_studio() -> None:
                         else {}
                     )
                     transform = (
-                        prov.get("transform")
-                        if isinstance(prov.get("transform"), dict)
-                        else {}
+                        prov.get("transform") if isinstance(prov.get("transform"), dict) else {}
                     )
-                    title, code_text, code_lang, kind = (
-                        _pipeline_studio_transform_code_snippet(transform)
+                    title, code_text, code_lang, kind = _pipeline_studio_transform_code_snippet(
+                        transform
                     )
                 except Exception:
                     title, code_text, code_lang, kind = None, None, "python", ""
@@ -10867,9 +10151,7 @@ def _render_pipeline_studio() -> None:
                                 else None
                             )
                         if inline_key not in st.session_state:
-                            st.session_state[inline_key] = (
-                                saved_draft or code_text or ""
-                            )
+                            st.session_state[inline_key] = saved_draft or code_text or ""
                         draft_code = st.text_area(
                             "Draft editor",
                             key=inline_key,
@@ -10909,9 +10191,7 @@ def _render_pipeline_studio() -> None:
                                     lang=lang,
                                     draft_code=code,
                                 )
-                                st.session_state["pipeline_studio_code_draft_saved"] = (
-                                    node_id
-                                )
+                                st.session_state["pipeline_studio_code_draft_saved"] = node_id
 
                             st.button(
                                 "Save draft",
@@ -10928,14 +10208,10 @@ def _render_pipeline_studio() -> None:
                             )
                         with c_reset:
 
-                            def _reset_inline_draft(
-                                node_id: str, fingerprint: str | None
-                            ) -> None:
+                            def _reset_inline_draft(node_id: str, fingerprint: str | None) -> None:
                                 st.session_state.pop(inline_key, None)
                                 if isinstance(fingerprint, str) and fingerprint:
-                                    _delete_pipeline_studio_code_draft(
-                                        fingerprint=fingerprint
-                                    )
+                                    _delete_pipeline_studio_code_draft(fingerprint=fingerprint)
                                 st.session_state["pipeline_studio_history_notice"] = (
                                     f"Reset draft for `{node_id}`."
                                 )
@@ -10967,9 +10243,7 @@ def _render_pipeline_studio() -> None:
 
                         def _run_inline_draft(nid: str, e_key: str, k: str) -> None:
                             if k == "python_function":
-                                _run_python_function_draft(
-                                    node_id=nid, editor_key=e_key
-                                )
+                                _run_python_function_draft(node_id=nid, editor_key=e_key)
                             elif k == "python_merge":
                                 _run_python_merge_draft(node_id=nid, editor_key=e_key)
                             elif k == "sql_query":
@@ -10982,9 +10256,7 @@ def _render_pipeline_studio() -> None:
                             err = st.session_state.get("pipeline_studio_run_error")
                             if isinstance(err, str) and err.strip():
                                 return
-                            last_repl = st.session_state.get(
-                                "pipeline_studio_last_replacement"
-                            )
+                            last_repl = st.session_state.get("pipeline_studio_last_replacement")
                             if not isinstance(last_repl, dict):
                                 return
                             old_id = last_repl.get("old_id")
@@ -11126,35 +10398,23 @@ def _render_pipeline_studio() -> None:
                 compare_node_id = None
                 compare_mode = st.checkbox(
                     "Compare mode",
-                    value=bool(
-                        st.session_state.get("pipeline_studio_compare_mode", False)
-                    ),
+                    value=bool(st.session_state.get("pipeline_studio_compare_mode", False)),
                     key="pipeline_studio_compare_mode",
                     help="Compare two pipeline steps side-by-side (schema + table preview).",
                 )
                 if compare_mode:
                     compare_candidates = (
-                        selectable_node_ids
-                        if isinstance(selectable_node_ids, list)
-                        else node_ids
+                        selectable_node_ids if isinstance(selectable_node_ids, list) else node_ids
                     )
-                    compare_options = [
-                        did for did in compare_candidates if did != selected_node_id
-                    ]
+                    compare_options = [did for did in compare_candidates if did != selected_node_id]
                     compare_options = compare_options or compare_candidates
-                    default_compare = (
-                        compare_options[-1] if compare_options else selected_node_id
-                    )
-                    current_compare = st.session_state.get(
-                        "pipeline_studio_compare_node_id"
-                    )
+                    default_compare = compare_options[-1] if compare_options else selected_node_id
+                    current_compare = st.session_state.get("pipeline_studio_compare_node_id")
                     if (
                         not isinstance(current_compare, str)
                         or current_compare not in compare_options
                     ):
-                        st.session_state["pipeline_studio_compare_node_id"] = (
-                            default_compare
-                        )
+                        st.session_state["pipeline_studio_compare_node_id"] = default_compare
 
                     compare_node_id = st.selectbox(
                         "Compare with",
@@ -11164,23 +10424,15 @@ def _render_pipeline_studio() -> None:
                     )
 
             with right:
-                if (
-                    compare_mode
-                    and isinstance(compare_node_id, str)
-                    and compare_node_id
-                ):
+                if compare_mode and isinstance(compare_node_id, str) and compare_node_id:
                     a_id = selected_node_id
                     b_id = compare_node_id
 
                     a_entry = (
-                        studio_datasets.get(a_id)
-                        if isinstance(studio_datasets, dict)
-                        else None
+                        studio_datasets.get(a_id) if isinstance(studio_datasets, dict) else None
                     )
                     b_entry = (
-                        studio_datasets.get(b_id)
-                        if isinstance(studio_datasets, dict)
-                        else None
+                        studio_datasets.get(b_id) if isinstance(studio_datasets, dict) else None
                     )
                     a_entry = a_entry if isinstance(a_entry, dict) else {}
                     b_entry = b_entry if isinstance(b_entry, dict) else {}
@@ -11189,16 +10441,8 @@ def _render_pipeline_studio() -> None:
 
                     st.caption(f"Comparing `{a_id}` vs `{b_id}`")
 
-                    col_map_a = (
-                        {str(c): c for c in list(df_a.columns)}
-                        if df_a is not None
-                        else {}
-                    )
-                    col_map_b = (
-                        {str(c): c for c in list(df_b.columns)}
-                        if df_b is not None
-                        else {}
-                    )
+                    col_map_a = {str(c): c for c in list(df_a.columns)} if df_a is not None else {}
+                    col_map_b = {str(c): c for c in list(df_b.columns)} if df_b is not None else {}
                     cols_a = (
                         [str(c) for c in list(df_a.columns)]
                         if df_a is not None
@@ -11248,17 +10492,13 @@ def _render_pipeline_studio() -> None:
                                 dataset_id, require_key="plotly_graph"
                             )
                             graph_json = (
-                                detail.get("plotly_graph")
-                                if isinstance(detail, dict)
-                                else None
+                                detail.get("plotly_graph") if isinstance(detail, dict) else None
                             )
                         if not graph_json and isinstance(entry_obj, dict):
                             fp = entry_obj.get("fingerprint")
                             fp = fp if isinstance(fp, str) and fp else None
                             if fp:
-                                persisted = _get_persisted_pipeline_studio_artifacts(
-                                    fingerprint=fp
-                                )
+                                persisted = _get_persisted_pipeline_studio_artifacts(fingerprint=fp)
                                 pg = persisted.get("plotly_graph")
                                 pg = pg if isinstance(pg, dict) else {}
                                 graph_json = pg.get("json")
@@ -11266,9 +10506,7 @@ def _render_pipeline_studio() -> None:
 
                     def _render_plotly_graph(graph_json, *, widget_key: str) -> None:
                         payload = (
-                            json.dumps(graph_json)
-                            if isinstance(graph_json, dict)
-                            else graph_json
+                            json.dumps(graph_json) if isinstance(graph_json, dict) else graph_json
                         )
                         fig = _apply_streamlit_plot_style(pio.from_json(payload))
                         st.plotly_chart(fig, width="stretch", key=widget_key)
@@ -11280,9 +10518,7 @@ def _render_pipeline_studio() -> None:
                             else {}
                         )
                         transform = (
-                            prov.get("transform")
-                            if isinstance(prov.get("transform"), dict)
-                            else {}
+                            prov.get("transform") if isinstance(prov.get("transform"), dict) else {}
                         )
                         kind = str(transform.get("kind") or "")
                         code_lang = "python"
@@ -11318,9 +10554,7 @@ def _render_pipeline_studio() -> None:
                             )
                         elif kind == "h2o_predict":
                             model_id = transform.get("model_id")
-                            model_id = (
-                                model_id.strip() if isinstance(model_id, str) else ""
-                            )
+                            model_id = model_id.strip() if isinstance(model_id, str) else ""
                             title = "Prediction (H2O) snippet"
                             code_text = (
                                 "\n".join(
@@ -11337,9 +10571,7 @@ def _render_pipeline_studio() -> None:
                                 + "\n"
                             )
                         code_text = (
-                            code_text
-                            if isinstance(code_text, str) and code_text.strip()
-                            else None
+                            code_text if isinstance(code_text, str) and code_text.strip() else None
                         )
                         return title, code_text, code_lang, kind
 
@@ -11382,16 +10614,8 @@ def _render_pipeline_studio() -> None:
                                     for col in shared:
                                         col_a = col_map_a.get(col)
                                         col_b = col_map_b.get(col)
-                                        dt_a = (
-                                            str(df_a[col_a].dtype)
-                                            if col_a is not None
-                                            else ""
-                                        )
-                                        dt_b = (
-                                            str(df_b[col_b].dtype)
-                                            if col_b is not None
-                                            else ""
-                                        )
+                                        dt_a = str(df_a[col_a].dtype) if col_a is not None else ""
+                                        dt_b = str(df_b[col_b].dtype) if col_b is not None else ""
                                         if dt_a != dt_b:
                                             changes.append(
                                                 {
@@ -11409,13 +10633,9 @@ def _render_pipeline_studio() -> None:
                                         width="stretch",
                                     )
                                 else:
-                                    st.caption(
-                                        "No dtype changes detected (pandas dtypes)."
-                                    )
+                                    st.caption("No dtype changes detected (pandas dtypes).")
 
-                                with st.expander(
-                                    "Missingness delta (sampled)", expanded=False
-                                ):
+                                with st.expander("Missingness delta (sampled)", expanded=False):
                                     try:
                                         max_rows = PIPELINE_STUDIO_PROFILE_SAMPLE_MAX_ROWS
                                         max_cols = PIPELINE_STUDIO_PROFILE_SAMPLE_MAX_COLS
@@ -11429,12 +10649,8 @@ def _render_pipeline_studio() -> None:
                                                 "No shared columns available for missingness comparison."
                                             )
                                         else:
-                                            cols_a_sel = [
-                                                col_map_a[c] for c in shared_sample
-                                            ]
-                                            cols_b_sel = [
-                                                col_map_b[c] for c in shared_sample
-                                            ]
+                                            cols_a_sel = [col_map_a[c] for c in shared_sample]
+                                            cols_b_sel = [col_map_b[c] for c in shared_sample]
                                             sample_a = df_a[cols_a_sel].head(max_rows)
                                             sample_b = df_b[cols_b_sel].head(max_rows)
                                             sample_a.columns = shared_sample
@@ -11474,9 +10690,7 @@ def _render_pipeline_studio() -> None:
                                                         f"Missingness computed on first {max_cols} shared columns."
                                                     )
                                     except Exception as e:
-                                        st.caption(
-                                            f"Could not compute missingness delta: {e}"
-                                        )
+                                        st.caption(f"Could not compute missingness delta: {e}")
 
                     with cmp_tabs[1]:
                         rows = st.slider(
@@ -11494,18 +10708,14 @@ def _render_pipeline_studio() -> None:
                                 st.info("No tabular data available for A.")
                             else:
                                 st.caption(f"Shape: {df_a.shape[0]} × {df_a.shape[1]}")
-                                st.dataframe(
-                                    df_a.head(int(rows)), width="stretch"
-                                )
+                                st.dataframe(df_a.head(int(rows)), width="stretch")
                         with cb:
                             st.markdown(f"**B (compare): {_node_label(b_id)}**")
                             if df_b is None:
                                 st.info("No tabular data available for B.")
                             else:
                                 st.caption(f"Shape: {df_b.shape[0]} × {df_b.shape[1]}")
-                                st.dataframe(
-                                    df_b.head(int(rows)), width="stretch"
-                                )
+                                st.dataframe(df_b.head(int(rows)), width="stretch")
 
                     with cmp_tabs[2]:
                         ga = _get_plotly_graph_json(a_id, a_entry)
@@ -11546,18 +10756,14 @@ def _render_pipeline_studio() -> None:
                         title_b, code_b, lang_b, kind_b = _build_code_snippet(b_entry)
                         ca, cb = st.columns(2, gap="large")
                         with ca:
-                            st.markdown(
-                                f"**A (selected): {title_a or kind_a or 'Code'}**"
-                            )
+                            st.markdown(f"**A (selected): {title_a or kind_a or 'Code'}**")
                             if code_a:
                                 st.code(code_a, language=lang_a)
                                 _render_copy_to_clipboard(code_a, label="Copy A")
                             else:
                                 st.info("No runnable code recorded for A.")
                         with cb:
-                            st.markdown(
-                                f"**B (compare): {title_b or kind_b or 'Code'}**"
-                            )
+                            st.markdown(f"**B (compare): {title_b or kind_b or 'Code'}**")
                             if code_b:
                                 st.code(code_b, language=lang_b)
                                 _render_copy_to_clipboard(code_b, label="Copy B")
@@ -11565,9 +10771,7 @@ def _render_pipeline_studio() -> None:
                                 st.info("No runnable code recorded for B.")
 
                         if code_a and code_b:
-                            with st.expander(
-                                "Unified diff (compare → selected)", expanded=False
-                            ):
+                            with st.expander("Unified diff (compare → selected)", expanded=False):
                                 try:
                                     import difflib
 
@@ -11579,17 +10783,13 @@ def _render_pipeline_studio() -> None:
                                         lineterm="",
                                     )
                                     diff_text = "\n".join(diff_lines).strip()
-                                    st.code(
-                                        diff_text if diff_text else "—", language="diff"
-                                    )
+                                    st.code(diff_text if diff_text else "—", language="diff")
                                 except Exception as e:
                                     st.caption(f"Could not compute diff: {e}")
 
                     with cmp_tabs[4]:
                         if df_a is None or df_b is None:
-                            st.info(
-                                "Row diff requires tabular data for both A and B (DataFrames)."
-                            )
+                            st.info("Row diff requires tabular data for both A and B (DataFrames).")
                         elif not shared:
                             st.info("No shared columns available for row diff.")
                         else:
@@ -11597,22 +10797,17 @@ def _render_pipeline_studio() -> None:
                             current_key = st.session_state.get(
                                 "pipeline_studio_compare_rowdiff_key"
                             )
-                            if (
-                                not isinstance(current_key, str)
-                                or current_key not in key_options
-                            ):
-                                st.session_state[
-                                    "pipeline_studio_compare_rowdiff_key"
-                                ] = key_options[0]
+                            if not isinstance(current_key, str) or current_key not in key_options:
+                                st.session_state["pipeline_studio_compare_rowdiff_key"] = (
+                                    key_options[0]
+                                )
                             key_col = st.selectbox(
                                 "Key column",
                                 options=key_options,
                                 key="pipeline_studio_compare_rowdiff_key",
                                 help="Used to align rows between A (selected) and B (compare).",
                             )
-                            compare_candidates = [
-                                c for c in key_options if c != key_col
-                            ]
+                            compare_candidates = [c for c in key_options if c != key_col]
                             compare_candidates = compare_candidates[:50]
                             default_cols = compare_candidates[:10]
                             current_cols = st.session_state.get(
@@ -11621,9 +10816,9 @@ def _render_pipeline_studio() -> None:
                             if not isinstance(current_cols, list) or any(
                                 c not in compare_candidates for c in current_cols
                             ):
-                                st.session_state[
-                                    "pipeline_studio_compare_rowdiff_cols"
-                                ] = default_cols
+                                st.session_state["pipeline_studio_compare_rowdiff_cols"] = (
+                                    default_cols
+                                )
                             cols_to_compare = st.multiselect(
                                 "Columns to compare",
                                 options=compare_candidates,
@@ -11645,14 +10840,10 @@ def _render_pipeline_studio() -> None:
                                 st.info("Key column not available in both DataFrames.")
                             else:
                                 cols_a_actual = [col_a] + [
-                                    col_map_a[c]
-                                    for c in cols_to_compare
-                                    if c in col_map_a
+                                    col_map_a[c] for c in cols_to_compare if c in col_map_a
                                 ]
                                 cols_b_actual = [col_b] + [
-                                    col_map_b[c]
-                                    for c in cols_to_compare
-                                    if c in col_map_b
+                                    col_map_b[c] for c in cols_to_compare if c in col_map_b
                                 ]
                                 a_small = df_a[cols_a_actual].copy()
                                 b_small = df_b[cols_b_actual].copy()
@@ -11681,15 +10872,11 @@ def _render_pipeline_studio() -> None:
                                 try:
                                     set_a_keys = set(a_keys.unique().tolist())
                                 except Exception:
-                                    set_a_keys = set(
-                                        a_keys.astype(str).unique().tolist()
-                                    )
+                                    set_a_keys = set(a_keys.astype(str).unique().tolist())
                                 try:
                                     set_b_keys = set(b_keys.unique().tolist())
                                 except Exception:
-                                    set_b_keys = set(
-                                        b_keys.astype(str).unique().tolist()
-                                    )
+                                    set_b_keys = set(b_keys.astype(str).unique().tolist())
 
                                 only_a = set_a_keys - set_b_keys
                                 only_b = set_b_keys - set_a_keys
@@ -11712,9 +10899,9 @@ def _render_pipeline_studio() -> None:
                                     ):
                                         sample_keys = list(only_a)[: int(preview_rows)]
                                         st.dataframe(
-                                            a_small[
-                                                a_small[key_col].isin(sample_keys)
-                                            ].head(int(preview_rows)),
+                                            a_small[a_small[key_col].isin(sample_keys)].head(
+                                                int(preview_rows)
+                                            ),
                                             width="stretch",
                                         )
                                 if only_b:
@@ -11724,9 +10911,9 @@ def _render_pipeline_studio() -> None:
                                     ):
                                         sample_keys = list(only_b)[: int(preview_rows)]
                                         st.dataframe(
-                                            b_small[
-                                                b_small[key_col].isin(sample_keys)
-                                            ].head(int(preview_rows)),
+                                            b_small[b_small[key_col].isin(sample_keys)].head(
+                                                int(preview_rows)
+                                            ),
                                             width="stretch",
                                         )
 
@@ -11758,13 +10945,10 @@ def _render_pipeline_studio() -> None:
                                         b_vals = merged[b_col]
                                         try:
                                             neq = ~(
-                                                a_vals.eq(b_vals)
-                                                | (a_vals.isna() & b_vals.isna())
+                                                a_vals.eq(b_vals) | (a_vals.isna() & b_vals.isna())
                                             )
                                         except Exception:
-                                            neq = a_vals.astype(str) != b_vals.astype(
-                                                str
-                                            )
+                                            neq = a_vals.astype(str) != b_vals.astype(str)
                                         n_bad = int(neq.sum())
                                         if n_bad:
                                             diff_counts.append(
@@ -11807,15 +10991,12 @@ def _render_pipeline_studio() -> None:
                                         try:
                                             neq = ~(
                                                 merged[a_col].eq(merged[b_col])
-                                                | (
-                                                    merged[a_col].isna()
-                                                    & merged[b_col].isna()
-                                                )
+                                                | (merged[a_col].isna() & merged[b_col].isna())
                                             )
                                         except Exception:
-                                            neq = merged[a_col].astype(str) != merged[
-                                                b_col
-                                            ].astype(str)
+                                            neq = merged[a_col].astype(str) != merged[b_col].astype(
+                                                str
+                                            )
                                         preview = (
                                             merged.loc[neq, [key_col, a_col, b_col]]
                                             .head(int(preview_rows))
@@ -11833,9 +11014,7 @@ def _render_pipeline_studio() -> None:
                     return
                 if "pipeline_studio_view" not in st.session_state:
                     st.session_state["pipeline_studio_view"] = "Visual Editor"
-                pending_view = st.session_state.pop(
-                    "pipeline_studio_view_pending", None
-                )
+                pending_view = st.session_state.pop("pipeline_studio_view_pending", None)
                 valid_views = {
                     "Table",
                     "Chart",
@@ -11862,9 +11041,7 @@ def _render_pipeline_studio() -> None:
                 fp = entry.get("fingerprint")
                 fp = fp if isinstance(fp, str) and fp else None
                 persisted_art = (
-                    _get_persisted_pipeline_studio_artifacts(fingerprint=fp)
-                    if fp
-                    else {}
+                    _get_persisted_pipeline_studio_artifacts(fingerprint=fp) if fp else {}
                 )
                 artifact_clears = _pipeline_studio_get_artifact_clear_keys(
                     dataset_id=selected_node_id
@@ -11883,16 +11060,9 @@ def _render_pipeline_studio() -> None:
                         detail = _latest_detail_for_dataset_id(
                             selected_node_id, require_key=detail_key
                         )
-                        if (
-                            isinstance(detail, dict)
-                            and detail.get(detail_key) is not None
-                        ):
+                        if isinstance(detail, dict) and detail.get(detail_key) is not None:
                             return detail.get(detail_key)
-                    persisted = (
-                        persisted_art.get(key)
-                        if isinstance(persisted_art, dict)
-                        else None
-                    )
+                    persisted = persisted_art.get(key) if isinstance(persisted_art, dict) else None
                     persisted = persisted if isinstance(persisted, dict) else {}
                     if field and persisted.get(field) is not None:
                         return persisted.get(field)
@@ -11909,9 +11079,7 @@ def _render_pipeline_studio() -> None:
                     eda_count = sum(1 for v in eda_reports.values() if v)
                 else:
                     eda_count = 1 if eda_reports else 0
-                model_info = _artifact_payload(
-                    "model_info", detail_key="model_info", field="info"
-                )
+                model_info = _artifact_payload("model_info", detail_key="model_info", field="info")
                 eval_art = _artifact_payload("eval_artifacts", field="artifacts")
                 eval_graph = _artifact_payload("eval_plotly_graph", field="json")
                 model_count = sum(1 for v in (model_info, eval_art, eval_graph) if v)
@@ -11919,16 +11087,8 @@ def _render_pipeline_studio() -> None:
                     "mlflow_artifacts", detail_key="mlflow_artifacts", field="artifacts"
                 )
                 mlflow_count = 1 if mlflow_art else 0
-                prov = (
-                    entry.get("provenance")
-                    if isinstance(entry.get("provenance"), dict)
-                    else {}
-                )
-                transform = (
-                    prov.get("transform")
-                    if isinstance(prov.get("transform"), dict)
-                    else {}
-                )
+                prov = entry.get("provenance") if isinstance(entry.get("provenance"), dict) else {}
+                transform = prov.get("transform") if isinstance(prov.get("transform"), dict) else {}
                 kind = str(transform.get("kind") or "")
                 pred_count = 1 if kind in {"mlflow_predict", "h2o_predict"} else 0
                 view_badges = {
@@ -12019,9 +11179,7 @@ def _render_pipeline_studio() -> None:
                                     missing = None
                                 if missing is not None:
                                     try:
-                                        missing = missing[missing > 0].sort_values(
-                                            ascending=False
-                                        )
+                                        missing = missing[missing > 0].sort_values(ascending=False)
                                     except Exception:
                                         missing = None
                                 if missing is not None and len(missing) > 0:
@@ -12064,24 +11222,18 @@ def _render_pipeline_studio() -> None:
                             selected_node_id, require_key="plotly_graph"
                         )
                         graph_json = (
-                            detail.get("plotly_graph")
-                            if isinstance(detail, dict)
-                            else None
+                            detail.get("plotly_graph") if isinstance(detail, dict) else None
                         )
                         if isinstance(detail, dict) and not viz_err_msg:
                             viz_err_msg = detail.get("data_visualization_error")
-                            viz_err_path = detail.get(
-                                "data_visualization_error_log_path"
-                            )
+                            viz_err_path = detail.get("data_visualization_error_log_path")
                         if isinstance(detail, dict) and not viz_warn_msg:
                             viz_warn_msg = detail.get("data_visualization_warning")
                     if not graph_json:
                         fp = entry.get("fingerprint")
                         fp = fp if isinstance(fp, str) and fp else None
                         if fp:
-                            persisted = _get_persisted_pipeline_studio_artifacts(
-                                fingerprint=fp
-                            )
+                            persisted = _get_persisted_pipeline_studio_artifacts(fingerprint=fp)
                             pg = persisted.get("plotly_graph")
                             pg = pg if isinstance(pg, dict) else {}
                             graph_json = pg.get("json")
@@ -12141,18 +11293,12 @@ def _render_pipeline_studio() -> None:
                         detail = _latest_detail_for_dataset_id(
                             selected_node_id, require_key="eda_reports"
                         )
-                        reports = (
-                            detail.get("eda_reports")
-                            if isinstance(detail, dict)
-                            else None
-                        )
+                        reports = detail.get("eda_reports") if isinstance(detail, dict) else None
                     if not reports:
                         fp = entry.get("fingerprint")
                         fp = fp if isinstance(fp, str) and fp else None
                         if fp:
-                            persisted = _get_persisted_pipeline_studio_artifacts(
-                                fingerprint=fp
-                            )
+                            persisted = _get_persisted_pipeline_studio_artifacts(fingerprint=fp)
                             er = persisted.get("eda_reports")
                             er = er if isinstance(er, dict) else {}
                             reports = er.get("reports")
@@ -12195,14 +11341,10 @@ def _render_pipeline_studio() -> None:
 
                 elif view == "Code":
                     prov = (
-                        entry.get("provenance")
-                        if isinstance(entry.get("provenance"), dict)
-                        else {}
+                        entry.get("provenance") if isinstance(entry.get("provenance"), dict) else {}
                     )
                     transform = (
-                        prov.get("transform")
-                        if isinstance(prov.get("transform"), dict)
-                        else {}
+                        prov.get("transform") if isinstance(prov.get("transform"), dict) else {}
                     )
                     kind = str(transform.get("kind") or "")
 
@@ -12339,11 +11481,7 @@ def _render_pipeline_studio() -> None:
                             )
                         try:
                             ext = "sql" if code_lang == "sql" else "py"
-                            mime = (
-                                "application/sql"
-                                if code_lang == "sql"
-                                else "text/x-python"
-                            )
+                            mime = "application/sql" if code_lang == "sql" else "text/x-python"
                             c_ask, c_save, c_reset, c_copy, c_download = st.columns(
                                 [0.16, 0.16, 0.14, 0.20, 0.34]
                             )
@@ -12379,10 +11517,7 @@ def _render_pipeline_studio() -> None:
                                     t_kind: str,
                                     lang: str,
                                 ) -> None:
-                                    if (
-                                        not isinstance(fingerprint, str)
-                                        or not fingerprint
-                                    ):
+                                    if not isinstance(fingerprint, str) or not fingerprint:
                                         return
                                     code = st.session_state.get(e_key)
                                     code = code if isinstance(code, str) else ""
@@ -12393,9 +11528,7 @@ def _render_pipeline_studio() -> None:
                                         lang=lang,
                                         draft_code=code,
                                     )
-                                    st.session_state[
-                                        "pipeline_studio_code_draft_saved"
-                                    ] = node_id
+                                    st.session_state["pipeline_studio_code_draft_saved"] = node_id
 
                                 st.button(
                                     "Save",
@@ -12415,13 +11548,9 @@ def _render_pipeline_studio() -> None:
                                 def _queue_code_reset(
                                     node_id: str, fingerprint: str | None
                                 ) -> None:
-                                    st.session_state[
-                                        "pipeline_studio_code_reset_pending"
-                                    ] = node_id
+                                    st.session_state["pipeline_studio_code_reset_pending"] = node_id
                                     if isinstance(fingerprint, str) and fingerprint:
-                                        _delete_pipeline_studio_code_draft(
-                                            fingerprint=fingerprint
-                                        )
+                                        _delete_pipeline_studio_code_draft(fingerprint=fingerprint)
 
                                 st.button(
                                     "Reset",
@@ -12431,9 +11560,7 @@ def _render_pipeline_studio() -> None:
                                     args=(selected_node_id, fp),
                                 )
                             with c_copy:
-                                _render_copy_to_clipboard(
-                                    draft_code, label="Copy draft"
-                                )
+                                _render_copy_to_clipboard(draft_code, label="Copy draft")
                             with c_download:
                                 st.download_button(
                                     "Download draft",
@@ -12468,9 +11595,7 @@ def _render_pipeline_studio() -> None:
                                     f"SQL URL: `{_redact_sqlalchemy_url(st.session_state.get('sql_url', DEFAULT_SQL_URL))}`"
                                 )
 
-                            confirm_key = (
-                                f"pipeline_studio_run_confirm_{selected_node_id}"
-                            )
+                            confirm_key = f"pipeline_studio_run_confirm_{selected_node_id}"
                             confirm_label = (
                                 "I understand this executes code locally"
                                 if kind in {"python_function", "python_merge"}
@@ -12484,33 +11609,23 @@ def _render_pipeline_studio() -> None:
 
                             def _run_draft_click(nid: str, e_key: str, k: str) -> None:
                                 if k == "python_function":
-                                    _run_python_function_draft(
-                                        node_id=nid, editor_key=e_key
-                                    )
+                                    _run_python_function_draft(node_id=nid, editor_key=e_key)
                                 elif k == "python_merge":
-                                    _run_python_merge_draft(
-                                        node_id=nid, editor_key=e_key
-                                    )
+                                    _run_python_merge_draft(node_id=nid, editor_key=e_key)
                                 elif k == "sql_query":
                                     _run_sql_query_draft(node_id=nid, editor_key=e_key)
 
-                            def _run_draft_and_downstream(
-                                nid: str, e_key: str, k: str
-                            ) -> None:
+                            def _run_draft_and_downstream(nid: str, e_key: str, k: str) -> None:
                                 _run_draft_click(nid, e_key, k)
                                 err = st.session_state.get("pipeline_studio_run_error")
                                 if isinstance(err, str) and err.strip():
                                     return
-                                last_repl = st.session_state.get(
-                                    "pipeline_studio_last_replacement"
-                                )
+                                last_repl = st.session_state.get("pipeline_studio_last_replacement")
                                 if not isinstance(last_repl, dict):
                                     return
                                 old_id = last_repl.get("old_id")
                                 new_id = last_repl.get("new_id")
-                                run_ok = st.session_state.get(
-                                    "pipeline_studio_run_success"
-                                )
+                                run_ok = st.session_state.get("pipeline_studio_run_success")
                                 old_id = (
                                     old_id.strip()
                                     if isinstance(old_id, str) and old_id.strip()
@@ -12588,9 +11703,7 @@ def _render_pipeline_studio() -> None:
                         fp = entry.get("fingerprint")
                         fp = fp if isinstance(fp, str) and fp else None
                         if fp:
-                            persisted = _get_persisted_pipeline_studio_artifacts(
-                                fingerprint=fp
-                            )
+                            persisted = _get_persisted_pipeline_studio_artifacts(fingerprint=fp)
                             mi = persisted.get("model_info")
                             mi = mi if isinstance(mi, dict) else {}
                             model_info = mi.get("info")
@@ -12649,14 +11762,10 @@ def _render_pipeline_studio() -> None:
 
                 elif view == "Predictions":
                     prov = (
-                        entry.get("provenance")
-                        if isinstance(entry.get("provenance"), dict)
-                        else {}
+                        entry.get("provenance") if isinstance(entry.get("provenance"), dict) else {}
                     )
                     transform = (
-                        prov.get("transform")
-                        if isinstance(prov.get("transform"), dict)
-                        else {}
+                        prov.get("transform") if isinstance(prov.get("transform"), dict) else {}
                     )
                     kind = str(transform.get("kind") or "")
                     is_pred = kind in {"mlflow_predict", "h2o_predict"}
@@ -12671,9 +11780,7 @@ def _render_pipeline_studio() -> None:
                         st.markdown("**Predictions preview**")
                         meta = {
                             "kind": kind,
-                            "run_id": transform.get("run_id")
-                            if kind == "mlflow_predict"
-                            else None,
+                            "run_id": transform.get("run_id") if kind == "mlflow_predict" else None,
                             "model_uri": transform.get("model_uri")
                             if kind == "mlflow_predict"
                             else None,
@@ -12703,9 +11810,7 @@ def _render_pipeline_studio() -> None:
                         fp = entry.get("fingerprint")
                         fp = fp if isinstance(fp, str) and fp else None
                         if fp:
-                            persisted = _get_persisted_pipeline_studio_artifacts(
-                                fingerprint=fp
-                            )
+                            persisted = _get_persisted_pipeline_studio_artifacts(fingerprint=fp)
                             ma = persisted.get("mlflow_artifacts")
                             ma = ma if isinstance(ma, dict) else {}
                             mlflow_art = ma.get("artifacts")
@@ -12721,9 +11826,7 @@ def _render_pipeline_studio() -> None:
 
                         def _render_mlflow_artifact(obj):
                             try:
-                                if isinstance(obj, dict) and isinstance(
-                                    obj.get("runs"), list
-                                ):
+                                if isinstance(obj, dict) and isinstance(obj.get("runs"), list):
                                     df = pd.DataFrame(obj["runs"])
                                     preferred_cols = [
                                         c
@@ -12753,9 +11856,7 @@ def _render_pipeline_studio() -> None:
                                             "artifact_uri",
                                         )
                                     ):
-                                        with st.expander(
-                                            "Raw run details", expanded=False
-                                        ):
+                                        with st.expander("Raw run details", expanded=False):
                                             st.json(obj)
                                     return
                                 if isinstance(obj, dict) and isinstance(
@@ -12823,9 +11924,7 @@ def _render_pipeline_studio() -> None:
                         )
                         return
 
-                    all_node_ids = [
-                        did for did in node_ids if isinstance(did, str) and did
-                    ]
+                    all_node_ids = [did for did in node_ids if isinstance(did, str) and did]
                     if not all_node_ids:
                         st.info("No pipeline nodes available to render.")
                         return
@@ -12837,9 +11936,11 @@ def _render_pipeline_studio() -> None:
                     )
                     ordered_dataset_ids = sorted(
                         studio_datasets.items(),
-                        key=lambda kv: float(kv[1].get("created_ts") or 0.0)
-                        if isinstance(kv[1], dict)
-                        else 0.0,
+                        key=lambda kv: (
+                            float(kv[1].get("created_ts") or 0.0)
+                            if isinstance(kv[1], dict)
+                            else 0.0
+                        ),
                         reverse=True,
                     )
                     all_dataset_ids = [
@@ -12854,21 +11955,15 @@ def _render_pipeline_studio() -> None:
                     if not dataset_ids:
                         dataset_ids = list(all_dataset_ids)
 
-                    pipeline_hash = (
-                        pipe.get("pipeline_hash") if isinstance(pipe, dict) else None
-                    )
+                    pipeline_hash = pipe.get("pipeline_hash") if isinstance(pipe, dict) else None
                     pipeline_hash = (
                         pipeline_hash
                         if isinstance(pipeline_hash, str) and pipeline_hash.strip()
                         else None
                     )
-                    prev_pipeline_hash = st.session_state.get(
-                        "pipeline_studio_flow_pipeline_hash"
-                    )
+                    prev_pipeline_hash = st.session_state.get("pipeline_studio_flow_pipeline_hash")
                     if pipeline_hash and prev_pipeline_hash != pipeline_hash:
-                        st.session_state["pipeline_studio_flow_pipeline_hash"] = (
-                            pipeline_hash
-                        )
+                        st.session_state["pipeline_studio_flow_pipeline_hash"] = pipeline_hash
                         # Reset in-session layout cache when switching pipelines.
                         st.session_state.pop("pipeline_studio_flow_state", None)
                         st.session_state.pop("pipeline_studio_flow_signature", None)
@@ -12884,9 +11979,7 @@ def _render_pipeline_studio() -> None:
                             st.session_state["pipeline_studio_flow_positions"] = pos
                         hid = persisted_layout.get("hidden_ids")
                         hid = hid if isinstance(hid, list) else []
-                        hid_clean = {
-                            str(x) for x in hid if isinstance(x, str) and x.strip()
-                        }
+                        hid_clean = {str(x) for x in hid if isinstance(x, str) and x.strip()}
                         ui_hidden, ui_deleted = _pipeline_studio_get_registry_ui(
                             pipeline_hash=pipeline_hash
                         )
@@ -12905,17 +11998,13 @@ def _render_pipeline_studio() -> None:
                                 deleted_ids=ui_deleted,
                             )
                         st.session_state["pipeline_studio_flow_hidden_ids"] = sorted(
-                            (ui_hidden | ui_deleted)
-                            if (ui_hidden or ui_deleted)
-                            else hid_clean
+                            (ui_hidden | ui_deleted) if (ui_hidden or ui_deleted) else hid_clean
                         )
                         st.session_state["pipeline_studio_flow_fit_view_pending"] = True
 
                     hidden_ids = st.session_state.get("pipeline_studio_flow_hidden_ids")
                     hidden_ids = hidden_ids if isinstance(hidden_ids, list) else []
-                    hidden_set = {
-                        str(x) for x in hidden_ids if isinstance(x, str) and x
-                    }
+                    hidden_set = {str(x) for x in hidden_ids if isinstance(x, str) and x}
                     all_set = set(all_node_ids)
                     hidden_set = {hid for hid in hidden_set if hid in all_set}
 
@@ -12928,9 +12017,7 @@ def _render_pipeline_studio() -> None:
                     ui_deleted_ids = {hid for hid in ui_deleted_ids if hid in all_set}
                     if ui_hidden_ids or ui_deleted_ids:
                         hidden_set = set(ui_hidden_ids) | set(ui_deleted_ids)
-                    st.session_state["pipeline_studio_flow_hidden_ids"] = sorted(
-                        hidden_set
-                    )
+                    st.session_state["pipeline_studio_flow_hidden_ids"] = sorted(hidden_set)
                     if not (ui_hidden_ids or ui_deleted_ids):
                         ui_hidden_ids = set(hidden_set)
                         ui_deleted_ids = set()
@@ -12948,13 +12035,9 @@ def _render_pipeline_studio() -> None:
                         canvas_hidden_set |= set(ui_deleted_ids)
 
                     stale_ids_list = st.session_state.get("pipeline_studio_stale_ids")
-                    stale_ids_list = (
-                        stale_ids_list if isinstance(stale_ids_list, list) else []
-                    )
+                    stale_ids_list = stale_ids_list if isinstance(stale_ids_list, list) else []
                     stale_set = {
-                        str(x)
-                        for x in stale_ids_list
-                        if isinstance(x, str) and x in all_set
+                        str(x) for x in stale_ids_list if isinstance(x, str) and x in all_set
                     }
 
                     stale_only_key = "pipeline_studio_flow_stale_only"
@@ -12972,9 +12055,7 @@ def _render_pipeline_studio() -> None:
                     stale_only_empty = False
                     if stale_only:
                         if focus_set:
-                            flow_node_ids = [
-                                did for did in all_node_ids if did in focus_set
-                            ]
+                            flow_node_ids = [did for did in all_node_ids if did in focus_set]
                         else:
                             stale_only_empty = True
 
@@ -12983,9 +12064,7 @@ def _render_pipeline_studio() -> None:
                             idx_map = st.session_state.get("pipeline_studio_artifacts")
                             if isinstance(idx_map, dict):
                                 entry_art = idx_map.get(did)
-                                entry_art = (
-                                    entry_art if isinstance(entry_art, dict) else {}
-                                )
+                                entry_art = entry_art if isinstance(entry_art, dict) else {}
                                 if isinstance(entry_art.get(key), dict):
                                     return True
                             ds_entry = (
@@ -12997,9 +12076,7 @@ def _render_pipeline_studio() -> None:
                             fp = ds_entry.get("fingerprint")
                             fp = fp if isinstance(fp, str) and fp else None
                             if fp:
-                                persisted = _get_persisted_pipeline_studio_artifacts(
-                                    fingerprint=fp
-                                )
+                                persisted = _get_persisted_pipeline_studio_artifacts(fingerprint=fp)
                                 return isinstance(persisted.get(key), dict)
                         except Exception:
                             return False
@@ -13057,17 +12134,13 @@ def _render_pipeline_studio() -> None:
 
                     def _parent_ids_for(did: str) -> list[str]:
                         entry = (
-                            studio_datasets.get(did)
-                            if isinstance(studio_datasets, dict)
-                            else None
+                            studio_datasets.get(did) if isinstance(studio_datasets, dict) else None
                         )
                         entry = entry if isinstance(entry, dict) else {}
                         parents: list[str] = []
                         pids = entry.get("parent_ids")
                         if isinstance(pids, (list, tuple)):
-                            parents.extend(
-                                [str(p) for p in pids if isinstance(p, str) and p]
-                            )
+                            parents.extend([str(p) for p in pids if isinstance(p, str) and p])
                         pid = entry.get("parent_id")
                         if isinstance(pid, str) and pid and pid not in parents:
                             parents.insert(0, pid)
@@ -13108,9 +12181,7 @@ def _render_pipeline_studio() -> None:
                             if isinstance(pos_val, dict):
                                 x = float(pos_val.get("x", 0.0))
                                 y = float(pos_val.get("y", 0.0))
-                            elif (
-                                isinstance(pos_val, (list, tuple)) and len(pos_val) == 2
-                            ):
+                            elif isinstance(pos_val, (list, tuple)) and len(pos_val) == 2:
                                 x = float(pos_val[0])
                                 y = float(pos_val[1])
                         except Exception:
@@ -13152,38 +12223,24 @@ def _render_pipeline_studio() -> None:
                         else ManualLayout()
                     )
                     should_fit_view = use_auto_layout or bool(
-                        st.session_state.pop(
-                            "pipeline_studio_flow_fit_view_pending", False
-                        )
+                        st.session_state.pop("pipeline_studio_flow_fit_view_pending", False)
                     )
 
                     selected_default = None
-                    if prev_state is not None and isinstance(
-                        prev_state.selected_id, str
-                    ):
+                    if prev_state is not None and isinstance(prev_state.selected_id, str):
                         selected_default = prev_state.selected_id
                     elif isinstance(selected_node_id, str):
                         selected_default = selected_node_id
 
-                    active_id = (
-                        pipe.get("active_dataset_id")
-                        if isinstance(pipe, dict)
-                        else None
-                    )
+                    active_id = pipe.get("active_dataset_id") if isinstance(pipe, dict) else None
                     active_id = active_id if isinstance(active_id, str) else None
-                    target_id = (
-                        pipe.get("target_dataset_id")
-                        if isinstance(pipe, dict)
-                        else None
-                    )
+                    target_id = pipe.get("target_dataset_id") if isinstance(pipe, dict) else None
                     target_id = target_id if isinstance(target_id, str) else None
 
                     base_nodes: list[StreamlitFlowNode] = []
                     sig_nodes = []
                     for idx, did in enumerate(flow_node_ids):
-                        meta = (
-                            meta_by_id.get(did) if isinstance(meta_by_id, dict) else {}
-                        )
+                        meta = meta_by_id.get(did) if isinstance(meta_by_id, dict) else {}
                         meta = meta if isinstance(meta, dict) else {}
                         label = meta.get("label") or did
                         stage = str(meta.get("stage") or "")
@@ -13286,9 +12343,7 @@ def _render_pipeline_studio() -> None:
                         )
 
                     sig_obj = {
-                        "nodes": sorted(
-                            sig_nodes, key=lambda x: str(x.get("id") or "")
-                        ),
+                        "nodes": sorted(sig_nodes, key=lambda x: str(x.get("id") or "")),
                         "edges": sorted(
                             [(e.source, e.target) for e in base_edges],
                             key=lambda x: (str(x[0]), str(x[1])),
@@ -13324,13 +12379,9 @@ def _render_pipeline_studio() -> None:
                             st.session_state.pop("pipeline_studio_flow_positions", None)
                             st.session_state.pop("pipeline_studio_flow_signature", None)
                             if isinstance(p_hash, str) and p_hash:
-                                _delete_persisted_pipeline_studio_flow_layout(
-                                    pipeline_hash=p_hash
-                                )
+                                _delete_persisted_pipeline_studio_flow_layout(pipeline_hash=p_hash)
                             st.session_state["pipeline_studio_flow_force_layout"] = True
-                            st.session_state[
-                                "pipeline_studio_flow_fit_view_pending"
-                            ] = True
+                            st.session_state["pipeline_studio_flow_fit_view_pending"] = True
                             st.session_state[flow_ts_key] = int(time.time() * 1000)
 
                         st.button(
@@ -13350,9 +12401,7 @@ def _render_pipeline_studio() -> None:
                                     hidden_ids=set(),
                                     deleted_ids=set(),
                                 )
-                            st.session_state[
-                                "pipeline_studio_flow_fit_view_pending"
-                            ] = True
+                            st.session_state["pipeline_studio_flow_fit_view_pending"] = True
                             st.session_state[flow_ts_key] = int(time.time() * 1000)
 
                         st.button(
@@ -13366,9 +12415,7 @@ def _render_pipeline_studio() -> None:
 
                         def _open_manual_node_editor() -> None:
                             st.session_state["pipeline_studio_manual_node_open"] = True
-                            st.session_state["pipeline_studio_manual_seed_defaults"] = (
-                                True
-                            )
+                            st.session_state["pipeline_studio_manual_seed_defaults"] = True
 
                         st.button(
                             "New node",
@@ -13411,16 +12458,10 @@ def _render_pipeline_studio() -> None:
                                 key="pipeline_studio_manual_kind",
                                 help="Choose the transform type for this manual node.",
                             )
-                            prev_kind = st.session_state.get(
-                                "pipeline_studio_manual_kind_prev"
-                            )
+                            prev_kind = st.session_state.get("pipeline_studio_manual_kind_prev")
                             if prev_kind != manual_kind:
-                                st.session_state["pipeline_studio_manual_kind_prev"] = (
-                                    manual_kind
-                                )
-                                st.session_state[
-                                    "pipeline_studio_manual_seed_defaults"
-                                ] = True
+                                st.session_state["pipeline_studio_manual_kind_prev"] = manual_kind
+                                st.session_state["pipeline_studio_manual_seed_defaults"] = True
 
                             default_parent = (
                                 selected_default
@@ -13428,8 +12469,7 @@ def _render_pipeline_studio() -> None:
                                 and selected_default in dataset_ids
                                 else (
                                     active_id
-                                    if isinstance(active_id, str)
-                                    and active_id in dataset_ids
+                                    if isinstance(active_id, str) and active_id in dataset_ids
                                     else (dataset_ids[0] if dataset_ids else None)
                                 )
                             )
@@ -13446,11 +12486,7 @@ def _render_pipeline_studio() -> None:
                                     else None
                                 )
                                 entry = entry if isinstance(entry, dict) else {}
-                                m = (
-                                    meta_by_id.get(did)
-                                    if isinstance(meta_by_id, dict)
-                                    else {}
-                                )
+                                m = meta_by_id.get(did) if isinstance(meta_by_id, dict) else {}
                                 m = m if isinstance(m, dict) else {}
                                 lbl = entry.get("label") or m.get("label") or did
                                 stg = str(entry.get("stage") or m.get("stage") or "")
@@ -13475,9 +12511,9 @@ def _render_pipeline_studio() -> None:
                                         if isinstance(did, str) and did in dataset_ids
                                     ]
                                     if pending_clean:
-                                        st.session_state[
-                                            "pipeline_studio_manual_parent_ids"
-                                        ] = pending_clean
+                                        st.session_state["pipeline_studio_manual_parent_ids"] = (
+                                            pending_clean
+                                        )
 
                                 def _queue_manual_merge_parents(
                                     ids: list[str], *, notice: str | None = None
@@ -13485,40 +12521,33 @@ def _render_pipeline_studio() -> None:
                                     cleaned: list[str] = []
                                     seen: set[str] = set()
                                     for did in ids:
-                                        if (
-                                            not isinstance(did, str)
-                                            or did not in dataset_ids
-                                        ):
+                                        if not isinstance(did, str) or did not in dataset_ids:
                                             continue
                                         if did in seen:
                                             continue
                                         seen.add(did)
                                         cleaned.append(did)
                                     if len(cleaned) < 2:
-                                        st.session_state[
-                                            "pipeline_studio_manual_parent_notice"
-                                        ] = "Select at least two datasets."
+                                        st.session_state["pipeline_studio_manual_parent_notice"] = (
+                                            "Select at least two datasets."
+                                        )
                                         return
                                     st.session_state[
                                         "pipeline_studio_manual_parent_ids_pending"
                                     ] = cleaned
-                                    st.session_state[
-                                        "pipeline_studio_manual_parent_notice"
-                                    ] = notice or "Updated parent datasets."
+                                    st.session_state["pipeline_studio_manual_parent_notice"] = (
+                                        notice or "Updated parent datasets."
+                                    )
                                     _keep_pipeline_studio_open()
 
                                 def _parse_parent_hint(text: str) -> list[str]:
                                     text = text if isinstance(text, str) else ""
                                     tokens = [
-                                        t.strip()
-                                        for t in re.split(r"[,\n]+", text)
-                                        if t.strip()
+                                        t.strip() for t in re.split(r"[,\n]+", text) if t.strip()
                                     ]
                                     if len(tokens) <= 1:
                                         tokens = [
-                                            t.strip()
-                                            for t in re.split(r"\s+", text)
-                                            if t.strip()
+                                            t.strip() for t in re.split(r"\s+", text) if t.strip()
                                         ]
                                     if not tokens:
                                         return []
@@ -13532,10 +12561,7 @@ def _render_pipeline_studio() -> None:
                                         if tok_lower:
                                             for did in dataset_ids:
                                                 did_lower = did.lower()
-                                                if (
-                                                    tok_lower == did_lower
-                                                    or tok_lower in did_lower
-                                                ):
+                                                if tok_lower == did_lower or tok_lower in did_lower:
                                                     match_id = did
                                                     break
                                         if match_id:
@@ -13543,24 +12569,16 @@ def _render_pipeline_studio() -> None:
                                             continue
                                         for did in dataset_ids:
                                             entry = studio_datasets.get(did)
-                                            entry = (
-                                                entry if isinstance(entry, dict) else {}
-                                            )
+                                            entry = entry if isinstance(entry, dict) else {}
                                             label = entry.get("label") or ""
                                             prov = entry.get("provenance")
-                                            prov = (
-                                                prov if isinstance(prov, dict) else {}
-                                            )
+                                            prov = prov if isinstance(prov, dict) else {}
                                             candidates = [
                                                 str(label),
                                                 str(prov.get("original_name") or ""),
                                                 str(prov.get("source") or ""),
                                             ]
-                                            if any(
-                                                tok_lower in c.lower()
-                                                for c in candidates
-                                                if c
-                                            ):
+                                            if any(tok_lower in c.lower() for c in candidates if c):
                                                 match_id = did
                                                 break
                                         if match_id:
@@ -13597,10 +12615,7 @@ def _render_pipeline_studio() -> None:
                                         width="stretch",
                                     ):
                                         auto_ids: list[str] = []
-                                        if (
-                                            isinstance(active_id, str)
-                                            and active_id in dataset_ids
-                                        ):
+                                        if isinstance(active_id, str) and active_id in dataset_ids:
                                             auto_ids.append(active_id)
                                         for did in dataset_ids:
                                             if did not in auto_ids:
@@ -13612,9 +12627,7 @@ def _render_pipeline_studio() -> None:
                                             notice="Auto-picked parent datasets.",
                                         )
 
-                                default_merge = (
-                                    [default_parent] if default_parent else []
-                                )
+                                default_merge = [default_parent] if default_parent else []
                                 for pid in dataset_ids:
                                     if pid != default_parent:
                                         default_merge.append(pid)
@@ -13635,9 +12648,7 @@ def _render_pipeline_studio() -> None:
                                 )
                                 if isinstance(hint_notice, str) and hint_notice.strip():
                                     st.success(hint_notice)
-                                parent_id_new = (
-                                    parent_ids_new[0] if parent_ids_new else ""
-                                )
+                                parent_id_new = parent_ids_new[0] if parent_ids_new else ""
                             else:
                                 parent_id_new = st.selectbox(
                                     "Parent dataset",
@@ -13651,9 +12662,7 @@ def _render_pipeline_studio() -> None:
                             insert_between = False
                             if manual_kind in {"python_function", "sql_query"}:
                                 child_idx = _build_children_index(studio_datasets)
-                                child_candidates = sorted(
-                                    child_idx.get(parent_id_new, set())
-                                )
+                                child_candidates = sorted(child_idx.get(parent_id_new, set()))
                                 insert_between = st.checkbox(
                                     "Insert between parent and child",
                                     key="pipeline_studio_manual_insert_between",
@@ -13675,22 +12684,15 @@ def _render_pipeline_studio() -> None:
                                             "No downstream nodes available for the selected parent."
                                         )
                             seed_defaults = bool(
-                                st.session_state.pop(
-                                    "pipeline_studio_manual_seed_defaults", False
-                                )
+                                st.session_state.pop("pipeline_studio_manual_seed_defaults", False)
                             )
                             parent_meta = (
                                 meta_by_id.get(parent_id_new)
-                                if isinstance(meta_by_id, dict)
-                                and isinstance(parent_id_new, str)
+                                if isinstance(meta_by_id, dict) and isinstance(parent_id_new, str)
                                 else {}
                             )
-                            parent_meta = (
-                                parent_meta if isinstance(parent_meta, dict) else {}
-                            )
-                            parent_stage_guess = str(
-                                parent_meta.get("stage") or ""
-                            ).strip()
+                            parent_meta = parent_meta if isinstance(parent_meta, dict) else {}
+                            parent_stage_guess = str(parent_meta.get("stage") or "").strip()
                             if manual_kind == "sql_query":
                                 stage_default = "sql"
                             else:
@@ -13704,62 +12706,39 @@ def _render_pipeline_studio() -> None:
                                 "sql_query": "manual_sql",
                                 "python_merge": "manual_merge",
                             }
-                            label_default = label_defaults.get(
-                                manual_kind, "manual_transform"
-                            )
+                            label_default = label_defaults.get(manual_kind, "manual_transform")
                             if seed_defaults:
                                 try:
-                                    st.session_state["pipeline_studio_manual_stage"] = (
-                                        stage_default
-                                    )
-                                    st.session_state["pipeline_studio_manual_label"] = (
-                                        label_default
-                                    )
-                                    st.session_state[
-                                        "pipeline_studio_manual_confirm_run"
-                                    ] = False
+                                    st.session_state["pipeline_studio_manual_stage"] = stage_default
+                                    st.session_state["pipeline_studio_manual_label"] = label_default
+                                    st.session_state["pipeline_studio_manual_confirm_run"] = False
                                 except Exception:
                                     pass
                             c_stage, c_label = st.columns([0.25, 0.75])
                             with c_stage:
                                 if (
-                                    "pipeline_studio_manual_stage"
-                                    not in st.session_state
+                                    "pipeline_studio_manual_stage" not in st.session_state
                                     or not str(
-                                        st.session_state.get(
-                                            "pipeline_studio_manual_stage"
-                                        )
-                                        or ""
+                                        st.session_state.get("pipeline_studio_manual_stage") or ""
                                     ).strip()
                                 ):
-                                    st.session_state["pipeline_studio_manual_stage"] = (
-                                        stage_default
-                                    )
+                                    st.session_state["pipeline_studio_manual_stage"] = stage_default
                                 stage_new = st.text_input(
                                     "Stage",
                                     key="pipeline_studio_manual_stage",
                                     help="Used as the dataset id prefix (e.g. `cleaned_...`, `features_...`).",
                                 )
                                 stage_norm = _normalize_pipeline_stage(stage_new or "")
-                                if (
-                                    stage_new
-                                    and stage_norm != (stage_new or "").strip().lower()
-                                ):
+                                if stage_new and stage_norm != (stage_new or "").strip().lower():
                                     st.caption(f"Normalized stage: `{stage_norm}`")
                             with c_label:
                                 if (
-                                    "pipeline_studio_manual_label"
-                                    not in st.session_state
+                                    "pipeline_studio_manual_label" not in st.session_state
                                     or not str(
-                                        st.session_state.get(
-                                            "pipeline_studio_manual_label"
-                                        )
-                                        or ""
+                                        st.session_state.get("pipeline_studio_manual_label") or ""
                                     ).strip()
                                 ):
-                                    st.session_state["pipeline_studio_manual_label"] = (
-                                        label_default
-                                    )
+                                    st.session_state["pipeline_studio_manual_label"] = label_default
                                 st.text_input(
                                     "Label",
                                     key="pipeline_studio_manual_label",
@@ -13800,9 +12779,7 @@ def _render_pipeline_studio() -> None:
                                 else "Load a Python script (optional)"
                             )
                             upload_types = (
-                                ["sql", "txt"]
-                                if manual_kind == "sql_query"
-                                else ["py", "txt"]
+                                ["sql", "txt"] if manual_kind == "sql_query" else ["py", "txt"]
                             )
                             upload_key = f"pipeline_studio_manual_upload_{manual_kind}"
                             load_key = f"pipeline_studio_manual_load_{manual_kind}"
@@ -13819,10 +12796,8 @@ def _render_pipeline_studio() -> None:
                                     width="stretch",
                                 ):
                                     try:
-                                        st.session_state[template_key] = (
-                                            up.getvalue().decode(
-                                                "utf-8", errors="replace"
-                                            )
+                                        st.session_state[template_key] = up.getvalue().decode(
+                                            "utf-8", errors="replace"
                                         )
                                     except Exception:
                                         pass
@@ -13859,30 +12834,21 @@ def _render_pipeline_studio() -> None:
                             if show_preview:
                                 st.code(
                                     code_new if isinstance(code_new, str) else "",
-                                    language="sql"
-                                    if manual_kind == "sql_query"
-                                    else "python",
+                                    language="sql" if manual_kind == "sql_query" else "python",
                                 )
                             manual_errors: list[str] = []
-                            if (
-                                manual_kind == "python_merge"
-                                and len(parent_ids_new) < 2
-                            ):
-                                manual_errors.append(
-                                    "Select at least two parent datasets."
-                                )
+                            if manual_kind == "python_merge" and len(parent_ids_new) < 2:
+                                manual_errors.append("Select at least two parent datasets.")
                             if insert_between and not insert_child_id:
-                                manual_errors.append(
-                                    "Select a downstream node to insert between."
-                                )
+                                manual_errors.append("Select a downstream node to insert between.")
                             if manual_kind in {
                                 "python_function",
                                 "python_merge",
                             } and not (isinstance(code_new, str) and code_new.strip()):
                                 manual_errors.append("Python code is empty.")
                             if manual_kind == "sql_query":
-                                _sql_text, sql_err = (
-                                    _pipeline_studio_validate_readonly_sql(code_new)
+                                _sql_text, sql_err = _pipeline_studio_validate_readonly_sql(
+                                    code_new
                                 )
                                 if sql_err:
                                     manual_errors.append(sql_err)
@@ -13890,9 +12856,7 @@ def _render_pipeline_studio() -> None:
                                 "pipeline_studio_manual_last_created_id"
                             )
                             if isinstance(last_created, str) and last_created.strip():
-                                st.caption(
-                                    f"Last manual node created: `{last_created}`"
-                                )
+                                st.caption(f"Last manual node created: `{last_created}`")
                             confirm_label = (
                                 "I understand this runs a read-only SQL query"
                                 if manual_kind == "sql_query"
@@ -13919,9 +12883,7 @@ def _render_pipeline_studio() -> None:
                                             label=st.session_state.get(
                                                 "pipeline_studio_manual_label", ""
                                             ),
-                                            sql_text=st.session_state.get(
-                                                template_key, ""
-                                            ),
+                                            sql_text=st.session_state.get(template_key, ""),
                                             insert_child_id=insert_child_id or None,
                                         )
                                     elif manual_kind == "python_merge":
@@ -13957,8 +12919,7 @@ def _render_pipeline_studio() -> None:
                                     "Create node",
                                     key="pipeline_studio_manual_create_node",
                                     type="primary",
-                                    disabled=not bool(confirm_run)
-                                    or bool(manual_errors),
+                                    disabled=not bool(confirm_run) or bool(manual_errors),
                                     width="stretch",
                                     on_click=_manual_create_click,
                                 )
@@ -13968,9 +12929,7 @@ def _render_pipeline_studio() -> None:
                                     key="pipeline_studio_manual_close",
                                     width="stretch",
                                 ):
-                                    st.session_state[
-                                        "pipeline_studio_manual_node_open"
-                                    ] = False
+                                    st.session_state["pipeline_studio_manual_node_open"] = False
 
                     new_state = streamlit_flow(
                         key="pipeline_studio_flow",
@@ -14009,53 +12968,35 @@ def _render_pipeline_studio() -> None:
                             hidden_ids=ui_hidden,
                             deleted_ids=ui_deleted,
                         )
-                        hidden_set = (set(ui_hidden) | set(ui_deleted)) | set(
-                            hidden_set
-                        )
-                        st.session_state["pipeline_studio_flow_hidden_ids"] = sorted(
-                            hidden_set
-                        )
+                        hidden_set = (set(ui_hidden) | set(ui_deleted)) | set(hidden_set)
+                        st.session_state["pipeline_studio_flow_hidden_ids"] = sorted(hidden_set)
                     st.session_state["pipeline_studio_flow_state"] = new_state
                     if pipeline_hash:
                         try:
-                            hid_save = st.session_state.get(
-                                "pipeline_studio_flow_hidden_ids"
-                            )
+                            hid_save = st.session_state.get("pipeline_studio_flow_hidden_ids")
                             hid_save = (
-                                hid_save
-                                if isinstance(hid_save, list)
-                                else sorted(hidden_set)
+                                hid_save if isinstance(hid_save, list) else sorted(hidden_set)
                             )
                             _update_persisted_pipeline_studio_flow_layout(
                                 pipeline_hash=pipeline_hash,
                                 positions=pos_store,
-                                hidden_ids=[
-                                    str(x) for x in hid_save if isinstance(x, str) and x
-                                ],
+                                hidden_ids=[str(x) for x in hid_save if isinstance(x, str) and x],
                             )
                         except Exception:
                             pass
 
                     st.markdown("---")
-                    sel = (
-                        new_state.selected_id
-                        if isinstance(new_state.selected_id, str)
-                        else None
-                    )
+                    sel = new_state.selected_id if isinstance(new_state.selected_id, str) else None
                     if not sel:
                         st.info("Click a node to inspect it.")
                     else:
                         st.markdown("**Node Inspector**")
                         st.code(sel, language="text")
 
-                        meta = (
-                            meta_by_id.get(sel) if isinstance(meta_by_id, dict) else {}
-                        )
+                        meta = meta_by_id.get(sel) if isinstance(meta_by_id, dict) else {}
                         meta = meta if isinstance(meta, dict) else {}
                         entry_obj = (
-                            studio_datasets.get(sel)
-                            if isinstance(studio_datasets, dict)
-                            else None
+                            studio_datasets.get(sel) if isinstance(studio_datasets, dict) else None
                         )
                         entry_obj = entry_obj if isinstance(entry_obj, dict) else {}
                         prov = (
@@ -14064,9 +13005,7 @@ def _render_pipeline_studio() -> None:
                             else {}
                         )
                         transform = (
-                            prov.get("transform")
-                            if isinstance(prov.get("transform"), dict)
-                            else {}
+                            prov.get("transform") if isinstance(prov.get("transform"), dict) else {}
                         )
                         kind = str(transform.get("kind") or "")
 
@@ -14095,32 +13034,22 @@ def _render_pipeline_studio() -> None:
                         ):
                             st.session_state[open_view_key] = available_views[0]
                         ui_hidden, ui_deleted = (
-                            _pipeline_studio_get_registry_ui(
-                                pipeline_hash=pipeline_hash
-                            )
+                            _pipeline_studio_get_registry_ui(pipeline_hash=pipeline_hash)
                             if pipeline_hash
                             else (set(), set())
                         )
                         in_hidden = sel in ui_hidden
                         in_deleted = sel in ui_deleted
 
-                        def _flow_open_in_workspace(
-                            node_id: str, view_name: str
-                        ) -> None:
-                            st.session_state["pipeline_studio_node_id_pending"] = (
-                                node_id
-                            )
-                            st.session_state["pipeline_studio_autofollow_pending"] = (
-                                False
-                            )
+                        def _flow_open_in_workspace(node_id: str, view_name: str) -> None:
+                            st.session_state["pipeline_studio_node_id_pending"] = node_id
+                            st.session_state["pipeline_studio_autofollow_pending"] = False
                             st.session_state["pipeline_studio_view_pending"] = view_name
 
                         def _flow_toggle_hidden(
                             p_hash: str, node_id: str, currently_hidden: bool
                         ) -> None:
-                            ui_h, ui_d = _pipeline_studio_get_registry_ui(
-                                pipeline_hash=p_hash
-                            )
+                            ui_h, ui_d = _pipeline_studio_get_registry_ui(pipeline_hash=p_hash)
                             ui_h = set(ui_h)
                             ui_d = set(ui_d)
                             if currently_hidden:
@@ -14132,21 +13061,17 @@ def _render_pipeline_studio() -> None:
                                 hidden_ids=ui_h,
                                 deleted_ids=ui_d,
                             )
-                            st.session_state["pipeline_studio_flow_hidden_ids"] = (
-                                sorted(ui_h | ui_d)
+                            st.session_state["pipeline_studio_flow_hidden_ids"] = sorted(
+                                ui_h | ui_d
                             )
-                            st.session_state[
-                                "pipeline_studio_flow_fit_view_pending"
-                            ] = True
+                            st.session_state["pipeline_studio_flow_fit_view_pending"] = True
                             st.session_state[flow_ts_key] = int(time.time() * 1000)
                             _sync_pipeline_targets_after_ui_change()
 
                         def _flow_toggle_deleted(
                             p_hash: str, node_id: str, currently_deleted: bool
                         ) -> None:
-                            ui_h, ui_d = _pipeline_studio_get_registry_ui(
-                                pipeline_hash=p_hash
-                            )
+                            ui_h, ui_d = _pipeline_studio_get_registry_ui(pipeline_hash=p_hash)
                             ui_h = set(ui_h)
                             ui_d = set(ui_d)
                             if currently_deleted:
@@ -14158,12 +13083,10 @@ def _render_pipeline_studio() -> None:
                                 hidden_ids=ui_h,
                                 deleted_ids=ui_d,
                             )
-                            st.session_state["pipeline_studio_flow_hidden_ids"] = (
-                                sorted(ui_h | ui_d)
+                            st.session_state["pipeline_studio_flow_hidden_ids"] = sorted(
+                                ui_h | ui_d
                             )
-                            st.session_state[
-                                "pipeline_studio_flow_fit_view_pending"
-                            ] = True
+                            st.session_state["pipeline_studio_flow_fit_view_pending"] = True
                             st.session_state[flow_ts_key] = int(time.time() * 1000)
                             _sync_pipeline_targets_after_ui_change()
 
@@ -14173,15 +13096,11 @@ def _render_pipeline_studio() -> None:
                             stage_key: str,
                         ) -> None:
                             try:
-                                node_id = (
-                                    node_id.strip() if isinstance(node_id, str) else ""
-                                )
+                                node_id = node_id.strip() if isinstance(node_id, str) else ""
                                 if not node_id:
                                     return
                                 team_state = st.session_state.get("team_state", {})
-                                team_state = (
-                                    team_state if isinstance(team_state, dict) else {}
-                                )
+                                team_state = team_state if isinstance(team_state, dict) else {}
                                 ds = team_state.get("datasets")
                                 ds = ds if isinstance(ds, dict) else {}
                                 if node_id not in ds:
@@ -14189,14 +13108,10 @@ def _render_pipeline_studio() -> None:
                                 entry = ds.get(node_id)
                                 entry = entry if isinstance(entry, dict) else {}
                                 new_label = st.session_state.get(label_key)
-                                new_label = (
-                                    new_label if isinstance(new_label, str) else ""
-                                )
+                                new_label = new_label if isinstance(new_label, str) else ""
                                 new_label = new_label.strip()
                                 new_stage = st.session_state.get(stage_key)
-                                new_stage = (
-                                    new_stage if isinstance(new_stage, str) else ""
-                                )
+                                new_stage = new_stage if isinstance(new_stage, str) else ""
                                 new_stage = new_stage.strip() or (
                                     entry.get("stage")
                                     if isinstance(entry.get("stage"), str)
@@ -14212,17 +13127,15 @@ def _render_pipeline_studio() -> None:
                                 team_state["datasets"] = ds
                                 st.session_state["team_state"] = team_state
                                 try:
-                                    pipelines_new = _pipeline_studio_build_pipelines_from_team_state(
-                                        team_state
+                                    pipelines_new = (
+                                        _pipeline_studio_build_pipelines_from_team_state(team_state)
                                     )
                                     _update_pipeline_registry_store_for_pipelines(
                                         pipelines=pipelines_new, datasets=ds
                                     )
                                 except Exception:
                                     pass
-                                _persist_pipeline_studio_team_state(
-                                    team_state=team_state
-                                )
+                                _persist_pipeline_studio_team_state(team_state=team_state)
                                 st.session_state["pipeline_studio_history_notice"] = (
                                     f"Updated metadata for `{node_id}`."
                                 )
@@ -14232,36 +13145,24 @@ def _render_pipeline_studio() -> None:
 
                         def _flow_delete_branch(p_hash: str, root_id: str) -> None:
                             try:
-                                p_hash = (
-                                    p_hash.strip() if isinstance(p_hash, str) else ""
-                                )
-                                root_id = (
-                                    root_id.strip() if isinstance(root_id, str) else ""
-                                )
+                                p_hash = p_hash.strip() if isinstance(p_hash, str) else ""
+                                root_id = root_id.strip() if isinstance(root_id, str) else ""
                                 if not p_hash or not root_id:
                                     return
                                 child_idx = _build_children_index(studio_datasets)
-                                branch_ids = {root_id} | _descendants(
-                                    root_id, child_idx
-                                )
-                                ui_h, ui_d = _pipeline_studio_get_registry_ui(
-                                    pipeline_hash=p_hash
-                                )
+                                branch_ids = {root_id} | _descendants(root_id, child_idx)
+                                ui_h, ui_d = _pipeline_studio_get_registry_ui(pipeline_hash=p_hash)
                                 ui_h = set(ui_h)
-                                ui_d = set(ui_d) | {
-                                    str(x) for x in branch_ids if str(x).strip()
-                                }
+                                ui_d = set(ui_d) | {str(x) for x in branch_ids if str(x).strip()}
                                 _pipeline_studio_set_registry_ui(
                                     pipeline_hash=p_hash,
                                     hidden_ids=ui_h,
                                     deleted_ids=ui_d,
                                 )
-                                st.session_state["pipeline_studio_flow_hidden_ids"] = (
-                                    sorted(ui_h | ui_d)
+                                st.session_state["pipeline_studio_flow_hidden_ids"] = sorted(
+                                    ui_h | ui_d
                                 )
-                                st.session_state[
-                                    "pipeline_studio_flow_fit_view_pending"
-                                ] = True
+                                st.session_state["pipeline_studio_flow_fit_view_pending"] = True
                                 st.session_state[flow_ts_key] = int(time.time() * 1000)
                                 st.session_state["pipeline_studio_history_notice"] = (
                                     f"Soft-deleted {len(branch_ids)} node(s) under `{root_id}`."
@@ -14272,21 +13173,13 @@ def _render_pipeline_studio() -> None:
 
                         def _flow_restore_branch(p_hash: str, root_id: str) -> None:
                             try:
-                                p_hash = (
-                                    p_hash.strip() if isinstance(p_hash, str) else ""
-                                )
-                                root_id = (
-                                    root_id.strip() if isinstance(root_id, str) else ""
-                                )
+                                p_hash = p_hash.strip() if isinstance(p_hash, str) else ""
+                                root_id = root_id.strip() if isinstance(root_id, str) else ""
                                 if not p_hash or not root_id:
                                     return
                                 child_idx = _build_children_index(studio_datasets)
-                                branch_ids = {root_id} | _descendants(
-                                    root_id, child_idx
-                                )
-                                ui_h, ui_d = _pipeline_studio_get_registry_ui(
-                                    pipeline_hash=p_hash
-                                )
+                                branch_ids = {root_id} | _descendants(root_id, child_idx)
+                                ui_h, ui_d = _pipeline_studio_get_registry_ui(pipeline_hash=p_hash)
                                 ui_h = set(ui_h) - branch_ids
                                 ui_d = set(ui_d) - branch_ids
                                 _pipeline_studio_set_registry_ui(
@@ -14294,12 +13187,10 @@ def _render_pipeline_studio() -> None:
                                     hidden_ids=ui_h,
                                     deleted_ids=ui_d,
                                 )
-                                st.session_state["pipeline_studio_flow_hidden_ids"] = (
-                                    sorted(ui_h | ui_d)
+                                st.session_state["pipeline_studio_flow_hidden_ids"] = sorted(
+                                    ui_h | ui_d
                                 )
-                                st.session_state[
-                                    "pipeline_studio_flow_fit_view_pending"
-                                ] = True
+                                st.session_state["pipeline_studio_flow_fit_view_pending"] = True
                                 st.session_state[flow_ts_key] = int(time.time() * 1000)
                                 st.session_state["pipeline_studio_history_notice"] = (
                                     f"Restored {len(branch_ids)} node(s) under `{root_id}`."
@@ -14310,21 +13201,13 @@ def _render_pipeline_studio() -> None:
 
                         def _flow_hide_branch(p_hash: str, root_id: str) -> None:
                             try:
-                                p_hash = (
-                                    p_hash.strip() if isinstance(p_hash, str) else ""
-                                )
-                                root_id = (
-                                    root_id.strip() if isinstance(root_id, str) else ""
-                                )
+                                p_hash = p_hash.strip() if isinstance(p_hash, str) else ""
+                                root_id = root_id.strip() if isinstance(root_id, str) else ""
                                 if not p_hash or not root_id:
                                     return
                                 child_idx = _build_children_index(studio_datasets)
-                                branch_ids = {root_id} | _descendants(
-                                    root_id, child_idx
-                                )
-                                ui_h, ui_d = _pipeline_studio_get_registry_ui(
-                                    pipeline_hash=p_hash
-                                )
+                                branch_ids = {root_id} | _descendants(root_id, child_idx)
+                                ui_h, ui_d = _pipeline_studio_get_registry_ui(pipeline_hash=p_hash)
                                 ui_h = set(ui_h) | branch_ids
                                 ui_d = set(ui_d)
                                 _pipeline_studio_set_registry_ui(
@@ -14332,12 +13215,10 @@ def _render_pipeline_studio() -> None:
                                     hidden_ids=ui_h,
                                     deleted_ids=ui_d,
                                 )
-                                st.session_state["pipeline_studio_flow_hidden_ids"] = (
-                                    sorted(ui_h | ui_d)
+                                st.session_state["pipeline_studio_flow_hidden_ids"] = sorted(
+                                    ui_h | ui_d
                                 )
-                                st.session_state[
-                                    "pipeline_studio_flow_fit_view_pending"
-                                ] = True
+                                st.session_state["pipeline_studio_flow_fit_view_pending"] = True
                                 st.session_state[flow_ts_key] = int(time.time() * 1000)
                                 st.session_state["pipeline_studio_history_notice"] = (
                                     f"Hid {len(branch_ids)} node(s) under `{root_id}`."
@@ -14348,21 +13229,13 @@ def _render_pipeline_studio() -> None:
 
                         def _flow_unhide_branch(p_hash: str, root_id: str) -> None:
                             try:
-                                p_hash = (
-                                    p_hash.strip() if isinstance(p_hash, str) else ""
-                                )
-                                root_id = (
-                                    root_id.strip() if isinstance(root_id, str) else ""
-                                )
+                                p_hash = p_hash.strip() if isinstance(p_hash, str) else ""
+                                root_id = root_id.strip() if isinstance(root_id, str) else ""
                                 if not p_hash or not root_id:
                                     return
                                 child_idx = _build_children_index(studio_datasets)
-                                branch_ids = {root_id} | _descendants(
-                                    root_id, child_idx
-                                )
-                                ui_h, ui_d = _pipeline_studio_get_registry_ui(
-                                    pipeline_hash=p_hash
-                                )
+                                branch_ids = {root_id} | _descendants(root_id, child_idx)
+                                ui_h, ui_d = _pipeline_studio_get_registry_ui(pipeline_hash=p_hash)
                                 ui_h = set(ui_h) - branch_ids
                                 ui_d = set(ui_d)
                                 _pipeline_studio_set_registry_ui(
@@ -14370,12 +13243,10 @@ def _render_pipeline_studio() -> None:
                                     hidden_ids=ui_h,
                                     deleted_ids=ui_d,
                                 )
-                                st.session_state["pipeline_studio_flow_hidden_ids"] = (
-                                    sorted(ui_h | ui_d)
+                                st.session_state["pipeline_studio_flow_hidden_ids"] = sorted(
+                                    ui_h | ui_d
                                 )
-                                st.session_state[
-                                    "pipeline_studio_flow_fit_view_pending"
-                                ] = True
+                                st.session_state["pipeline_studio_flow_fit_view_pending"] = True
                                 st.session_state[flow_ts_key] = int(time.time() * 1000)
                                 st.session_state["pipeline_studio_history_notice"] = (
                                     f"Unhid {len(branch_ids)} node(s) under `{root_id}`."
@@ -14390,40 +13261,30 @@ def _render_pipeline_studio() -> None:
                             try:
                                 import time as _time
 
-                                root_id = (
-                                    root_id.strip() if isinstance(root_id, str) else ""
-                                )
+                                root_id = root_id.strip() if isinstance(root_id, str) else ""
                                 if not root_id:
                                     return
                                 team_state = st.session_state.get("team_state", {})
-                                team_state = (
-                                    team_state if isinstance(team_state, dict) else {}
-                                )
+                                team_state = team_state if isinstance(team_state, dict) else {}
                                 ds = team_state.get("datasets")
                                 ds = ds if isinstance(ds, dict) else {}
                                 if root_id not in ds:
-                                    st.session_state[
-                                        "pipeline_studio_history_notice"
-                                    ] = f"Hard delete skipped: `{root_id}` not found."
+                                    st.session_state["pipeline_studio_history_notice"] = (
+                                        f"Hard delete skipped: `{root_id}` not found."
+                                    )
                                     return
                                 child_idx = _build_children_index(ds)
-                                branch_ids = {root_id} | _descendants(
-                                    root_id, child_idx
-                                )
-                                ds_new = {
-                                    k: v for k, v in ds.items() if k not in branch_ids
-                                }
+                                branch_ids = {root_id} | _descendants(root_id, child_idx)
+                                ds_new = {k: v for k, v in ds.items() if k not in branch_ids}
                                 if not ds_new:
-                                    st.session_state[
-                                        "pipeline_studio_history_notice"
-                                    ] = "Hard delete skipped: would remove all datasets."
+                                    st.session_state["pipeline_studio_history_notice"] = (
+                                        "Hard delete skipped: would remove all datasets."
+                                    )
                                     return
 
                                 active_id = team_state.get("active_dataset_id")
                                 active_id = (
-                                    active_id
-                                    if isinstance(active_id, str) and active_id
-                                    else None
+                                    active_id if isinstance(active_id, str) and active_id else None
                                 )
                                 if active_id in branch_ids:
                                     # Pick newest remaining dataset as the new active id.
@@ -14445,9 +13306,7 @@ def _render_pipeline_studio() -> None:
                                 team_state["datasets"] = ds_new
                                 team_state["active_dataset_id"] = active_id
                                 st.session_state["team_state"] = team_state
-                                _persist_pipeline_studio_team_state(
-                                    team_state=team_state
-                                )
+                                _persist_pipeline_studio_team_state(team_state=team_state)
 
                                 # Clean up registry UI for the current pipeline hash (best effort).
                                 p_hash_clean = (
@@ -14468,17 +13327,11 @@ def _render_pipeline_studio() -> None:
                                     )
 
                                 # Drop cached positions for deleted nodes.
-                                pos_store = st.session_state.get(
-                                    "pipeline_studio_flow_positions"
-                                )
-                                pos_store = (
-                                    pos_store if isinstance(pos_store, dict) else {}
-                                )
+                                pos_store = st.session_state.get("pipeline_studio_flow_positions")
+                                pos_store = pos_store if isinstance(pos_store, dict) else {}
                                 for did in list(branch_ids):
                                     pos_store.pop(str(did), None)
-                                st.session_state["pipeline_studio_flow_positions"] = (
-                                    pos_store
-                                )
+                                st.session_state["pipeline_studio_flow_positions"] = pos_store
 
                                 # Clear in-session history if requested (frees memory).
                                 if bool(clear_history):
@@ -14487,8 +13340,8 @@ def _render_pipeline_studio() -> None:
 
                                 # Refresh semantic registry for new pipelines.
                                 try:
-                                    pipelines_new = _pipeline_studio_build_pipelines_from_team_state(
-                                        team_state
+                                    pipelines_new = (
+                                        _pipeline_studio_build_pipelines_from_team_state(team_state)
                                     )
                                     _update_pipeline_registry_store_for_pipelines(
                                         pipelines=pipelines_new, datasets=ds_new
@@ -14498,30 +13351,16 @@ def _render_pipeline_studio() -> None:
 
                                 # Reset flow caches so the editor rehydrates.
                                 st.session_state.pop("pipeline_studio_flow_state", None)
-                                st.session_state.pop(
-                                    "pipeline_studio_flow_signature", None
-                                )
-                                st.session_state.pop(
-                                    "pipeline_studio_flow_hidden_ids", None
-                                )
-                                st.session_state.pop(
-                                    "pipeline_studio_flow_layout_sig", None
-                                )
-                                st.session_state[
-                                    "pipeline_studio_flow_force_layout"
-                                ] = True
-                                st.session_state[
-                                    "pipeline_studio_flow_fit_view_pending"
-                                ] = True
+                                st.session_state.pop("pipeline_studio_flow_signature", None)
+                                st.session_state.pop("pipeline_studio_flow_hidden_ids", None)
+                                st.session_state.pop("pipeline_studio_flow_layout_sig", None)
+                                st.session_state["pipeline_studio_flow_force_layout"] = True
+                                st.session_state["pipeline_studio_flow_fit_view_pending"] = True
                                 st.session_state[flow_ts_key] = int(_time.time() * 1000)
 
                                 if isinstance(active_id, str) and active_id:
-                                    st.session_state[
-                                        "pipeline_studio_node_id_pending"
-                                    ] = active_id
-                                    st.session_state[
-                                        "pipeline_studio_autofollow_pending"
-                                    ] = False
+                                    st.session_state["pipeline_studio_node_id_pending"] = active_id
+                                    st.session_state["pipeline_studio_autofollow_pending"] = False
                                 st.session_state["pipeline_studio_history_notice"] = (
                                     f"Permanently deleted {len(branch_ids)} node(s) under `{root_id}`."
                                 )
@@ -14531,9 +13370,7 @@ def _render_pipeline_studio() -> None:
                                     f"Hard delete failed: {e}"
                                 )
 
-                        c_view, c_open, c_hide, c_delete = st.columns(
-                            [0.45, 0.25, 0.15, 0.15]
-                        )
+                        c_view, c_open, c_hide, c_delete = st.columns([0.45, 0.25, 0.15, 0.15])
                         with c_view:
                             open_view = st.selectbox(
                                 "Open workspace view",
@@ -14612,9 +13449,7 @@ def _render_pipeline_studio() -> None:
                                 saved_draft = None
                                 saved_meta = {}
                                 if fp:
-                                    saved_meta = _get_pipeline_studio_code_draft(
-                                        fingerprint=fp
-                                    )
+                                    saved_meta = _get_pipeline_studio_code_draft(fingerprint=fp)
                                     saved_draft = (
                                         saved_meta.get("draft_code")
                                         if isinstance(saved_meta, dict)
@@ -14622,8 +13457,7 @@ def _render_pipeline_studio() -> None:
                                     )
                                     saved_draft = (
                                         saved_draft
-                                        if isinstance(saved_draft, str)
-                                        and saved_draft.strip()
+                                        if isinstance(saved_draft, str) and saved_draft.strip()
                                         else None
                                     )
                                 if (
@@ -14675,17 +13509,11 @@ def _render_pipeline_studio() -> None:
                                     )
                                     if show_preview:
                                         st.code(
-                                            draft_code
-                                            if isinstance(draft_code, str)
-                                            else "",
-                                            language="sql"
-                                            if code_lang == "sql"
-                                            else "python",
+                                            draft_code if isinstance(draft_code, str) else "",
+                                            language="sql" if code_lang == "sql" else "python",
                                         )
 
-                                    c_ask, c_save, c_reset, c_copy = st.columns(
-                                        [2, 1, 1, 1]
-                                    )
+                                    c_ask, c_save, c_reset, c_copy = st.columns([2, 1, 1, 1])
                                     with c_ask:
                                         if st.button(
                                             "Ask AI about this code",
@@ -14695,22 +13523,17 @@ def _render_pipeline_studio() -> None:
                                             prompt_lines = [
                                                 "Pipeline Studio request: review and improve this code draft for the selected pipeline node.",
                                                 f"selected_node_id: {sel}",
-                                                f"transform_kind: {_kind}"
-                                                if _kind
-                                                else "",
+                                                f"transform_kind: {_kind}" if _kind else "",
                                                 "",
                                                 f"```{code_lang}\n{draft_code}\n```",
                                             ]
-                                            st.session_state["chat_prompt_pending"] = (
-                                                "\n".join(
-                                                    [
-                                                        x
-                                                        for x in prompt_lines
-                                                        if isinstance(x, str)
-                                                        and x.strip()
-                                                    ]
-                                                ).strip()
-                                            )
+                                            st.session_state["chat_prompt_pending"] = "\n".join(
+                                                [
+                                                    x
+                                                    for x in prompt_lines
+                                                    if isinstance(x, str) and x.strip()
+                                                ]
+                                            ).strip()
                                             st.rerun()
                                     with c_save:
 
@@ -14721,10 +13544,7 @@ def _render_pipeline_studio() -> None:
                                             t_kind: str,
                                             lang: str,
                                         ) -> None:
-                                            if (
-                                                not isinstance(fingerprint, str)
-                                                or not fingerprint
-                                            ):
+                                            if not isinstance(fingerprint, str) or not fingerprint:
                                                 return
                                             code = st.session_state.get(e_key)
                                             code = code if isinstance(code, str) else ""
@@ -14735,9 +13555,9 @@ def _render_pipeline_studio() -> None:
                                                 lang=lang,
                                                 draft_code=code,
                                             )
-                                            st.session_state[
-                                                "pipeline_studio_code_draft_saved"
-                                            ] = node_id
+                                            st.session_state["pipeline_studio_code_draft_saved"] = (
+                                                node_id
+                                            )
 
                                         st.button(
                                             "Save draft",
@@ -14760,10 +13580,7 @@ def _render_pipeline_studio() -> None:
                                             st.session_state[
                                                 "pipeline_studio_code_reset_pending"
                                             ] = node_id
-                                            if (
-                                                isinstance(fingerprint, str)
-                                                and fingerprint
-                                            ):
+                                            if isinstance(fingerprint, str) and fingerprint:
                                                 _delete_pipeline_studio_code_draft(
                                                     fingerprint=fingerprint
                                                 )
@@ -14776,9 +13593,7 @@ def _render_pipeline_studio() -> None:
                                             args=(sel, fp),
                                         )
                                     with c_copy:
-                                        _render_copy_to_clipboard(
-                                            draft_code, label="Copy draft"
-                                        )
+                                        _render_copy_to_clipboard(draft_code, label="Copy draft")
                                     if _kind in {
                                         "python_function",
                                         "python_merge",
@@ -14806,13 +13621,10 @@ def _render_pipeline_studio() -> None:
                                                 f"SQL URL: `{_redact_sqlalchemy_url(st.session_state.get('sql_url', DEFAULT_SQL_URL))}`"
                                             )
 
-                                        confirm_key = (
-                                            f"pipeline_studio_run_confirm_{sel}"
-                                        )
+                                        confirm_key = f"pipeline_studio_run_confirm_{sel}"
                                         confirm_label = (
                                             "I understand this executes code locally"
-                                            if _kind
-                                            in {"python_function", "python_merge"}
+                                            if _kind in {"python_function", "python_merge"}
                                             else "I understand this runs a read-only SQL query"
                                         )
                                         confirmed = st.checkbox(
@@ -14839,9 +13651,7 @@ def _render_pipeline_studio() -> None:
                                                     node_id=nid, editor_key=e_key
                                                 )
                                             elif k == "sql_query":
-                                                _run_sql_query_draft(
-                                                    node_id=nid, editor_key=e_key
-                                                )
+                                                _run_sql_query_draft(node_id=nid, editor_key=e_key)
 
                                         def _run_draft_only_with_replace_from_flow(
                                             nid: str,
@@ -14852,9 +13662,7 @@ def _render_pipeline_studio() -> None:
                                             _run_draft_click_from_flow(nid, e_key, k)
                                             if not bool(do_replace and pipeline_hash):
                                                 return
-                                            err = st.session_state.get(
-                                                "pipeline_studio_run_error"
-                                            )
+                                            err = st.session_state.get("pipeline_studio_run_error")
                                             if isinstance(err, str) and err.strip():
                                                 return
                                             _flow_hide_branch(pipeline_hash or "", nid)
@@ -14863,9 +13671,7 @@ def _render_pipeline_studio() -> None:
                                             nid: str, e_key: str, k: str
                                         ) -> None:
                                             _run_draft_click_from_flow(nid, e_key, k)
-                                            err = st.session_state.get(
-                                                "pipeline_studio_run_error"
-                                            )
+                                            err = st.session_state.get("pipeline_studio_run_error")
                                             if isinstance(err, str) and err.strip():
                                                 return
                                             last_repl = st.session_state.get(
@@ -14880,23 +13686,18 @@ def _render_pipeline_studio() -> None:
                                             )
                                             old_id = (
                                                 old_id.strip()
-                                                if isinstance(old_id, str)
-                                                and old_id.strip()
+                                                if isinstance(old_id, str) and old_id.strip()
                                                 else None
                                             )
                                             new_id = (
                                                 new_id.strip()
-                                                if isinstance(new_id, str)
-                                                and new_id.strip()
+                                                if isinstance(new_id, str) and new_id.strip()
                                                 else None
                                             )
                                             if (
                                                 not old_id
                                                 or not new_id
-                                                or (
-                                                    isinstance(run_ok, str)
-                                                    and run_ok != new_id
-                                                )
+                                                or (isinstance(run_ok, str) and run_ok != new_id)
                                             ):
                                                 return
                                             _run_downstream_transforms(old_id, new_id)
@@ -14904,12 +13705,8 @@ def _render_pipeline_studio() -> None:
                                                 err = st.session_state.get(
                                                     "pipeline_studio_run_error"
                                                 )
-                                                if not (
-                                                    isinstance(err, str) and err.strip()
-                                                ):
-                                                    _flow_hide_branch(
-                                                        pipeline_hash or "", old_id
-                                                    )
+                                                if not (isinstance(err, str) and err.strip()):
+                                                    _flow_hide_branch(pipeline_hash or "", old_id)
 
                                         r1, r2 = st.columns(2)
                                         with r1:
@@ -14940,12 +13737,8 @@ def _render_pipeline_studio() -> None:
                                             )
 
                         with node_tabs[2]:
-                            locked_ids = st.session_state.get(
-                                "pipeline_studio_locked_node_ids", []
-                            )
-                            locked_set = {
-                                str(x) for x in locked_ids if isinstance(x, str) and x
-                            }
+                            locked_ids = st.session_state.get("pipeline_studio_locked_node_ids", [])
+                            locked_set = {str(x) for x in locked_ids if isinstance(x, str) and x}
                             lock_key = f"pipeline_studio_lock_node_{sel}"
                             lock_default = sel in locked_set
                             lock_value = st.checkbox(
@@ -14958,9 +13751,7 @@ def _render_pipeline_studio() -> None:
                                 locked_set.add(sel)
                             else:
                                 locked_set.discard(sel)
-                            st.session_state["pipeline_studio_locked_node_ids"] = (
-                                sorted(locked_set)
-                            )
+                            st.session_state["pipeline_studio_locked_node_ids"] = sorted(locked_set)
                             if lock_value != lock_default:
                                 _persist_pipeline_studio_team_state(
                                     team_state=st.session_state.get("team_state", {})
@@ -14970,16 +13761,10 @@ def _render_pipeline_studio() -> None:
                             label_key = f"pipeline_studio_flow_label_{sel}"
                             stage_key = f"pipeline_studio_flow_stage_{sel}"
 
-                            current_label = (
-                                entry_obj.get("label") or meta.get("label") or sel
-                            )
-                            current_label = (
-                                str(current_label) if current_label is not None else sel
-                            )
+                            current_label = entry_obj.get("label") or meta.get("label") or sel
+                            current_label = str(current_label) if current_label is not None else sel
 
-                            current_stage = (
-                                entry_obj.get("stage") or meta.get("stage") or "custom"
-                            )
+                            current_stage = entry_obj.get("stage") or meta.get("stage") or "custom"
                             current_stage = (
                                 str(current_stage).strip()
                                 if isinstance(current_stage, str)
@@ -15025,9 +13810,7 @@ def _render_pipeline_studio() -> None:
                                 child_idx = _build_children_index(studio_datasets)
                                 branch_ids = {sel} | _descendants(sel, child_idx)
                                 ui_h, ui_d = (
-                                    _pipeline_studio_get_registry_ui(
-                                        pipeline_hash=pipeline_hash
-                                    )
+                                    _pipeline_studio_get_registry_ui(pipeline_hash=pipeline_hash)
                                     if pipeline_hash
                                     else (set(), set())
                                 )
@@ -15067,9 +13850,7 @@ def _render_pipeline_studio() -> None:
                                         "Delete branch (soft)",
                                         key=f"pipeline_studio_flow_delete_branch_{sel}",
                                         type="secondary",
-                                        disabled=not bool(
-                                            confirm_soft and pipeline_hash
-                                        ),
+                                        disabled=not bool(confirm_soft and pipeline_hash),
                                         on_click=_flow_delete_branch,
                                         args=(pipeline_hash or "", sel),
                                         width="stretch",
@@ -15132,9 +13913,7 @@ else:
         _render_pipeline_studio_safe()
 
 
-open_studio_requested = bool(
-    st.session_state.pop("pipeline_studio_open_requested", False)
-)
+open_studio_requested = bool(st.session_state.pop("pipeline_studio_open_requested", False))
 if open_studio_requested:
     _open_pipeline_studio_dialog()
 
@@ -15193,9 +13972,7 @@ if drawer_open and _pipeline_studio_is_docked():
                 '<span id="pipeline-studio-drawer-marker"></span>',
                 unsafe_allow_html=True,
             )
-            c_drawer_close, _c_drawer_hint = st.columns(
-                [0.18, 0.82], vertical_alignment="center"
-            )
+            c_drawer_close, _c_drawer_hint = st.columns([0.18, 0.82], vertical_alignment="center")
             with c_drawer_close:
                 if st.button(
                     "Close Studio",
@@ -15303,5 +14080,3 @@ st.markdown(
     ),
     unsafe_allow_html=True,
 )
-
-

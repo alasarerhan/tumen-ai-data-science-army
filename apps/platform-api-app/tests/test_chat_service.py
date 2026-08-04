@@ -9,7 +9,13 @@ from pathlib import Path
 import pytest
 from fastapi import HTTPException
 
-from platform_api.db.models import ChatMessage, ChatMessageRole, ChatSession, ChatSessionStatus, ChatUpload
+from platform_api.db.models import (
+    ChatMessage,
+    ChatMessageRole,
+    ChatSession,
+    ChatSessionStatus,
+    ChatUpload,
+)
 from platform_api.services import chat_service
 from platform_api.services.workflow_chain_validator import inspect_workflow_spec
 
@@ -153,7 +159,7 @@ def test_get_chat_session_success_and_errors(seeded_db: dict[str, object]) -> No
     [
         (ChatMessageRole.user, "hello", None),
         (ChatMessageRole.assistant, "analysis", [{"type": "report", "x": 1}]),
-        (ChatMessageRole.system, "\u011f\u00fc\u015f\u00f6\u00e7\u0131\u0130 \U0001F4CA", []),
+        (ChatMessageRole.system, "\u011f\u00fc\u015f\u00f6\u00e7\u0131\u0130 \U0001f4ca", []),
     ],
 )
 def test_create_message_sets_session_update_and_artifacts_json(
@@ -234,7 +240,9 @@ def test_list_messages_returns_ascending_order(seeded_db: dict[str, object]) -> 
 
 
 def test_build_assistant_reply_returns_workflow_design_for_pipeline_requests() -> None:
-    text, artifacts = chat_service.build_assistant_reply("Create a daily anomaly detection workflow")
+    text, artifacts = chat_service.build_assistant_reply(
+        "Create a daily anomaly detection workflow"
+    )
     workflow_spec = artifacts[0]["workflow_spec"]
     validation = inspect_workflow_spec(workflow_spec)
 
@@ -250,7 +258,9 @@ def test_build_assistant_reply_returns_workflow_design_for_pipeline_requests() -
 
 
 def test_build_assistant_reply_returns_valid_forecasting_workflow_design() -> None:
-    _text, artifacts = chat_service.build_assistant_reply("Create a weekly forecast workflow for revenue")
+    _text, artifacts = chat_service.build_assistant_reply(
+        "Create a weekly forecast workflow for revenue"
+    )
     workflow_spec = artifacts[0]["workflow_spec"]
     validation = inspect_workflow_spec(workflow_spec)
 
@@ -435,7 +445,9 @@ def test_session_to_dict_and_upload_to_dict_serialization(seeded_db: dict[str, o
 
 
 @pytest.mark.asyncio
-async def test_chatworkspace_astream_emits_progress_and_response(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_chatworkspace_astream_emits_progress_and_response(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     from ai_data_science_team.multiagents.chat_router import RouterDecision
     from ai_data_science_team.multiagents.chat_workspace import ChatWorkspace
 

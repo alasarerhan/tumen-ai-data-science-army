@@ -53,7 +53,9 @@ def _get_workspace_and_membership(
 
     bind = db.get_bind()
     if bind is not None and bind.dialect.name == "postgresql":
-        db.execute(text("SET app.current_tenant_id = :tenant_id"), {"tenant_id": str(workspace.tenant_id)})
+        db.execute(
+            text("SET app.current_tenant_id = :tenant_id"), {"tenant_id": str(workspace.tenant_id)}
+        )
 
     return {"user": user, "workspace": workspace, "membership": membership}
 

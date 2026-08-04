@@ -43,13 +43,13 @@ from datetime import datetime, timezone  # noqa: E402, F401
 from enum import Enum  # noqa: E402, F401
 from typing import Any, Dict, List, Optional  # noqa: E402, F401
 
-
 DEFAULT_MAX_SIGNALS_PER_SESSION = 1000
 MAX_SESSION_ID_LENGTH = 200
 
 
 class SignalLimitExceededError(Exception):
     """Raised when a session has reached its maximum signal limit."""
+
     pass
 
 
@@ -61,12 +61,12 @@ class SignalLimitExceededError(Exception):
 class SignalType(str, Enum):
     """Types of user-emitted workflow intervention signals."""
 
-    PAUSE = "pause"       # Request a graceful pause after the current step
-    RESUME = "resume"     # Resume after an engine-initiated pause
-    SKIP = "skip"         # Skip a specific named step
-    MODIFY = "modify"     # Override a step's instruction via payload
-    ANNOTATE = "annotate" # Attach a user note (non-functional, purely metadata)
-    CANCEL = "cancel"     # Abort the entire workflow immediately
+    PAUSE = "pause"  # Request a graceful pause after the current step
+    RESUME = "resume"  # Resume after an engine-initiated pause
+    SKIP = "skip"  # Skip a specific named step
+    MODIFY = "modify"  # Override a step's instruction via payload
+    ANNOTATE = "annotate"  # Attach a user note (non-functional, purely metadata)
+    CANCEL = "cancel"  # Abort the entire workflow immediately
 
 
 # ---------------------------------------------------------------------------
@@ -103,9 +103,7 @@ class WorkflowSignal:
     step_id: Optional[str] = None
     payload: Dict[str, Any] = field(default_factory=dict)
     signal_id: str = field(default_factory=lambda: str(uuid.uuid4()))
-    timestamp: str = field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat()
-    )
+    timestamp: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     consumed: bool = False
 
     def consume(self) -> "WorkflowSignal":
@@ -140,7 +138,7 @@ class SignalStore:
     This class is intentionally simple (in-memory list per session).  For
     production use, replace with a Redis-backed implementation while keeping
     the same interface.
-    
+
     Parameters
     ----------
     max_signals_per_session : int
@@ -150,7 +148,9 @@ class SignalStore:
 
     def __init__(self, max_signals_per_session: int = DEFAULT_MAX_SIGNALS_PER_SESSION) -> None:
         if max_signals_per_session < 1:
-            raise ValueError(f"max_signals_per_session must be at least 1, got {max_signals_per_session}")
+            raise ValueError(
+                f"max_signals_per_session must be at least 1, got {max_signals_per_session}"
+            )
         self._max_signals = max_signals_per_session
         self._lock = threading.Lock()
         self._signals: Dict[str, List[WorkflowSignal]] = {}
@@ -159,7 +159,7 @@ class SignalStore:
 
     def emit(self, signal: WorkflowSignal) -> WorkflowSignal:
         """Add a signal to the session queue and return it.
-        
+
         Raises
         ------
         ValueError
@@ -174,7 +174,7 @@ class SignalStore:
                 f"session_id too long: {len(signal.session_id)} chars, "
                 f"max is {MAX_SESSION_ID_LENGTH}"
             )
-        
+
         with self._lock:
             session_signals = self._signals.setdefault(signal.session_id, [])
             if len(session_signals) >= self._max_signals:
@@ -244,9 +244,7 @@ class SignalStore:
             else:
                 for sid in list(self._signals.keys()):
                     before = len(self._signals[sid])
-                    self._signals[sid] = [
-                        s for s in self._signals[sid] if not s.consumed
-                    ]
+                    self._signals[sid] = [s for s in self._signals[sid] if not s.consumed]
                     removed += before - len(self._signals[sid])
                     if not self._signals[sid]:
                         del self._signals[sid]
@@ -258,8 +256,7 @@ class SignalStore:
             total_sessions = len(self._signals)
             total_signals = sum(len(s) for s in self._signals.values())
             consumed_signals = sum(
-                sum(1 for s in signals if s.consumed)
-                for signals in self._signals.values()
+                sum(1 for s in signals if s.consumed) for signals in self._signals.values()
             )
             return {
                 "total_sessions": total_sessions,

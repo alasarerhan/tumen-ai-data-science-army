@@ -134,11 +134,7 @@ def judge_output(
     correctness = 0.6 * _score_length(text) + 0.4 * _score_structure(text)
     faithfulness = _score_faithfulness(text)
     code_q = _code_quality(code)
-    overall = (
-        weights[0] * correctness
-        + weights[1] * faithfulness
-        + weights[2] * code_q
-    )
+    overall = weights[0] * correctness + weights[1] * faithfulness + weights[2] * code_q
     if overall >= accept_threshold:
         rec = "accept"
     elif overall >= revise_threshold:
@@ -172,5 +168,3 @@ def judge_batch(
         )
         for item in items
     ]
-
-

@@ -1,6 +1,3 @@
-
-
-
 import logging
 
 logger = logging.getLogger(__name__)
@@ -11,43 +8,40 @@ logger = logging.getLogger(__name__)
 
 
 # Libraries
-from typing_extensions import TypedDict, Annotated, Sequence, Literal  # noqa: E402, F401
-import operator  # noqa: E402, F401
-
-from langchain_core.prompts import PromptTemplate  # noqa: E402, F401
-from langchain_core.messages import BaseMessage  # noqa: E402, F401
-
-from langgraph.types import Command  # noqa: E402, F401
-from langgraph.checkpoint.memory import MemorySaver  # noqa: E402, F401
-
-import os  # noqa: E402, F401
-import json  # noqa: E402, F401
 import difflib  # noqa: E402, F401
+import json  # noqa: E402, F401
+import operator  # noqa: E402, F401
+import os  # noqa: E402, F401
 import re  # noqa: E402, F401
+
 import pandas as pd  # noqa: E402, F401
-
 from IPython.display import Markdown  # noqa: E402, F401
+from langchain_core.messages import BaseMessage  # noqa: E402, F401
+from langchain_core.prompts import PromptTemplate  # noqa: E402, F401
+from langgraph.checkpoint.memory import MemorySaver  # noqa: E402, F401
+from langgraph.types import Command  # noqa: E402, F401
+from typing_extensions import Annotated, Literal, Sequence, TypedDict  # noqa: E402, F401
 
-from ai_data_science_team.templates import (  # noqa: E402, F401
-    node_func_human_review,
-    node_func_fix_agent_code,
-    node_func_report_agent_outputs,
-    create_coding_agent_graph,
-    BaseAgent,
-)
 from ai_data_science_team.parsers.parsers import PythonOutputParser  # noqa: E402, F401
+from ai_data_science_team.templates import (  # noqa: E402, F401
+    BaseAgent,
+    create_coding_agent_graph,
+    node_func_fix_agent_code,
+    node_func_human_review,
+    node_func_report_agent_outputs,
+)
+from ai_data_science_team.tools.dataframe import get_dataframe_summary  # noqa: E402, F401
+from ai_data_science_team.utils.logging import log_ai_error, log_ai_function  # noqa: E402, F401
+from ai_data_science_team.utils.messages import get_last_user_message_content  # noqa: E402, F401
+from ai_data_science_team.utils.plotly import plotly_from_dict  # noqa: E402, F401
 from ai_data_science_team.utils.regex import (  # noqa: E402, F401
-    relocate_imports_inside_function,
     add_comments_to_top,
     format_agent_name,
     format_recommended_steps,
     get_generic_summary,
+    relocate_imports_inside_function,
 )
-from ai_data_science_team.tools.dataframe import get_dataframe_summary  # noqa: E402, F401
-from ai_data_science_team.utils.logging import log_ai_function, log_ai_error  # noqa: E402, F401
-from ai_data_science_team.utils.plotly import plotly_from_dict  # noqa: E402, F401
 from ai_data_science_team.utils.sandbox import run_code_sandboxed_subprocess  # noqa: E402, F401
-from ai_data_science_team.utils.messages import get_last_user_message_content  # noqa: E402, F401
 
 # Setup
 AGENT_NAME = "data_visualization_agent"
@@ -404,9 +398,7 @@ class DataVisualizationAgent(BaseAgent):
         Retrieves the agent's workflow summary, if logging is enabled.
         """
         if self.response and self.response.get("messages"):
-            summary = get_generic_summary(
-                json.loads(self.response.get("messages")[-1].content)
-            )
+            summary = get_generic_summary(json.loads(self.response.get("messages")[-1].content))
             if markdown:
                 return Markdown(summary)
             else:
@@ -689,8 +681,10 @@ Use an appropriate chart type based on column types (categorical vs numeric). De
     def _format_profile_for_prompt(profile: dict) -> str:
         if not isinstance(profile, dict):
             return ""
+
         def _fmt(values: list[str]) -> str:
             return ", ".join(values[:12]) if values else "None"
+
         return "\n".join(
             [
                 f"Rows: {profile.get('n_rows')}",
@@ -749,9 +743,7 @@ Use an appropriate chart type based on column types (categorical vs numeric). De
         items = [f"{k} -> {v}" for k, v in list(aliases.items())[:12]]
         return ", ".join(items)
 
-    def _build_prompt_context(
-        df: pd.DataFrame, user_text: str | None
-    ) -> tuple[str, dict]:
+    def _build_prompt_context(df: pd.DataFrame, user_text: str | None) -> tuple[str, dict]:
         base = _summarize_df_for_prompt(df)
         profile = _profile_dataframe(df)
         units = _infer_units(profile.get("columns") or [])
@@ -817,14 +809,15 @@ Use an appropriate chart type based on column types (categorical vs numeric). De
             if not isinstance(old, str) or not isinstance(new, str):
                 continue
             patched = re.sub(rf"'{re.escape(old)}'", f"'{new}'", patched)
-            patched = re.sub(rf"\\\"{re.escape(old)}\\\"", f'\"{new}\"', patched)
+            patched = re.sub(rf"\\\"{re.escape(old)}\\\"", f'"{new}"', patched)
         return patched, patched != code
 
     def _build_fallback_chart(df: pd.DataFrame, profile: dict) -> tuple[dict | None, str | None]:
         try:
+            import json as _json  # noqa: E402, F401
+
             import plotly.express as px  # noqa: E402, F401
             import plotly.io as pio  # noqa: E402, F401
-            import json as _json  # noqa: E402, F401
         except Exception:
             return None, "Plotly is not available for fallback."
 
@@ -884,9 +877,7 @@ Use an appropriate chart type based on column types (categorical vs numeric). De
         return fig_dict, note
 
     def _summarize_df_for_prompt(df: pd.DataFrame) -> str:
-        df_limited = (
-            df.iloc[:, :MAX_SUMMARY_COLUMNS] if df.shape[1] > MAX_SUMMARY_COLUMNS else df
-        )
+        df_limited = df.iloc[:, :MAX_SUMMARY_COLUMNS] if df.shape[1] > MAX_SUMMARY_COLUMNS else df
         summary = "\n\n".join(
             get_dataframe_summary(
                 [df_limited],
@@ -1175,12 +1166,8 @@ Use an appropriate chart type based on column types (categorical vs numeric). De
         if error:
             missing_cols = _extract_missing_columns(error)
             if missing_cols:
-                suggestions = _suggest_column_fallbacks(
-                    missing_cols, profile.get("columns") or []
-                )
-                patched_code, changed = _patch_missing_columns(
-                    code_snippet or "", suggestions
-                )
+                suggestions = _suggest_column_fallbacks(missing_cols, profile.get("columns") or [])
+                patched_code, changed = _patch_missing_columns(code_snippet or "", suggestions)
                 if changed:
                     result, error = run_code_sandboxed_subprocess(
                         code_snippet=patched_code,
@@ -1191,12 +1178,8 @@ Use an appropriate chart type based on column types (categorical vs numeric). De
                         data_format="dataframe",
                     )
                     if error is None and suggestions:
-                        replaced = ", ".join(
-                            [f"{k} -> {v}" for k, v in suggestions.items()]
-                        )
-                        warning_message = (
-                            "Auto-substituted missing columns: " + replaced
-                        )
+                        replaced = ", ".join([f"{k} -> {v}" for k, v in suggestions.items()])
+                        warning_message = "Auto-substituted missing columns: " + replaced
                         patched_code_used = True
                         code_snippet = patched_code
 
@@ -1255,7 +1238,11 @@ Use an appropriate chart type based on column types (categorical vs numeric). De
                         mismatch = None
                         if "violin" in expected and "violin" not in actual_types:
                             mismatch = "violin"
-                        elif "box" in expected and "violin" not in expected and "box" not in actual_types:
+                        elif (
+                            "box" in expected
+                            and "violin" not in expected
+                            and "box" not in actual_types
+                        ):
                             mismatch = "box"
                         elif "histogram" in expected and "histogram" not in actual_types:
                             mismatch = "histogram"
@@ -1269,11 +1256,7 @@ Use an appropriate chart type based on column types (categorical vs numeric). De
                             mismatch = "line"
 
                         if mismatch:
-                            got = (
-                                ", ".join(sorted(actual_types))
-                                if actual_types
-                                else "unknown"
-                            )
+                            got = ", ".join(sorted(actual_types)) if actual_types else "unknown"
                             warning_message = (
                                 "Chart type warning. "
                                 f"User requested '{mismatch}' style, but got '{got}'. "

@@ -62,8 +62,8 @@ Example usage
     logger.info(agent.get_ai_message())
     logger.info(agent.get_artifacts())
 """
-from typing import (Dict, List, Optional, Sequence)  # noqa: E402
 import logging  # noqa: E402, F401
+from typing import Dict, List, Optional, Sequence  # noqa: E402
 
 logger = logging.getLogger(__name__)
 import json  # noqa: E402, F401
@@ -240,9 +240,7 @@ def _build_hitl_graph(
         modifications = "User requested modifications: " + user_input
         current_instructions = state.get("user_instructions") or ""
         updated_instructions = (
-            current_instructions + "\n\n" + modifications
-            if current_instructions
-            else modifications
+            current_instructions + "\n\n" + modifications if current_instructions else modifications
         )
         return Command(  # type: ignore[return-value]
             goto="run_react_agent",

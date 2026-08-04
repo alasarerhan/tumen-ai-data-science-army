@@ -16,17 +16,16 @@ Markers: ``e2e_supervisor``
 Run::
     pytest plugins/tests/test_e2e_supervisor_team.py -v -s
 """
+
 from __future__ import annotations
 
-import os
 import shutil
 from pathlib import Path
 
 import pandas as pd
 import pytest
-from langchain_core.messages import AIMessage, HumanMessage
-
 from _llm import make_chat_model, skip_no_key
+from langchain_core.messages import AIMessage, HumanMessage
 
 pytestmark = pytest.mark.e2e_supervisor
 
@@ -43,14 +42,16 @@ def _ensure_data() -> None:
     """Create a small CSV fixture for integration tests."""
     TEST_DIR.mkdir(parents=True, exist_ok=True)
     if not SAMPLE_CSV.exists():
-        df = pd.DataFrame({
-            "id": range(1, 51),
-            "age": [25, 34, 45, 52, 38, 29, 41, 33, 47, 50] * 5,
-            "income": [45000, 62000, 83000, 95000, 71000,
-                       53000, 88000, 59000, 92000, 105000] * 5,
-            "education_years": [12, 16, 14, 18, 15, 13, 17, 12, 16, 14] * 5,
-            "purchased": [0, 1, 1, 1, 0, 0, 1, 0, 1, 1] * 5,
-        })
+        df = pd.DataFrame(
+            {
+                "id": range(1, 51),
+                "age": [25, 34, 45, 52, 38, 29, 41, 33, 47, 50] * 5,
+                "income": [45000, 62000, 83000, 95000, 71000, 53000, 88000, 59000, 92000, 105000]
+                * 5,
+                "education_years": [12, 16, 14, 18, 15, 13, 17, 12, 16, 14] * 5,
+                "purchased": [0, 1, 1, 1, 0, 0, 1, 0, 1, 1] * 5,
+            }
+        )
         df.to_csv(SAMPLE_CSV, index=False)
 
     yield
@@ -72,20 +73,20 @@ def llm():
 
 def _make_real_team(llm):
     """Construct a supervisor_ds_team with real agent instances."""
-    from ai_data_science_team.multiagents.supervisor_ds_team import (
-        make_supervisor_ds_team,
-    )
     from ai_data_science_team.agents import (
-        DataLoaderToolsAgent,
-        DataWranglingAgent,
         DataCleaningAgent,
-        EDAToolsAgent,
+        DataLoaderToolsAgent,
         DataVisualizationAgent,
-        SQLDatabaseAgent,
+        DataWranglingAgent,
+        EDAToolsAgent,
         FeatureEngineeringAgent,
         H2OMLAgent,
         MLflowToolsAgent,
         ModelEvaluationAgent,
+        SQLDatabaseAgent,
+    )
+    from ai_data_science_team.multiagents.supervisor_ds_team import (
+        make_supervisor_ds_team,
     )
 
     return make_supervisor_ds_team(
@@ -117,9 +118,6 @@ def test_e2e_full_ds_pipeline(llm) -> None:
     It validates that the supervisor correctly routes messages and that
     each agent produces structured output the next agent can consume.
     """
-    from ai_data_science_team.multiagents.supervisor_ds_team import (
-        make_supervisor_ds_team,
-    )
 
     app = _make_real_team(llm)
 
@@ -132,19 +130,19 @@ def test_e2e_full_ds_pipeline(llm) -> None:
         f"Summarize all results."
     )
 
-    result = app.invoke({
-        "messages": [HumanMessage(content=prompt)],
-        "artifacts": {"config": {"proactive_workflow_mode": True}},
-    })
+    result = app.invoke(
+        {
+            "messages": [HumanMessage(content=prompt)],
+            "artifacts": {"config": {"proactive_workflow_mode": True}},
+        }
+    )
 
     msg = result.get("messages", [])
     assert len(msg) > 1, "Expected multiple messages from the supervisor chain"
     last = msg[-1] if isinstance(msg, list) else msg
     assert isinstance(last, AIMessage) or hasattr(last, "content")
     final_text = str(last.content) if hasattr(last, "content") else str(last)
-    assert len(final_text) > 100, (
-        f"Expected substantive AI response, got {len(final_text)} chars"
-    )
+    assert len(final_text) > 100, f"Expected substantive AI response, got {len(final_text)} chars"
     print(f"\n  ✅ Full pipeline completed. Response: {final_text[:300]}...")
 
 

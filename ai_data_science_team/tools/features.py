@@ -48,10 +48,17 @@ from typing import Any, Dict, List, Optional  # noqa: E402, F401
 
 import numpy as np  # noqa: E402, F401
 import pandas as pd  # noqa: E402, F401
-from sklearn.feature_selection import mutual_info_classif, mutual_info_regression  # noqa: E402, F401
-from sklearn.linear_model import Lasso, LassoCV, LogisticRegression, LogisticRegressionCV  # noqa: E402, F401
+from sklearn.feature_selection import (  # noqa: E402, F401
+    mutual_info_classif,
+    mutual_info_regression,
+)
+from sklearn.linear_model import (  # noqa: E402, F401
+    Lasso,
+    LassoCV,
+    LogisticRegression,
+    LogisticRegressionCV,
+)
 from sklearn.preprocessing import StandardScaler  # noqa: E402, F401
-
 
 # ---------------------------------------------------------------------------
 # Filter scores
@@ -95,9 +102,7 @@ def filter_scores(
     absolute / numeric score.
     """
     if method not in {"correlation", "mutual_info"}:
-        raise ValueError(
-            f"method must be 'correlation' or 'mutual_info', got {method!r}"
-        )
+        raise ValueError(f"method must be 'correlation' or 'mutual_info', got {method!r}")
     target_arr = _safe_numeric(target)
     rows: List[Dict[str, Any]] = []
     if method == "correlation":
@@ -105,7 +110,9 @@ def filter_scores(
             arr = _safe_numeric(df[col])
             mask = ~(np.isnan(arr) | np.isnan(target_arr))
             if int(mask.sum()) < 2:
-                rows.append({"feature": str(col), "score": 0.0, "method": "correlation", "n_used": 0})
+                rows.append(
+                    {"feature": str(col), "score": 0.0, "method": "correlation", "n_used": 0}
+                )
                 continue
             x = arr[mask]
             yv = target_arr[mask]
@@ -133,7 +140,11 @@ def filter_scores(
         task = _infer_task_type(target)
         try:
             if task == "binary":
-                ybin = (target.astype(str) == target.dropna().astype(str).iloc[0]).astype(int) if False else target
+                ybin = (
+                    (target.astype(str) == target.dropna().astype(str).iloc[0]).astype(int)
+                    if False
+                    else target
+                )
                 # Target is already passed through as numeric.
                 ybin = pd.to_numeric(target, errors="coerce")
                 mi = mutual_info_classif(
@@ -204,8 +215,7 @@ def select_wrapper(
         raise ValueError("max_features must be positive")
     target_arr = _safe_numeric(target)
     remaining: List[str] = [
-        str(col) for col in df.columns
-        if pd.to_numeric(df[col], errors="coerce").notna().sum() >= 5
+        str(col) for col in df.columns if pd.to_numeric(df[col], errors="coerce").notna().sum() >= 5
     ]
     selected: List[str] = []
     residual = target_arr.copy()
@@ -511,13 +521,9 @@ def multicollinearity_report(
         for j in range(i + 1, len(cols)):
             rho = corr[i][j]
             if abs(rho) >= 0.7:
-                pairs.append(
-                    {"a": cols[i], "b": cols[j], "rho": rho, "label": "high"}
-                )
+                pairs.append({"a": cols[i], "b": cols[j], "rho": rho, "label": "high"})
             elif abs(rho) >= 0.4:
-                pairs.append(
-                    {"a": cols[i], "b": cols[j], "rho": rho, "label": "moderate"}
-                )
+                pairs.append({"a": cols[i], "b": cols[j], "rho": rho, "label": "moderate"})
 
     return {
         "vif": {k: (float(v) if np.isfinite(v) else None) for k, v in vif.items()},
@@ -574,9 +580,7 @@ def select_feature(
             "alpha_used": alpha,
             "n_selected": len(chosen),
         }
-    raise ValueError(
-        f"method must be one of filter/wrapper/embedded; got {method!r}"
-    )
+    raise ValueError(f"method must be one of filter/wrapper/embedded; got {method!r}")
 
 
 __all__ = [
@@ -590,5 +594,3 @@ __all__ = [
     "LeakageFinding",
     "multicollinearity_report",
 ]
-
-

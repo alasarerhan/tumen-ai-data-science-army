@@ -1,8 +1,8 @@
 from __future__ import annotations
 
+from fastapi import APIRouter, Response
 from sqlalchemy import text
 
-from fastapi import APIRouter, Response
 from platform_api.db.session import get_db
 
 router = APIRouter()
@@ -21,7 +21,7 @@ def health_alias() -> dict:
 @router.get("/ready")
 def readiness(response: Response) -> dict:
     result = {"status": "ok", "checks": {}}
-    
+
     db = next(get_db())
     try:
         db.execute(text("SELECT 1"))
@@ -30,5 +30,5 @@ def readiness(response: Response) -> dict:
         result["checks"]["database"] = f"failed: {str(e)[:100]}"
         result["status"] = "degraded"
         response.status_code = 503
-    
+
     return result

@@ -24,6 +24,15 @@ Quality Score (0–100) components
 import logging  # noqa: E402, F401
 
 logger = logging.getLogger(__name__)
+import pandas as pd  # noqa: E402, F401
+from IPython.display import Markdown  # noqa: E402, F401
+from langchain.agents import create_agent  # noqa: E402, F401
+from langchain.tools import tool  # noqa: E402, F401
+from langchain_core.messages import AIMessage, BaseMessage  # noqa: E402, F401
+from langgraph.graph import END, START, StateGraph  # noqa: E402, F401
+from langgraph.graph.message import add_messages  # noqa: E402, F401
+from langgraph.prebuilt import InjectedState  # noqa: E402, F401
+from langgraph.types import Checkpointer  # noqa: E402, F401
 from typing_extensions import (  # noqa: E402, F401
     Annotated,
     Any,
@@ -34,17 +43,6 @@ from typing_extensions import (  # noqa: E402, F401
     Tuple,
     TypedDict,
 )
-
-import pandas as pd  # noqa: E402, F401
-from IPython.display import Markdown  # noqa: E402, F401
-
-from langchain.agents import create_agent  # noqa: E402, F401
-from langchain.tools import tool  # noqa: E402, F401
-from langchain_core.messages import AIMessage, BaseMessage  # noqa: E402, F401
-from langgraph.graph import END, START, StateGraph  # noqa: E402, F401
-from langgraph.graph.message import add_messages  # noqa: E402, F401
-from langgraph.prebuilt import InjectedState  # noqa: E402, F401
-from langgraph.types import Checkpointer  # noqa: E402, F401
 
 from ai_data_science_team.templates import BaseAgent  # noqa: E402, F401
 from ai_data_science_team.utils.messages import get_tool_call_names  # noqa: E402, F401
@@ -223,11 +221,13 @@ def validate_schema(
         expected_dtype = schema[col]
         actual_dtype = str(df[col].dtype)
         if expected_dtype != actual_dtype:
-            type_mismatches.append({
-                "column": col,
-                "expected": expected_dtype,
-                "actual": actual_dtype,
-            })
+            type_mismatches.append(
+                {
+                    "column": col,
+                    "expected": expected_dtype,
+                    "actual": actual_dtype,
+                }
+            )
 
     violations = (
         [{"type": "missing_column", "column": c} for c in missing_cols]
@@ -350,7 +350,9 @@ def make_data_quality_agent(
 
     def run_react_agent(state: GraphState):
         logger.info("    * RUN REACT TOOL-CALLING AGENT FOR DATA QUALITY")
-        logger.info(f"    * outlier_method={state.get('outlier_method')}, threshold={state.get('outlier_threshold')}")
+        logger.info(
+            f"    * outlier_method={state.get('outlier_method')}, threshold={state.get('outlier_threshold')}"
+        )
 
         system_hint = (
             "You are a Data Quality agent. "
@@ -540,8 +542,16 @@ class DataQualityAgent(BaseAgent):
             messages = [("user", user_instructions)]
 
         eff_method = outlier_method or self._params["outlier_method"]
-        eff_threshold = outlier_threshold if outlier_threshold is not None else self._params["outlier_threshold"]
-        eff_schema = expected_schema if expected_schema is not None else self._params.get("expected_schema", {})
+        eff_threshold = (
+            outlier_threshold
+            if outlier_threshold is not None
+            else self._params["outlier_threshold"]
+        )
+        eff_schema = (
+            expected_schema
+            if expected_schema is not None
+            else self._params.get("expected_schema", {})
+        )
 
         response = self._compiled_graph.invoke(
             {

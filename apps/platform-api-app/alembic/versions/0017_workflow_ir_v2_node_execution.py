@@ -9,9 +9,9 @@ Create Date: 2026-05-20
 from __future__ import annotations
 
 import sqlalchemy as sa
-from alembic import op
 from sqlalchemy.dialects import postgresql
 
+from alembic import op
 
 revision = "0017_workflow_ir_v2"
 down_revision = "0016_rls_system_actor"
@@ -21,7 +21,9 @@ depends_on = None
 
 def upgrade() -> None:
     with op.batch_alter_table("workflow_runs") as batch_op:
-        batch_op.add_column(sa.Column("workflow_spec_id", postgresql.UUID(as_uuid=True), nullable=True))
+        batch_op.add_column(
+            sa.Column("workflow_spec_id", postgresql.UUID(as_uuid=True), nullable=True)
+        )
         batch_op.add_column(sa.Column("workflow_version", sa.Integer(), nullable=True))
         batch_op.add_column(sa.Column("trigger_type", sa.String(length=50), nullable=True))
         batch_op.add_column(sa.Column("input_artifact_ids_json", sa.Text(), nullable=True))
@@ -55,20 +57,46 @@ def upgrade() -> None:
         sa.Column("produced_artifact_ids_json", sa.Text(), nullable=True),
         sa.Column("started_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("finished_at", sa.DateTime(timezone=True), nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("CURRENT_TIMESTAMP"), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.text("CURRENT_TIMESTAMP"), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("CURRENT_TIMESTAMP"),
+            nullable=False,
+        ),
+        sa.Column(
+            "updated_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("CURRENT_TIMESTAMP"),
+            nullable=False,
+        ),
         sa.ForeignKeyConstraint(["tenant_id"], ["tenants.id"], ondelete="CASCADE"),
         sa.ForeignKeyConstraint(["workspace_id"], ["workspaces.id"], ondelete="CASCADE"),
         sa.ForeignKeyConstraint(["workflow_run_id"], ["workflow_runs.id"], ondelete="CASCADE"),
-        sa.ForeignKeyConstraint(["workspace_id", "tenant_id"], ["workspaces.id", "workspaces.tenant_id"], ondelete="CASCADE"),
-        sa.UniqueConstraint("workflow_run_id", "node_id", name="uq_workflow_node_executions_run_node"),
+        sa.ForeignKeyConstraint(
+            ["workspace_id", "tenant_id"],
+            ["workspaces.id", "workspaces.tenant_id"],
+            ondelete="CASCADE",
+        ),
+        sa.UniqueConstraint(
+            "workflow_run_id", "node_id", name="uq_workflow_node_executions_run_node"
+        ),
     )
-    op.create_index("ix_workflow_node_executions_run_status", "workflow_node_executions", ["workflow_run_id", "status"])
-    op.create_index("ix_workflow_node_executions_workspace_created", "workflow_node_executions", ["workspace_id", "created_at"])
+    op.create_index(
+        "ix_workflow_node_executions_run_status",
+        "workflow_node_executions",
+        ["workflow_run_id", "status"],
+    )
+    op.create_index(
+        "ix_workflow_node_executions_workspace_created",
+        "workflow_node_executions",
+        ["workspace_id", "created_at"],
+    )
 
 
 def downgrade() -> None:
-    op.drop_index("ix_workflow_node_executions_workspace_created", table_name="workflow_node_executions")
+    op.drop_index(
+        "ix_workflow_node_executions_workspace_created", table_name="workflow_node_executions"
+    )
     op.drop_index("ix_workflow_node_executions_run_status", table_name="workflow_node_executions")
     op.drop_table("workflow_node_executions")
     with op.batch_alter_table("artifacts") as batch_op:

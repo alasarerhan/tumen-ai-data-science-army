@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-
 from collections.abc import Mapping, Sequence
 from typing import Any
 
@@ -56,6 +55,7 @@ def dataset_meta(
 
     try:
         import hashlib  # noqa: E402, F401
+
         import pandas as pd  # noqa: E402, F401
 
         if isinstance(df, pd.DataFrame):
@@ -67,13 +67,9 @@ def dataset_meta(
                 }
                 for column in column_order[:DATASET_SCHEMA_MAX_COLS]
             ]
-            schema_str = "|".join(
-                f"{row['name']}:{row['dtype']}" for row in schema
-            )
+            schema_str = "|".join(f"{row['name']}:{row['dtype']}" for row in schema)
             schema_hash = (
-                hashlib.sha256(schema_str.encode("utf-8")).hexdigest()
-                if schema_str
-                else None
+                hashlib.sha256(schema_str.encode("utf-8")).hexdigest() if schema_str else None
             )
 
             df_sample = (
@@ -130,11 +126,7 @@ def prune_datasets(datasets: dict[str, Any]) -> dict[str, Any]:
         items.append((timestamp, dataset_id))
     items.sort(reverse=True)
     keep = {dataset_id for _timestamp, dataset_id in items[:DATASET_REGISTRY_MAX]}
-    return {
-        dataset_id: datasets[dataset_id]
-        for dataset_id in keep
-        if dataset_id in datasets
-    }
+    return {dataset_id: datasets[dataset_id] for dataset_id in keep if dataset_id in datasets}
 
 
 def ensure_dataset_registry(state: Mapping[str, Any]) -> tuple[dict[str, Any], str | None]:
@@ -161,9 +153,7 @@ def ensure_dataset_registry(state: Mapping[str, Any]) -> tuple[dict[str, Any], s
                 try:
                     artifacts = state.get("artifacts") or {}
                     input_dataset = (
-                        artifacts.get("input_dataset")
-                        if isinstance(artifacts, dict)
-                        else None
+                        artifacts.get("input_dataset") if isinstance(artifacts, dict) else None
                     )
                     if isinstance(input_dataset, dict) and input_dataset.get("source"):
                         provenance = {**provenance, **input_dataset}
@@ -214,9 +204,9 @@ def ensure_dataset_registry(state: Mapping[str, Any]) -> tuple[dict[str, Any], s
         if active_id is None:
             newest = sorted(
                 datasets.items(),
-                key=lambda kv: float(kv[1].get("created_ts") or 0.0)
-                if isinstance(kv[1], dict)
-                else 0.0,
+                key=lambda kv: (
+                    float(kv[1].get("created_ts") or 0.0) if isinstance(kv[1], dict) else 0.0
+                ),
             )
             active_id = newest[-1][0] if newest else None
 

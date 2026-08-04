@@ -138,9 +138,7 @@ def test_request_promotion_real():
     assert out["to_stage"] == "staging"
     assert rec.stage == "dev"  # henüz approve edilmedi
 
-    out2 = request_promotion(
-        record=rec, to_stage="staging", reason="auto", require_approval=False
-    )
+    out2 = request_promotion(record=rec, to_stage="staging", reason="auto", require_approval=False)
     assert out2["status"] == "approved"
 
 

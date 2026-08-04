@@ -90,7 +90,6 @@ class TestInterpretResult:
 
     def test_magnitude_buckets(self):
         # Very small, small, medium, large thresholds.
-        for d, label in [(0.05, "very small"), (0.4, "small"),
-                         (0.7, "medium"), (1.5, "large")]:
+        for d, label in [(0.05, "very small"), (0.4, "small"), (0.7, "medium"), (1.5, "large")]:
             out = interpret_result(p_value=0.04, effect_size=d, alpha=0.05)
             assert out["magnitude"] == label

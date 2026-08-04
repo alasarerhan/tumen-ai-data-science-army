@@ -37,6 +37,15 @@ Set via ``scrape_mode`` state key (default 'http').
 import logging  # noqa: E402, F401
 
 logger = logging.getLogger(__name__)
+import pandas as pd  # noqa: E402, F401
+from IPython.display import Markdown  # noqa: E402, F401
+from langchain.agents import create_agent  # noqa: E402, F401
+from langchain.tools import tool  # noqa: E402, F401
+from langchain_core.messages import AIMessage, BaseMessage  # noqa: E402, F401
+from langgraph.graph import END, START, StateGraph  # noqa: E402, F401
+from langgraph.graph.message import add_messages  # noqa: E402, F401
+from langgraph.prebuilt import InjectedState  # noqa: E402, F401
+from langgraph.types import Checkpointer  # noqa: E402, F401
 from typing_extensions import (  # noqa: E402, F401
     Annotated,
     Any,
@@ -47,17 +56,6 @@ from typing_extensions import (  # noqa: E402, F401
     Tuple,
     TypedDict,
 )
-
-import pandas as pd  # noqa: E402, F401
-from IPython.display import Markdown  # noqa: E402, F401
-
-from langchain.agents import create_agent  # noqa: E402, F401
-from langchain.tools import tool  # noqa: E402, F401
-from langchain_core.messages import AIMessage, BaseMessage  # noqa: E402, F401
-from langgraph.graph import END, START, StateGraph  # noqa: E402, F401
-from langgraph.graph.message import add_messages  # noqa: E402, F401
-from langgraph.prebuilt import InjectedState  # noqa: E402, F401
-from langgraph.types import Checkpointer  # noqa: E402, F401
 
 from ai_data_science_team.templates import BaseAgent  # noqa: E402, F401
 from ai_data_science_team.utils.messages import get_tool_call_names  # noqa: E402, F401
@@ -207,6 +205,7 @@ def parse_document(
                 # Fallback to BeautifulSoup if scraping returns nothing
                 try:
                     from bs4 import BeautifulSoup as _BS  # noqa: E402, F401
+
                     _soup = _BS(html_content, "html.parser")
                     for tag in _soup(["script", "style"]):
                         tag.decompose()
@@ -246,6 +245,7 @@ def parse_document(
                     # Fallback to BeautifulSoup4 for table extraction
                     try:
                         from bs4 import BeautifulSoup as _BS  # noqa: E402, F401
+
                         _soup = _BS(html_content, "html.parser")
                         for tbl_tag in _soup.find_all("table"):
                             rows = []
@@ -431,8 +431,7 @@ def get_parser_params(
     logger.info("    * Tool: get_parser_params")
     page_info = f"max_pages={max_pages}" if max_pages and max_pages > 0 else "all pages"
     return (
-        f"Document Parser config → type='{document_type}', "
-        f"mode='{extraction_mode}', {page_info}."
+        f"Document Parser config → type='{document_type}', mode='{extraction_mode}', {page_info}."
     )
 
 

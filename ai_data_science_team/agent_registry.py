@@ -41,7 +41,6 @@ import threading  # noqa: E402, F401
 from dataclasses import dataclass, field  # noqa: E402, F401
 from typing import Any, Dict, List, Optional, Type  # noqa: E402, F401
 
-
 # ---------------------------------------------------------------------------
 # AgentMetadata
 # ---------------------------------------------------------------------------
@@ -169,8 +168,7 @@ class AgentRegistry:
         with cls._lock:
             if not overwrite and name in cls._registry:
                 raise ValueError(
-                    f"Agent '{name}' is already registered.  "
-                    "Pass overwrite=True to replace it."
+                    f"Agent '{name}' is already registered.  Pass overwrite=True to replace it."
                 )
             meta = AgentMetadata(
                 name=name,
@@ -214,8 +212,7 @@ class AgentRegistry:
         with cls._lock:
             if name not in cls._registry:
                 raise KeyError(
-                    f"Agent '{name}' is not registered.  "
-                    f"Available: {sorted(cls._registry.keys())}"
+                    f"Agent '{name}' is not registered.  Available: {sorted(cls._registry.keys())}"
                 )
             return cls._registry[name]
 

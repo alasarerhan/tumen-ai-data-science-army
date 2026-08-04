@@ -92,7 +92,9 @@ def _entry_parent_ids(entry_obj: dict) -> list[str]:
     parent_ids: list[str] = []
     listed_parent_ids = entry_obj.get("parent_ids")
     if isinstance(listed_parent_ids, list):
-        parent_ids.extend([str(parent) for parent in listed_parent_ids if isinstance(parent, str) and parent])
+        parent_ids.extend(
+            [str(parent) for parent in listed_parent_ids if isinstance(parent, str) and parent]
+        )
     parent_id = entry_obj.get("parent_id")
     if isinstance(parent_id, str) and parent_id and parent_id not in parent_ids:
         parent_ids.insert(0, parent_id)
@@ -186,7 +188,9 @@ def _apply_branch_ui_action(
 ) -> tuple[set[str], set[str], str]:
     hidden_ids = set(hidden_ids)
     deleted_ids = set(deleted_ids)
-    branch_ids = {str(dataset_id) for dataset_id in branch_ids if isinstance(dataset_id, str) and dataset_id}
+    branch_ids = {
+        str(dataset_id) for dataset_id in branch_ids if isinstance(dataset_id, str) and dataset_id
+    }
     normalized_action = action.strip().lower() if isinstance(action, str) else ""
 
     if normalized_action == "soft_delete":
@@ -252,9 +256,7 @@ def _hard_delete_branch_from_team_state(
 
     active_dataset_id = team_state.get("active_dataset_id")
     active_dataset_id = (
-        active_dataset_id
-        if isinstance(active_dataset_id, str) and active_dataset_id
-        else None
+        active_dataset_id if isinstance(active_dataset_id, str) and active_dataset_id else None
     )
     if active_dataset_id in branch_ids:
         active_dataset_id = _pick_latest_dataset_id_for_datasets(remaining_datasets)
@@ -282,9 +284,7 @@ def _normalize_readonly_sql(sql_text: str) -> str:
     sql_text = non_empty_parts[0] if non_empty_parts else ""
     first_token = re.sub(r"^\s*\(+\s*", "", sql_text).strip().lower()
     if not re.match(r"^(select|with|pragma|explain)\b", first_token):
-        raise ValueError(
-            "Only read-only queries are allowed (SELECT/WITH/PRAGMA/EXPLAIN)."
-        )
+        raise ValueError("Only read-only queries are allowed (SELECT/WITH/PRAGMA/EXPLAIN).")
     return sql_text
 
 

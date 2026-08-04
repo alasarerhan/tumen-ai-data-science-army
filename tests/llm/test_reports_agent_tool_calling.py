@@ -30,7 +30,8 @@ def test_get_template_real(llm_or_skip, llm_model):
     tool = get_template_wrapped
     result, _ = _assert_result(
         _drive_tool_call(
-            llm_model, tool,
+            llm_model,
+            tool,
             "get_template tool'unu TEK çağrı ile çağır. template_id='daily_ops'.",
         ),
         tool.name,
@@ -46,7 +47,8 @@ def test_build_report_real(llm_or_skip, llm_model):
     tool = build_report_wrapped
     result, _ = _assert_result(
         _drive_tool_call(
-            llm_model, tool,
+            llm_model,
+            tool,
             "build_report tool'unu TEK çağrı ile çağır. template_id='daily_ops'.",
         ),
         tool.name,
@@ -62,7 +64,8 @@ def test_compute_schedule_real(llm_or_skip, llm_model):
     tool = compute_schedule_wrapped
     result, _ = _assert_result(
         _drive_tool_call(
-            llm_model, tool,
+            llm_model,
+            tool,
             "compute_schedule tool'unu TEK çağrı ile çağır. "
             "period='daily', starting_at_epoch=1700000000.0, n_runs=3.",
         ),
@@ -85,7 +88,8 @@ def test_render_markdown_real(llm_or_skip, llm_model):
     }
     result, _ = _assert_result(
         _drive_tool_call(
-            llm_model, tool,
+            llm_model,
+            tool,
             f"render_markdown tool'unu TEK çağrı ile çağır. report = {report!r}",
         ),
         tool.name,

@@ -70,7 +70,10 @@ class TestMitigation:
         y_proba = [0.9, 0.7, 0.6, 0.4]
         g = ["A", "A", "B", "B"]
         df = f3.simulate_threshold_mitigation(
-            y_true, y_proba, g, target_rate=0.5,
+            y_true,
+            y_proba,
+            g,
+            target_rate=0.5,
         )
         # 50% selection rate ⇒ each group gets 1 positive.
         assert (df["selection_rate"] == 0.5).all()
@@ -96,15 +99,15 @@ class TestAuditFairness:
         rep = f3.audit_fairness(y_true, y_pred, g)
         assert not any(rep.four_fifths_violations.values())
         assert not rep.recommendations or all(
-            "No fairness issues" in r
-            or "violated" not in r
-            for r in rep.recommendations
+            "No fairness issues" in r or "violated" not in r for r in rep.recommendations
         )
 
     def test_with_proba_mitigation(self):
         y_true, y_pred, g, y_proba = _toy()
         rep = f3.audit_fairness(
-            y_true, y_pred, g, y_proba=y_proba,
+            y_true,
+            y_pred,
+            g,
+            y_proba=y_proba,
         )
         assert rep.mitigated is not None
-

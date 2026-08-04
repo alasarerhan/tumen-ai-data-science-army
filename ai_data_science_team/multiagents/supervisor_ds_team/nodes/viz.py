@@ -13,8 +13,7 @@ from typing import Any, Callable  # noqa: E402, F401
 
 from langchain_core.messages import AIMessage  # noqa: E402, F401
 
-from ai_data_science_team.multiagents.supervisor import (  # noqa: E402, F401
-    SupervisorDSState)
+from ai_data_science_team.multiagents.supervisor import SupervisorDSState  # noqa: E402, F401
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +21,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class VizNodeDeps:
     """Dependencies for the viz node."""
+
     data_visualization_agent: Any
     ensure_df: Any  # was _ensure_df
     get_active_data: Any  # was _get_active_data
@@ -47,26 +47,25 @@ def make_node_viz(deps: VizNodeDeps) -> Callable[[SupervisorDSState], dict]:
                     "data_sql",
                     "data_raw",
                     "feature_data",
-                ])
+                ],
+            )
         )
         if deps.is_empty_df(active_df):
             return {
                 "messages": [
                     AIMessage(
                         content="No dataset is available to plot. Load a file (or run a SQL query) first.",
-                        name="data_visualization_agent")
+                        name="data_visualization_agent",
+                    )
                 ],
                 "last_worker": "Data_Visualization_Agent",
             }
         deps.data_visualization_agent.invoke_messages(
-            messages=before_msgs,
-            user_instructions=last_human,
-            data_raw=active_df)
+            messages=before_msgs, user_instructions=last_human, data_raw=active_df
+        )
         response = deps.data_visualization_agent.response or {}
         merged = deps.merge_messages(before_msgs, response)
-        merged["messages"] = deps.tag_messages(
-            merged.get("messages"), "data_visualization_agent"
-        )
+        merged["messages"] = deps.tag_messages(merged.get("messages"), "data_visualization_agent")
         plotly_graph = response.get("plotly_graph")
         viz_error = response.get("data_visualization_error")
         viz_error_path = response.get("data_visualization_error_log_path")
@@ -92,9 +91,7 @@ def make_node_viz(deps: VizNodeDeps) -> Callable[[SupervisorDSState], dict]:
                     title = getattr(getattr(fig.layout, "title", None), "text", None)
                 except Exception:
                     title = None
-            viz_summary = (
-                response.get("data_visualization_summary") or "Visualization generated."
-            )
+            viz_summary = response.get("data_visualization_summary") or "Visualization generated."
             if trace_types:
                 viz_summary = f"{viz_summary} Trace types: {', '.join(trace_types)}."
             if title:
@@ -111,13 +108,15 @@ def make_node_viz(deps: VizNodeDeps) -> Callable[[SupervisorDSState], dict]:
             merged["messages"].append(
                 AIMessage(
                     content="Visualization error:\n" + "\n".join(err_bits),
-                    name="data_visualization_agent")
+                    name="data_visualization_agent",
+                )
             )
         if isinstance(viz_warning, str) and viz_warning:
             merged["messages"].append(
                 AIMessage(
                     content="Visualization warning:\n" + viz_warning,
-                    name="data_visualization_agent")
+                    name="data_visualization_agent",
+                )
             )
         return {
             **merged,
@@ -126,9 +125,7 @@ def make_node_viz(deps: VizNodeDeps) -> Callable[[SupervisorDSState], dict]:
                 **state.get("artifacts", {}),
                 "viz": {
                     "plotly_graph": plotly_graph,
-                    "data_visualization_function": response.get(
-                        "data_visualization_function"
-                    ),
+                    "data_visualization_function": response.get("data_visualization_function"),
                     "error": viz_error,
                     "error_log_path": viz_error_path,
                     "warning": viz_warning,
@@ -137,9 +134,7 @@ def make_node_viz(deps: VizNodeDeps) -> Callable[[SupervisorDSState], dict]:
             "last_worker": "Data_Visualization_Agent",
         }
 
-
     return node_viz
-
 
 
 __all__ = ["VizNodeDeps", "make_node_viz"]

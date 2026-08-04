@@ -1,28 +1,29 @@
-from langchain_core.messages import BaseMessage, AIMessage, HumanMessage, SystemMessage
-from langchain_core.prompts import PromptTemplate
-from langchain_core.output_parsers import JsonOutputParser
-from langgraph.types import Checkpointer
-from langgraph.graph import START, END, StateGraph
-from langgraph.graph.state import CompiledStateGraph
-from langgraph.graph.message import add_messages
-
-
-
 import logging
 
+from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
+from langchain_core.output_parsers import JsonOutputParser
+from langchain_core.prompts import PromptTemplate
+from langgraph.graph import END, START, StateGraph
+from langgraph.graph.message import add_messages
+from langgraph.graph.state import CompiledStateGraph
+from langgraph.types import Checkpointer
+
 logger = logging.getLogger(__name__)
-from typing_extensions import TypedDict, Annotated, Sequence, Union  # noqa: E402, F401
+import json  # noqa: E402, F401
 
 import pandas as pd  # noqa: E402, F401
-import json  # noqa: E402, F401
 from IPython.display import Markdown  # noqa: E402, F401
+from typing_extensions import Annotated, Sequence, TypedDict, Union  # noqa: E402, F401
 
+from ai_data_science_team.agents import (  # noqa: E402, F401
+    DataVisualizationAgent,
+    DataWranglingAgent,
+)
 from ai_data_science_team.templates import BaseAgent  # noqa: E402, F401
-from ai_data_science_team.agents import DataWranglingAgent, DataVisualizationAgent  # noqa: E402, F401
 from ai_data_science_team.utils.plotly import plotly_from_dict  # noqa: E402, F401
 from ai_data_science_team.utils.regex import (  # noqa: E402, F401
-    remove_consecutive_duplicates,
     get_generic_summary,
+    remove_consecutive_duplicates,
 )
 
 AGENT_NAME = "pandas_data_analyst"
@@ -81,9 +82,7 @@ class PandasDataAnalyst(BaseAgent):
         return make_pandas_data_analyst(
             model=self._params["model"],
             data_wrangling_agent=self._params["data_wrangling_agent"]._compiled_graph,
-            data_visualization_agent=self._params[
-                "data_visualization_agent"
-            ]._compiled_graph,
+            data_visualization_agent=self._params["data_visualization_agent"]._compiled_graph,
             checkpointer=self._params["checkpointer"],
         )
 
@@ -238,9 +237,7 @@ class PandasDataAnalyst(BaseAgent):
                     seen.add(role)
                 if role in allowed and role not in role_to_content:
                     role_to_content[role] = getattr(msg, "content", "")
-            agent_labels = [
-                f"- **Agent {i + 1}:** {role}\n" for i, role in enumerate(agents)
-            ]
+            agent_labels = [f"- **Agent {i + 1}:** {role}\n" for i, role in enumerate(agents)]
             header = (
                 f"# Pandas Data Analyst Workflow Summary\n\nThis workflow contains {len(agents)} agents:\n\n"
                 + "\n".join(agent_labels)
@@ -265,13 +262,8 @@ class PandasDataAnalyst(BaseAgent):
         if isinstance(data_raw, dict):
             return data_raw
         if isinstance(data_raw, list):
-            return [
-                item.to_dict() if isinstance(item, pd.DataFrame) else item
-                for item in data_raw
-            ]
-        raise ValueError(
-            "data_raw must be a DataFrame, dict, or list of DataFrames/dicts"
-        )
+            return [item.to_dict() if isinstance(item, pd.DataFrame) else item for item in data_raw]
+        raise ValueError("data_raw must be a DataFrame, dict, or list of DataFrames/dicts")
 
 
 def make_pandas_data_analyst(
@@ -398,18 +390,12 @@ def make_pandas_data_analyst(
             "user_instructions_data_visualization": response.get(
                 "user_instructions_data_visualization"
             ),
-            "routing_preprocessor_decision": response.get(
-                "routing_preprocessor_decision", "table"
-            ),
+            "routing_preprocessor_decision": response.get("routing_preprocessor_decision", "table"),
         }
 
     def router_chart_or_table(state: PrimaryState):
         logger.info("---ROUTER: CHART OR TABLE---")
-        return (
-            "chart"
-            if state.get("routing_preprocessor_decision") == "chart"
-            else "table"
-        )
+        return "chart" if state.get("routing_preprocessor_decision") == "chart" else "table"
 
     def invoke_data_wrangling_agent(state: PrimaryState):
         response = data_wrangling_agent.invoke(

@@ -69,6 +69,7 @@ def _start(store: DeploymentStore) -> str:
 # 1. start_deployment_wrapped — wrapper (store) → artifact içinde Deployment
 # ---------------------------------------------------------------------------
 
+
 def test_start_deployment_real():
     """``start_deployment_wrapped`` DeploymentStore'a yeni Deployment ekler.
 
@@ -79,12 +80,9 @@ def test_start_deployment_real():
     store = _fresh_store()
     out = start_deployment_wrapped.func(store=store)
     s = str(out).lower()
-    assert (
-        "ok" in s
-        or "start_deployment" in s
-        or "challenger" in s
-        or "deployment" in s
-    ), f"start_deployment beklenen çıktı üretmedi: {s[:300]}"
+    assert "ok" in s or "start_deployment" in s or "challenger" in s or "deployment" in s, (
+        f"start_deployment beklenen çıktı üretmedi: {s[:300]}"
+    )
     # Alttaki fonksiyonla state doğrulama.
     start_deployment_fn(
         store=store,
@@ -99,6 +97,7 @@ def test_start_deployment_real():
 # ---------------------------------------------------------------------------
 # 2. record_live_sample_wrapped — wrapper (store, deployment_id)
 # ---------------------------------------------------------------------------
+
 
 def test_record_live_sample_real():
     """``record_live_sample_wrapped`` bir deployment'a live sample ekler.
@@ -127,6 +126,7 @@ def test_record_live_sample_real():
 # 3. evaluate_rollback_wrapped — wrapper (store, deployment_id)
 # ---------------------------------------------------------------------------
 
+
 def test_evaluate_rollback_real():
     """``evaluate_rollback_wrapped`` rollback kararını değerlendirir.
 
@@ -137,17 +137,15 @@ def test_evaluate_rollback_real():
     d_id = _start(store)
     out = evaluate_rollback_wrapped.func(store=store, deployment_id=d_id)
     s = str(out).lower()
-    assert (
-        "ok" in s
-        or "rollback" in s
-        or "insufficient" in s
-        or "samples" in s
-    ), f"evaluate_rollback beklenen sonuç üretmedi: {s[:300]}"
+    assert "ok" in s or "rollback" in s or "insufficient" in s or "samples" in s, (
+        f"evaluate_rollback beklenen sonuç üretmedi: {s[:300]}"
+    )
 
 
 # ---------------------------------------------------------------------------
 # 4. mark_status_wrapped — wrapper (store, deployment_id, status)
 # ---------------------------------------------------------------------------
+
 
 def test_mark_status_real():
     """``mark_status_wrapped`` deployment durumunu günceller.
@@ -171,6 +169,7 @@ def test_mark_status_real():
 # 5. summarise_deployment_wrapped — wrapper (store, deployment_id)
 # ---------------------------------------------------------------------------
 
+
 def test_summarise_deployment_real():
     """``summarise_deployment_wrapped`` deployment özetini üretir.
 
@@ -180,17 +179,15 @@ def test_summarise_deployment_real():
     d_id = _start(store)
     out = summarise_deployment_wrapped.func(store=store, deployment_id=d_id)
     s = str(out).lower()
-    assert (
-        "ok" in s
-        or "summarise" in s
-        or "champion" in s
-        or "challenger" in s
-    ), f"summarise_deployment beklenen özet üretmedi: {s[:300]}"
+    assert "ok" in s or "summarise" in s or "champion" in s or "challenger" in s, (
+        f"summarise_deployment beklenen özet üretmedi: {s[:300]}"
+    )
 
 
 # ---------------------------------------------------------------------------
 # 6. list_deployments_wrapped — wrapper (store)
 # ---------------------------------------------------------------------------
+
 
 def test_list_deployments_real():
     """``list_deployments_wrapped`` store'daki deployment'ları listeler.
@@ -201,9 +198,6 @@ def test_list_deployments_real():
     _start(store)
     out = list_deployments_wrapped.func(store=store)
     s = str(out).lower()
-    assert (
-        "ok" in s
-        or "list" in s
-        or "deployment" in s
-        or "challenger" in s
-    ), f"list_deployments beklenen çıktı üretmedi: {s[:300]}"
+    assert "ok" in s or "list" in s or "deployment" in s or "challenger" in s, (
+        f"list_deployments beklenen çıktı üretmedi: {s[:300]}"
+    )

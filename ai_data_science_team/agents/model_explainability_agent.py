@@ -20,6 +20,15 @@ checkpointing.  (Checkpointing a non-serialisable model is not supported.)
 import logging  # noqa: E402, F401
 
 logger = logging.getLogger(__name__)
+import pandas as pd  # noqa: E402, F401
+from IPython.display import Markdown  # noqa: E402, F401
+from langchain.agents import create_agent  # noqa: E402, F401
+from langchain.tools import tool  # noqa: E402, F401
+from langchain_core.messages import AIMessage, BaseMessage  # noqa: E402, F401
+from langgraph.graph import END, START, StateGraph  # noqa: E402, F401
+from langgraph.graph.message import add_messages  # noqa: E402, F401
+from langgraph.prebuilt import InjectedState  # noqa: E402, F401
+from langgraph.types import Checkpointer  # noqa: E402, F401
 from typing_extensions import (  # noqa: E402, F401
     Annotated,
     Any,
@@ -30,17 +39,6 @@ from typing_extensions import (  # noqa: E402, F401
     Tuple,
     TypedDict,
 )
-
-import pandas as pd  # noqa: E402, F401
-from IPython.display import Markdown  # noqa: E402, F401
-
-from langchain.agents import create_agent  # noqa: E402, F401
-from langchain.tools import tool  # noqa: E402, F401
-from langchain_core.messages import AIMessage, BaseMessage  # noqa: E402, F401
-from langgraph.graph import END, START, StateGraph  # noqa: E402, F401
-from langgraph.graph.message import add_messages  # noqa: E402, F401
-from langgraph.prebuilt import InjectedState  # noqa: E402, F401
-from langgraph.types import Checkpointer  # noqa: E402, F401
 
 from ai_data_science_team.templates import BaseAgent  # noqa: E402, F401
 from ai_data_science_team.utils.messages import get_tool_call_names  # noqa: E402, F401
@@ -99,9 +97,7 @@ def explain_with_shap(
     # Choose explainer strategy
     try:
         # Try TreeExplainer first (fastest for tree-based models)
-        explainer = shap.TreeExplainer(
-            model_artifact, data=background_df, check_additivity=False
-        )
+        explainer = shap.TreeExplainer(model_artifact, data=background_df, check_additivity=False)
         shap_values = explainer.shap_values(explain_df)
     except Exception:
         try:
@@ -149,8 +145,7 @@ def explain_with_shap(
 
     # Per-row shap values (for downstream use)
     per_row = [
-        {feat: round(float(v), 6) for feat, v in zip(feature_names, row)}
-        for row in sv.tolist()
+        {feat: round(float(v), 6) for feat, v in zip(feature_names, row)} for row in sv.tolist()
     ]
 
     artifact = {
@@ -161,10 +156,7 @@ def explain_with_shap(
     }
 
     top_str = ", ".join(f"{f}={v:.4f}" for f, v in top_features[:5])
-    content = (
-        f"SHAP explanation complete for {n} samples.  "
-        f"Top features by mean |SHAP|: {top_str}."
-    )
+    content = f"SHAP explanation complete for {n} samples.  Top features by mean |SHAP|: {top_str}."
     return content, artifact
 
 
@@ -199,7 +191,6 @@ def explain_with_lime(
             "LIME is required for this tool.  Install with: pip install lime"
         ) from exc
 
-
     explain_df = pd.DataFrame(data_raw)
     background_df = pd.DataFrame(background_data_raw)
     feature_names: List[str] = list(explain_df.columns)
@@ -209,11 +200,7 @@ def explain_with_lime(
     mode = "classification" if is_classifier else "regression"
 
     try:
-        (
-            len(model_artifact.classes_)
-            if hasattr(model_artifact, "classes_")
-            else 2
-        )
+        (len(model_artifact.classes_) if hasattr(model_artifact, "classes_") else 2)
         class_names: Optional[List[str]] = (
             [str(c) for c in model_artifact.classes_]
             if hasattr(model_artifact, "classes_")
@@ -234,13 +221,9 @@ def explain_with_lime(
     idx = min(sample_index, len(explain_df) - 1)
     instance = explain_df.iloc[idx].values.astype(float)
 
-    predict_fn = (
-        model_artifact.predict_proba if is_classifier else model_artifact.predict
-    )
+    predict_fn = model_artifact.predict_proba if is_classifier else model_artifact.predict
 
-    exp = explainer.explain_instance(
-        instance, predict_fn, num_features=min(15, len(feature_names))
-    )
+    exp = explainer.explain_instance(instance, predict_fn, num_features=min(15, len(feature_names)))
     lime_list = exp.as_list()
 
     artifact = {
@@ -327,9 +310,9 @@ def make_model_explainability_agent(
     class GraphState(TypedDict):
         messages: Annotated[Sequence[BaseMessage], add_messages]
         user_instructions: str
-        model_artifact: Any          # sklearn model object
-        data_raw: dict               # feature data to explain
-        background_data_raw: dict    # background/training data for SHAP/LIME
+        model_artifact: Any  # sklearn model object
+        data_raw: dict  # feature data to explain
+        background_data_raw: dict  # background/training data for SHAP/LIME
         n_samples: int
         explainability_results: dict
         tool_calls: list

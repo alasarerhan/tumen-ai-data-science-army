@@ -35,7 +35,7 @@ Design
 from __future__ import annotations
 
 import uuid
-from typing import Generic, Type, TypeVar
+from typing import Generic, TypeVar
 
 from fastapi import HTTPException
 from sqlalchemy import and_, func, or_, select
@@ -69,14 +69,14 @@ class TenantQuery(Generic[ModelType]):
         run = TenantQuery(db, WorkflowRun).for_workspace(workspace_id).get_for_update(run_id)
     """
 
-    def __init__(self, db: Session, model: Type[ModelType]):
+    def __init__(self, db: Session, model: type[ModelType]):
         self._db = db
         self._model = model
         self._tenant_id: uuid.UUID | None = None
         self._workspace_id: uuid.UUID | None = None
         self._model_name = model.__name__
 
-    def for_tenant(self, tenant_id: uuid.UUID | str) -> "TenantQuery[ModelType]":
+    def for_tenant(self, tenant_id: uuid.UUID | str) -> TenantQuery[ModelType]:
         """Set tenant filter.
 
         Parameters
@@ -92,7 +92,7 @@ class TenantQuery(Generic[ModelType]):
         self._tenant_id = self._parse_uuid(tenant_id, "tenant_id")
         return self
 
-    def for_workspace(self, workspace_id: uuid.UUID | str) -> "TenantQuery[ModelType]":
+    def for_workspace(self, workspace_id: uuid.UUID | str) -> TenantQuery[ModelType]:
         """Set workspace filter.
 
         Parameters
@@ -314,7 +314,7 @@ class TenantQuery(Generic[ModelType]):
             raise HTTPException(status_code=400, detail=f"Invalid {label}") from exc
 
 
-def tenant_query(db: Session, model: Type[ModelType]) -> TenantQuery[ModelType]:
+def tenant_query(db: Session, model: type[ModelType]) -> TenantQuery[ModelType]:
     """Factory function to create a TenantQuery instance.
 
     Parameters

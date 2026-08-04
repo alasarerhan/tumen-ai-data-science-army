@@ -31,7 +31,9 @@ def node_execution_to_dict(node: WorkflowNodeExecution) -> dict[str, Any]:
         "logs": json.loads(node.logs_json) if node.logs_json else [],
         "error": node.error,
         "retry_count": node.retry_count,
-        "produced_artifact_ids": json.loads(node.produced_artifact_ids_json) if node.produced_artifact_ids_json else [],
+        "produced_artifact_ids": json.loads(node.produced_artifact_ids_json)
+        if node.produced_artifact_ids_json
+        else [],
         "started_at": node.started_at.isoformat() if node.started_at else None,
         "finished_at": node.finished_at.isoformat() if node.finished_at else None,
         "created_at": node.created_at.isoformat() if node.created_at else None,
@@ -51,7 +53,12 @@ def create_node_executions_for_run(
     records: list[WorkflowNodeExecution] = []
     for index, node in enumerate(document.get("nodes", [])):
         node_id = str(node.get("id", ""))
-        node_type = str(node.get("type") or node.get("data", {}).get("type") or node.get("data", {}).get("agent") or "")
+        node_type = str(
+            node.get("type")
+            or node.get("data", {}).get("type")
+            or node.get("data", {}).get("agent")
+            or ""
+        )
         if not node_id or not node_type:
             continue
         inputs_payload = _build_node_inputs_payload(node)
@@ -103,7 +110,9 @@ def list_node_executions_for_run(
         db.execute(
             select(WorkflowNodeExecution)
             .where(WorkflowNodeExecution.workflow_run_id == workflow_run_id)
-            .order_by(WorkflowNodeExecution.execution_index.asc(), WorkflowNodeExecution.created_at.asc())
+            .order_by(
+                WorkflowNodeExecution.execution_index.asc(), WorkflowNodeExecution.created_at.asc()
+            )
         ).scalars()
     )
 

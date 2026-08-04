@@ -13,8 +13,7 @@ from typing import Any, Callable  # noqa: E402, F401
 
 from langchain_core.messages import AIMessage  # noqa: E402, F401
 
-from ai_data_science_team.multiagents.supervisor import (  # noqa: E402, F401
-    SupervisorDSState)
+from ai_data_science_team.multiagents.supervisor import SupervisorDSState  # noqa: E402, F401
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +21,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class H2oNodeDeps:
     """Dependencies for the h2o node."""
+
     h2o_ml_agent: Any
     append_error_message: Any  # was _append_error_message
     ensure_dataset_registry: Any  # was _ensure_dataset_registry
@@ -54,14 +54,16 @@ def make_node_h2o(deps: H2oNodeDeps) -> Callable[[SupervisorDSState], dict]:
                     "data_wrangled",
                     "data_sql",
                     "data_raw",
-                ])
+                ],
+            )
         )
         if deps.is_empty_df(active_df):
             return {
                 "messages": [
                     AIMessage(
                         content="No dataset is available for modeling. Load data and (optionally) engineer features first.",
-                        name="h2o_ml_agent")
+                        name="h2o_ml_agent",
+                    )
                 ],
                 "last_worker": "H2O_ML_Agent",
             }
@@ -126,24 +128,19 @@ def make_node_h2o(deps: H2oNodeDeps) -> Callable[[SupervisorDSState], dict]:
                             runs = client.search_runs(
                                 experiment_ids=[exp.experiment_id],
                                 order_by=["attributes.start_time DESC"],
-                                max_results=25)
+                                max_results=25,
+                            )
 
                             def _run_has_model_artifact(rid: str) -> bool:
                                 try:
-                                    return bool(
-                                        client.list_artifacts(rid, path="model")
-                                    )
+                                    return bool(client.list_artifacts(rid, path="model"))
                                 except Exception:
                                     return False
 
                             # Prefer the newest run that actually contains a logged model.
                             for r in runs or []:
                                 rid = getattr(getattr(r, "info", None), "run_id", None)
-                                if (
-                                    isinstance(rid, str)
-                                    and rid
-                                    and _run_has_model_artifact(rid)
-                                ):
+                                if isinstance(rid, str) and rid and _run_has_model_artifact(rid):
                                     run_id = rid
                                     break
                     except Exception:
@@ -153,15 +150,13 @@ def make_node_h2o(deps: H2oNodeDeps) -> Callable[[SupervisorDSState], dict]:
                     # Best-effort: drop target column if present so we score only features.
                     target = state.get("target_variable")
                     target = (
-                        target
-                        if isinstance(target, str) and target in active_df.columns
-                        else None
+                        target if isinstance(target, str) and target in active_df.columns else None
                     )
                     x_df = active_df.drop(columns=[target]) if target else active_df
                     try:
+                        import h2o  # noqa: E402, F401
                         import mlflow  # noqa: E402, F401
                         import pandas as pd  # noqa: E402, F401
-                        import h2o  # noqa: E402, F401
                         from mlflow.tracking import MlflowClient  # noqa: E402, F401
 
                         tracking_uri = cfg.get("mlflow_tracking_uri")
@@ -174,9 +169,7 @@ def make_node_h2o(deps: H2oNodeDeps) -> Callable[[SupervisorDSState], dict]:
                             client = MlflowClient()
                             has_model = any(
                                 getattr(item, "path", None) == "model"
-                                for item in client.list_artifacts(
-                                    run_id.strip(), path=""
-                                )
+                                for item in client.list_artifacts(run_id.strip(), path="")
                             )
                         except Exception:
                             has_model = True
@@ -189,7 +182,8 @@ def make_node_h2o(deps: H2oNodeDeps) -> Callable[[SupervisorDSState], dict]:
                                             "This usually means you logged workflow artifacts (tables/json) but did not log a model. "
                                             "Train with MLflow enabled (H2O training logs to `model/`), or provide a run id that contains a model."
                                         ),
-                                        name="h2o_ml_agent")
+                                        name="h2o_ml_agent",
+                                    )
                                 ],
                                 "last_worker": "H2O_ML_Agent",
                             }
@@ -201,9 +195,7 @@ def make_node_h2o(deps: H2oNodeDeps) -> Callable[[SupervisorDSState], dict]:
                         except Exception:
                             model = mlflow.pyfunc.load_model(model_uri)
 
-                        if hasattr(model, "predict") and not hasattr(
-                            model, "_model_json"
-                        ):
+                        if hasattr(model, "predict") and not hasattr(model, "_model_json"):
                             # Likely a pyfunc wrapper; predict directly.
                             raw_preds = model.predict(x_df)
                             if isinstance(raw_preds, pd.DataFrame):
@@ -218,23 +210,13 @@ def make_node_h2o(deps: H2oNodeDeps) -> Callable[[SupervisorDSState], dict]:
                             try:
                                 out_json = getattr(model, "_model_json", {}) or {}
                                 output = (
-                                    out_json.get("output")
-                                    if isinstance(out_json, dict)
-                                    else {}
+                                    out_json.get("output") if isinstance(out_json, dict) else {}
                                 )
-                                names = (
-                                    output.get("names")
-                                    if isinstance(output, dict)
-                                    else None
-                                )
+                                names = output.get("names") if isinstance(output, dict) else None
                                 domains = (
-                                    output.get("domains")
-                                    if isinstance(output, dict)
-                                    else None
+                                    output.get("domains") if isinstance(output, dict) else None
                                 )
-                                if isinstance(names, list) and isinstance(
-                                    domains, list
-                                ):
+                                if isinstance(names, list) and isinstance(domains, list):
                                     for col, dom in zip(names, domains):
                                         if dom is None:
                                             continue
@@ -253,9 +235,8 @@ def make_node_h2o(deps: H2oNodeDeps) -> Callable[[SupervisorDSState], dict]:
                             preds_df.insert(0, "row_id", range(len(preds_df)))
                             if target:
                                 preds_df.insert(
-                                    1,
-                                    f"actual_{target}",
-                                    active_df[target].reset_index(drop=True))
+                                    1, f"actual_{target}", active_df[target].reset_index(drop=True)
+                                )
                         except Exception:
                             pass
 
@@ -270,7 +251,8 @@ def make_node_h2o(deps: H2oNodeDeps) -> Callable[[SupervisorDSState], dict]:
                                         "Tip: scoring must use the same feature schema as training. "
                                         "If you trained on engineered features, set the active dataset to that feature dataset before scoring."
                                     ),
-                                    name="h2o_ml_agent")
+                                    name="h2o_ml_agent",
+                                )
                             ],
                             "last_worker": "H2O_ML_Agent",
                         }
@@ -299,7 +281,8 @@ def make_node_h2o(deps: H2oNodeDeps) -> Callable[[SupervisorDSState], dict]:
                                 },
                             },
                             parent_id=active_dataset_id,
-                            make_active=True)
+                            make_active=True,
+                        )
                     except Exception:
                         pred_id = None
 
@@ -332,18 +315,15 @@ def make_node_h2o(deps: H2oNodeDeps) -> Callable[[SupervisorDSState], dict]:
                                 "To make predictions, provide an H2O `model_id` (or train a model first). "
                                 "Example: `predict with model `XGBoost_grid_...` on the dataset`."
                             ),
-                            name="h2o_ml_agent")
+                            name="h2o_ml_agent",
+                        )
                     ],
                     "last_worker": "H2O_ML_Agent",
                 }
 
             # Best-effort: drop target column if present so we score only features.
             target = state.get("target_variable")
-            target = (
-                target
-                if isinstance(target, str) and target in active_df.columns
-                else None
-            )
+            target = target if isinstance(target, str) and target in active_df.columns else None
             x_df = active_df.drop(columns=[target]) if target else active_df
 
             try:
@@ -358,9 +338,8 @@ def make_node_h2o(deps: H2oNodeDeps) -> Callable[[SupervisorDSState], dict]:
                     preds_df.insert(0, "row_id", range(len(preds_df)))
                     if target:
                         preds_df.insert(
-                            1,
-                            f"actual_{target}",
-                            active_df[target].reset_index(drop=True))
+                            1, f"actual_{target}", active_df[target].reset_index(drop=True)
+                        )
                 except Exception:
                     pass
                 preds_data = preds_df.to_dict()
@@ -373,7 +352,8 @@ def make_node_h2o(deps: H2oNodeDeps) -> Callable[[SupervisorDSState], dict]:
                                 "Tip: model IDs are only available while the H2O cluster is running. "
                                 "If you restarted, retrain or load a saved model."
                             ),
-                            name="h2o_ml_agent")
+                            name="h2o_ml_agent",
+                        )
                     ],
                     "last_worker": "H2O_ML_Agent",
                 }
@@ -404,7 +384,8 @@ def make_node_h2o(deps: H2oNodeDeps) -> Callable[[SupervisorDSState], dict]:
                         },
                     },
                     parent_id=active_dataset_id,
-                    make_active=True)
+                    make_active=True,
+                )
             except Exception:
                 pred_id = None
 
@@ -434,7 +415,8 @@ def make_node_h2o(deps: H2oNodeDeps) -> Callable[[SupervisorDSState], dict]:
             messages=before_msgs,
             user_instructions=last_human,
             data_raw=active_df,
-            target_variable=state.get("target_variable"))
+            target_variable=state.get("target_variable"),
+        )
         response = deps.h2o_ml_agent.response or {}
         merged = deps.merge_messages(before_msgs, response)
         merged["messages"] = deps.tag_messages(merged.get("messages"), "h2o_ml_agent")
@@ -442,30 +424,31 @@ def make_node_h2o(deps: H2oNodeDeps) -> Callable[[SupervisorDSState], dict]:
             "h2o_ml_agent",
             response.get("leaderboard"),
             deps._get_last_human_text(before_msgs),
-            extra_text="H2O AutoML results.")
+            extra_text="H2O AutoML results.",
+        )
         if summary_text:
-            merged["messages"].append(
-                AIMessage(content=summary_text, name="h2o_ml_agent")
-            )
+            merged["messages"].append(AIMessage(content=summary_text, name="h2o_ml_agent"))
         deps.append_error_message(
             merged,
             "h2o_ml_agent",
             response.get("h2o_train_error"),
             response.get("h2o_train_error_log_path"),
-            prefix="Model training error")
+            prefix="Model training error",
+        )
         mlflow_run_id = response.get("mlflow_run_id")
         if mlflow_run_id:
             merged["messages"].append(
                 AIMessage(
                     content=f"MLflow logging enabled. Run ID: `{mlflow_run_id}`",
-                    name="h2o_ml_agent")
+                    name="h2o_ml_agent",
+                )
             )
             model_uri = response.get("mlflow_model_uri")
             if isinstance(model_uri, str) and model_uri.strip():
                 merged["messages"].append(
                     AIMessage(
-                        content=f"MLflow model URI: `{model_uri.strip()}`",
-                        name="h2o_ml_agent")
+                        content=f"MLflow model URI: `{model_uri.strip()}`", name="h2o_ml_agent"
+                    )
                 )
         leaderboard = response.get("leaderboard")
         return {
@@ -485,9 +468,7 @@ def make_node_h2o(deps: H2oNodeDeps) -> Callable[[SupervisorDSState], dict]:
                 "h2o": response,
                 "h2o_details": {
                     "h2o_train_error": response.get("h2o_train_error"),
-                    "h2o_train_error_log_path": response.get(
-                        "h2o_train_error_log_path"
-                    ),
+                    "h2o_train_error_log_path": response.get("h2o_train_error_log_path"),
                     "best_model_id": response.get("best_model_id"),
                     "leaderboard": response.get("leaderboard"),
                     "mlflow_run_id": mlflow_run_id,
@@ -497,9 +478,7 @@ def make_node_h2o(deps: H2oNodeDeps) -> Callable[[SupervisorDSState], dict]:
             "last_worker": "H2O_ML_Agent",
         }
 
-
     return node_h2o
-
 
 
 __all__ = ["H2oNodeDeps", "make_node_h2o"]

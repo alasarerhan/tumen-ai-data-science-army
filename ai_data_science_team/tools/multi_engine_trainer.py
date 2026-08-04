@@ -32,7 +32,6 @@ from sklearn.model_selection import KFold, StratifiedKFold, cross_val_score  # n
 from sklearn.pipeline import Pipeline  # noqa: E402, F401
 from sklearn.preprocessing import OneHotEncoder, StandardScaler  # noqa: E402, F401
 
-
 # ---------------------------------------------------------------------------
 # Candidates registry
 # ---------------------------------------------------------------------------
@@ -65,9 +64,7 @@ SCORING_BY_TASK: Dict[str, str] = {
 }
 
 
-def candidates_for_task(
-    task_type: str, engine: str
-) -> str:
+def candidates_for_task(task_type: str, engine: str) -> str:
     """Return the class name for the candidate model of ``engine``.
 
     Parameters
@@ -86,10 +83,7 @@ def candidates_for_task(
     ValueError for unknown task_type or engine.
     """
     if task_type not in CANDIDATES_BY_TASK:
-        raise ValueError(
-            f"Unknown task_type '{task_type}'. Known: "
-            f"{sorted(CANDIDATES_BY_TASK)}"
-        )
+        raise ValueError(f"Unknown task_type '{task_type}'. Known: {sorted(CANDIDATES_BY_TASK)}")
     if engine not in CANDIDATES_BY_TASK[task_type]:
         raise ValueError(
             f"Unknown engine '{engine}' for task '{task_type}'. "
@@ -172,7 +166,7 @@ def _instantiate_estimator(
             ) from exc
         cls = getattr(lgb, cls_name)
     elif engine == "sklearn":
-        from sklearn import linear_model, ensemble  # noqa: E402, F401
+        from sklearn import ensemble, linear_model  # noqa: E402, F401
 
         if cls_name == "LogisticRegression":
             return linear_model.LogisticRegression(max_iter=1000, **params)
@@ -182,9 +176,7 @@ def _instantiate_estimator(
             return ensemble.RandomForestClassifier(**params)
         if cls_name == "RandomForestRegressor":
             return ensemble.RandomForestRegressor(**params)
-        raise ValueError(
-            f"sklearn does not provide a default class for '{cls_name}'"
-        )
+        raise ValueError(f"sklearn does not provide a default class for '{cls_name}'")
     else:  # pragma: no cover
         raise ValueError(f"Unsupported engine '{engine}'")
     return cls(**params)
@@ -277,10 +269,7 @@ def cross_validate_candidates(
     negative RMSE is converted to positive RMSE for ranking).
     """
     if task_type not in CANDIDATES_BY_TASK:
-        raise ValueError(
-            f"Unknown task_type '{task_type}'. Known: "
-            f"{sorted(CANDIDATES_BY_TASK)}"
-        )
+        raise ValueError(f"Unknown task_type '{task_type}'. Known: {sorted(CANDIDATES_BY_TASK)}")
     candidates = list(candidates or SENSIBLE_CANDIDATES[task_type])
     cv_obj = _make_cv(task_type, cv or {})
     scoring = SCORING_BY_TASK[task_type]
@@ -298,9 +287,7 @@ def cross_validate_candidates(
         }
         try:
             pipe = build_pipeline(X, task_type, engine, per_engine_params)
-            scores = cross_val_score(
-                pipe, X, y, cv=cv_obj, scoring=scoring, error_score="raise"
-            )
+            scores = cross_val_score(pipe, X, y, cv=cv_obj, scoring=scoring, error_score="raise")
             mean = float(np.mean(scores))
             std = float(np.std(scores))
             results.append(
@@ -326,7 +313,12 @@ def cross_validate_candidates(
                 CVResult(
                     engine=engine,
                     candidate_name=candidate_name,
-                    metrics={"mean": 0.0, "std": 0.0, "scoring": scoring, "is_higher_better": scoring != "neg_mean_squared_error"},
+                    metrics={
+                        "mean": 0.0,
+                        "std": 0.0,
+                        "scoring": scoring,
+                        "is_higher_better": scoring != "neg_mean_squared_error",
+                    },
                     n_splits=cv_obj.get_n_splits(),
                     n_samples=int(len(y)),
                     error=repr(exc),
@@ -362,5 +354,3 @@ __all__ = [
     "cross_validate_candidates",
     "select_best_model",
 ]
-
-

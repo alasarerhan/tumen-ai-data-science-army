@@ -4,7 +4,6 @@ Tests for ``ai_data_science_team.tools.model_serving`` (G3 tool layer).
 
 from __future__ import annotations
 
-
 from ai_data_science_team.tools.model_serving import (
     PORT_POOL,
     allocate_port,
@@ -46,8 +45,8 @@ class TestRenderDockerfile:
 class TestRenderBentofile:
     def test_basic(self):
         bf = render_bentofile("m", "2")
-        assert "model_id: \"m\"" in bf
-        assert "model_version: \"2\"" in bf
+        assert 'model_id: "m"' in bf
+        assert 'model_version: "2"' in bf
         assert "bentoml serve" in bf
 
 
@@ -65,9 +64,7 @@ class TestRenderFastApiApp:
 
 class TestDeploymentAndRollback:
     def test_record_deployment_minimal(self):
-        rec = record_deployment(
-            model_id="m", version="1", target="endpoint"
-        )
+        rec = record_deployment(model_id="m", version="1", target="endpoint")
         assert rec["model_id"] == "m"
         assert rec["version"] == "1"
         assert rec["target"] == "endpoint"
@@ -77,16 +74,19 @@ class TestDeploymentAndRollback:
 
     def test_record_deployment_full(self):
         rec = record_deployment(
-            model_id="m", version="2", target="container",
-            port=8103, status="running", artifacts={"image": "m:v2"}
+            model_id="m",
+            version="2",
+            target="container",
+            port=8103,
+            status="running",
+            artifacts={"image": "m:v2"},
         )
         assert rec["port"] == 8103
         assert rec["artifacts"] == {"image": "m:v2"}
 
     def test_record_rollback(self):
         out = record_rollback(
-            deployment_id="d1", from_version="3", to_version="2",
-            reason="drift detected"
+            deployment_id="d1", from_version="3", to_version="2", reason="drift detected"
         )
         assert out["from_version"] == "3"
         assert out["to_version"] == "2"

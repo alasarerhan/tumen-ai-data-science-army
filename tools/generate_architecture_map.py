@@ -11,6 +11,7 @@ with the exact structure the test expects:
 The HTML uses a minimal inline CSS/JS renderer so the test can also
 check the absence of CDN links (no network dependency).
 """
+
 from __future__ import annotations
 
 import datetime
@@ -34,26 +35,32 @@ def build_graph() -> dict:
         if node_id in seen_node_ids:
             return
         seen_node_ids.add(node_id)
-        nodes.append({
-            "id": node_id,
-            "label": label,
-            "group": group,
-            "kind": kind,
-        })
+        nodes.append(
+            {
+                "id": node_id,
+                "label": label,
+                "group": group,
+                "kind": kind,
+            }
+        )
 
     def add_edge(src: str, dst: str, relation: str = "imports") -> None:
-        edges.append({
-            "source": src,
-            "target": dst,
-            "relation": relation,
-        })
+        edges.append(
+            {
+                "source": src,
+                "target": dst,
+                "relation": relation,
+            }
+        )
 
     # ---- 1. Top-level layout groups ----
     add_node("frontend", "Frontend (React + Vite)", "ui", "presentation")
     add_node("apps", "apps/ (5 deployment units)", "package", "presentation")
     add_node("docs", "docs/ (PLATFORM_SPEC + PHASE_4_COMPLETION + FORME)", "docs", "documentation")
     add_node("tests", "tests/ (1757 passing)", "tests", "quality")
-    add_node("ai_data_science_team", "ai_data_science_team/ (49 tools + 52 agents)", "library", "core")
+    add_node(
+        "ai_data_science_team", "ai_data_science_team/ (49 tools + 52 agents)", "library", "core"
+    )
 
     # ---- 2. ai_data_science_team/ subpackages (8 nodes) ----
     subpkgs = [
@@ -85,15 +92,39 @@ def build_graph() -> dict:
 
     # ---- 4. supervisor_ds_team subpackage (5 nodes) ----
     sup_nodes = [
-        ("ai_data_science_team.multiagents.supervisor_ds_team", "multiagents/supervisor_ds_team/ (15 files)", "package"),
-        ("ai_data_science_team.multiagents.supervisor_ds_team.nodes", "nodes/ (12 worker nodes)", "submodule"),
-        ("ai_data_science_team.multiagents.supervisor", "multiagents/supervisor/ (helpers)", "submodule"),
+        (
+            "ai_data_science_team.multiagents.supervisor_ds_team",
+            "multiagents/supervisor_ds_team/ (15 files)",
+            "package",
+        ),
+        (
+            "ai_data_science_team.multiagents.supervisor_ds_team.nodes",
+            "nodes/ (12 worker nodes)",
+            "submodule",
+        ),
+        (
+            "ai_data_science_team.multiagents.supervisor",
+            "multiagents/supervisor/ (helpers)",
+            "submodule",
+        ),
     ]
     for sup_id, sup_label, sup_kind in sup_nodes:
         add_node(sup_id, sup_label, sup_kind, "core")
-    add_edge("ai_data_science_team.multiagents", "ai_data_science_team.multiagents.supervisor_ds_team", "contains")
-    add_edge("ai_data_science_team.multiagents.supervisor_ds_team", "ai_data_science_team.multiagents.supervisor_ds_team.nodes", "contains")
-    add_edge("ai_data_science_team.multiagents.supervisor_ds_team", "ai_data_science_team.multiagents.supervisor", "imports")
+    add_edge(
+        "ai_data_science_team.multiagents",
+        "ai_data_science_team.multiagents.supervisor_ds_team",
+        "contains",
+    )
+    add_edge(
+        "ai_data_science_team.multiagents.supervisor_ds_team",
+        "ai_data_science_team.multiagents.supervisor_ds_team.nodes",
+        "contains",
+    )
+    add_edge(
+        "ai_data_science_team.multiagents.supervisor_ds_team",
+        "ai_data_science_team.multiagents.supervisor",
+        "imports",
+    )
 
     # ---- 5. test/ subdirs (3 nodes) ----
     test_nodes = [
@@ -113,77 +144,173 @@ def build_graph() -> dict:
     add_edge("frontend", "apps.platform-api-app", "calls")
     add_edge("ai_data_science_team.agents", "frontend", "exposed-via")
     add_edge("docs", "ai_data_science_team", "documents")
-    add_edge("ai_data_science_team.multiagents.supervisor_ds_team", "ai_data_science_team.agents", "routes")
-    add_edge("ai_data_science_team.multiagents.supervisor_ds_team", "ai_data_science_team.tools", "calls")
+    add_edge(
+        "ai_data_science_team.multiagents.supervisor_ds_team",
+        "ai_data_science_team.agents",
+        "routes",
+    )
+    add_edge(
+        "ai_data_science_team.multiagents.supervisor_ds_team", "ai_data_science_team.tools", "calls"
+    )
     add_edge("ai_data_science_team.templates", "ai_data_science_team.agents", "provides")
-    add_edge("ai_data_science_team.workflow_resolver", "ai_data_science_team.multiagents", "resolves")
+    add_edge(
+        "ai_data_science_team.workflow_resolver", "ai_data_science_team.multiagents", "resolves"
+    )
     add_edge("ai_data_science_team.connectors", "apps.platform-api-app", "powers")
     add_edge("ai_data_science_team.parsers", "ai_data_science_team.templates", "feeds")
 
     # ---- 7. Flows: end-to-end pipelines (12) ----
     flow_defs = [
-        ("data_ingest", "Data Ingest Pipeline", [
-            "frontend", "apps.platform-api-app", "ai_data_science_team.tools",
-            "ai_data_science_team.connectors", "ai_data_science_team.tools",
-            "tests",
-        ]),
-        ("eda", "EDA + Insight Pipeline", [
-            "frontend", "apps.platform-api-app", "ai_data_science_team.agents",
-            "ai_data_science_team.tools", "ai_data_science_team.agents",
-            "frontend",
-        ]),
-        ("model_training", "Model Training Pipeline", [
-            "frontend", "apps.platform-api-app", "ai_data_science_team.agents",
-            "ai_data_science_team.tools", "ai_data_science_team.agents",
-            "tests",
-        ]),
-        ("model_serving", "Model Serving Pipeline", [
-            "frontend", "apps.platform-api-app", "ai_data_science_team.agents",
-            "ai_data_science_team.tools", "apps.platform-api-app", "frontend",
-        ]),
-        ("ab_test", "A/B Test Pipeline", [
-            "frontend", "apps.platform-api-app", "ai_data_science_team.agents",
-            "ai_data_science_team.tools", "ai_data_science_team.agents", "frontend",
-        ]),
-        ("supervisor_ds", "Supervisor DS Team", [
-            "frontend", "apps.platform-api-app", "ai_data_science_team.multiagents",
-            "ai_data_science_team.multiagents.supervisor_ds_team",
-            "ai_data_science_team.multiagents.supervisor_ds_team.nodes",
-            "ai_data_science_team.tools", "frontend",
-        ]),
-        ("exploration", "Exploratory Copilot", [
-            "frontend", "apps.exploratory-copilot-app", "ai_data_science_team.agents",
-            "ai_data_science_team.tools", "frontend",
-        ]),
-        ("sql_analyst", "SQL Database Analyst", [
-            "frontend", "apps.sql-database-agent-app", "ai_data_science_team.connectors",
-            "ai_data_science_team.agents", "frontend",
-        ]),
-        ("pandas_analyst", "Pandas Data Analyst", [
-            "frontend", "apps.pandas-data-analyst-app", "ai_data_science_team.agents",
-            "ai_data_science_team.tools", "frontend",
-        ]),
-        ("ai_pipeline", "AI Pipeline Studio", [
-            "frontend", "apps.ai-pipeline-studio-app", "ai_data_science_team.agents",
-            "ai_data_science_team.multiagents.supervisor_ds_team",
-            "ai_data_science_team.tools", "frontend",
-        ]),
-        ("docs_check", "Documentation Check", [
-            "docs", "ai_data_science_team", "tests",
-        ]),
-        ("ci_lint", "CI Lint + Test", [
-            "ai_data_science_team", "tests", "frontend",
-        ]),
+        (
+            "data_ingest",
+            "Data Ingest Pipeline",
+            [
+                "frontend",
+                "apps.platform-api-app",
+                "ai_data_science_team.tools",
+                "ai_data_science_team.connectors",
+                "ai_data_science_team.tools",
+                "tests",
+            ],
+        ),
+        (
+            "eda",
+            "EDA + Insight Pipeline",
+            [
+                "frontend",
+                "apps.platform-api-app",
+                "ai_data_science_team.agents",
+                "ai_data_science_team.tools",
+                "ai_data_science_team.agents",
+                "frontend",
+            ],
+        ),
+        (
+            "model_training",
+            "Model Training Pipeline",
+            [
+                "frontend",
+                "apps.platform-api-app",
+                "ai_data_science_team.agents",
+                "ai_data_science_team.tools",
+                "ai_data_science_team.agents",
+                "tests",
+            ],
+        ),
+        (
+            "model_serving",
+            "Model Serving Pipeline",
+            [
+                "frontend",
+                "apps.platform-api-app",
+                "ai_data_science_team.agents",
+                "ai_data_science_team.tools",
+                "apps.platform-api-app",
+                "frontend",
+            ],
+        ),
+        (
+            "ab_test",
+            "A/B Test Pipeline",
+            [
+                "frontend",
+                "apps.platform-api-app",
+                "ai_data_science_team.agents",
+                "ai_data_science_team.tools",
+                "ai_data_science_team.agents",
+                "frontend",
+            ],
+        ),
+        (
+            "supervisor_ds",
+            "Supervisor DS Team",
+            [
+                "frontend",
+                "apps.platform-api-app",
+                "ai_data_science_team.multiagents",
+                "ai_data_science_team.multiagents.supervisor_ds_team",
+                "ai_data_science_team.multiagents.supervisor_ds_team.nodes",
+                "ai_data_science_team.tools",
+                "frontend",
+            ],
+        ),
+        (
+            "exploration",
+            "Exploratory Copilot",
+            [
+                "frontend",
+                "apps.exploratory-copilot-app",
+                "ai_data_science_team.agents",
+                "ai_data_science_team.tools",
+                "frontend",
+            ],
+        ),
+        (
+            "sql_analyst",
+            "SQL Database Analyst",
+            [
+                "frontend",
+                "apps.sql-database-agent-app",
+                "ai_data_science_team.connectors",
+                "ai_data_science_team.agents",
+                "frontend",
+            ],
+        ),
+        (
+            "pandas_analyst",
+            "Pandas Data Analyst",
+            [
+                "frontend",
+                "apps.pandas-data-analyst-app",
+                "ai_data_science_team.agents",
+                "ai_data_science_team.tools",
+                "frontend",
+            ],
+        ),
+        (
+            "ai_pipeline",
+            "AI Pipeline Studio",
+            [
+                "frontend",
+                "apps.ai-pipeline-studio-app",
+                "ai_data_science_team.agents",
+                "ai_data_science_team.multiagents.supervisor_ds_team",
+                "ai_data_science_team.tools",
+                "frontend",
+            ],
+        ),
+        (
+            "docs_check",
+            "Documentation Check",
+            [
+                "docs",
+                "ai_data_science_team",
+                "tests",
+            ],
+        ),
+        (
+            "ci_lint",
+            "CI Lint + Test",
+            [
+                "ai_data_science_team",
+                "tests",
+                "frontend",
+            ],
+        ),
     ]
     for flow_id, flow_label, hops in flow_defs:
-        flows.append({
-            "id": flow_id,
-            "label": flow_label,
-            "steps": hops,
-        })
+        flows.append(
+            {
+                "id": flow_id,
+                "label": flow_label,
+                "steps": hops,
+            }
+        )
 
     return {
-        "generated_at": datetime.datetime.now(datetime.timezone.utc).isoformat().replace("+00:00", "Z"),
+        "generated_at": datetime.datetime.now(datetime.timezone.utc)
+        .isoformat()
+        .replace("+00:00", "Z"),
         "repo_root": str(REPO_ROOT),
         "nodes": nodes,
         "edges": edges,
@@ -215,40 +342,51 @@ def render_html(graph: dict) -> str:
 </head>
 <body>
   <h1>Project Architecture Flows</h1>
-  <div class="meta">Generated at <code>{graph['generated_at']}</code> from <code>{graph['repo_root']}</code></div>
+  <div class="meta">Generated at <code>{graph["generated_at"]}</code> from <code>{
+        graph["repo_root"]
+    }</code></div>
   <div class="legend">
-    <span>nodes: {len(graph['nodes'])}</span>
-    <span>edges: {len(graph['edges'])}</span>
-    <span>flows: {len(graph['flows'])}</span>
+    <span>nodes: {len(graph["nodes"])}</span>
+    <span>edges: {len(graph["edges"])}</span>
+    <span>flows: {len(graph["flows"])}</span>
   </div>
   <h2>Nodes</h2>
   <table>
     <thead><tr><th>id</th><th>group</th><th>kind</th><th>label</th></tr></thead>
     <tbody>
-{''.join(
-    f"      <tr><td><code>{n['id']}</code></td><td>{n['group']}</td><td>{n['kind']}</td><td>{n['label']}</td></tr>" + chr(10)
-    for n in graph['nodes']
- )}
+{
+        "".join(
+            f"      <tr><td><code>{n['id']}</code></td><td>{n['group']}</td><td>{n['kind']}</td><td>{n['label']}</td></tr>"
+            + chr(10)
+            for n in graph["nodes"]
+        )
+    }
     </tbody>
   </table>
   <h2>Edges</h2>
   <table>
     <thead><tr><th>source</th><th>relation</th><th>target</th></tr></thead>
     <tbody>
-{''.join(
-    f"      <tr><td><code>{e['source']}</code></td><td>{e['relation']}</td><td><code>{e['target']}</code></td></tr>" + chr(10)
-    for e in graph['edges']
- )}
+{
+        "".join(
+            f"      <tr><td><code>{e['source']}</code></td><td>{e['relation']}</td><td><code>{e['target']}</code></td></tr>"
+            + chr(10)
+            for e in graph["edges"]
+        )
+    }
     </tbody>
   </table>
   <h2>Flows</h2>
   <table>
     <thead><tr><th>id</th><th>label</th><th>steps</th></tr></thead>
     <tbody>
-{''.join(
-    f"      <tr><td><code>{f['id']}</code></td><td>{f['label']}</td><td>{' → '.join(f['steps'])}</td></tr>" + chr(10)
-    for f in graph['flows']
- )}
+{
+        "".join(
+            f"      <tr><td><code>{f['id']}</code></td><td>{f['label']}</td><td>{' → '.join(f['steps'])}</td></tr>"
+            + chr(10)
+            for f in graph["flows"]
+        )
+    }
     </tbody>
   </table>
   <script id="architecture-data" type="application/json">

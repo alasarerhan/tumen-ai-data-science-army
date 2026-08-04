@@ -14,8 +14,8 @@ os.environ.setdefault("OMP_NUM_THREADS", "1")
 import numpy as np  # noqa: E402
 import pandas as pd  # noqa: E402
 import pytest  # noqa: E402
-from sklearn.linear_model import LogisticRegression  # noqa: E402
 from sklearn.ensemble import RandomForestClassifier  # noqa: E402
+from sklearn.linear_model import LogisticRegression  # noqa: E402
 
 warnings.filterwarnings("ignore")
 
@@ -140,9 +140,7 @@ class TestPredictDataframe:
                 "ignored_col": [1, 2],
             }
         )
-        out, alignment = predict_dataframe(
-            df, rf, feature_columns="auto", prediction_column="pred"
-        )
+        out, alignment = predict_dataframe(df, rf, feature_columns="auto", prediction_column="pred")
         assert "pred" in out.columns
         assert alignment.missing == []
         assert "ignored_col" in alignment.extra

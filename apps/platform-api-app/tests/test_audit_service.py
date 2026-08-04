@@ -12,7 +12,7 @@ from platform_api.services.audit_service import write_audit_log
     [
         ("invite.created", None),
         ("workspace.updated", '{"field":"name"}'),
-        ("unicode.event", "\u011f\u00fc\u015f\u00f6\u00e7\u0131\u0130 \U0001F4CA"),
+        ("unicode.event", "\u011f\u00fc\u015f\u00f6\u00e7\u0131\u0130 \U0001f4ca"),
     ],
 )
 def test_write_audit_log_persists_record(

@@ -38,4 +38,6 @@ def downgrade() -> None:
     bind = op.get_bind()
     op.drop_index("uq_canary_deployments_version_id", table_name="canary_deployments")
     if bind is not None and bind.dialect.name != "sqlite":
-        op.drop_constraint("fk_canary_deployments_version_id", "canary_deployments", type_="foreignkey")
+        op.drop_constraint(
+            "fk_canary_deployments_version_id", "canary_deployments", type_="foreignkey"
+        )

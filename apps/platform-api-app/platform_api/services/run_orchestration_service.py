@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
 import logging
 import uuid
+from dataclasses import dataclass
 from typing import Any, Protocol
 
 from platform_api.core.config import settings
@@ -44,10 +44,7 @@ def validate_orchestration_runtime_settings(*, raise_runtime: bool = False) -> N
     mode = settings.orchestration_execution_mode.strip().lower()
     allowed_modes = {"prefect", "staged_m22"}
     if mode not in allowed_modes:
-        message = (
-            "Invalid orchestration execution mode. "
-            "Expected one of: prefect, staged_m22."
-        )
+        message = "Invalid orchestration execution mode. Expected one of: prefect, staged_m22."
         if raise_runtime:
             raise RuntimeError(message)
         raise ValidationError(message)
@@ -68,7 +65,9 @@ class PrefectExecutionAdapter:
     async def create_run(self, request: OrchestrationRunRequest) -> str:
         gateway = _gateway()
         try:
-            return await gateway.create_flow_run(flow_key=request.flow_key, parameters=request.parameters or {})
+            return await gateway.create_flow_run(
+                flow_key=request.flow_key, parameters=request.parameters or {}
+            )
         except ValueError as exc:
             if settings.is_local_profile() and settings.allow_local_run_fallback:
                 logger.warning(
@@ -86,9 +85,7 @@ class PrefectExecutionAdapter:
                 )
                 return f"local-{uuid.uuid4().hex[:12]}"
             logger.error("Orchestration run creation failed: %s", exc)
-            raise UpstreamUnavailableError(
-                f"Failed to create orchestration run: {exc}"
-            ) from exc
+            raise UpstreamUnavailableError(f"Failed to create orchestration run: {exc}") from exc
 
     async def read_run(self, flow_run_id: str) -> dict[str, Any]:
         gateway = _gateway()

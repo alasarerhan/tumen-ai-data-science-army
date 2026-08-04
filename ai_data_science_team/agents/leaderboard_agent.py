@@ -12,9 +12,13 @@ PowerAnalysisAgent.
 Node type: ``experiment.leaderboard``
 """
 
-from typing import (Dict, Optional, Tuple)  # noqa: E402
 import logging  # noqa: E402, F401
-from typing import Any  # noqa: E402, F401
+from typing import (  # noqa: E402
+    Any,  # noqa: E402, F401
+    Dict,
+    Optional,
+    Tuple,
+)
 
 from langchain.tools import tool  # noqa: E402, F401
 from langchain_core.messages import AIMessage, BaseMessage  # noqa: E402, F401
@@ -24,10 +28,6 @@ from langgraph.types import Checkpointer  # noqa: E402, F401
 from typing_extensions import Annotated, Sequence, TypedDict  # noqa: E402, F401
 
 from ai_data_science_team.templates import BaseAgent  # noqa: E402, F401
-from ai_data_science_team.utils.regex import format_agent_name  # noqa: E402, F401
-
-
-
 from ai_data_science_team.tools.leaderboard import (  # noqa: E402, F401
     ExperimentStore,
     leaderboard,
@@ -35,7 +35,7 @@ from ai_data_science_team.tools.leaderboard import (  # noqa: E402, F401
     record_run,
     summarise_metrics,
 )
-
+from ai_data_science_team.utils.regex import format_agent_name  # noqa: E402, F401
 
 logger = logging.getLogger(__name__)
 
@@ -47,6 +47,7 @@ NODE_TYPE = "experiment.leaderboard"
 # Tool wrappers
 # ---------------------------------------------------------------------------
 
+
 @tool(response_format="content_and_artifact")
 def record_run_wrapped(store: ExperimentStore) -> Tuple[str, dict]:
     """Tool wrapper for ``record_run``.
@@ -56,7 +57,7 @@ def record_run_wrapped(store: ExperimentStore) -> Tuple[str, dict]:
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: i3_record_run")
-    kwargs = {'store': store}
+    kwargs = {"store": store}
     try:
         result = record_run(**kwargs)
     except Exception as exc:
@@ -76,7 +77,9 @@ def record_run_wrapped(store: ExperimentStore) -> Tuple[str, dict]:
 
 
 @tool(response_format="content_and_artifact")
-def leaderboard_wrapped(store: ExperimentStore, experiment_id: str, primary_metric: str) -> Tuple[str, dict]:
+def leaderboard_wrapped(
+    store: ExperimentStore, experiment_id: str, primary_metric: str
+) -> Tuple[str, dict]:
     """Tool wrapper for ``leaderboard``.
 
     See underlying tool module.
@@ -84,7 +87,7 @@ def leaderboard_wrapped(store: ExperimentStore, experiment_id: str, primary_metr
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: i3_leaderboard")
-    kwargs = {'store': store, 'experiment_id': experiment_id, 'primary_metric': primary_metric}
+    kwargs = {"store": store, "experiment_id": experiment_id, "primary_metric": primary_metric}
     try:
         result = leaderboard(**kwargs)
     except Exception as exc:
@@ -104,7 +107,9 @@ def leaderboard_wrapped(store: ExperimentStore, experiment_id: str, primary_metr
 
 
 @tool(response_format="content_and_artifact")
-def summarise_metrics_wrapped(store: ExperimentStore, experiment_id: str, metric: str) -> Tuple[str, dict]:
+def summarise_metrics_wrapped(
+    store: ExperimentStore, experiment_id: str, metric: str
+) -> Tuple[str, dict]:
     """Tool wrapper for ``summarise_metrics``.
 
     See underlying tool module.
@@ -112,7 +117,7 @@ def summarise_metrics_wrapped(store: ExperimentStore, experiment_id: str, metric
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: i3_summarise_metrics")
-    kwargs = {'store': store, 'experiment_id': experiment_id, 'metric': metric}
+    kwargs = {"store": store, "experiment_id": experiment_id, "metric": metric}
     try:
         result = summarise_metrics(**kwargs)
     except Exception as exc:
@@ -132,7 +137,9 @@ def summarise_metrics_wrapped(store: ExperimentStore, experiment_id: str, metric
 
 
 @tool(response_format="content_and_artifact")
-def parallel_coordinates_payload_wrapped(store: ExperimentStore, experiment_id: str, metric_columns: Sequence[str]) -> Tuple[str, dict]:
+def parallel_coordinates_payload_wrapped(
+    store: ExperimentStore, experiment_id: str, metric_columns: Sequence[str]
+) -> Tuple[str, dict]:
     """Tool wrapper for ``parallel_coordinates_payload``.
 
     Build a payload for parallel-coords visualisation.
@@ -140,7 +147,7 @@ def parallel_coordinates_payload_wrapped(store: ExperimentStore, experiment_id: 
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: i3_parallel_coordinates_payload")
-    kwargs = {'store': store, 'experiment_id': experiment_id, 'metric_columns': metric_columns}
+    kwargs = {"store": store, "experiment_id": experiment_id, "metric_columns": metric_columns}
     try:
         result = parallel_coordinates_payload(**kwargs)
     except Exception as exc:
@@ -210,7 +217,12 @@ def make_leaderboard_agent(
     def run_react_agent(state: GraphState):
         logger.info("    * RUN REACT AGENT FOR I3")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
-        messages = [("system", "You are the I3 agent. Use the available tools to complete the user's request.")] + list(base)
+        messages = [
+            (
+                "system",
+                "You are the I3 agent. Use the available tools to complete the user's request.",
+            )
+        ] + list(base)
         input_payload = {"messages": messages}
         return react_agent.invoke(input_payload, invoke_react_agent_kwargs)
 
@@ -229,7 +241,9 @@ def make_leaderboard_agent(
             last_ai = AIMessage(content=getattr(internal[-1], "content", ""), name=AGENT_NAME)
         tool_calls = []
         for msg in internal:
-            name = getattr(getattr(msg, "tool_call_id", None), "name", None) or getattr(msg, "name", None)
+            name = getattr(getattr(msg, "tool_call_id", None), "name", None) or getattr(
+                msg, "name", None
+            )
             if name:
                 tool_calls.append(name)
         if log_tool_calls and tool_calls:
@@ -297,6 +311,7 @@ class ExperimentTrackerAgent(BaseAgent):
         if not self.response or "messages" not in self.response:
             return None
         from IPython.display import Markdown as _Markdown  # noqa: E402, F401
+
         for msg in reversed(self.response.get("messages", [])):
             content = getattr(msg, "content", "")
             if content:

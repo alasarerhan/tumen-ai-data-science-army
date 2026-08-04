@@ -29,7 +29,9 @@ def enqueue_workflow_run(
     redis_url = settings.workflow_queue_redis_url.strip() or settings.agent_cache_redis_url.strip()
     if not redis_url:
         if settings.workflow_queue_required:
-            raise UpstreamUnavailableError("Workflow queue Redis URL is required but not configured")
+            raise UpstreamUnavailableError(
+                "Workflow queue Redis URL is required but not configured"
+            )
         return {"enqueued": False, "queue": None, "reason": "workflow_queue_not_configured"}
 
     try:
@@ -54,5 +56,9 @@ def enqueue_workflow_run(
         if settings.workflow_queue_required:
             raise UpstreamUnavailableError("Failed to enqueue workflow run") from exc
         logger.warning("Failed to enqueue workflow run", exc_info=True)
-        return {"enqueued": False, "queue": WORKFLOW_RUN_QUEUE_KEY, "reason": "redis_enqueue_failed"}
+        return {
+            "enqueued": False,
+            "queue": WORKFLOW_RUN_QUEUE_KEY,
+            "reason": "redis_enqueue_failed",
+        }
     return {"enqueued": True, "queue": WORKFLOW_RUN_QUEUE_KEY, "message_id": str(message_id)}

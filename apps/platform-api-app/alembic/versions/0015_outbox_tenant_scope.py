@@ -8,8 +8,9 @@ Create Date: 2026-04-13
 from __future__ import annotations
 
 import sqlalchemy as sa
-from alembic import op
 from sqlalchemy.dialects import postgresql
+
+from alembic import op
 
 revision = "0015_outbox_tenant_scope"
 down_revision = "0014_reconcile_data_layer"

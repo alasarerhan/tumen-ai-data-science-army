@@ -97,7 +97,9 @@ async def list_dlq_events(
                 "payload_json": e.payload_json,
                 "final_error": e.final_error,
                 "retry_count": e.retry_count,
-                "original_created_at": e.original_created_at.isoformat() if e.original_created_at else None,
+                "original_created_at": e.original_created_at.isoformat()
+                if e.original_created_at
+                else None,
                 "moved_to_dlq_at": e.moved_to_dlq_at.isoformat() if e.moved_to_dlq_at else None,
                 "reviewed": e.reviewed,
                 "reviewed_at": e.reviewed_at.isoformat() if e.reviewed_at else None,
@@ -115,8 +117,9 @@ async def replay_dlq_event(
     db: Session = Depends(get_db),
 ) -> dict:
     """Replay a failed event from the DLQ (admin only)."""
-    from platform_api.services.outbox import OutboxService
     import uuid
+
+    from platform_api.services.outbox import OutboxService
 
     dlq_id = uuid.UUID(event_id)
 

@@ -46,12 +46,13 @@ Usage
 
 import threading  # noqa: E402, F401
 from dataclasses import dataclass, field  # noqa: E402, F401
-from typing import Any, Callable, Dict, List  # noqa: E402, F401
 from enum import Enum  # noqa: E402, F401
+from typing import Any, Callable, Dict, List  # noqa: E402, F401
 
 
 class ToolNamespace(str, Enum):
     """Tool namespace prefixes for origin tracking."""
+
     CORE = "core"
     CUSTOM = "custom"
     PLUGIN = "plugin"
@@ -62,6 +63,7 @@ class ToolNamespace(str, Enum):
 @dataclass
 class ToolParameter:
     """Definition of a tool parameter."""
+
     type: str
     description: str = ""
     required: bool = True
@@ -202,8 +204,7 @@ class ToolRegistry:
         with cls._lock:
             if not overwrite and name in cls._tools:
                 raise ValueError(
-                    f"Tool '{name}' is already registered. "
-                    "Pass overwrite=True to replace it."
+                    f"Tool '{name}' is already registered. Pass overwrite=True to replace it."
                 )
             cls._tools[name] = definition
             cls._executors[name] = executor
@@ -247,8 +248,7 @@ class ToolRegistry:
         with cls._lock:
             if name not in cls._tools:
                 raise KeyError(
-                    f"Tool '{name}' is not registered. "
-                    f"Available: {sorted(cls._tools.keys())}"
+                    f"Tool '{name}' is not registered. Available: {sorted(cls._tools.keys())}"
                 )
             return cls._tools[name], cls._executors[name]
 
@@ -361,6 +361,7 @@ def register_tool(
             import plotly.express as px  # noqa: E402, F401
             return px.scatter(data, x=x, y=y)
     """
+
     def decorator(func: ToolExecutor) -> ToolExecutor:
         definition = ToolDefinition(
             name=name,
@@ -374,6 +375,7 @@ def register_tool(
         )
         ToolRegistry.register(name, definition, func)
         return func
+
     return decorator
 
 

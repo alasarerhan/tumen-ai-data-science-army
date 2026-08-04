@@ -33,7 +33,6 @@ import uuid  # noqa: E402, F401
 from dataclasses import dataclass, field  # noqa: E402, F401
 from typing import Any, Dict, List, Mapping, Optional, Sequence  # noqa: E402, F401
 
-
 # ---------------------------------------------------------------------------
 # Panel / Dashboard dataclasses
 # ---------------------------------------------------------------------------
@@ -130,10 +129,7 @@ def add_panel(
         options=dict(options or {}),
     )
     if _overlaps(panel, dashboard.panels):
-        raise ValueError(
-            f"panel {pid} ({row},{col})+{width}x{height} overlaps an "
-            "existing panel"
-        )
+        raise ValueError(f"panel {pid} ({row},{col})+{width}x{height} overlaps an existing panel")
     dashboard.panels.append(panel)
     return panel
 
@@ -156,25 +152,17 @@ def validate_layout(dashboard: Dashboard) -> List[str]:
         if panel.row < 0 or panel.col < 0:
             issues.append(f"{panel.panel_id} has negative row/col")
         if panel.row + panel.height > dashboard.grid_rows:
-            issues.append(
-                f"{panel.panel_id} extends past grid_rows"
-            )
+            issues.append(f"{panel.panel_id} extends past grid_rows")
         if panel.col + panel.width > dashboard.grid_cols:
-            issues.append(
-                f"{panel.panel_id} extends past grid_cols"
-            )
+            issues.append(f"{panel.panel_id} extends past grid_cols")
         if panel.width <= 0 or panel.height <= 0:
-            issues.append(
-                f"{panel.panel_id} has non-positive size"
-            )
+            issues.append(f"{panel.panel_id} has non-positive size")
     if _has_overlaps(dashboard.panels):
         issues.append("panels overlap")
     return issues
 
 
-def make_share_token(
-    dashboard: Dashboard, *, secret: str = "platform-share"
-) -> str:
+def make_share_token(dashboard: Dashboard, *, secret: str = "platform-share") -> str:
     """Compute a deterministic share token from a dashboard snapshot."""
     payload = json.dumps(dashboard.to_dict(), sort_keys=True, default=str)
     raw = (secret + "|" + payload).encode("utf-8")
@@ -189,9 +177,7 @@ def render_snapshot(dashboard: Dashboard) -> str:
     """
     lines: List[str] = []
     lines.append(f"Dashboard: {dashboard.name} ({dashboard.dashboard_id})")
-    lines.append(
-        f"Grid: {dashboard.grid_rows} rows x {dashboard.grid_cols} cols"
-    )
+    lines.append(f"Grid: {dashboard.grid_rows} rows x {dashboard.grid_cols} cols")
     if dashboard.share_token:
         lines.append(f"Share token: {dashboard.share_token}")
     issues = validate_layout(dashboard)
@@ -201,12 +187,9 @@ def render_snapshot(dashboard: Dashboard) -> str:
         lines.append("Layout: valid")
     lines.append(f"Panels ({len(dashboard.panels)}):")
     # Sort by (row, col) for deterministic output
-    for panel in sorted(
-        dashboard.panels, key=lambda p: (p.row, p.col, p.panel_id)
-    ):
+    for panel in sorted(dashboard.panels, key=lambda p: (p.row, p.col, p.panel_id)):
         lines.append(
-            "  - {pid} {title!r} type={ctype} at ({row},{col}) "
-            "{w}x{h} ref={ref}".format(
+            "  - {pid} {title!r} type={ctype} at ({row},{col}) {w}x{h} ref={ref}".format(
                 pid=panel.panel_id,
                 title=panel.title,
                 ctype=panel.chart_type,
@@ -296,5 +279,3 @@ __all__ = [
     "render_snapshot",
     "make_dashboard",
 ]
-
-

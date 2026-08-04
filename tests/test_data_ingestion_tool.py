@@ -43,7 +43,9 @@ class TestRegisterJob:
 
 class TestComputeWatermark:
     def test_basic(self):
-        wm = compute_watermark("job1", "2026-07-13T01:00:00Z", "2026-07-13T02:00:00Z", delta_rows=200)
+        wm = compute_watermark(
+            "job1", "2026-07-13T01:00:00Z", "2026-07-13T02:00:00Z", delta_rows=200
+        )
         d = wm.to_dict()
         assert d["job_id"] == "job1"
         assert d["next_high_water"] == "2026-07-13T02:00:00Z"
@@ -54,9 +56,7 @@ class TestIncrementalDiff:
     def test_additions_removals_by_key(self):
         baseline = pd.DataFrame({"id": [1, 2, 3], "v": ["a", "b", "c"]})
         current = pd.DataFrame({"id": [1, 2, 4], "v": ["a", "b2", "d"]})
-        diff = incremental_diff(
-            baseline, current, key_columns=["id"], compare_columns=["v"]
-        )
+        diff = incremental_diff(baseline, current, key_columns=["id"], compare_columns=["v"])
         # 4 not in baseline ⇒ added
         assert (4,) in diff["added"]
         # 3 not in current ⇒ removed

@@ -5,12 +5,12 @@ Tests cover:
   - Concurrent run creation version conflict
   - Circuit breaker concurrent state changes
 """
+
 from __future__ import annotations
 
 import threading
 import uuid
 from unittest.mock import patch
-
 
 
 class TestConcurrentWorkflowPublish:
@@ -99,7 +99,10 @@ class TestCircuitBreakerConcurrency:
     """Tests for circuit breaker thread safety."""
 
     def test_circuit_breaker_concurrent_state_changes(self) -> None:
-        from platform_api.core.circuit_breaker import CircuitBreakerConfig, DistributedCircuitBreaker
+        from platform_api.core.circuit_breaker import (
+            CircuitBreakerConfig,
+            DistributedCircuitBreaker,
+        )
 
         config = CircuitBreakerConfig(name="concurrent-test", failure_threshold=50)
         cb = DistributedCircuitBreaker(config)

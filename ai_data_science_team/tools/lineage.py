@@ -11,9 +11,13 @@ import uuid  # noqa: E402, F401
 from dataclasses import dataclass, field  # noqa: E402, F401
 from typing import Any, Dict, List, Mapping, Optional, Set, Tuple  # noqa: E402, F401
 
-
 VALID_KINDS: Set[str] = {
-    "source", "dataset", "feature", "model", "deployment", "report",
+    "source",
+    "dataset",
+    "feature",
+    "model",
+    "deployment",
+    "report",
 }
 
 
@@ -128,14 +132,9 @@ def render_graph(
     """Build a UI-ready dict. mode='impact' highlights all
     descendants of highlight_node."""
     nodes = [
-        {"id": n.node_id, "kind": n.kind, "label": n.label,
-         "attrs": n.attrs}
-        for n in graph.nodes
+        {"id": n.node_id, "kind": n.kind, "label": n.label, "attrs": n.attrs} for n in graph.nodes
     ]
-    edges = [
-        {"source": e.source, "target": e.target, "relation": e.relation}
-        for e in graph.edges
-    ]
+    edges = [{"source": e.source, "target": e.target, "relation": e.relation} for e in graph.edges]
     highlight: List[str] = []
     if highlight_node is not None:
         highlight = [highlight_node] + descendants(graph, highlight_node)
@@ -153,10 +152,7 @@ def node_summary(graph: LineageGraph, node_id: str) -> Dict[str, Any]:
     if n is None:
         raise KeyError(f"node_id not found: {node_id}")
     return {
-        "node": {"id": n.node_id, "kind": n.kind, "label": n.label,
-                 "attrs": n.attrs},
+        "node": {"id": n.node_id, "kind": n.kind, "label": n.label, "attrs": n.attrs},
         "ancestors": ancestors(graph, node_id),
         "descendants": descendants(graph, node_id),
     }
-
-

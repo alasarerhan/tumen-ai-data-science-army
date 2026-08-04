@@ -12,9 +12,13 @@ PowerAnalysisAgent.
 Node type: ``model.causal_infer``
 """
 
-from typing import (Dict, Optional, Tuple)  # noqa: E402
 import logging  # noqa: E402, F401
-from typing import Any  # noqa: E402, F401
+from typing import (  # noqa: E402
+    Any,  # noqa: E402, F401
+    Dict,
+    Optional,
+    Tuple,
+)
 
 from langchain.tools import tool  # noqa: E402, F401
 from langchain_core.messages import AIMessage, BaseMessage  # noqa: E402, F401
@@ -24,17 +28,13 @@ from langgraph.types import Checkpointer  # noqa: E402, F401
 from typing_extensions import Annotated, Sequence, TypedDict  # noqa: E402, F401
 
 from ai_data_science_team.templates import BaseAgent  # noqa: E402, F401
-from ai_data_science_team.utils.regex import format_agent_name  # noqa: E402, F401
-
-
-
 from ai_data_science_team.tools.causal import (  # noqa: E402, F401
     adj_lift,
     check_propensity_overlap,
     did_lift,
     e_value,
 )
-
+from ai_data_science_team.utils.regex import format_agent_name  # noqa: E402, F401
 
 logger = logging.getLogger(__name__)
 
@@ -46,8 +46,14 @@ NODE_TYPE = "model.causal_infer"
 # Tool wrappers
 # ---------------------------------------------------------------------------
 
+
 @tool(response_format="content_and_artifact")
-def did_lift_wrapped(pre_treat_y_pre: Sequence[float], pre_treat_y_post: Sequence[float], control_y_pre: Sequence[float], control_y_post: Sequence[float]) -> Tuple[str, dict]:
+def did_lift_wrapped(
+    pre_treat_y_pre: Sequence[float],
+    pre_treat_y_post: Sequence[float],
+    control_y_pre: Sequence[float],
+    control_y_post: Sequence[float],
+) -> Tuple[str, dict]:
     """Tool wrapper for ``did_lift``.
 
     Diff-in-diff average treatment effect on the treated.
@@ -55,7 +61,12 @@ def did_lift_wrapped(pre_treat_y_pre: Sequence[float], pre_treat_y_post: Sequenc
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: a5_did_lift")
-    kwargs = {'pre_treat_y_pre': pre_treat_y_pre, 'pre_treat_y_post': pre_treat_y_post, 'control_y_pre': control_y_pre, 'control_y_post': control_y_post}
+    kwargs = {
+        "pre_treat_y_pre": pre_treat_y_pre,
+        "pre_treat_y_post": pre_treat_y_post,
+        "control_y_pre": control_y_pre,
+        "control_y_post": control_y_post,
+    }
     try:
         result = did_lift(**kwargs)
     except Exception as exc:
@@ -75,7 +86,9 @@ def did_lift_wrapped(pre_treat_y_pre: Sequence[float], pre_treat_y_post: Sequenc
 
 
 @tool(response_format="content_and_artifact")
-def adj_lift_wrapped(y: Sequence[float], treatment: Sequence[int], covariates: Sequence[Sequence[float]]) -> Tuple[str, dict]:
+def adj_lift_wrapped(
+    y: Sequence[float], treatment: Sequence[int], covariates: Sequence[Sequence[float]]
+) -> Tuple[str, dict]:
     """Tool wrapper for ``adj_lift``.
 
     Adjusted mean difference with one-hot treatment assignment.
@@ -83,7 +96,7 @@ def adj_lift_wrapped(y: Sequence[float], treatment: Sequence[int], covariates: S
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: a5_adj_lift")
-    kwargs = {'y': y, 'treatment': treatment, 'covariates': covariates}
+    kwargs = {"y": y, "treatment": treatment, "covariates": covariates}
     try:
         result = adj_lift(**kwargs)
     except Exception as exc:
@@ -111,7 +124,7 @@ def check_propensity_overlap_wrapped(propensity: Sequence[float], label: str) ->
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: a5_check_propensity_overlap")
-    kwargs = {'propensity': propensity, 'label': label}
+    kwargs = {"propensity": propensity, "label": label}
     try:
         result = check_propensity_overlap(**kwargs)
     except Exception as exc:
@@ -139,7 +152,7 @@ def e_value_wrapped(point_estimate: float) -> Tuple[str, dict]:
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: a5_e_value")
-    kwargs = {'point_estimate': point_estimate}
+    kwargs = {"point_estimate": point_estimate}
     try:
         result = e_value(**kwargs)
     except Exception as exc:
@@ -209,7 +222,12 @@ def make_causal_agent(
     def run_react_agent(state: GraphState):
         logger.info("    * RUN REACT AGENT FOR A5")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
-        messages = [("system", "You are the A5 agent. Use the available tools to complete the user's request.")] + list(base)
+        messages = [
+            (
+                "system",
+                "You are the A5 agent. Use the available tools to complete the user's request.",
+            )
+        ] + list(base)
         input_payload = {"messages": messages}
         return react_agent.invoke(input_payload, invoke_react_agent_kwargs)
 
@@ -228,7 +246,9 @@ def make_causal_agent(
             last_ai = AIMessage(content=getattr(internal[-1], "content", ""), name=AGENT_NAME)
         tool_calls = []
         for msg in internal:
-            name = getattr(getattr(msg, "tool_call_id", None), "name", None) or getattr(msg, "name", None)
+            name = getattr(getattr(msg, "tool_call_id", None), "name", None) or getattr(
+                msg, "name", None
+            )
             if name:
                 tool_calls.append(name)
         if log_tool_calls and tool_calls:
@@ -296,6 +316,7 @@ class CausalInferenceAgent(BaseAgent):
         if not self.response or "messages" not in self.response:
             return None
         from IPython.display import Markdown as _Markdown  # noqa: E402, F401
+
         for msg in reversed(self.response.get("messages", [])):
             content = getattr(msg, "content", "")
             if content:

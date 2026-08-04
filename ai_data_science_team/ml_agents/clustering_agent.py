@@ -41,7 +41,9 @@ from langgraph.types import Checkpointer  # noqa: E402, F401
 from typing_extensions import Annotated, TypedDict  # noqa: E402, F401
 
 try:
-    from IPython.display import Markdown  # optional — only needed in notebook contexts  # noqa: E402, F401
+    from IPython.display import (
+        Markdown,  # optional — only needed in notebook contexts  # noqa: E402, F401
+    )
 except ImportError:
     Markdown = None  # type: ignore[assignment,misc]
 
@@ -50,12 +52,12 @@ from langgraph.graph.message import add_messages  # noqa: E402, F401
 
 from ai_data_science_team.templates import BaseAgent  # noqa: E402, F401
 from ai_data_science_team.tools.e12_clustering import (  # noqa: E402, F401
-    run_kmeans,
-    run_dbscan,
-    reduce_pca,
-    reduce_tsne,
     compute_cluster_profile,
     compute_silhouette,
+    reduce_pca,
+    reduce_tsne,
+    run_dbscan,
+    run_kmeans,
 )
 from ai_data_science_team.utils.messages import get_tool_call_names  # noqa: E402, F401
 from ai_data_science_team.utils.regex import format_agent_name  # noqa: E402, F401

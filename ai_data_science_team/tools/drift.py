@@ -28,7 +28,6 @@ from typing import Any, Dict, List, Optional, Sequence  # noqa: E402, F401
 import numpy as np  # noqa: E402, F401
 import pandas as pd  # noqa: E402, F401
 
-
 # ---------------------------------------------------------------------------
 # Numerical drift metrics
 # ---------------------------------------------------------------------------
@@ -177,9 +176,7 @@ def feature_drift_report(
             psi_sev = _psi_severity(psi_val)
             ks_sev = _ks_severity(ks_val)
             combined_sev = max(severity_score[psi_sev], severity_score[ks_sev])
-            combined_label = [
-                k for k, v in severity_score.items() if v == combined_sev
-            ][0]
+            combined_label = [k for k, v in severity_score.items() if v == combined_sev][0]
             signals.append(
                 {
                     "column": col,
@@ -189,26 +186,16 @@ def feature_drift_report(
                     "psi_severity": psi_sev,
                     "ks_severity": ks_sev,
                     "severity": combined_label,
-                    "status": (
-                        "drift" if combined_label != "none" else "ok"
-                    ),
+                    "status": ("drift" if combined_label != "none" else "ok"),
                 }
             )
-            heatmap.append(
-                {"column": col, "metric": "psi", "value": float(psi_val)}
-            )
-            heatmap.append(
-                {"column": col, "metric": "ks2", "value": float(ks_val)}
-            )
+            heatmap.append({"column": col, "metric": "psi", "value": float(psi_val)})
+            heatmap.append({"column": col, "metric": "ks2", "value": float(ks_val)})
             max_score = max(max_score, combined_sev)
         else:
             # Categorical or low-coverage numeric → categorical PSI.
-            base_counts = (
-                base_series.astype(str).value_counts(normalize=True).to_dict()
-            )
-            cur_counts = (
-                cur_series.astype(str).value_counts(normalize=True).to_dict()
-            )
+            base_counts = base_series.astype(str).value_counts(normalize=True).to_dict()
+            cur_counts = cur_series.astype(str).value_counts(normalize=True).to_dict()
             keys = sorted(set(base_counts) | set(cur_counts))
             cat_psi = 0.0
             eps = 1e-6
@@ -227,16 +214,12 @@ def feature_drift_report(
                     "status": "drift" if cat_sev != "none" else "ok",
                 }
             )
-            heatmap.append(
-                {"column": col, "metric": "psi", "value": float(cat_psi)}
-            )
+            heatmap.append({"column": col, "metric": "psi", "value": float(cat_psi)})
             max_score = max(max_score, cat_score)
 
     return {
         "signals": signals,
-        "overall_drift": [
-            k for k, v in severity_score.items() if v == max_score
-        ][0],
+        "overall_drift": [k for k, v in severity_score.items() if v == max_score][0],
         "feature_heatmap": heatmap,
     }
 
@@ -273,8 +256,10 @@ def performance_drift(
     if absolute_threshold is not None:
         breached = abs(delta) >= abs(absolute_threshold)
     else:
-        breached = (delta_pct <= -abs(relative_threshold)) if not lower_is_better else (
-            delta_pct >= abs(relative_threshold)
+        breached = (
+            (delta_pct <= -abs(relative_threshold))
+            if not lower_is_better
+            else (delta_pct >= abs(relative_threshold))
         )
 
     return {
@@ -309,9 +294,7 @@ def drift_signal_payload(
 ) -> Dict[str, Any]:
     """Combine feature-drift and performance-drift into a single payload."""
     if feature_report is None:
-        feature_report = feature_drift_report(
-            baseline_df, current_df, n_bins=n_bins
-        )
+        feature_report = feature_drift_report(baseline_df, current_df, n_bins=n_bins)
     perf_drift: Optional[Dict[str, Any]] = None
     if baseline_metric is not None and current_metric is not None:
         perf_drift = performance_drift(
@@ -342,5 +325,3 @@ __all__ = [
     "performance_drift",
     "drift_signal_payload",
 ]
-
-

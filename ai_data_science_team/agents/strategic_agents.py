@@ -74,23 +74,23 @@ from langgraph.graph.message import add_messages  # noqa: E402, F401
 
 from ai_data_science_team.templates import BaseAgent  # noqa: E402, F401
 from ai_data_science_team.tools.strategic import (  # noqa: E402, F401
-    # ResultsSynthesizer
-    merge_agent_outputs,
-    extract_key_metrics,
-    compare_results,
-    rank_findings,
     # ContextualKnowledge
     build_context_profile,
-    generate_clarifying_questions,
+    compare_results,
+    design_ab_test,
     extract_business_entities,
+    extract_key_metrics,
+    format_report,
+    generate_clarifying_questions,
     # Narrative
     generate_executive_summary,
-    generate_section,
-    format_report,
     # Recommendation
     generate_recommendations,
-    design_ab_test,
+    generate_section,
+    # ResultsSynthesizer
+    merge_agent_outputs,
     prioritize_actions,
+    rank_findings,
 )
 from ai_data_science_team.utils.messages import get_tool_call_names  # noqa: E402, F401
 from ai_data_science_team.utils.regex import format_agent_name  # noqa: E402, F401
@@ -262,6 +262,7 @@ def _build_strategic_graph(
         prior = state.get("prior_artifacts", {})
         if prior:
             import json as _json  # noqa: E402, F401
+
             ctx = f"\n\nPrior agent artifacts available:\n{_json.dumps(prior, indent=2, default=str)[:2000]}"
         else:
             ctx = ""

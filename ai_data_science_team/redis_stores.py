@@ -45,6 +45,7 @@ logger = logging.getLogger(__name__)
 REDIS_AVAILABLE = False
 try:
     import redis  # noqa: E402, F401
+
     REDIS_AVAILABLE = True
 except ImportError:
     pass
@@ -101,9 +102,7 @@ class RedisContextStore:
         self._is_redis_mode = False
 
         if redis_url and REDIS_AVAILABLE:
-            self._redis: Optional[redis.Redis] = redis.from_url(
-                redis_url, **redis_kwargs
-            )
+            self._redis: Optional[redis.Redis] = redis.from_url(redis_url, **redis_kwargs)
             self._in_memory_fallback: Optional[Dict] = None
             self._is_redis_mode = True
             logger.info("RedisContextStore connected to Redis: %s", redis_url)
@@ -161,7 +160,13 @@ class RedisContextStore:
 
         if self._redis:
             pipe = self._redis.pipeline()
-            pipe.hset(self._meta_key(sid), mapping={k: json.dumps(v) if isinstance(v, (dict, list)) else str(v) for k, v in meta.items()})
+            pipe.hset(
+                self._meta_key(sid),
+                mapping={
+                    k: json.dumps(v) if isinstance(v, (dict, list)) else str(v)
+                    for k, v in meta.items()
+                },
+            )
             pipe.delete(self._artifacts_key(sid))
             if self._session_ttl:
                 pipe.expire(self._meta_key(sid), self._session_ttl)
@@ -188,7 +193,10 @@ class RedisContextStore:
             meta_raw = self._redis.hgetall(self._meta_key(session_id))
             if not meta_raw:
                 raise KeyError(f"Session '{session_id}' does not exist.")
-            meta = {k.decode() if isinstance(k, bytes) else k: self._parse_value(v) for k, v in meta_raw.items()}
+            meta = {
+                k.decode() if isinstance(k, bytes) else k: self._parse_value(v)
+                for k, v in meta_raw.items()
+            }
             artifacts_raw = self._redis.lrange(self._artifacts_key(session_id), 0, -1)
             artifacts = [json.loads(a) for a in artifacts_raw]
             return {"_meta": meta, "_artifacts": artifacts}
@@ -201,7 +209,10 @@ class RedisContextStore:
     def get_meta(self, session_id: str) -> Dict[str, Any]:
         if self._redis:
             meta_raw = self._redis.hgetall(self._meta_key(session_id))
-            return {k.decode() if isinstance(k, bytes) else k: self._parse_value(v) for k, v in meta_raw.items()}
+            return {
+                k.decode() if isinstance(k, bytes) else k: self._parse_value(v)
+                for k, v in meta_raw.items()
+            }
         else:
             with self._lock:
                 return dict(self._in_memory_fallback.get(session_id, {}).get("_meta", {}))
@@ -210,7 +221,11 @@ class RedisContextStore:
         if self._redis:
             pipe = self._redis.pipeline()
             for k, v in kwargs.items():
-                pipe.hset(self._meta_key(session_id), k, json.dumps(v) if isinstance(v, (dict, list)) else str(v))
+                pipe.hset(
+                    self._meta_key(session_id),
+                    k,
+                    json.dumps(v) if isinstance(v, (dict, list)) else str(v),
+                )
             if self._session_ttl:
                 pipe.expire(self._meta_key(session_id), self._session_ttl)
             pipe.execute()
@@ -235,7 +250,9 @@ class RedisContextStore:
             pattern = f"{self._key_prefix}meta:*"
             keys = self._redis.keys(pattern)
             prefix_len = len(f"{self._key_prefix}meta:")
-            return [k.decode()[prefix_len:] if isinstance(k, bytes) else k[prefix_len:] for k in keys]
+            return [
+                k.decode()[prefix_len:] if isinstance(k, bytes) else k[prefix_len:] for k in keys
+            ]
         else:
             with self._lock:
                 return list(self._in_memory_fallback.keys())
@@ -280,7 +297,11 @@ class RedisContextStore:
             return result
         else:
             with self._lock:
-                return [k for k in self._in_memory_fallback.get(session_id, {}).keys() if not k.startswith("_")]
+                return [
+                    k
+                    for k in self._in_memory_fallback.get(session_id, {}).keys()
+                    if not k.startswith("_")
+                ]
 
     def append_artifact(
         self,
@@ -397,9 +418,7 @@ class RedisSignalStore:
         self._is_redis_mode = False
 
         if redis_url and REDIS_AVAILABLE:
-            self._redis: Optional[redis.Redis] = redis.from_url(
-                redis_url, **redis_kwargs
-            )
+            self._redis: Optional[redis.Redis] = redis.from_url(redis_url, **redis_kwargs)
             self._in_memory_fallback: Optional[Dict] = None
             self._is_redis_mode = True
             logger.info("RedisSignalStore connected to Redis: %s", redis_url)
@@ -500,7 +519,9 @@ class RedisSignalStore:
             pattern = f"{self._key_prefix}signals:*"
             keys = self._redis.keys(pattern)
             prefix_len = len(f"{self._key_prefix}signals:")
-            return [k.decode()[prefix_len:] if isinstance(k, bytes) else k[prefix_len:] for k in keys]
+            return [
+                k.decode()[prefix_len:] if isinstance(k, bytes) else k[prefix_len:] for k in keys
+            ]
         else:
             with self._lock:
                 return list(self._in_memory_fallback.keys())
@@ -540,18 +561,14 @@ class RedisChatSessionStore:
         self._df_cache: Dict[str, Dict[str, Any]] = {}
 
         if redis_url and REDIS_AVAILABLE:
-            self._redis: Optional[redis.Redis] = redis.from_url(
-                redis_url, **redis_kwargs
-            )
+            self._redis: Optional[redis.Redis] = redis.from_url(redis_url, **redis_kwargs)
             self._in_memory_fallback: Optional[Dict] = None
             logger.info("RedisChatSessionStore connected to Redis: %s", redis_url)
         else:
             self._redis = None
             self._in_memory_fallback = {}
             if redis_url and not REDIS_AVAILABLE:
-                logger.warning(
-                    "Redis not available. Falling back to in-memory chat session store."
-                )
+                logger.warning("Redis not available. Falling back to in-memory chat session store.")
 
     def _session_key(self, session_id: str) -> str:
         return f"{self._key_prefix}session:{session_id}"
@@ -574,11 +591,14 @@ class RedisChatSessionStore:
 
         if self._redis:
             pipe = self._redis.pipeline()
-            pipe.hset(self._session_key(sid), mapping={
-                "session_id": sid,
-                "created_at": now.isoformat(),
-                "metadata": json.dumps(metadata or {}),
-            })
+            pipe.hset(
+                self._session_key(sid),
+                mapping={
+                    "session_id": sid,
+                    "created_at": now.isoformat(),
+                    "metadata": json.dumps(metadata or {}),
+                },
+            )
             if self._session_ttl:
                 pipe.expire(self._session_key(sid), self._session_ttl)
                 pipe.expire(self._messages_key(sid), self._session_ttl)
@@ -597,7 +617,10 @@ class RedisChatSessionStore:
         return ChatSession(session_id=sid, metadata=metadata or {}, created_at=now)
 
     def get(self, session_id: str):
-        from ai_data_science_team.multiagents.chat_session import ChatSession, ChatMessage  # noqa: E402, F401
+        from ai_data_science_team.multiagents.chat_session import (  # noqa: E402, F401
+            ChatMessage,
+            ChatSession,
+        )
 
         if self._redis:
             session_data = self._redis.hgetall(self._session_key(session_id))
@@ -616,12 +639,18 @@ class RedisChatSessionStore:
                 datasets=datasets,
                 created_at=datetime.fromisoformat(
                     session_data.get(b"created_at", session_data.get("created_at", b"")).decode()
-                    if isinstance(session_data.get(b"created_at", session_data.get("created_at")), bytes)
+                    if isinstance(
+                        session_data.get(b"created_at", session_data.get("created_at")), bytes
+                    )
                     else session_data.get("created_at", "")
-                ) if session_data.get(b"created_at", session_data.get("created_at")) else datetime.now(timezone.utc),
+                )
+                if session_data.get(b"created_at", session_data.get("created_at"))
+                else datetime.now(timezone.utc),
                 metadata=json.loads(
                     session_data.get(b"metadata", session_data.get("metadata", b"{}")).decode()
-                    if isinstance(session_data.get(b"metadata", session_data.get("metadata")), bytes)
+                    if isinstance(
+                        session_data.get(b"metadata", session_data.get("metadata")), bytes
+                    )
                     else session_data.get("metadata", "{}")
                 ),
             )
@@ -630,7 +659,10 @@ class RedisChatSessionStore:
                 data = self._in_memory_fallback.get(session_id)
                 if not data:
                     return None
-                from ai_data_science_team.multiagents.chat_session import ChatSession  # noqa: E402, F401
+                from ai_data_science_team.multiagents.chat_session import (
+                    ChatSession,  # noqa: E402, F401
+                )
+
                 return ChatSession(
                     session_id=data["session_id"],
                     messages=data.get("messages", []),
@@ -658,7 +690,9 @@ class RedisChatSessionStore:
             pattern = f"{self._key_prefix}session:*"
             keys = self._redis.keys(pattern)
             prefix_len = len(f"{self._key_prefix}session:")
-            return [k.decode()[prefix_len:] if isinstance(k, bytes) else k[prefix_len:] for k in keys]
+            return [
+                k.decode()[prefix_len:] if isinstance(k, bytes) else k[prefix_len:] for k in keys
+            ]
         else:
             with self._lock:
                 return list(self._in_memory_fallback.keys())
@@ -714,7 +748,9 @@ class RedisChatSessionStore:
             "content": message.content,
             "artifact": message.artifact,
             "agent_used": message.agent_used,
-            "timestamp": message.timestamp.isoformat() if hasattr(message.timestamp, "isoformat") else message.timestamp,
+            "timestamp": message.timestamp.isoformat()
+            if hasattr(message.timestamp, "isoformat")
+            else message.timestamp,
         }
 
         if self._redis:

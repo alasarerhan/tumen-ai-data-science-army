@@ -12,6 +12,7 @@ Supplements ``test_observability.py`` (TG1) with deeper checks:
   * ``setup_observability`` attaches /metrics to a real FastAPI app
   * Platform API ``_REGISTRY`` metrics endpoint with global counter check
 """
+
 from __future__ import annotations
 
 import json
@@ -32,13 +33,12 @@ from prometheus_client import (
 )
 
 from platform_api.core.observability import (
+    _REGISTRY,
     SLO_ERROR_RATE_BUDGET,
     SLO_LATENCY_P99_MS,
-    _REGISTRY,
     _normalise_path,
     setup_observability,
 )
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -94,11 +94,13 @@ def _isolated_app() -> tuple[FastAPI, CollectorRegistry, dict]:
     @app.get("/err")
     async def err():
         from fastapi import HTTPException
+
         raise HTTPException(status_code=500, detail="boom")
 
     @app.get("/metrics")
     async def metrics():
         from fastapi import Response
+
         return Response(generate_latest(reg), media_type=CONTENT_TYPE_LATEST)
 
     return app, reg, {"total": total, "duration": duration, "in_flight": in_flight}
@@ -124,7 +126,12 @@ def test_in_flight_gauge_increments_to_one_during_request():
     client = TestClient(app)
     client.get("/ping")
     # After completion the gauge is 0; the counter incremented once.
-    {s.name: s.value for s in reg.collect() for s in s.samples if s.name == "iso_in_flight_requests"}
+    {
+        s.name: s.value
+        for s in reg.collect()
+        for s in s.samples
+        if s.name == "iso_in_flight_requests"
+    }
     # just ensure it has not drifted negative
     in_flight_value = refs["in_flight"]._value.get()
     assert in_flight_value == 0.0
@@ -349,4 +356,4 @@ def test_slo_error_budget_is_strictly_positive():
 def test_slo_constants_are_consistent():
     """Basic sanity: error budget is a small percentage and latency is sub-second."""
     assert SLO_ERROR_RATE_BUDGET < 0.1  # less than 10%
-    assert SLO_LATENCY_P99_MS < 2000    # less than 2 seconds
+    assert SLO_LATENCY_P99_MS < 2000  # less than 2 seconds

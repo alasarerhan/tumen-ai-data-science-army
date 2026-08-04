@@ -50,7 +50,9 @@ def _make_artifact(
     )
 
 
-def test_gather_workspace_stats_filters_by_tenant_and_workspace(seeded_db: dict[str, object]) -> None:
+def test_gather_workspace_stats_filters_by_tenant_and_workspace(
+    seeded_db: dict[str, object],
+) -> None:
     # Arrange
     db = seeded_db["db"]
     tenant = seeded_db["tenant"]
@@ -215,7 +217,9 @@ async def test_openai_recommendations_parses_bullet_lines(
             ]
         )
     )
-    fake_client = SimpleNamespace(chat=SimpleNamespace(completions=SimpleNamespace(create=create_mock)))
+    fake_client = SimpleNamespace(
+        chat=SimpleNamespace(completions=SimpleNamespace(create=create_mock))
+    )
     fake_async_openai = MagicMock(return_value=fake_client)
     fake_openai_module = SimpleNamespace(AsyncOpenAI=fake_async_openai)
     monkeypatch.setattr(settings, "openai_api_key", "test-key")
@@ -257,17 +261,23 @@ async def test_openai_recommendations_returns_none_and_logs_on_failure(
 
     # Act
     if isinstance(side_effect, ImportError):
-        with patch.dict(sys.modules, {"openai": None}), patch.object(
-            strategy_service.logger,
-            "warning",
-        ) as warning_mock:
+        with (
+            patch.dict(sys.modules, {"openai": None}),
+            patch.object(
+                strategy_service.logger,
+                "warning",
+            ) as warning_mock,
+        ):
             recommendations = await strategy_service._openai_recommendations(summary)
     else:
         fake_openai_module = SimpleNamespace(AsyncOpenAI=MagicMock(side_effect=side_effect))
-        with patch.dict(sys.modules, {"openai": fake_openai_module}), patch.object(
-            strategy_service.logger,
-            "warning",
-        ) as warning_mock:
+        with (
+            patch.dict(sys.modules, {"openai": fake_openai_module}),
+            patch.object(
+                strategy_service.logger,
+                "warning",
+            ) as warning_mock,
+        ):
             recommendations = await strategy_service._openai_recommendations(summary)
 
     # Assert
@@ -285,12 +295,15 @@ async def test_generate_workspace_strategy_report_uses_openai_when_available() -
     ]
 
     # Act
-    with patch(
-        "platform_api.services.strategy_service._gather_workspace_stats",
-        return_value=(runs, artifacts),
-    ), patch(
-        "platform_api.services.strategy_service._openai_recommendations",
-        new=AsyncMock(return_value=openai_recommendations),
+    with (
+        patch(
+            "platform_api.services.strategy_service._gather_workspace_stats",
+            return_value=(runs, artifacts),
+        ),
+        patch(
+            "platform_api.services.strategy_service._openai_recommendations",
+            new=AsyncMock(return_value=openai_recommendations),
+        ),
     ):
         report = await strategy_service.generate_workspace_strategy_report(
             db=MagicMock(spec=Session),
@@ -313,21 +326,23 @@ async def test_generate_workspace_strategy_report_falls_back_to_rules() -> None:
     # Arrange
     runs = [SimpleNamespace(status="FAILED")]
     artifacts = []
-    fallback_recommendations = [
-        "Kural tabanl\u0131 iyile\u015ftirme \u00f6nerisi."
-    ]
+    fallback_recommendations = ["Kural tabanl\u0131 iyile\u015ftirme \u00f6nerisi."]
 
     # Act
-    with patch(
-        "platform_api.services.strategy_service._gather_workspace_stats",
-        return_value=(runs, artifacts),
-    ), patch(
-        "platform_api.services.strategy_service._openai_recommendations",
-        new=AsyncMock(return_value=None),
-    ), patch(
-        "platform_api.services.strategy_service._rule_based_recommendations",
-        return_value=fallback_recommendations,
-    ) as rules_mock:
+    with (
+        patch(
+            "platform_api.services.strategy_service._gather_workspace_stats",
+            return_value=(runs, artifacts),
+        ),
+        patch(
+            "platform_api.services.strategy_service._openai_recommendations",
+            new=AsyncMock(return_value=None),
+        ),
+        patch(
+            "platform_api.services.strategy_service._rule_based_recommendations",
+            return_value=fallback_recommendations,
+        ) as rules_mock,
+    ):
         report = await strategy_service.generate_workspace_strategy_report(
             db=MagicMock(spec=Session),
             tenant_id=str(uuid.uuid4()),
@@ -367,7 +382,7 @@ async def test_generate_workspace_strategy_report_rejects_invalid_uuid_inputs(
         ("COMPLETED", "report"),
         ("FAILED", "model"),
         ("T\u00fcrk\u00e7e-\u0130sim", "\u00f6zet-\u00e7\u0131kt\u0131"),
-        (" " * 3, "\U0001F4CA"),
+        (" " * 3, "\U0001f4ca"),
     ],
 )
 def test_summary_counters_handle_unicode_and_whitespace_values(

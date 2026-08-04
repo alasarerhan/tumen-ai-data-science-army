@@ -4,8 +4,8 @@ import asyncio
 import logging
 import signal
 import threading
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from typing import AsyncGenerator
 
 from fastapi import FastAPI
 

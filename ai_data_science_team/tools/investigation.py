@@ -44,6 +44,7 @@ class DetectionResult:
 @dataclass
 class IsolationResult:
     """Which dimension(s) drove the change."""
+
     candidate_dimensions: List[str]
     dimension_scores: Dict[str, float]
     primary_dimension: Optional[str]
@@ -52,6 +53,7 @@ class IsolationResult:
 @dataclass
 class QuantificationResult:
     """How much each group contributes to the delta."""
+
     contributors: List[Dict[str, Any]]
     total_delta: float
 
@@ -78,6 +80,7 @@ class Investigation:
 
 # ----- Phase 1: detect -----------------------------------------------------
 
+
 def detect_change(
     *,
     baseline_value: float,
@@ -100,6 +103,7 @@ def detect_change(
 
 
 # ----- Phase 2: isolate ----------------------------------------------------
+
 
 def isolate_dimension(
     *,
@@ -132,6 +136,7 @@ def isolate_dimension(
 
 # ----- Phase 3: quantify ---------------------------------------------------
 
+
 def quantify_contributors(
     *,
     baseline_total: float,
@@ -147,20 +152,24 @@ def quantify_contributors(
         cur = float(c.get("current", 0))
         delta = cur - b
         share = (delta / total_delta) if total_delta != 0 else 0.0
-        rows.append({
-            "name": str(c.get("name", "")),
-            "baseline": b,
-            "current": cur,
-            "delta": delta,
-            "contribution_share": share,
-        })
+        rows.append(
+            {
+                "name": str(c.get("name", "")),
+                "baseline": b,
+                "current": cur,
+                "delta": delta,
+                "contribution_share": share,
+            }
+        )
     rows.sort(key=lambda r: abs(r["contribution_share"]), reverse=True)
     return QuantificationResult(
-        contributors=rows, total_delta=total_delta,
+        contributors=rows,
+        total_delta=total_delta,
     )
 
 
 # ----- Phase 4: narrate ----------------------------------------------------
+
 
 def narrate(
     *,
@@ -171,15 +180,9 @@ def narrate(
     actions: Optional[Sequence[str]] = None,
 ) -> Narrative:
     direction = "up" if detection.abs_delta > 0 else "down"
-    title = (
-        f"{signal.kpi_name} {direction} "
-        f"{abs(detection.relative_delta) * 100:.1f}%"
-    )
+    title = f"{signal.kpi_name} {direction} {abs(detection.relative_delta) * 100:.1f}%"
     primary = isolation.primary_dimension or "no clear dimension"
-    worst = (
-        quantification.contributors[0]
-        if quantification.contributors else None
-    )
+    worst = quantification.contributors[0] if quantification.contributors else None
     summary_parts = [
         f"KPI '{signal.kpi_name}' moved "
         f"{direction} by {abs(detection.relative_delta) * 100:.1f}% "
@@ -189,17 +192,16 @@ def narrate(
     if worst is not None:
         summary_parts.append(
             f"Worst contributor: {worst['name']} "
-            f"(delta={worst['delta']:.2f}, share={worst['contribution_share']*100:.1f}%)."
+            f"(delta={worst['delta']:.2f}, share={worst['contribution_share'] * 100:.1f}%)."
         )
     summary = " ".join(summary_parts)
     evidence = [
-        {"type": "kpi_snapshot",
-         "ref": {"baseline": signal.baseline_value,
-                 "current": signal.current_value}},
-        {"type": "isolation",
-         "ref": isolation.dimension_scores},
-        {"type": "contributors",
-         "ref": quantification.contributors},
+        {
+            "type": "kpi_snapshot",
+            "ref": {"baseline": signal.baseline_value, "current": signal.current_value},
+        },
+        {"type": "isolation", "ref": isolation.dimension_scores},
+        {"type": "contributors", "ref": quantification.contributors},
     ]
     return Narrative(
         title=title,
@@ -210,6 +212,7 @@ def narrate(
 
 
 # ----- Orchestrator --------------------------------------------------------
+
 
 def investigate(
     *,
@@ -248,8 +251,11 @@ def investigate(
         contributions=contributions or [],
     )
     narr = narrate(
-        signal=signal, detection=det,
-        isolation=iso, quantification=quant, actions=actions,
+        signal=signal,
+        detection=det,
+        isolation=iso,
+        quantification=quant,
+        actions=actions,
     )
     return Investigation(
         investigation_id=_new_id(),
@@ -261,5 +267,3 @@ def investigate(
         started_at=signal.timestamp,
         completed_at=_now(),
     )
-
-

@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 import re
-from typing import Dict, Tuple
 
-WEEKDAY_MAP: Dict[str, str] = {
+WEEKDAY_MAP: dict[str, str] = {
     "pazartesi": "MON",
     "monday": "MON",
     "salı": "TUE",
@@ -148,6 +147,6 @@ class ScheduleParser:
         except ImportError:
             return cron_expression
 
-    def parse_with_description(self, natural_language: str) -> Tuple[str, str]:
+    def parse_with_description(self, natural_language: str) -> tuple[str, str]:
         cron = self.parse(natural_language)
         return cron, self.to_human_readable(cron)

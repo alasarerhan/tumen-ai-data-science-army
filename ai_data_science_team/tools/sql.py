@@ -39,9 +39,7 @@ def get_database_metadata(connection, n_samples=10) -> dict:
         metadata["dialect"] = sql_engine.dialect.name
         metadata["driver"] = sql_engine.driver
         try:
-            metadata["connection_url"] = sql_engine.url.render_as_string(
-                hide_password=True
-            )
+            metadata["connection_url"] = sql_engine.url.render_as_string(hide_password=True)
         except Exception:
             metadata["connection_url"] = str(sql_engine.url)
 
@@ -70,9 +68,7 @@ def get_database_metadata(connection, n_samples=10) -> dict:
                     col_name_quoted = preparer.quote_identifier(col_name)
 
                     # Build query for sample data
-                    query = build_query(
-                        col_name_quoted, table_name_quoted, n_samples, dialect_name
-                    )
+                    query = build_query(col_name_quoted, table_name_quoted, n_samples, dialect_name)
 
                     # Retrieve sample data
                     try:
@@ -86,9 +82,7 @@ def get_database_metadata(connection, n_samples=10) -> dict:
                     )
 
                 # Primary keys
-                pk_constraint = inspector.get_pk_constraint(
-                    table_name, schema=schema_name
-                )
+                pk_constraint = inspector.get_pk_constraint(table_name, schema=schema_name)
                 table_info["primary_key"] = pk_constraint.get("constrained_columns", [])
 
                 # Foreign keys
@@ -117,9 +111,7 @@ def get_database_metadata(connection, n_samples=10) -> dict:
     return metadata
 
 
-def build_query(
-    col_name_quoted: str, table_name_quoted: str, n: int, dialect_name: str
-) -> str:
+def build_query(col_name_quoted: str, table_name_quoted: str, n: int, dialect_name: str) -> str:
     # Example: expand your build_query to handle random sampling if possible
     if "postgres" in dialect_name:
         return f"SELECT {col_name_quoted} FROM {table_name_quoted} ORDER BY RANDOM() LIMIT {n}"

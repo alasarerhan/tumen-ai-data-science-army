@@ -9,12 +9,12 @@ Best Practices Reference:
 https://http.dev/last-event-id
 https://ithy.com/article/sse-streaming-retries-v0p7rdp1
 """
+
 from __future__ import annotations
 
 import asyncio
 import json
 import logging
-from typing import Optional
 
 from fastapi import APIRouter, Depends, Header, Query
 from fastapi.responses import StreamingResponse
@@ -27,7 +27,12 @@ from platform_api.core.config import settings
 from platform_api.db.session import get_db
 from platform_api.services.identity_service import get_or_create_user
 from platform_api.services.run_service import get_workspace_for_member
-from platform_api.services.signal_service import emit_signal, ensure_run_for_workspace, list_signals, signal_to_dict
+from platform_api.services.signal_service import (
+    emit_signal,
+    ensure_run_for_workspace,
+    list_signals,
+    signal_to_dict,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -89,12 +94,12 @@ async def stream_signals(
     workspace_id: str,
     principal: Principal = Depends(get_principal),
     db: Session = Depends(get_db),
-    last_event_id: Optional[str] = Query(
+    last_event_id: str | None = Query(
         default=None,
         alias="last_event_id",
         description="ID of last received event for reconnection replay",
     ),
-    last_event_id_header: Optional[str] = Header(
+    last_event_id_header: str | None = Header(
         default=None,
         alias="Last-Event-ID",
         description="Last-Event-ID header for SSE reconnection",
@@ -125,7 +130,8 @@ async def stream_signals(
     if effective_last_id:
         logger.info(
             "SSE reconnection: run_id=%s, last_event_id=%s",
-            run_id, effective_last_id,
+            run_id,
+            effective_last_id,
         )
 
     async def _events():

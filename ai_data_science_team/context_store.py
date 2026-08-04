@@ -163,11 +163,7 @@ class ContextStore:
     def keys(self, session_id: str) -> List[str]:
         """Return all user-defined keys in the session (excludes _meta, _artifacts)."""
         with self._lock:
-            return [
-                k
-                for k in self._sessions.get(session_id, {}).keys()
-                if not k.startswith("_")
-            ]
+            return [k for k in self._sessions.get(session_id, {}).keys() if not k.startswith("_")]
 
     # ------------------------------------------------------------------ artifacts
 

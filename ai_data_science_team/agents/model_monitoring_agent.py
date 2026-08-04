@@ -24,6 +24,15 @@ Drift severity thresholds (PSI)
 import logging  # noqa: E402, F401
 
 logger = logging.getLogger(__name__)
+import pandas as pd  # noqa: E402, F401
+from IPython.display import Markdown  # noqa: E402, F401
+from langchain.agents import create_agent  # noqa: E402, F401
+from langchain.tools import tool  # noqa: E402, F401
+from langchain_core.messages import AIMessage, BaseMessage  # noqa: E402, F401
+from langgraph.graph import END, START, StateGraph  # noqa: E402, F401
+from langgraph.graph.message import add_messages  # noqa: E402, F401
+from langgraph.prebuilt import InjectedState  # noqa: E402, F401
+from langgraph.types import Checkpointer  # noqa: E402, F401
 from typing_extensions import (  # noqa: E402, F401
     Annotated,
     Any,
@@ -34,17 +43,6 @@ from typing_extensions import (  # noqa: E402, F401
     Tuple,
     TypedDict,
 )
-
-import pandas as pd  # noqa: E402, F401
-from IPython.display import Markdown  # noqa: E402, F401
-
-from langchain.agents import create_agent  # noqa: E402, F401
-from langchain.tools import tool  # noqa: E402, F401
-from langchain_core.messages import AIMessage, BaseMessage  # noqa: E402, F401
-from langgraph.graph import END, START, StateGraph  # noqa: E402, F401
-from langgraph.graph.message import add_messages  # noqa: E402, F401
-from langgraph.prebuilt import InjectedState  # noqa: E402, F401
-from langgraph.types import Checkpointer  # noqa: E402, F401
 
 from ai_data_science_team.templates import BaseAgent  # noqa: E402, F401
 from ai_data_science_team.utils.messages import get_tool_call_names  # noqa: E402, F401
@@ -85,7 +83,9 @@ def _psi(expected: "pd.Series", actual: "pd.Series", n_bins: int = 10) -> float:
 
     import numpy as np  # noqa: E402, F401
 
-    psi_value = float(np.sum((act_pct.values - exp_pct.values) * np.log(act_pct.values / exp_pct.values)))
+    psi_value = float(
+        np.sum((act_pct.values - exp_pct.values) * np.log(act_pct.values / exp_pct.values))
+    )
     return round(abs(psi_value), 6)
 
 
@@ -312,9 +312,7 @@ def compute_performance(
             pass
     else:  # regression
         try:
-            computed["rmse"] = round(
-                float(np.sqrt(skm.mean_squared_error(y_true, y_pred))), 6
-            )
+            computed["rmse"] = round(float(np.sqrt(skm.mean_squared_error(y_true, y_pred))), 6)
         except Exception:
             pass
         try:
@@ -452,10 +450,10 @@ def make_model_monitoring_agent(
     class GraphState(TypedDict):
         messages: Annotated[Sequence[BaseMessage], add_messages]
         user_instructions: str
-        reference_data_raw: dict     # reference/baseline feature data
-        current_data_raw: dict       # current/production feature data
-        y_true_raw: dict             # ground-truth labels (single column)
-        y_pred_raw: dict             # model predictions (single column)
+        reference_data_raw: dict  # reference/baseline feature data
+        current_data_raw: dict  # current/production feature data
+        y_true_raw: dict  # ground-truth labels (single column)
+        y_pred_raw: dict  # model predictions (single column)
         drift_method: str
         psi_bins: int
         task_type: str
@@ -480,7 +478,9 @@ def make_model_monitoring_agent(
 
     def run_react_agent(state: GraphState):
         logger.info("    * RUN REACT TOOL-CALLING AGENT FOR MODEL MONITORING")
-        logger.info(f"    * drift_method={state.get('drift_method')}, task_type={state.get('task_type')}")
+        logger.info(
+            f"    * drift_method={state.get('drift_method')}, task_type={state.get('task_type')}"
+        )
 
         system_hint = (
             "You are a Model Monitoring agent. "
@@ -714,7 +714,9 @@ class ModelMonitoringAgent(BaseAgent):
                 "drift_method": drift_method or self._params["drift_method"],
                 "psi_bins": self._params["psi_bins"],
                 "task_type": task_type or self._params["task_type"],
-                "baseline_metrics": baseline_metrics if baseline_metrics is not None else self._params["baseline_metrics"],
+                "baseline_metrics": baseline_metrics
+                if baseline_metrics is not None
+                else self._params["baseline_metrics"],
             },
             **kwargs,
         )

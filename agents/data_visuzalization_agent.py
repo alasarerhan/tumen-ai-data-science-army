@@ -1,5 +1,3 @@
-
-
 # Libraries
 import json
 import operator
@@ -8,24 +6,30 @@ from typing import Annotated, Literal, Sequence, TypedDict
 
 import pandas as pd
 from IPython.display import Markdown
-from langchain_core.prompts import PromptTemplate
 from langchain_core.messages import BaseMessage
+from langchain_core.prompts import PromptTemplate
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.types import Command
 
 from ai_data_science_team.parsers.parsers import PythonOutputParser
 from ai_data_science_team.templates import (
-    BaseAgent, create_coding_agent_graph, node_func_execute_agent_code_on_data,
-    node_func_fix_agent_code, node_func_human_review,
-    node_func_report_agent_outputs)
+    BaseAgent,
+    create_coding_agent_graph,
+    node_func_execute_agent_code_on_data,
+    node_func_fix_agent_code,
+    node_func_human_review,
+    node_func_report_agent_outputs,
+)
 from ai_data_science_team.tools.dataframe import get_dataframe_summary
 from ai_data_science_team.utils.logging import log_ai_function
 from ai_data_science_team.utils.plotly import plotly_from_dict
-from ai_data_science_team.utils.regex import (add_comments_to_top,
-                                              format_agent_name,
-                                              format_recommended_steps,
-                                              get_generic_summary,
-                                              relocate_imports_inside_functions)
+from ai_data_science_team.utils.regex import (
+    add_comments_to_top,
+    format_agent_name,
+    format_recommended_steps,
+    get_generic_summary,
+    relocate_imports_inside_functions,
+)
 
 # Setup
 AGENT_NAME = "data_visualization_agent"
@@ -274,9 +278,7 @@ class DataVisualizationAgent(BaseAgent):
         Retrieves the agent's workflow summary, if logging is enabled.
         """
         if self.response and self.response.get("messages"):
-            summary = get_generic_summary(
-                json.loads(self.response.get("messages")[-1].content)
-            )
+            summary = get_generic_summary(json.loads(self.response.get("messages")[-1].content))
             if markdown:
                 return Markdown(summary)
             else:
@@ -291,9 +293,9 @@ class DataVisualizationAgent(BaseAgent):
                 log_details = f"""
 ## Data Visualization Agent Log Summary:
 
-Function Path: {self.response.get('data_visualization_function_path')}
+Function Path: {self.response.get("data_visualization_function_path")}
 
-Function Name: {self.response.get('data_visualization_function_name')}
+Function Name: {self.response.get("data_visualization_function_name")}
                 """
                 if markdown:
                     return Markdown(log_details)
@@ -560,9 +562,7 @@ def make_data_visualization_agent(
         data_raw = state.get("data_raw")
         df = pd.DataFrame.from_dict(data_raw)
 
-        all_datasets_summary = get_dataframe_summary(
-            [df], n_sample=n_samples, skip_stats=False
-        )
+        all_datasets_summary = get_dataframe_summary([df], n_sample=n_samples, skip_stats=False)
 
         all_datasets_summary_str = "\n\n".join(all_datasets_summary)
 
@@ -593,9 +593,7 @@ def make_data_visualization_agent(
             data_raw = state.get("data_raw")
             df = pd.DataFrame.from_dict(data_raw)
 
-            all_datasets_summary = get_dataframe_summary(
-                [df], n_sample=n_samples, skip_stats=False
-            )
+            all_datasets_summary = get_dataframe_summary([df], n_sample=n_samples, skip_stats=False)
 
             all_datasets_summary_str = "\n\n".join(all_datasets_summary)
 

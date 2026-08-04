@@ -8,7 +8,14 @@ import pytest
 from fastapi import HTTPException
 from sqlalchemy import select
 
-from platform_api.db.models import InviteStatus, TenantMembership, TenantRole, User, WorkspaceMembership, WorkspaceRole
+from platform_api.db.models import (
+    InviteStatus,
+    TenantMembership,
+    TenantRole,
+    User,
+    WorkspaceMembership,
+    WorkspaceRole,
+)
 from platform_api.services import provisioning_service
 
 
@@ -39,7 +46,9 @@ def test_parse_uuid_accepts_valid_values(value: str) -> None:
     assert parsed == uuid.UUID(value)
 
 
-@pytest.mark.parametrize("value", ["", "bad-uuid", "\u011f\u00fc\u015f\u00f6\u00e7\u0131\u0130", "x" * 10000])
+@pytest.mark.parametrize(
+    "value", ["", "bad-uuid", "\u011f\u00fc\u015f\u00f6\u00e7\u0131\u0130", "x" * 10000]
+)
 def test_parse_uuid_rejects_invalid_values(value: str) -> None:
     # Act / Assert
     with pytest.raises(HTTPException, match=r"Invalid tenant_id") as exc_info:
@@ -105,7 +114,9 @@ def test_create_tenant_with_owner_creates_membership(db_session) -> None:
     assert membership.role == TenantRole.owner
 
 
-def test_create_workspace_requires_admin_and_adds_owner_membership(seeded_db: dict[str, object]) -> None:
+def test_create_workspace_requires_admin_and_adds_owner_membership(
+    seeded_db: dict[str, object],
+) -> None:
     # Arrange
     db = seeded_db["db"]
     tenant = seeded_db["tenant"]
@@ -179,14 +190,18 @@ def test_create_invite_generates_raw_token_and_hashed_storage(seeded_db: dict[st
     assert invite.email == "target@test.local"
 
 
-def test_create_invite_rejects_owner_invites_from_non_owner_admin(seeded_db: dict[str, object]) -> None:
+def test_create_invite_rejects_owner_invites_from_non_owner_admin(
+    seeded_db: dict[str, object],
+) -> None:
     db = seeded_db["db"]
     tenant = seeded_db["tenant"]
     actor = _create_user(db, "admin-owner-invite@test.local")
     db.add(TenantMembership(tenant_id=tenant.id, user_id=actor.id, role=TenantRole.admin))
     db.flush()
 
-    with pytest.raises(HTTPException, match=r"Only tenant owners may issue owner invites") as exc_info:
+    with pytest.raises(
+        HTTPException, match=r"Only tenant owners may issue owner invites"
+    ) as exc_info:
         provisioning_service.create_invite(
             db,
             tenant_id=str(tenant.id),
@@ -199,7 +214,9 @@ def test_create_invite_rejects_owner_invites_from_non_owner_admin(seeded_db: dic
     assert exc_info.value.status_code == 403
 
 
-def test_create_invite_expires_previous_pending_invites_for_same_scope(seeded_db: dict[str, object]) -> None:
+def test_create_invite_expires_previous_pending_invites_for_same_scope(
+    seeded_db: dict[str, object],
+) -> None:
     # Arrange
     db = seeded_db["db"]
     tenant = seeded_db["tenant"]
@@ -424,7 +441,9 @@ def test_accept_invite_rejects_not_found_or_missing_email_or_not_pending_or_emai
     assert expired_invite.status == InviteStatus.expired
 
 
-def test_accept_invite_preserves_existing_memberships_without_duplicates(seeded_db: dict[str, object]) -> None:
+def test_accept_invite_preserves_existing_memberships_without_duplicates(
+    seeded_db: dict[str, object],
+) -> None:
     # Arrange
     db = seeded_db["db"]
     tenant = seeded_db["tenant"]
@@ -433,7 +452,11 @@ def test_accept_invite_preserves_existing_memberships_without_duplicates(seeded_
     invited_user = _create_user(db, "invited@dup.test")
     db.add(TenantMembership(tenant_id=tenant.id, user_id=actor.id, role=TenantRole.owner))
     db.add(TenantMembership(tenant_id=tenant.id, user_id=invited_user.id, role=TenantRole.member))
-    db.add(WorkspaceMembership(workspace_id=workspace.id, user_id=invited_user.id, role=WorkspaceRole.member))
+    db.add(
+        WorkspaceMembership(
+            workspace_id=workspace.id, user_id=invited_user.id, role=WorkspaceRole.member
+        )
+    )
     db.flush()
     invite, raw_token = provisioning_service.create_invite(
         db,

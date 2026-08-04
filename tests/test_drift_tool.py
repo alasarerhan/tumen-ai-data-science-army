@@ -11,8 +11,8 @@ import pandas as pd
 import pytest
 
 from ai_data_science_team.tools.drift import (
-    feature_drift_report,
     drift_signal_payload,
+    feature_drift_report,
     ks2,
     performance_drift,
     psi,
@@ -90,9 +90,7 @@ class TestFeatureDriftReport:
         df = pd.DataFrame({"x": [1, 2, 3]})
         cur = pd.DataFrame({"y": [1, 2, 3]})
         out = feature_drift_report(df, cur)
-        schema_warning = next(
-            (s for s in out["signals"] if s["column"] == "__schema__"), None
-        )
+        schema_warning = next((s for s in out["signals"] if s["column"] == "__schema__"), None)
         assert schema_warning is not None
 
     def test_heatmap_format(self):

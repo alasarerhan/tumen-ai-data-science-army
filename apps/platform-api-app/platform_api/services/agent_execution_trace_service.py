@@ -64,12 +64,18 @@ def complete_agent_execution_trace(
     finished_at = datetime.now(UTC)
     trace.status = status
     trace.output_summary_json = json.dumps(_summarize_outputs(output or {}))
-    trace.tool_calls_json = json.dumps(_summarize_tool_calls((output or {}).get("outputs", {}).get("tool_calls")))
+    trace.tool_calls_json = json.dumps(
+        _summarize_tool_calls((output or {}).get("outputs", {}).get("tool_calls"))
+    )
     trace.artifact_ids_json = json.dumps([str(item) for item in artifact_ids or []])
     trace.token_usage_json = json.dumps(_summarize_named_payload(output or {}, "token_usage"))
     trace.cost_summary_json = json.dumps(_summarize_named_payload(output or {}, "cost_summary"))
-    trace.evaluation_summary_json = json.dumps(_summarize_named_payload(output or {}, "evaluation_summary"))
-    trace.version_metadata_json = json.dumps(_summarize_named_payload(output or {}, "version_metadata"))
+    trace.evaluation_summary_json = json.dumps(
+        _summarize_named_payload(output or {}, "evaluation_summary")
+    )
+    trace.version_metadata_json = json.dumps(
+        _summarize_named_payload(output or {}, "version_metadata")
+    )
     trace.error_summary = _redact_error(error)
     trace.finished_at = finished_at
     trace.duration_ms = max(0, int((finished_at - trace.started_at).total_seconds() * 1000))
@@ -143,7 +149,11 @@ def _summarize_outputs(output: dict[str, Any]) -> dict[str, Any]:
         "status": str(output.get("status") or "succeeded"),
         "output_keys": _safe_keys(outputs),
         "artifact_count": len(artifacts),
-        "artifact_types": [str(item.get("artifact_type")) for item in artifacts if isinstance(item, dict) and item.get("artifact_type")],
+        "artifact_types": [
+            str(item.get("artifact_type"))
+            for item in artifacts
+            if isinstance(item, dict) and item.get("artifact_type")
+        ],
         "log_count": len(logs),
     }
 

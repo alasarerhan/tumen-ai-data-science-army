@@ -10,6 +10,6 @@ from platform_api.scheduler.job_queue import ScheduledJobQueue
 from platform_api.scheduler.schedule_parser import ScheduleParser
 
 __all__ = [
-    "ScheduledJobQueue",
     "ScheduleParser",
+    "ScheduledJobQueue",
 ]

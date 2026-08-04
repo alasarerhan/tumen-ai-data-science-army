@@ -37,7 +37,6 @@ from typing import Any, Dict, List, Mapping, Optional, Sequence  # noqa: E402, F
 import numpy as np  # noqa: E402, F401
 import pandas as pd  # noqa: E402, F401
 
-
 # ---------------------------------------------------------------------------
 # KPI definition
 # ---------------------------------------------------------------------------
@@ -219,9 +218,7 @@ class KPIHistory:
         }
 
 
-def record_period(
-    kpi: Mapping[str, Any], *, history: KPIHistory
-) -> KPIHistory:
+def record_period(kpi: Mapping[str, Any], *, history: KPIHistory) -> KPIHistory:
     """Re-export for clarity at the public surface. Computes the KPI
     value (Python-only; SQL is delegated to the agent) and appends.
     """
@@ -318,9 +315,7 @@ def build_alarm(
     )
 
 
-def check_alarm(
-    rule: AlarmRule, *, history: Sequence[float]
-) -> Dict[str, Any]:
+def check_alarm(rule: AlarmRule, *, history: Sequence[float]) -> Dict[str, Any]:
     """Evaluate ``rule`` against a history window.
 
     Returns ``{"fired", "value", "baseline", "deviation"}``.
@@ -418,5 +413,3 @@ __all__ = [
     "check_alarm",
     "sparkline_points",
 ]
-
-

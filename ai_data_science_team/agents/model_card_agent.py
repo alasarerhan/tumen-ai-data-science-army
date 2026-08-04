@@ -12,9 +12,13 @@ PowerAnalysisAgent.
 Node type: ``model.card``
 """
 
-from typing import (Dict, Optional, Tuple)  # noqa: E402
 import logging  # noqa: E402, F401
-from typing import Any  # noqa: E402, F401
+from typing import (  # noqa: E402
+    Any,  # noqa: E402, F401
+    Dict,
+    Optional,
+    Tuple,
+)
 
 from langchain.tools import tool  # noqa: E402, F401
 from langchain_core.messages import AIMessage, BaseMessage  # noqa: E402, F401
@@ -24,9 +28,6 @@ from langgraph.types import Checkpointer  # noqa: E402, F401
 from typing_extensions import Annotated, Sequence, TypedDict  # noqa: E402, F401
 
 from ai_data_science_team.templates import BaseAgent  # noqa: E402, F401
-from ai_data_science_team.utils.regex import format_agent_name  # noqa: E402, F401
-
-
 from ai_data_science_team.tools.model_card import (  # noqa: E402, F401
     ModelCard,
     generate_card,
@@ -36,7 +37,7 @@ from ai_data_science_team.tools.model_card import (  # noqa: E402, F401
     render_pdf,
     update_section,
 )
-
+from ai_data_science_team.utils.regex import format_agent_name  # noqa: E402, F401
 
 logger = logging.getLogger(__name__)
 
@@ -48,6 +49,7 @@ NODE_TYPE = "model.card"
 # Tool wrappers
 # ---------------------------------------------------------------------------
 
+
 @tool(response_format="content_and_artifact")
 def generate_card_wrapped(model_id: str) -> Tuple[str, dict]:
     """Tool wrapper for ``generate_card``.
@@ -57,7 +59,7 @@ def generate_card_wrapped(model_id: str) -> Tuple[str, dict]:
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: f4_generate_card")
-    kwargs = {'model_id': model_id}
+    kwargs = {"model_id": model_id}
     try:
         result = generate_card(**kwargs)
     except Exception as exc:
@@ -85,7 +87,7 @@ def update_section_wrapped(card: ModelCard, section: str, content: str) -> Tuple
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: f4_update_section")
-    kwargs = {'card': card, 'section': section, 'content': content}
+    kwargs = {"card": card, "section": section, "content": content}
     try:
         result = update_section(**kwargs)
     except Exception as exc:
@@ -113,7 +115,7 @@ def render_html_wrapped(card: ModelCard) -> Tuple[str, dict]:
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: f4_render_html")
-    kwargs = {'card': card}
+    kwargs = {"card": card}
     try:
         result = render_html(**kwargs)
     except Exception as exc:
@@ -141,7 +143,7 @@ def render_pdf_wrapped(card: ModelCard) -> Tuple[str, dict]:
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: f4_render_pdf")
-    kwargs = {'card': card}
+    kwargs = {"card": card}
     try:
         result = render_pdf(**kwargs)
     except Exception as exc:
@@ -169,7 +171,7 @@ def get_card_wrapped(card_id: str) -> Tuple[str, dict]:
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: f4_get_card")
-    kwargs = {'card_id': card_id}
+    kwargs = {"card_id": card_id}
     try:
         result = get_card(**kwargs)
     except Exception as exc:
@@ -197,7 +199,7 @@ def list_cards_wrapped(model_id: str) -> Tuple[str, dict]:
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: f4_list_cards")
-    kwargs = {'model_id': model_id}
+    kwargs = {"model_id": model_id}
     try:
         result = list_cards(**kwargs)
     except Exception as exc:
@@ -269,7 +271,12 @@ def make_model_card_agent(
     def run_react_agent(state: GraphState):
         logger.info("    * RUN REACT AGENT FOR F4")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
-        messages = [("system", "You are the F4 agent. Use the available tools to complete the user's request.")] + list(base)
+        messages = [
+            (
+                "system",
+                "You are the F4 agent. Use the available tools to complete the user's request.",
+            )
+        ] + list(base)
         input_payload = {"messages": messages}
         return react_agent.invoke(input_payload, invoke_react_agent_kwargs)
 
@@ -288,7 +295,9 @@ def make_model_card_agent(
             last_ai = AIMessage(content=getattr(internal[-1], "content", ""), name=AGENT_NAME)
         tool_calls = []
         for msg in internal:
-            name = getattr(getattr(msg, "tool_call_id", None), "name", None) or getattr(msg, "name", None)
+            name = getattr(getattr(msg, "tool_call_id", None), "name", None) or getattr(
+                msg, "name", None
+            )
             if name:
                 tool_calls.append(name)
         if log_tool_calls and tool_calls:
@@ -356,6 +365,7 @@ class ModelCardAgent(BaseAgent):
         if not self.response or "messages" not in self.response:
             return None
         from IPython.display import Markdown as _Markdown  # noqa: E402, F401
+
         for msg in reversed(self.response.get("messages", [])):
             content = getattr(msg, "content", "")
             if content:

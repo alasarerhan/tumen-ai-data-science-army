@@ -16,7 +16,6 @@ import uuid  # noqa: E402, F401
 from dataclasses import dataclass, field  # noqa: E402, F401
 from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple  # noqa: E402, F401
 
-
 STAGES: List[str] = ["dev", "staging", "production", "archived"]
 
 # Forward-only transitions allowed (dev -> staging -> production,
@@ -111,14 +110,10 @@ def validate_signature(
     if candidate.input_schema and target.input_schema:
         if list(candidate.input_schema) != list(target.input_schema):
             issues.append(
-                f"input_schema mismatch: {candidate.input_schema} "
-                f"vs {target.input_schema}"
+                f"input_schema mismatch: {candidate.input_schema} vs {target.input_schema}"
             )
     if candidate.output_type != target.output_type:
-        issues.append(
-            f"output_type mismatch: {candidate.output_type!r} "
-            f"vs {target.output_type!r}"
-        )
+        issues.append(f"output_type mismatch: {candidate.output_type!r} vs {target.output_type!r}")
     return (not issues), issues
 
 
@@ -134,9 +129,7 @@ def evaluate_min_metrics(
             issues.append(f"missing metric: {name}")
             continue
         if actual < threshold:
-            issues.append(
-                f"metric {name!r} {actual:.4f} < required {threshold:.4f}"
-            )
+            issues.append(f"metric {name!r} {actual:.4f} < required {threshold:.4f}")
     return (not issues), issues
 
 
@@ -168,9 +161,7 @@ def request_promotion(
         return {
             "status": "rejected",
             "to_stage": to_stage,
-            "issues": [
-                f"illegal transition: {record.stage} -> {to_stage}"
-            ],
+            "issues": [f"illegal transition: {record.stage} -> {to_stage}"],
             "audit_trail_entry": None,
         }
 
@@ -227,11 +218,7 @@ def approve(
     prev_stage = record.stage
     record.stage = to_stage
     archived: List[str] = []
-    if (
-        auto_archive_previous
-        and to_stage == "production"
-        and registry is not None
-    ):
+    if auto_archive_previous and to_stage == "production" and registry is not None:
         for v, rec in registry.items():
             if rec is record:
                 continue
@@ -284,9 +271,7 @@ def demote(
     if to_stage not in VALID_TRANSITIONS[record.stage]:
         return {
             "status": "rejected",
-            "issues": [
-                f"illegal transition: {record.stage} -> {to_stage}"
-            ],
+            "issues": [f"illegal transition: {record.stage} -> {to_stage}"],
             "audit_trail_entry": None,
         }
     return approve(
@@ -308,6 +293,7 @@ def get_version_by_stage(
     in_stage = [v for v, r in registry.items() if r.stage == stage]
     if not in_stage:
         return None
+
     # Sort by integer (or fallback to string) so v10 > v9.
     def _key(v: str) -> Tuple[int, str]:
         try:
@@ -341,9 +327,7 @@ def mlflow_alias_sync(
         mlflow.set_registry_uri(registry_uri)
     try:
         client = MlflowClient()
-        client.set_registered_model_alias(
-            name=model_id, alias=alias, version=version
-        )
+        client.set_registered_model_alias(name=model_id, alias=alias, version=version)
     except mlflow.exceptions.MlflowException:
         return {
             "status": "no_mlflow",

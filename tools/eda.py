@@ -1,6 +1,6 @@
+import importlib.util
 import os
 import tempfile
-import importlib.util
 from typing import Annotated, Dict, Tuple, Union
 
 from langchain_core.tools import tool
@@ -35,9 +35,7 @@ def explain_data(
     print("    * Tool: explain_data")
     import pandas as pd
 
-    result = get_dataframe_summary(
-        pd.DataFrame(data_raw), n_sample=n_sample, skip_stats=skip_stats
-    )
+    result = get_dataframe_summary(pd.DataFrame(data_raw), n_sample=n_sample, skip_stats=skip_stats)
 
     return result
 
@@ -147,9 +145,7 @@ def visualize_missing(
     # Create and encode the heatmap plot.
     encoded_plots["heatmap_plot"] = create_and_encode_plot(msno.heatmap, "heatmap")
 
-    content = (
-        "Missing data visualizations (matrix, bar, and heatmap) have been generated."
-    )
+    content = "Missing data visualizations (matrix, bar, and heatmap) have been generated."
     artifact = encoded_plots
     return content, artifact
 
@@ -213,9 +209,7 @@ def generate_correlation_funnel(
 
     # Determine the full target column name.
     # Look for all columns that start with "target__"
-    matching_columns = [
-        col for col in df_binarized.columns if col.startswith(f"{target}__")
-    ]
+    matching_columns = [col for col in df_binarized.columns if col.startswith(f"{target}__")]
     if not matching_columns:
         # If no matching columns are found, warn and use the provided target as-is.
         full_target = target

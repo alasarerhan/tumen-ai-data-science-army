@@ -1,4 +1,5 @@
 """Tests for J1 Autonomous Investigation tool."""
+
 from __future__ import annotations
 
 import pytest
@@ -9,15 +10,18 @@ import ai_data_science_team.tools.investigation as j1
 class TestDetectChange:
     def test_no_change(self):
         r = j1.detect_change(
-            baseline_value=100.0, current_value=100.0,
+            baseline_value=100.0,
+            current_value=100.0,
         )
         assert r.detected is False
         assert r.abs_delta == 0.0
 
     def test_large_change_detected(self):
         r = j1.detect_change(
-            baseline_value=100.0, current_value=130.0,
-            historical_std=5.0, z_threshold=2.0,
+            baseline_value=100.0,
+            current_value=130.0,
+            historical_std=5.0,
+            z_threshold=2.0,
         )
         assert r.detected is True
         assert r.z_score == pytest.approx(6.0, abs=1e-9)
@@ -26,15 +30,18 @@ class TestDetectChange:
     def test_small_change_below_relative_threshold(self):
         # 1% drop, below 5% relative threshold
         r = j1.detect_change(
-            baseline_value=100.0, current_value=99.0,
-            historical_std=5.0, z_threshold=2.0,
+            baseline_value=100.0,
+            current_value=99.0,
+            historical_std=5.0,
+            z_threshold=2.0,
             min_relative_delta=0.05,
         )
         assert r.detected is False
 
     def test_zero_baseline_returns_nan_relative(self):
         r = j1.detect_change(
-            baseline_value=0.0, current_value=10.0,
+            baseline_value=0.0,
+            current_value=10.0,
         )
         assert r.relative_delta != r.relative_delta  # NaN
 
@@ -67,7 +74,8 @@ class TestIsolateDimension:
 class TestQuantifyContributors:
     def test_shares_sum_to_one(self):
         q = j1.quantify_contributors(
-            baseline_total=100.0, current_total=80.0,
+            baseline_total=100.0,
+            current_total=80.0,
             contributions=[
                 {"name": "A", "baseline": 50.0, "current": 30.0},
                 {"name": "B", "baseline": 30.0, "current": 20.0},
@@ -81,7 +89,8 @@ class TestQuantifyContributors:
 
     def test_zero_total_delta_zero_shares(self):
         q = j1.quantify_contributors(
-            baseline_total=100.0, current_total=100.0,
+            baseline_total=100.0,
+            current_total=100.0,
             contributions=[
                 {"name": "A", "baseline": 50.0, "current": 60.0},
                 {"name": "B", "baseline": 50.0, "current": 40.0},
@@ -93,8 +102,10 @@ class TestQuantifyContributors:
 class TestNarrate:
     def test_narrative_shape(self):
         sig = j1.KPISignal(
-            signal_id="s1", kpi_name="conversion_rate",
-            baseline_value=10.0, current_value=12.0,
+            signal_id="s1",
+            kpi_name="conversion_rate",
+            baseline_value=10.0,
+            current_value=12.0,
             timestamp=0.0,
         )
         det = j1.detect_change(baseline_value=10.0, current_value=12.0)
@@ -104,12 +115,15 @@ class TestNarrate:
             primary_dimension="country",
         )
         quant = j1.quantify_contributors(
-            baseline_total=10.0, current_total=12.0,
+            baseline_total=10.0,
+            current_total=12.0,
             contributions=[{"name": "TR", "baseline": 5.0, "current": 7.0}],
         )
         n = j1.narrate(
-            signal=sig, detection=det,
-            isolation=iso, quantification=quant,
+            signal=sig,
+            detection=det,
+            isolation=iso,
+            quantification=quant,
             actions=["alert team"],
         )
         assert "conversion_rate" in n.title
@@ -122,7 +136,8 @@ class TestInvestigateOrchestrator:
     def test_full_pipeline(self):
         inv = j1.investigate(
             kpi_name="dau",
-            baseline_value=1000.0, current_value=850.0,
+            baseline_value=1000.0,
+            current_value=850.0,
             baseline_by_dim={
                 "country": {"TR": 600.0, "US": 400.0},
                 "device": {"mobile": 700.0, "desktop": 300.0},
@@ -146,7 +161,8 @@ class TestInvestigateOrchestrator:
 
     def test_minimal_investigate(self):
         inv = j1.investigate(
-            kpi_name="x", baseline_value=100.0, current_value=100.0,
+            kpi_name="x",
+            baseline_value=100.0,
+            current_value=100.0,
         )
         assert inv.detection.detected is False
-

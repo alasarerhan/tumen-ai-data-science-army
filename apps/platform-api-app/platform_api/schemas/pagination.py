@@ -13,9 +13,10 @@ Best Practices Reference:
 https://graphql.org/learn/pagination/
 https://slack.dev/node-slack/reference#pagination
 """
+
 from __future__ import annotations
 
-from typing import Generic, List, Optional, TypeVar
+from typing import Generic, TypeVar
 
 from pydantic import BaseModel, Field
 
@@ -28,7 +29,7 @@ MAX_PAGE_SIZE = 100
 class PaginationParams(BaseModel):
     """Pagination query parameters."""
 
-    cursor: Optional[str] = Field(
+    cursor: str | None = Field(
         default=None,
         description="Cursor for the next page (record ID)",
     )
@@ -43,8 +44,8 @@ class PaginationParams(BaseModel):
 class PaginatedResponse(BaseModel, Generic[T]):
     """Paginated response wrapper for list endpoints."""
 
-    items: List[T]
-    next_cursor: Optional[str] = Field(
+    items: list[T]
+    next_cursor: str | None = Field(
         default=None,
         description="Cursor to fetch the next page",
     )
@@ -52,13 +53,13 @@ class PaginatedResponse(BaseModel, Generic[T]):
         default=False,
         description="Whether more items are available",
     )
-    total_count: Optional[int] = Field(
+    total_count: int | None = Field(
         default=None,
         description="Total count (expensive, computed only if requested)",
     )
 
 
-def paginate_query(query, model, cursor: Optional[str], limit: int, cursor_column=None):
+def paginate_query(query, model, cursor: str | None, limit: int, cursor_column=None):
     """Apply pagination to a SQLAlchemy query.
 
     Parameters
@@ -78,7 +79,7 @@ def paginate_query(query, model, cursor: Optional[str], limit: int, cursor_colum
     -------
     Select
         The paginated query.
-    
+
     Raises
     ------
     ValueError
@@ -114,7 +115,7 @@ def build_paginated_response(items: list, limit: int, id_attr: str = "id") -> di
     -------
     dict
         Response dict with items, next_cursor, and has_more.
-    
+
     Raises
     ------
     ValueError
@@ -122,7 +123,7 @@ def build_paginated_response(items: list, limit: int, id_attr: str = "id") -> di
     """
     if limit < 1:
         raise ValueError(f"limit must be at least 1, got {limit}")
-    
+
     has_more = len(items) > limit
     result_items = items[:limit]
 

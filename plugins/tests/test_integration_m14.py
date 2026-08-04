@@ -9,14 +9,12 @@ Atlamak için (diğer testlerle birlikte):
 """
 
 import pytest
-
 from _llm import make_chat_model, skip_no_key
 
 # ---------------------------------------------------------------------------
 # Guards — skip the entire module if the key is absent
 # ---------------------------------------------------------------------------
 pytestmark = pytest.mark.integration
-
 
 
 langchain_openai = pytest.importorskip(
@@ -29,6 +27,7 @@ langchain_openai = pytest.importorskip(
 # Shared fixtures
 # ---------------------------------------------------------------------------
 
+
 @pytest.fixture(scope="module")
 def llm():
     return make_chat_model(temperature=0)
@@ -37,11 +36,23 @@ def llm():
 # Synthetic 2-D dataset with 3 clearly separated clusters
 _CLUSTER_DATA: list = [
     # Cluster A — bottom-left
-    [1.0, 1.1], [1.2, 0.9], [0.8, 1.0], [1.1, 1.3], [0.9, 0.8],
+    [1.0, 1.1],
+    [1.2, 0.9],
+    [0.8, 1.0],
+    [1.1, 1.3],
+    [0.9, 0.8],
     # Cluster B — top-right
-    [9.0, 9.1], [9.2, 8.9], [8.8, 9.0], [9.1, 9.3], [8.9, 8.8],
+    [9.0, 9.1],
+    [9.2, 8.9],
+    [8.8, 9.0],
+    [9.1, 9.3],
+    [8.9, 8.8],
     # Cluster C — bottom-right
-    [9.0, 1.0], [9.2, 0.9], [8.8, 1.1], [9.1, 0.8], [8.9, 1.2],
+    [9.0, 1.0],
+    [9.2, 0.9],
+    [8.8, 1.1],
+    [9.1, 0.8],
+    [8.9, 1.2],
 ]
 _FEATURE_NAMES = ["x", "y"]
 
@@ -49,6 +60,7 @@ _FEATURE_NAMES = ["x", "y"]
 # ---------------------------------------------------------------------------
 # ClusteringAgent tests
 # ---------------------------------------------------------------------------
+
 
 @skip_no_key
 def test_clustering_agent_basic(llm):
@@ -58,8 +70,7 @@ def test_clustering_agent_basic(llm):
     agent = ClusteringAgent(model=llm)
     agent.invoke_agent(
         user_instructions=(
-            "Cluster this 2-D dataset. "
-            "Use k-means with k=3 and describe the resulting clusters."
+            "Cluster this 2-D dataset. Use k-means with k=3 and describe the resulting clusters."
         ),
         data=_CLUSTER_DATA,
         feature_names=_FEATURE_NAMES,

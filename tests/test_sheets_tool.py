@@ -20,9 +20,7 @@ class TestBuild:
 
     def test_missing_credentials(self):
         with pytest.raises(ValueError):
-            h5.build_sheets_connector(
-                h5.ConnectorConfig(name="x", kind="sheets", params={})
-            )
+            h5.build_sheets_connector(h5.ConnectorConfig(name="x", kind="sheets", params={}))
 
     def test_unknown_auth(self):
         with pytest.raises(h5.ConnectorError):
@@ -69,4 +67,3 @@ class TestBehaviors:
         r = c.write_range("ss-1", "Sheet1!A1:B2", [[1, 2], [3, 4]])
         assert r["status"] == "ok"
         assert r["rows_written"] == 2
-

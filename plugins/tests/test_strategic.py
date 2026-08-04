@@ -3,12 +3,12 @@
 Tool tests call ``.func()`` directly (no LLM required).
 Agent construction tests use a deterministic FakeChatModel stub.
 """
+
 from __future__ import annotations
 
 import json
 
 import pytest
-
 
 # ===========================================================================
 # Fake LLM helper
@@ -27,9 +27,7 @@ def _fake_llm():
             return "fake"
 
         def _generate(self, messages, stop=None, _run_manager=None, **kw) -> ChatResult:
-            return ChatResult(
-                generations=[ChatGeneration(message=LCAIMessage(content="Done."))]
-            )
+            return ChatResult(generations=[ChatGeneration(message=LCAIMessage(content="Done."))])
 
         def bind_tools(self, tools, **kw):
             return self
@@ -41,10 +39,12 @@ def _fake_llm():
 # merge_agent_outputs
 # ===========================================================================
 
-_MERGE_INPUT = json.dumps({
-    "ClusteringAgent": {"n_clusters": 3, "silhouette": 0.71},
-    "AutoForecastAgent": {"best_model": "AutoARIMA", "rmse": 142.3},
-})
+_MERGE_INPUT = json.dumps(
+    {
+        "ClusteringAgent": {"n_clusters": 3, "silhouette": 0.71},
+        "AutoForecastAgent": {"best_model": "AutoARIMA", "rmse": 142.3},
+    }
+)
 
 
 def test_merge_valid_input():
@@ -85,20 +85,20 @@ def test_merge_empty_dict():
 # extract_key_metrics
 # ===========================================================================
 
-_MERGED_FLAT = json.dumps({
-    "ClusteringAgent.silhouette": 0.71,
-    "ClusteringAgent.n_clusters": 3,
-    "AutoForecastAgent.rmse": 142.3,
-    "AutoForecastAgent.best_model": "AutoARIMA",
-})
+_MERGED_FLAT = json.dumps(
+    {
+        "ClusteringAgent.silhouette": 0.71,
+        "ClusteringAgent.n_clusters": 3,
+        "AutoForecastAgent.rmse": 142.3,
+        "AutoForecastAgent.best_model": "AutoARIMA",
+    }
+)
 
 
 def test_extract_filters_by_keyword():
     from ai_data_science_team.tools.strategic import extract_key_metrics
 
-    _, artifact = extract_key_metrics.func(
-        merged_json=_MERGED_FLAT, metric_keys="silhouette,rmse"
-    )
+    _, artifact = extract_key_metrics.func(merged_json=_MERGED_FLAT, metric_keys="silhouette,rmse")
     assert artifact["found"] == 2
     assert any("silhouette" in k for k in artifact["metrics"])
     assert any("rmse" in k for k in artifact["metrics"])
@@ -107,9 +107,7 @@ def test_extract_filters_by_keyword():
 def test_extract_empty_filter_returns_all():
     from ai_data_science_team.tools.strategic import extract_key_metrics
 
-    _, artifact = extract_key_metrics.func(
-        merged_json=_MERGED_FLAT, metric_keys=""
-    )
+    _, artifact = extract_key_metrics.func(merged_json=_MERGED_FLAT, metric_keys="")
     assert artifact["found"] == 4
 
 
@@ -131,9 +129,7 @@ _CURRENT = json.dumps({"accuracy": 0.85, "rmse": 160.0, "loss": 0.4})
 def test_compare_improvements_detected():
     from ai_data_science_team.tools.strategic import compare_results
 
-    _, artifact = compare_results.func(
-        baseline_json=_BASELINE, current_json=_CURRENT
-    )
+    _, artifact = compare_results.func(baseline_json=_BASELINE, current_json=_CURRENT)
     assert "accuracy" in artifact["improvements"]
     assert "rmse" in artifact["improvements"]
     assert "loss" in artifact["improvements"]
@@ -142,9 +138,7 @@ def test_compare_improvements_detected():
 def test_compare_delta_values_correct():
     from ai_data_science_team.tools.strategic import compare_results
 
-    _, artifact = compare_results.func(
-        baseline_json=_BASELINE, current_json=_CURRENT
-    )
+    _, artifact = compare_results.func(baseline_json=_BASELINE, current_json=_CURRENT)
     assert artifact["deltas"]["accuracy"]["delta"] == pytest.approx(0.05, abs=1e-6)
     assert artifact["deltas"]["rmse"]["delta"] == pytest.approx(-40.0, abs=1e-6)
 
@@ -153,9 +147,7 @@ def test_compare_regressions_detected():
     from ai_data_science_team.tools.strategic import compare_results
 
     worse = json.dumps({"accuracy": 0.70, "rmse": 250.0})
-    _, artifact = compare_results.func(
-        baseline_json=_BASELINE, current_json=worse
-    )
+    _, artifact = compare_results.func(baseline_json=_BASELINE, current_json=worse)
     assert "accuracy" in artifact["regressions"]
     assert "rmse" in artifact["regressions"]
 
@@ -163,9 +155,7 @@ def test_compare_regressions_detected():
 def test_compare_invalid_json():
     from ai_data_science_team.tools.strategic import compare_results
 
-    text, artifact = compare_results.func(
-        baseline_json="BAD", current_json="{}"
-    )
+    text, artifact = compare_results.func(baseline_json="BAD", current_json="{}")
     assert artifact["valid"] is False
 
 
@@ -173,19 +163,19 @@ def test_compare_invalid_json():
 # rank_findings
 # ===========================================================================
 
-_FINDINGS = json.dumps([
-    {"description": "Churn spike in Q3", "impact": 0.9, "confidence": 0.8},
-    {"description": "Revenue opportunity", "impact": 0.6, "confidence": 0.7},
-    {"description": "Minor UI bug", "impact": 0.1, "confidence": 0.95},
-])
+_FINDINGS = json.dumps(
+    [
+        {"description": "Churn spike in Q3", "impact": 0.9, "confidence": 0.8},
+        {"description": "Revenue opportunity", "impact": 0.6, "confidence": 0.7},
+        {"description": "Minor UI bug", "impact": 0.1, "confidence": 0.95},
+    ]
+)
 
 
 def test_rank_descending_by_impact():
     from ai_data_science_team.tools.strategic import rank_findings
 
-    _, artifact = rank_findings.func(
-        findings_json=_FINDINGS, sort_by="impact", descending=True
-    )
+    _, artifact = rank_findings.func(findings_json=_FINDINGS, sort_by="impact", descending=True)
     ranked = artifact["ranked"]
     assert ranked[0]["description"] == "Churn spike in Q3"
     assert ranked[-1]["description"] == "Minor UI bug"
@@ -275,9 +265,7 @@ def test_generate_questions_focus_area():
 def test_generate_questions_capped_at_10():
     from ai_data_science_team.tools.strategic import generate_clarifying_questions
 
-    _, artifact = generate_clarifying_questions.func(
-        analysis_summary="test", num_questions=99
-    )
+    _, artifact = generate_clarifying_questions.func(analysis_summary="test", num_questions=99)
     assert artifact["count"] <= 10
 
 
@@ -295,9 +283,7 @@ _BUSINESS_TEXT = (
 def test_extract_kpi_entities():
     from ai_data_science_team.tools.strategic import extract_business_entities
 
-    _, artifact = extract_business_entities.func(
-        text=_BUSINESS_TEXT, entity_types="kpi,metric"
-    )
+    _, artifact = extract_business_entities.func(text=_BUSINESS_TEXT, entity_types="kpi,metric")
     assert artifact["total"] > 0
     assert "kpi" in artifact["entities"] or "metric" in artifact["entities"]
 
@@ -305,18 +291,14 @@ def test_extract_kpi_entities():
 def test_extract_team_entities():
     from ai_data_science_team.tools.strategic import extract_business_entities
 
-    _, artifact = extract_business_entities.func(
-        text=_BUSINESS_TEXT, entity_types="team"
-    )
+    _, artifact = extract_business_entities.func(text=_BUSINESS_TEXT, entity_types="team")
     assert "team" in artifact["entities"]
 
 
 def test_extract_returns_requested_types():
     from ai_data_science_team.tools.strategic import extract_business_entities
 
-    _, artifact = extract_business_entities.func(
-        text=_BUSINESS_TEXT, entity_types="kpi"
-    )
+    _, artifact = extract_business_entities.func(text=_BUSINESS_TEXT, entity_types="kpi")
     assert "kpi" in artifact["requested_types"]
 
 
@@ -324,21 +306,25 @@ def test_extract_returns_requested_types():
 # generate_executive_summary
 # ===========================================================================
 
-_FINDINGS_RANKED = json.dumps({
-    "ranked": [
-        {"description": "Churn spike in Q3", "impact": 0.9},
-        {"description": "CLV up 12%", "impact": 0.7},
-    ],
-    "total": 2,
-})
-_CONTEXT = json.dumps({
-    "company_name": "RetailCo",
-    "industry": "retail",
-    "goal": "reduce churn",
-    "kpis": ["churn_rate", "CLV"],
-    "audience": "executive",
-    "time_horizon": "short-term",
-})
+_FINDINGS_RANKED = json.dumps(
+    {
+        "ranked": [
+            {"description": "Churn spike in Q3", "impact": 0.9},
+            {"description": "CLV up 12%", "impact": 0.7},
+        ],
+        "total": 2,
+    }
+)
+_CONTEXT = json.dumps(
+    {
+        "company_name": "RetailCo",
+        "industry": "retail",
+        "goal": "reduce churn",
+        "kpis": ["churn_rate", "CLV"],
+        "audience": "executive",
+        "time_horizon": "short-term",
+    }
+)
 
 
 def test_executive_summary_contains_company():
@@ -387,9 +373,7 @@ def test_generate_section_findings():
 def test_generate_section_custom_title():
     from ai_data_science_team.tools.strategic import generate_section
 
-    _, artifact = generate_section.func(
-        section_type="risks", title="Key Risks & Assumptions"
-    )
+    _, artifact = generate_section.func(section_type="risks", title="Key Risks & Assumptions")
     assert artifact["title"] == "Key Risks & Assumptions"
 
 
@@ -413,11 +397,13 @@ def test_generate_section_unknown_type_falls_back():
 # format_report
 # ===========================================================================
 
-_SECTIONS = json.dumps([
-    "## Executive Summary\n\nGood results overall.",
-    "## Findings\n\nChurn decreased by 5%.",
-    "## Next Steps\n\n1. Monitor churn weekly.",
-])
+_SECTIONS = json.dumps(
+    [
+        "## Executive Summary\n\nGood results overall.",
+        "## Findings\n\nChurn decreased by 5%.",
+        "## Next Steps\n\n1. Monitor churn weekly.",
+    ]
+)
 
 
 def test_format_report_assembles_sections():
@@ -440,9 +426,7 @@ def test_format_report_toc_present():
 def test_format_report_no_toc():
     from ai_data_science_team.tools.strategic import format_report
 
-    _, artifact = format_report.func(
-        sections_json=_SECTIONS, include_toc=False
-    )
+    _, artifact = format_report.func(sections_json=_SECTIONS, include_toc=False)
     assert "Table of Contents" not in artifact["report"]
 
 
@@ -526,12 +510,16 @@ def test_ab_test_infeasible_small_audience():
 def test_ab_test_plan_keys():
     from ai_data_science_team.tools.strategic import design_ab_test
 
-    _, artifact = design_ab_test.func(
-        hypothesis="H1", primary_metric="revenue"
-    )
+    _, artifact = design_ab_test.func(hypothesis="H1", primary_metric="revenue")
     for key in (
-        "hypothesis", "primary_metric", "n_per_variant", "n_total_required",
-        "feasible", "success_criteria", "guardrail_metrics", "confidence_level",
+        "hypothesis",
+        "primary_metric",
+        "n_per_variant",
+        "n_total_required",
+        "feasible",
+        "success_criteria",
+        "guardrail_metrics",
+        "confidence_level",
     ):
         assert key in artifact
 
@@ -550,24 +538,38 @@ def test_ab_test_n_per_variant_positive():
 # prioritize_actions
 # ===========================================================================
 
-_ACTIONS = json.dumps([
-    {"description": "Launch loyalty programme", "impact": 8, "confidence": 7, "ease": 5},
-    {"description": "Fix checkout bug", "impact": 9, "confidence": 9, "ease": 9},
-    {"description": "A/B test new homepage", "impact": 5, "confidence": 6, "ease": 7},
-])
+_ACTIONS = json.dumps(
+    [
+        {"description": "Launch loyalty programme", "impact": 8, "confidence": 7, "ease": 5},
+        {"description": "Fix checkout bug", "impact": 9, "confidence": 9, "ease": 9},
+        {"description": "A/B test new homepage", "impact": 5, "confidence": 6, "ease": 7},
+    ]
+)
 
-_RICE_ACTIONS = json.dumps([
-    {"description": "Email campaign", "reach": 50000, "impact": 2.0, "confidence": 80, "effort": 2},
-    {"description": "Homepage redesign", "reach": 200000, "impact": 1.0, "confidence": 60, "effort": 10},
-])
+_RICE_ACTIONS = json.dumps(
+    [
+        {
+            "description": "Email campaign",
+            "reach": 50000,
+            "impact": 2.0,
+            "confidence": 80,
+            "effort": 2,
+        },
+        {
+            "description": "Homepage redesign",
+            "reach": 200000,
+            "impact": 1.0,
+            "confidence": 60,
+            "effort": 10,
+        },
+    ]
+)
 
 
 def test_ice_prioritization_first_is_highest():
     from ai_data_science_team.tools.strategic import prioritize_actions
 
-    _, artifact = prioritize_actions.func(
-        actions_json=_ACTIONS, framework="ice"
-    )
+    _, artifact = prioritize_actions.func(actions_json=_ACTIONS, framework="ice")
     assert artifact["valid"] is True
     assert artifact["prioritized"][0]["priority_rank"] == 1
     # Fix checkout bug has highest ICE (9*9*9 = 729)
@@ -585,9 +587,7 @@ def test_ice_scores_present():
 def test_rice_prioritization():
     from ai_data_science_team.tools.strategic import prioritize_actions
 
-    _, artifact = prioritize_actions.func(
-        actions_json=_RICE_ACTIONS, framework="rice"
-    )
+    _, artifact = prioritize_actions.func(actions_json=_RICE_ACTIONS, framework="rice")
     assert artifact["valid"] is True
     for a in artifact["prioritized"]:
         assert "rice_score" in a
@@ -746,10 +746,10 @@ def test_recommendation_agent_update_params():
 
 def test_all_four_agents_have_distinct_graphs():
     from ai_data_science_team.agents.strategic_agents import (
-        ResultsSynthesizerAgent,
         ContextualKnowledgeAgent,
         NarrativeAgent,
         RecommendationAgent,
+        ResultsSynthesizerAgent,
     )
 
     llm = _fake_llm()

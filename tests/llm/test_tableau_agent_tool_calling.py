@@ -42,9 +42,10 @@ def test_build_tableau_connector_real(llm_or_skip, llm_model):
     """build_tableau_connector Pydantic ConnectorConfig alır; in-memory nesne döndürür."""
     tool = build_tableau_connector_wrapped
     result = _invoke(
-        tool, llm_model,
+        tool,
+        llm_model,
         "build_tableau_connector tool'unu TEK çağrı ile çağır. "
-        "config = {\"kind\": \"tableau\", \"name\": \"tbl_demo\", \"params\": {}}.",
+        'config = {"kind": "tableau", "name": "tbl_demo", "params": {}}.',
     )
     assert isinstance(result, tuple) and len(result) == 2
     content, artifact = result

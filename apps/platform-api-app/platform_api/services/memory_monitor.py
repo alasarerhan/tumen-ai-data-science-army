@@ -35,7 +35,6 @@ import os
 import threading
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from typing import Dict, List, Optional
 
 from prometheus_client import Gauge
 
@@ -89,6 +88,7 @@ MEMORY_GROWTH_RATE = Gauge(
 @dataclass
 class MemorySnapshot:
     """Snapshot of memory usage at a point in time."""
+
     timestamp: datetime
     rss_bytes: int
     vms_bytes: int
@@ -118,7 +118,7 @@ class MemoryMonitor:
         self._sample_interval = sample_interval_seconds
         self._history_size = history_size
         self._leak_threshold = leak_threshold_percent
-        self._history: List[MemorySnapshot] = []
+        self._history: list[MemorySnapshot] = []
         self._psutil_available = self._check_psutil()
 
     def _check_psutil(self) -> bool:
@@ -128,7 +128,7 @@ class MemoryMonitor:
             return False
         return True
 
-    def get_memory_stats(self) -> Dict:
+    def get_memory_stats(self) -> dict:
         """Get current memory statistics.
 
         Returns
@@ -211,8 +211,8 @@ class MemoryMonitor:
         if len(self._history) < 10:
             return False
 
-        first_half = self._history[:len(self._history)//2]
-        second_half = self._history[len(self._history)//2:]
+        first_half = self._history[: len(self._history) // 2]
+        second_half = self._history[len(self._history) // 2 :]
 
         first_avg = sum(s.rss_bytes for s in first_half) / len(first_half)
         second_avg = sum(s.rss_bytes for s in second_half) / len(second_half)
@@ -225,7 +225,8 @@ class MemoryMonitor:
         if growth_percent > self._leak_threshold:
             logger.warning(
                 "Memory leak detected: growth=%.1f%% over %d samples",
-                growth_percent, len(self._history),
+                growth_percent,
+                len(self._history),
             )
             return True
 
@@ -256,7 +257,7 @@ class MemoryMonitor:
 
         return growth_rate
 
-    def get_gc_stats(self) -> Dict:
+    def get_gc_stats(self) -> dict:
         """Get garbage collection statistics.
 
         Returns
@@ -276,7 +277,7 @@ class MemoryMonitor:
 
         return gc_stats
 
-    def force_gc(self) -> Dict:
+    def force_gc(self) -> dict:
         """Force garbage collection and return stats.
 
         Returns
@@ -300,7 +301,7 @@ class MemoryMonitor:
             "freed_bytes": before["rss_bytes"] - after["rss_bytes"],
         }
 
-    def get_recommendations(self) -> List[str]:
+    def get_recommendations(self) -> list[str]:
         """Get memory optimization recommendations.
 
         Returns
@@ -360,7 +361,8 @@ class MemoryMonitor:
         if current_mb > memory_limit_mb:
             logger.warning(
                 "Memory limit exceeded: current=%.1f MB, limit=%d MB",
-                current_mb, memory_limit_mb,
+                current_mb,
+                memory_limit_mb,
             )
             return True
 
@@ -370,7 +372,7 @@ class MemoryMonitor:
         return False
 
 
-_memory_monitor: Optional[MemoryMonitor] = None
+_memory_monitor: MemoryMonitor | None = None
 _memory_monitor_lock = threading.Lock()
 
 
@@ -391,12 +393,12 @@ def get_memory_monitor() -> MemoryMonitor:
 
 
 __all__ = [
+    "MEMORY_GROWTH_RATE",
+    "PROCESS_MEMORY_BYTES",
+    "PROCESS_MEMORY_PERCENT",
+    "PROCESS_MEMORY_RSS",
+    "PROCESS_MEMORY_VMS",
     "MemoryMonitor",
     "MemorySnapshot",
     "get_memory_monitor",
-    "PROCESS_MEMORY_BYTES",
-    "PROCESS_MEMORY_RSS",
-    "PROCESS_MEMORY_VMS",
-    "PROCESS_MEMORY_PERCENT",
-    "MEMORY_GROWTH_RATE",
 ]

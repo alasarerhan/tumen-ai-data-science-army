@@ -1,5 +1,5 @@
-from dataclasses import dataclass, asdict
-from typing import Any, Optional, Callable
+from dataclasses import asdict, dataclass
+from typing import Any, Callable, Optional
 
 from langgraph.types import Checkpointer
 
@@ -17,10 +17,10 @@ class AgentConfig:
     bypass_recommended_steps: bool = False
     bypass_explain_code: bool = False
     checkpointer: Optional[Checkpointer] = None
-    
+
     def to_params(self) -> dict:
         return {k: v for k, v in asdict(self).items() if v is not None}
-    
+
     def with_overrides(self, **kwargs) -> "AgentConfig":
         params = asdict(self)
         params.update(kwargs)
@@ -58,7 +58,7 @@ class CodingAgentGraphConfig:
     human_review_node_name: str = "human_review"
     max_retries_key: str = "max_retries"
     retry_count_key: str = "retry_count"
-    
+
     def to_params(self) -> dict:
         return asdict(self)
 

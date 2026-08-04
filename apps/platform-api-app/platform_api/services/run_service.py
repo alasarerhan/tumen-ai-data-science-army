@@ -8,9 +8,9 @@ from datetime import UTC, datetime
 from sqlalchemy import select, text
 from sqlalchemy.orm import Session
 
+from platform_api.core.service_errors import ForbiddenError, NotFoundError
 from platform_api.db.models import WorkflowRun, WorkflowSpec, Workspace, WorkspaceMembership
 from platform_api.db.tenant_query import TenantQuery
-from platform_api.core.service_errors import ForbiddenError, NotFoundError
 from platform_api.tenant_context import set_tenant_context
 
 _RUN_WRITE_LOCK = threading.Lock()
@@ -21,14 +21,19 @@ def _parse_uuid(value: uuid.UUID | str, label: str) -> uuid.UUID:
 
 
 def _normalize_run_not_found_error(exc: Exception) -> Exception:
-    if getattr(exc, "status_code", None) == 404 and getattr(exc, "detail", None) == "WorkflowRun not found":
+    if (
+        getattr(exc, "status_code", None) == 404
+        and getattr(exc, "detail", None) == "WorkflowRun not found"
+    ):
         return NotFoundError("Workflow run not found")
     return exc
 
 
 def ensure_workspace_member(db: Session, *, workspace_id: str, user_id: uuid.UUID) -> uuid.UUID:
     workspace_uuid = _parse_uuid(workspace_id, "workspace_id")
-    workspace = db.execute(select(Workspace).where(Workspace.id == workspace_uuid)).scalar_one_or_none()
+    workspace = db.execute(
+        select(Workspace).where(Workspace.id == workspace_uuid)
+    ).scalar_one_or_none()
     if workspace is None:
         raise NotFoundError("Workspace not found")
 
@@ -49,7 +54,9 @@ def get_workspace_for_member(db: Session, *, workspace_id: str, user_id: uuid.UU
     set_tenant_context(workspace.tenant_id, workspace.id)
     bind = db.get_bind()
     if bind is not None and bind.dialect.name == "postgresql":
-        db.execute(text("SET app.current_tenant_id = :tenant_id"), {"tenant_id": str(workspace.tenant_id)})
+        db.execute(
+            text("SET app.current_tenant_id = :tenant_id"), {"tenant_id": str(workspace.tenant_id)}
+        )
     return workspace
 
 
@@ -142,7 +149,6 @@ def update_workflow_run_status(
     return run
 
 
-
 def get_run_by_id_for_workspace(
     db: Session,
     *,
@@ -169,20 +175,23 @@ def get_run_by_id_for_workspace_for_update(
     workspace_id: uuid.UUID,
 ) -> WorkflowRun:
     """Fetch a single WorkflowRun with row-level lock for status transitions.
-    
+
     Uses SELECT FOR UPDATE to prevent race conditions when multiple requests
     try to modify the same run's status simultaneously.
-    
+
     Security: tenant_id/workspace_id filter is applied IN the query (not post-fetch)
     to prevent IDOR vulnerabilities.
-    
+
     Raises a service-layer not-found or forbidden error if access is invalid.
     """
     parsed_run_id = _parse_uuid(run_id, "run_id")
     try:
-        return TenantQuery(db, WorkflowRun).for_workspace(workspace_id).get_for_update(parsed_run_id)
+        return (
+            TenantQuery(db, WorkflowRun).for_workspace(workspace_id).get_for_update(parsed_run_id)
+        )
     except Exception as exc:
         raise _normalize_run_not_found_error(exc) from exc
+
 
 def list_workflow_runs_for_workspace(
     db: Session,

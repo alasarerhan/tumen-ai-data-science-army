@@ -5,29 +5,36 @@ import functools
 import json
 import logging
 import uuid
+from collections.abc import AsyncIterator
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 from time import perf_counter
-from typing import Any, AsyncIterator
+from typing import Any
 
 from prometheus_client import Counter, Gauge, Histogram
 from sqlalchemy import and_, or_, select
 from sqlalchemy.orm import Session
 
+from platform_api.control_plane.actions import plan_action_from_text
+from platform_api.control_plane.query import build_context_for_chat_session, chat_platform_reply
 from platform_api.core.config import settings
 from platform_api.core.file_security import (
-    secure_upload_directory,
     sanitize_svg_content,
+    secure_upload_directory,
     validate_upload,
     validate_zip_archive,
 )
 from platform_api.core.malware_scan import enforce_scan_mode
-from platform_api.db.models import ChatMessage, ChatMessageRole, ChatSession, ChatSessionStatus, ChatUpload
 from platform_api.core.service_errors import NotFoundError, ValidationError
-from platform_api.control_plane.actions import plan_action_from_text
-from platform_api.control_plane.query import build_context_for_chat_session, chat_platform_reply
+from platform_api.db.models import (
+    ChatMessage,
+    ChatMessageRole,
+    ChatSession,
+    ChatSessionStatus,
+    ChatUpload,
+)
 from platform_api.services.workflow_chain_validator import inspect_workflow_spec
 
 logger = logging.getLogger(__name__)
@@ -355,11 +362,11 @@ def save_upload(
     )
     enforce_scan_mode(file_bytes, settings.malware_scan_mode)
 
-    if validated_mime == 'application/zip':
+    if validated_mime == "application/zip":
         validate_zip_archive(file_bytes)
 
     file_content = file_bytes
-    if secure_filename.lower().endswith('.svg'):
+    if secure_filename.lower().endswith(".svg"):
         file_content = sanitize_svg_content(file_bytes)
 
     base_upload_dir = Path(settings.chat_upload_dir).resolve()
@@ -384,7 +391,9 @@ def save_upload(
             temp_path.unlink()
         raise
 
-    relative_path = Path(str(session.tenant_id)) / str(session.workspace_id) / str(session.id) / secure_filename
+    relative_path = (
+        Path(str(session.tenant_id)) / str(session.workspace_id) / str(session.id) / secure_filename
+    )
     storage_uri = str(relative_path)
 
     try:
@@ -474,7 +483,9 @@ async def _run_chat_blocking(func, /, *args, **kwargs):
         CHAT_BLOCKING_TASKS_IN_FLIGHT.dec()
 
 
-async def _load_session_dataframe_async(db: Session, *, session: ChatSession) -> tuple[Any, str] | None:
+async def _load_session_dataframe_async(
+    db: Session, *, session: ChatSession
+) -> tuple[Any, str] | None:
     for upload in list_uploads(db, session_id=session.id):
         loaded = await _run_chat_blocking(_load_dataframe_from_upload, upload)
         if loaded is not None:
@@ -502,7 +513,9 @@ def _select_modeling_agent(lower_prompt: str) -> str:
     return "H2O ML"
 
 
-def _build_workflow_design(prompt: str, uploads: list[ChatUpload], dataframe: Any | None) -> tuple[str, list[dict]]:
+def _build_workflow_design(
+    prompt: str, uploads: list[ChatUpload], dataframe: Any | None
+) -> tuple[str, list[dict]]:
     lower = prompt.lower()
     include_modeling = any(
         keyword in lower
@@ -568,7 +581,11 @@ def _build_workflow_design(prompt: str, uploads: list[ChatUpload], dataframe: An
     if "daily" in lower:
         schedule = {"cron": "0 8 * * *", "natural_language": "Daily at 08:00", "timezone": "UTC"}
     elif "weekly" in lower:
-        schedule = {"cron": "0 8 * * 1", "natural_language": "Every Monday at 08:00", "timezone": "UTC"}
+        schedule = {
+            "cron": "0 8 * * 1",
+            "natural_language": "Every Monday at 08:00",
+            "timezone": "UTC",
+        }
 
     workflow_spec: dict[str, Any] = {
         "name": "AI Workspace Workflow",
@@ -603,7 +620,9 @@ def _build_workflow_design(prompt: str, uploads: list[ChatUpload], dataframe: An
     return text, [{"type": "workflow_design", "workflow_spec": workflow_spec}]
 
 
-def _normalize_chatworkspace_artifact(artifact_type: str | None, artifact_data: dict | None) -> list[dict]:
+def _normalize_chatworkspace_artifact(
+    artifact_type: str | None, artifact_data: dict | None
+) -> list[dict]:
     if not artifact_type or not artifact_data:
         return []
     if artifact_type == "table":
@@ -650,7 +669,8 @@ def _normalize_chatworkspace_artifact(artifact_type: str | None, artifact_data: 
                 {
                     "type": "chart",
                     "chart_type": "line",
-                    "categories": categories or [f"P{i + 1}" for i in range(len(series[0]["data"]))],
+                    "categories": categories
+                    or [f"P{i + 1}" for i in range(len(series[0]["data"]))],
                     "series": series,
                     "meta": {"title": "AI Workspace Chart"},
                 }
@@ -662,6 +682,7 @@ def _get_chatworkspace_session_store():
     if settings.agent_cache_redis_url:
         try:
             from ai_data_science_team.redis_stores import RedisChatSessionStore
+
             return RedisChatSessionStore(redis_url=settings.agent_cache_redis_url)
         except Exception as exc:
             logger.info("RedisChatSessionStore unavailable, using in-memory fallback: %s", exc)
@@ -677,8 +698,8 @@ def _try_chatworkspace_reply(
         return None
 
     try:
-        from langchain_openai import ChatOpenAI
         from ai_data_science_team.multiagents.chat_workspace import ChatWorkspace
+        from langchain_openai import ChatOpenAI
     except ImportError as exc:
         logger.info("ChatWorkspace dependencies unavailable, using fallback reply path: %s", exc)
         return None
@@ -709,8 +730,8 @@ async def _try_chatworkspace_reply_stream(
         return
 
     try:
-        from langchain_openai import ChatOpenAI
         from ai_data_science_team.multiagents.chat_workspace import ChatWorkspace
+        from langchain_openai import ChatOpenAI
     except ImportError as exc:
         logger.info("ChatWorkspace dependencies unavailable, using fallback reply path: %s", exc)
         return
@@ -735,7 +756,13 @@ async def _try_chatworkspace_reply_stream(
                     delta=event.response.text,
                     text=event.response.text,
                     artifacts=artifacts
-                    or [{"type": "report", "title": "AI Workspace Response", "content": event.response.text}],
+                    or [
+                        {
+                            "type": "report",
+                            "title": "AI Workspace Response",
+                            "content": event.response.text,
+                        }
+                    ],
                 )
     except Exception as exc:
         logger.warning("ChatWorkspace streaming failed, using fallback reply path: %s", exc)
@@ -768,7 +795,9 @@ def build_assistant_reply(
 
     if any(k in lower for k in ["chart", "grafik", "trend"]):
         if dataframe_preview is not None and numeric_columns:
-            chart_points = list(dataframe_preview[numeric_columns[0]].fillna(0).astype(float).head(8))
+            chart_points = list(
+                dataframe_preview[numeric_columns[0]].fillna(0).astype(float).head(8)
+            )
             categories = [str(i + 1) for i in range(len(chart_points))]
             artifacts.append(
                 {
@@ -810,7 +839,9 @@ def build_assistant_reply(
                 }
             )
     if any(k in lower for k in ["code", "python", "sql"]):
-        dataset_reference = dataset_name or (uploads[0].filename if uploads else "uploaded_dataset.csv")
+        dataset_reference = dataset_name or (
+            uploads[0].filename if uploads else "uploaded_dataset.csv"
+        )
         artifacts.append(
             {
                 "type": "code",
@@ -958,7 +989,8 @@ def message_to_dict(message: ChatMessage) -> dict:
         except json.JSONDecodeError as e:
             logger.warning(
                 "Failed to parse artifacts JSON for message %s: %s",
-                message.id, e,
+                message.id,
+                e,
             )
             artifacts = []
     return {

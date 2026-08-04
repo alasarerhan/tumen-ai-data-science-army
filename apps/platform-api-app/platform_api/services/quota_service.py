@@ -7,8 +7,8 @@ from sqlalchemy import delete, func, select, text
 from sqlalchemy.orm import Session
 
 from platform_api.core.config import settings
-from platform_api.db.models import TenantQuotaEvent
 from platform_api.core.service_errors import RateLimitExceededError, ValidationError
+from platform_api.db.models import TenantQuotaEvent
 
 
 def _parse_tenant_id(tenant_id: str) -> uuid.UUID:

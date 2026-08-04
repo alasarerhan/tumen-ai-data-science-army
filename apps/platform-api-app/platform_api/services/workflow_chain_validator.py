@@ -67,11 +67,23 @@ def canonicalize_agent(candidate: str | None) -> str | None:
     return _alias_map().get(_normalize_name(candidate))
 
 
-def _normalize_graph(spec: dict[str, Any]) -> tuple[list[dict[str, Any]], list[dict[str, Any]], str | None]:
+def _normalize_graph(
+    spec: dict[str, Any],
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]], str | None]:
     graph = spec.get("graph")
-    if isinstance(graph, dict) and isinstance(graph.get("nodes"), list) and isinstance(graph.get("edges"), list):
+    if (
+        isinstance(graph, dict)
+        and isinstance(graph.get("nodes"), list)
+        and isinstance(graph.get("edges"), list)
+    ):
         target_variable = spec.get("target_variable")
-        return graph["nodes"], graph["edges"], target_variable if isinstance(target_variable, str) and target_variable.strip() else None
+        return (
+            graph["nodes"],
+            graph["edges"],
+            target_variable
+            if isinstance(target_variable, str) and target_variable.strip()
+            else None,
+        )
 
     steps = spec.get("steps")
     if not isinstance(steps, list):
@@ -105,7 +117,11 @@ def _normalize_graph(spec: dict[str, Any]) -> tuple[list[dict[str, Any]], list[d
                 )
 
     target_variable = spec.get("target_variable")
-    return nodes, edges, target_variable if isinstance(target_variable, str) and target_variable.strip() else None
+    return (
+        nodes,
+        edges,
+        target_variable if isinstance(target_variable, str) and target_variable.strip() else None,
+    )
 
 
 def inspect_workflow_spec(spec: dict[str, Any]) -> dict[str, list[dict[str, str]]]:
@@ -125,14 +141,18 @@ def inspect_workflow_spec(spec: dict[str, Any]) -> dict[str, list[dict[str, str]
 
     nodes, edges, target_variable = _normalize_graph(spec)
     if not nodes and not edges:
-        errors.append({
-            "code": "invalid_graph",
-            "message": "Workflow spec must include graph.nodes/graph.edges or a non-empty steps array.",
-        })
+        errors.append(
+            {
+                "code": "invalid_graph",
+                "message": "Workflow spec must include graph.nodes/graph.edges or a non-empty steps array.",
+            }
+        )
         return {"warnings": warnings, "errors": errors}
 
     if not nodes:
-        errors.append({"code": "empty_nodes", "message": "Workflow must contain at least one node."})
+        errors.append(
+            {"code": "empty_nodes", "message": "Workflow must contain at least one node."}
+        )
         return {"warnings": warnings, "errors": errors}
 
     node_ids: set[str] = set()
@@ -146,17 +166,21 @@ def inspect_workflow_spec(spec: dict[str, Any]) -> dict[str, list[dict[str, str]
             errors.append({"code": "missing_node_id", "message": "Each node must include an id."})
             continue
         if node_id in node_ids:
-            errors.append({"code": "duplicate_node_id", "message": f"Duplicate node id detected: {node_id}"})
+            errors.append(
+                {"code": "duplicate_node_id", "message": f"Duplicate node id detected: {node_id}"}
+            )
             continue
         node_ids.add(node_id)
         canonical = canonicalize_agent(
             str(node.get("agent") or node.get("label") or "").strip() or None
         )
         if not canonical:
-            errors.append({
-                "code": "unknown_agent",
-                "message": f'Node "{node.get("label") or node_id}" does not map to a known agent.',
-            })
+            errors.append(
+                {
+                    "code": "unknown_agent",
+                    "message": f'Node "{node.get("label") or node_id}" does not map to a known agent.',
+                }
+            )
             continue
         canonical_by_node[node_id] = canonical
 
@@ -171,10 +195,17 @@ def inspect_workflow_spec(spec: dict[str, Any]) -> dict[str, list[dict[str, str]
         source = str(edge.get("source") or "").strip()
         target = str(edge.get("target") or "").strip()
         if not edge_id or not source or not target:
-            errors.append({"code": "invalid_edge", "message": "Each edge must include id, source, and target."})
+            errors.append(
+                {
+                    "code": "invalid_edge",
+                    "message": "Each edge must include id, source, and target.",
+                }
+            )
             continue
         if source not in node_ids or target not in node_ids:
-            errors.append({"code": "dangling_edge", "message": f"Edge {edge_id} references unknown node."})
+            errors.append(
+                {"code": "dangling_edge", "message": f"Edge {edge_id} references unknown node."}
+            )
             continue
 
         incoming_counts[target] = incoming_counts.get(target, 0) + 1
@@ -191,15 +222,19 @@ def inspect_workflow_spec(spec: dict[str, Any]) -> dict[str, list[dict[str, str]
         if target_key in (source_rule.get("safe_next") or []):
             continue
         if target_key in (source_rule.get("conditional_next") or []):
-            warnings.append({
-                "code": "conditional_edge",
-                "message": f"{source_label} -> {target_label} is valid, but conditional/advisory rather than a guaranteed typed handoff.",
-            })
+            warnings.append(
+                {
+                    "code": "conditional_edge",
+                    "message": f"{source_label} -> {target_label} is valid, but conditional/advisory rather than a guaranteed typed handoff.",
+                }
+            )
             continue
-        errors.append({
-            "code": "blocked_edge",
-            "message": f"{source_label} cannot chain directly into {target_label}.",
-        })
+        errors.append(
+            {
+                "code": "blocked_edge",
+                "message": f"{source_label} cannot chain directly into {target_label}.",
+            }
+        )
 
     requirements = _load_ruleset().get("requirements", {})
     for node_id, canonical in canonical_by_node.items():
@@ -209,15 +244,19 @@ def inspect_workflow_spec(spec: dict[str, Any]) -> dict[str, list[dict[str, str]
         min_incoming = req.get("min_incoming_edges")
         if isinstance(min_incoming, int) and incoming_counts.get(node_id, 0) < min_incoming:
             label = str(rules_by_key.get(canonical, {}).get("label") or canonical)
-            warnings.append({
-                "code": "insufficient_inputs",
-                "message": f"{label} usually needs at least {min_incoming} inbound edges, but this node currently has {incoming_counts.get(node_id, 0)}.",
-            })
+            warnings.append(
+                {
+                    "code": "insufficient_inputs",
+                    "message": f"{label} usually needs at least {min_incoming} inbound edges, but this node currently has {incoming_counts.get(node_id, 0)}.",
+                }
+            )
         if req.get("target_variable") and not target_variable:
             label = str(rules_by_key.get(canonical, {}).get("label") or canonical)
-            warnings.append({
-                "code": "missing_target_variable",
-                "message": f"{label} usually requires a target variable, but this workflow spec does not define one.",
-            })
+            warnings.append(
+                {
+                    "code": "missing_target_variable",
+                    "message": f"{label} usually requires a target variable, but this workflow spec does not define one.",
+                }
+            )
 
     return {"warnings": warnings, "errors": errors}

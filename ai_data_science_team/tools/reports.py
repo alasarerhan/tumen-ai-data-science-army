@@ -25,7 +25,6 @@ Public surface
 import uuid  # noqa: E402, F401
 from typing import Any, Dict, List, Mapping, Optional, Sequence  # noqa: E402, F401
 
-
 # ---------------------------------------------------------------------------
 # Template registry
 # ---------------------------------------------------------------------------
@@ -144,7 +143,9 @@ def build_report(
                 "name": k.get("name"),
                 "direction": "up"
                 if (k.get("delta") or 0) > 0
-                else "down" if (k.get("delta") or 0) < 0 else "flat",
+                else "down"
+                if (k.get("delta") or 0) < 0
+                else "flat",
             }
             for k in kpis
         ]
@@ -233,9 +234,7 @@ def render_markdown(report: Mapping[str, Any]) -> str:
         lines.append("| Name | Value | Delta |")
         lines.append("|------|-------|-------|")
         for k in report["kpis"]:
-            lines.append(
-                f"| {k.get('name', '')} | {k.get('value', '')} | {k.get('delta', '')} |"
-            )
+            lines.append(f"| {k.get('name', '')} | {k.get('value', '')} | {k.get('delta', '')} |")
         lines.append("")
 
     if "metrics" in report and report["metrics"]:
@@ -266,9 +265,7 @@ def render_markdown(report: Mapping[str, Any]) -> str:
         lines.append("")
         for s in report["drift_signals"]:
             lines.append(
-                f"- {s.get('column', '?')}: "
-                f"psi={s.get('psi', '')} "
-                f"severity={s.get('severity', '')}"
+                f"- {s.get('column', '?')}: psi={s.get('psi', '')} severity={s.get('severity', '')}"
             )
         lines.append("")
 
@@ -278,10 +275,7 @@ def render_markdown(report: Mapping[str, Any]) -> str:
         lines.append(str(report["retrain_recommendation"]))
         lines.append("")
 
-    if (
-        "protected_attribute_metrics" in report
-        and report["protected_attribute_metrics"]
-    ):
+    if "protected_attribute_metrics" in report and report["protected_attribute_metrics"]:
         lines.append("## Protected-attribute Metrics")
         lines.append("")
         lines.append("| Attribute | Group | Metric | Value |")
@@ -297,9 +291,7 @@ def render_markdown(report: Mapping[str, Any]) -> str:
         lines.append("## Trends")
         lines.append("")
         for t in report["trends"]:
-            lines.append(
-                f"- {t.get('name', '')}: {t.get('direction', '')}"
-            )
+            lines.append(f"- {t.get('name', '')}: {t.get('direction', '')}")
         lines.append("")
 
     if "next_steps" in report and report["next_steps"]:
@@ -326,5 +318,3 @@ __all__ = [
     "compute_schedule",
     "render_markdown",
 ]
-
-

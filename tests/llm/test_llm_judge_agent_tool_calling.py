@@ -28,7 +28,8 @@ def test_judge_output_real(llm_or_skip, llm_model):
     tool = judge_output_wrapped
     result, _ = _assert_result(
         _drive_tool_call(
-            llm_model, tool,
+            llm_model,
+            tool,
             "judge_output tool'unu TEK çağrı ile çağır. "
             "text='The output is correct.', code='def f(): return 42'.",
         ),
@@ -50,7 +51,8 @@ def test_judge_batch_real(llm_or_skip, llm_model):
     ]
     result, _ = _assert_result(
         _drive_tool_call(
-            llm_model, tool,
+            llm_model,
+            tool,
             f"judge_batch tool'unu TEK çağrı ile çağır. items = {items!r}",
         ),
         tool.name,

@@ -15,6 +15,7 @@ Best practice reference: https://agnitestudio.com/blog/preventing-cross-tenant-l
 
 FinOps: Configurable log retention to prevent unbounded storage growth.
 """
+
 from __future__ import annotations
 
 import json
@@ -24,8 +25,8 @@ import os
 import re
 import time
 import uuid
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable
 
 from fastapi import FastAPI, Request, Response
 from prometheus_client import (
@@ -43,9 +44,9 @@ from platform_api.tenant_context import get_current_tenant_id, get_current_works
 # SLO constants (document the budget; alerting thresholds reference these)
 # ---------------------------------------------------------------------------
 
-SLO_LATENCY_P99_MS: int = 500          # 500 ms p99 target
-SLO_ERROR_RATE_BUDGET: float = 0.01    # 1 % error rate budget  (5xx / total)
-SLO_AVAILABILITY_BUDGET: float = 0.995 # 99.5 % availability
+SLO_LATENCY_P99_MS: int = 500  # 500 ms p99 target
+SLO_ERROR_RATE_BUDGET: float = 0.01  # 1 % error rate budget  (5xx / total)
+SLO_AVAILABILITY_BUDGET: float = 0.995  # 99.5 % availability
 
 # ---------------------------------------------------------------------------
 # Prometheus metric registry
@@ -183,7 +184,8 @@ def configure_logging() -> None:
         root.warning(
             "CRITICAL: Could not configure file logging at %s: %s. "
             "Logs will only go to stdout. Audit trail may be incomplete.",
-            log_file, e,
+            log_file,
+            e,
         )
 
     for noisy in ("uvicorn.access", "watchfiles"):
@@ -282,6 +284,7 @@ def _register_service_metrics() -> None:
             OUTBOX_PENDING_GAUGE,
             OUTBOX_PROCESSING_GAUGE,
         )
+
         _register_metric_collector(OUTBOX_PENDING_GAUGE)
         _register_metric_collector(OUTBOX_PROCESSING_GAUGE)
         _register_metric_collector(OUTBOX_FAILED_GAUGE)
@@ -298,6 +301,7 @@ def _register_service_metrics() -> None:
             SCHEDULER_RUNNING_JOBS_GAUGE,
             SCHEDULER_STUCK_JOBS_GAUGE,
         )
+
         _register_metric_collector(SCHEDULER_JOBS_TOTAL)
         _register_metric_collector(SCHEDULER_JOB_DURATION)
         _register_metric_collector(SCHEDULER_LEADER_GAUGE)
@@ -313,6 +317,7 @@ def _register_service_metrics() -> None:
             CHAT_STREAM_DURATION,
             CHAT_STREAM_EVENTS_TOTAL,
         )
+
         _register_metric_collector(CHAT_STREAM_EVENTS_TOTAL)
         _register_metric_collector(CHAT_STREAM_DURATION)
         _register_metric_collector(CHAT_BLOCKING_TASKS_IN_FLIGHT)
@@ -327,6 +332,7 @@ def _register_service_metrics() -> None:
             PROCESS_MEMORY_RSS,
             PROCESS_MEMORY_VMS,
         )
+
         _register_metric_collector(PROCESS_MEMORY_BYTES)
         _register_metric_collector(PROCESS_MEMORY_RSS)
         _register_metric_collector(PROCESS_MEMORY_VMS)
@@ -337,10 +343,11 @@ def _register_service_metrics() -> None:
 
     try:
         from platform_api.services.workflow_scheduler_service import (
-            WORKFLOW_SCHEDULED_TOTAL,
             WORKFLOW_SCHEDULE_GAUGE,
+            WORKFLOW_SCHEDULED_TOTAL,
             WORKFLOW_TRIGGER_TOTAL,
         )
+
         _register_metric_collector(WORKFLOW_SCHEDULED_TOTAL)
         _register_metric_collector(WORKFLOW_TRIGGER_TOTAL)
         _register_metric_collector(WORKFLOW_SCHEDULE_GAUGE)
@@ -360,4 +367,3 @@ _UUID_PATTERN = __import__("re").compile(
 def _normalise_path(path: str) -> str:
     """Replace UUID path segments with ``{id}`` for metric label cardinality."""
     return _UUID_PATTERN.sub("{id}", path)
-

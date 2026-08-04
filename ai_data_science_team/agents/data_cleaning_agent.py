@@ -1,6 +1,3 @@
-
-
-
 import logging
 
 logger = logging.getLogger(__name__)
@@ -10,42 +7,40 @@ logger = logging.getLogger(__name__)
 # * Agents: Data Cleaning Agent
 
 # Libraries
-from typing_extensions import TypedDict, Annotated, Sequence, Literal  # noqa: E402, F401
-import operator  # noqa: E402, F401
-
-from langchain_core.prompts import PromptTemplate  # noqa: E402, F401
-
-from langchain_core.messages import BaseMessage  # noqa: E402, F401
-
-from langgraph.types import Command  # noqa: E402, F401
-from langgraph.checkpoint.memory import MemorySaver  # noqa: E402, F401
-from langgraph.types import Checkpointer  # noqa: E402, F401
-
-import os  # noqa: E402, F401
 import json  # noqa: E402, F401
+import operator  # noqa: E402, F401
+import os  # noqa: E402, F401
+
 import pandas as pd  # noqa: E402, F401
-
 from IPython.display import Markdown  # noqa: E402, F401
-
-from ai_data_science_team.templates import (  # noqa: E402, F401
-    node_func_human_review,
-    node_func_fix_agent_code,
-    node_func_report_agent_outputs,
-    create_coding_agent_graph,
-    BaseAgent,
+from langchain_core.messages import BaseMessage  # noqa: E402, F401
+from langchain_core.prompts import PromptTemplate  # noqa: E402, F401
+from langgraph.checkpoint.memory import MemorySaver  # noqa: E402, F401
+from langgraph.types import (
+    Checkpointer,  # noqa: E402, F401
+    Command,  # noqa: E402, F401
 )
+from typing_extensions import Annotated, Literal, Sequence, TypedDict  # noqa: E402, F401
+
 from ai_data_science_team.parsers.parsers import PythonOutputParser  # noqa: E402, F401
+from ai_data_science_team.templates import (  # noqa: E402, F401
+    BaseAgent,
+    create_coding_agent_graph,
+    node_func_fix_agent_code,
+    node_func_human_review,
+    node_func_report_agent_outputs,
+)
+from ai_data_science_team.tools.dataframe import get_dataframe_summary  # noqa: E402, F401
+from ai_data_science_team.utils.logging import log_ai_error, log_ai_function  # noqa: E402, F401
+from ai_data_science_team.utils.messages import get_last_user_message_content  # noqa: E402, F401
 from ai_data_science_team.utils.regex import (  # noqa: E402, F401
-    relocate_imports_inside_function,
     add_comments_to_top,
     format_agent_name,
     format_recommended_steps,
     get_generic_summary,
+    relocate_imports_inside_function,
 )
-from ai_data_science_team.tools.dataframe import get_dataframe_summary  # noqa: E402, F401
-from ai_data_science_team.utils.logging import log_ai_function, log_ai_error  # noqa: E402, F401
 from ai_data_science_team.utils.sandbox import run_code_sandboxed_subprocess  # noqa: E402, F401
-from ai_data_science_team.utils.messages import get_last_user_message_content  # noqa: E402, F401
 
 # Setup
 AGENT_NAME = "data_cleaning_agent"
@@ -290,6 +285,7 @@ class DataCleaningAgent(BaseAgent):
             **kwargs,
         )
         return None
+
     def _make_compiled_graph(self):
         """
         Create the compiled graph for the data cleaning agent. Running this method will reset the response to None.
@@ -297,15 +293,12 @@ class DataCleaningAgent(BaseAgent):
         self.response = None
         return make_data_cleaning_agent(**self._params)
 
-
     def get_workflow_summary(self, markdown=False):
         """
         Retrieves the agent's workflow summary, if logging is enabled.
         """
         if self.response and self.response.get("messages"):
-            summary = get_generic_summary(
-                json.loads(self.response.get("messages")[-1].content)
-            )
+            summary = get_generic_summary(json.loads(self.response.get("messages")[-1].content))
             if markdown:
                 return Markdown(summary)
             else:
@@ -349,9 +342,7 @@ Function Name: {self.response.get("data_cleaner_function_name")}
         """
         if self.response:
             if markdown:
-                return Markdown(
-                    f"```python\n{self.response.get('data_cleaner_function')}\n```"
-                )
+                return Markdown(f"```python\n{self.response.get('data_cleaner_function')}\n```")
             else:
                 return self.response.get("data_cleaner_function")
 

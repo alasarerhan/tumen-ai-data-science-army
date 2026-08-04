@@ -38,13 +38,17 @@ def _prompt(instruction: str, columns: str) -> str:
 # Tool başına gerçek testler
 # ---------------------------------------------------------------------------
 
+
 def test_explain_data_real(llm_or_skip, llm_model, sample_data_dict, sample_df):
     tool = explain_data
     result, _ = _assert_result(
         _drive_tool_call(
-            llm_model, tool,
-            _prompt("Bu veri setini ayrıntılı şekilde açıkla (explain_data çağır, n_sample=5).",
-                    ", ".join(sample_df.columns)),
+            llm_model,
+            tool,
+            _prompt(
+                "Bu veri setini ayrıntılı şekilde açıkla (explain_data çağır, n_sample=5).",
+                ", ".join(sample_df.columns),
+            ),
             sample_data_dict,
         ),
         tool.name,
@@ -56,17 +60,19 @@ def test_describe_dataset_real(llm_or_skip, llm_model, sample_data_dict, sample_
     tool = describe_dataset
     result, _ = _assert_result(
         _drive_tool_call(
-            llm_model, tool,
-            _prompt("Bu veri seti için istatistik özeti üret (describe_dataset çağır).",
-                    ", ".join(sample_df.columns)),
+            llm_model,
+            tool,
+            _prompt(
+                "Bu veri seti için istatistik özeti üret (describe_dataset çağır).",
+                ", ".join(sample_df.columns),
+            ),
             sample_data_dict,
         ),
         tool.name,
     )
     s = str(result).lower()
     assert any(
-        k in s for k in
-        ("row", "count", "mean", "describe", "summary", "statistic", "columns")
+        k in s for k in ("row", "count", "mean", "describe", "summary", "statistic", "columns")
     ), f"describe_dataset beklenen eda çıktısı üretmedi: {s[:300]}"
 
 
@@ -74,9 +80,11 @@ def test_visualize_missing_real(llm_or_skip, llm_model, sample_data_dict, sample
     tool = visualize_missing
     _assert_result(
         _drive_tool_call(
-            llm_model, tool,
-            _prompt("Eksik veri analizi yap (visualize_missing çağır).",
-                    ", ".join(sample_df.columns)),
+            llm_model,
+            tool,
+            _prompt(
+                "Eksik veri analizi yap (visualize_missing çağır).", ", ".join(sample_df.columns)
+            ),
             sample_data_dict,
         ),
         tool.name,
@@ -87,10 +95,13 @@ def test_generate_correlation_funnel_real(llm_or_skip, llm_model, sample_data_di
     tool = generate_correlation_funnel
     result, _ = _assert_result(
         _drive_tool_call(
-            llm_model, tool,
-            _prompt("Hedef sütun 'value' için korelasyon funnel üret "
-                    "(generate_correlation_funnel çağır, target='value').",
-                    ", ".join(sample_df.columns)),
+            llm_model,
+            tool,
+            _prompt(
+                "Hedef sütun 'value' için korelasyon funnel üret "
+                "(generate_correlation_funnel çağır, target='value').",
+                ", ".join(sample_df.columns),
+            ),
             sample_data_dict,
         ),
         tool.name,
@@ -104,7 +115,8 @@ def test_generate_sweetviz_report_real(  # noqa: E501
     tool = generate_sweetviz_report
     _, artifact = _assert_result(
         _drive_tool_call(
-            llm_model, tool,
+            llm_model,
+            tool,
             _prompt(
                 "sweetviz raporu üret (generate_sweetviz_report çağır; "
                 f"report_directory='{tmp_path}', report_name='report.html').",
@@ -123,7 +135,8 @@ def test_generate_dtale_report_real(llm_or_skip, llm_model, sample_data_dict, sa
     try:
         _assert_result(
             _drive_tool_call(
-                llm_model, tool,
+                llm_model,
+                tool,
                 _prompt(
                     "dtale ile interaktif analiz başlat (generate_dtale_report çağır, "
                     "host='localhost', port=40100, open_browser=False).",

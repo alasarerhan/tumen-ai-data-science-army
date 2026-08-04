@@ -1,7 +1,6 @@
-from typing_extensions import Annotated, Dict, Tuple, Union
-
-
 import logging
+
+from typing_extensions import Annotated, Dict, Tuple, Union
 
 logger = logging.getLogger(__name__)
 import os  # noqa: E402, F401
@@ -9,13 +8,14 @@ import tempfile  # noqa: E402, F401
 import warnings  # noqa: E402, F401
 
 from langchain.tools import tool  # noqa: E402, F401
-
 from langgraph.prebuilt import InjectedState  # noqa: E402, F401
 
 from ai_data_science_team.tools.dataframe import get_dataframe_summary  # noqa: E402, F401
 
 
-def _pytimetk_fallback_binarize(df, n_bins: int = 4, thresh_infreq: float = 0.01, name_infreq: str = "-OTHER"):
+def _pytimetk_fallback_binarize(
+    df, n_bins: int = 4, thresh_infreq: float = 0.01, name_infreq: str = "-OTHER"
+):
     """Pure-pandas binarizer used when pytimetk is unavailable (e.g. py3.13).
 
     Numeric columns → quantile-binned one-hot (col__bin_{i}); categorical
@@ -23,6 +23,7 @@ def _pytimetk_fallback_binarize(df, n_bins: int = 4, thresh_infreq: float = 0.01
     ``thresh_infreq``) collapse to ``name_infreq`` to match pytimetk semantics.
     """
     import pandas as pd
+
     out = pd.DataFrame(index=df.index)
     for c in df.columns:
         s = df[c]
@@ -31,7 +32,12 @@ def _pytimetk_fallback_binarize(df, n_bins: int = 4, thresh_infreq: float = 0.01
                 bins = pd.qcut(s.rank(method="first"), q=n_bins, labels=False, duplicates="drop")
             except ValueError:
                 # Too few unique values for qcut
-                bins = pd.cut(s, bins=min(n_bins, s.nunique(dropna=True) or 1), labels=False, include_lowest=True)
+                bins = pd.cut(
+                    s,
+                    bins=min(n_bins, s.nunique(dropna=True) or 1),
+                    labels=False,
+                    include_lowest=True,
+                )
             for i in sorted(bins.dropna().unique()):
                 out[f"{c}__bin_{int(i)}"] = (bins == i).astype(int)
         else:
@@ -70,9 +76,7 @@ def explain_data(
     logger.info("    * Tool: explain_data")
     import pandas as pd  # noqa: E402, F401
 
-    result = get_dataframe_summary(
-        pd.DataFrame(data_raw), n_sample=n_sample, skip_stats=skip_stats
-    )
+    result = get_dataframe_summary(pd.DataFrame(data_raw), n_sample=n_sample, skip_stats=skip_stats)
 
     return result
 
@@ -149,10 +153,11 @@ def visualize_missing(
             "Please install the 'missingno' package to use this tool. pip install missingno"
         )
 
-    import pandas as pd  # noqa: E402, F401
     import base64  # noqa: E402, F401
     from io import BytesIO  # noqa: E402, F401
+
     import matplotlib.pyplot as plt  # noqa: E402, F401
+    import pandas as pd  # noqa: E402, F401
 
     # Create the DataFrame and sample if n_sample is provided.
     df = pd.DataFrame(data_raw)
@@ -186,9 +191,7 @@ def visualize_missing(
     # Create and encode the heatmap plot.
     encoded_plots["heatmap_plot"] = create_and_encode_plot(msno.heatmap)
 
-    content = (
-        "Missing data visualizations (matrix, bar, and heatmap) have been generated."
-    )
+    content = "Missing data visualizations (matrix, bar, and heatmap) have been generated."
     artifact = encoded_plots
     return content, artifact
 
@@ -230,15 +233,17 @@ def generate_correlation_funnel(
     # pytimetk is optional — py3.13 + numpy>=2 has no wheel. If installed, prefer it
     # (more accurate binning via tk.binarize); otherwise fall back to a pure
     # pandas+plotly implementation that works on any supported Python.
-    import pandas as pd  # noqa: F402, F401
     import base64  # noqa: E402, F401
-    from io import BytesIO  # noqa: E402, F401
-    import matplotlib.pyplot as plt  # noqa: E402, F401
     import json  # noqa: E402, F401
+    from io import BytesIO  # noqa: E402, F401
+
+    import matplotlib.pyplot as plt  # noqa: E402, F401
+    import pandas as pd  # noqa: F402, F401
     import plotly.io as pio  # noqa: E402, F401
 
     try:
         import pytimetk as tk  # noqa: F401
+
         _HAS_PYTIMETK = True
     except ImportError:
         _HAS_PYTIMETK = False
@@ -270,8 +275,9 @@ def generate_correlation_funnel(
     else:
         # Fallback: pure pandas binarization (quantile for numerics, one-hot for categoricals)
         # + Pearson correlation with the target.
-        df_binarized = _pytimetk_fallback_binarize(df, n_bins=n_bins, thresh_infreq=thresh_infreq,
-                                                    name_infreq=name_infreq)
+        df_binarized = _pytimetk_fallback_binarize(
+            df, n_bins=n_bins, thresh_infreq=thresh_infreq, name_infreq=name_infreq
+        )
         # Pick a target binarization column. Strategy:
         #  - If target appears in binarized columns directly (numeric target was kept as-is
         #    by fallback because it had too few unique values, or it was a one-hot column),
@@ -313,14 +319,30 @@ def generate_correlation_funnel(
         corr_series = df_correlated["correlation"].dropna().sort_values(ascending=False)
     else:
         # pytimetk: contains feature + correlation cols
-        feature_col = df_correlated.columns[0] if df_correlated.columns[0] not in ("feature", "variable") else None
+        feature_col = (
+            df_correlated.columns[0]
+            if df_correlated.columns[0] not in ("feature", "variable")
+            else None
+        )
         if feature_col is None:
             # heuristic: correlation-like column
             num_cols = [c for c in df_correlated.columns if df_correlated[c].dtype.kind in "fiub"]
-            corr_series = df_correlated.set_index(feature_col or df_correlated.columns[0])[num_cols[-1]].dropna().sort_values(ascending=False)
+            corr_series = (
+                df_correlated.set_index(feature_col or df_correlated.columns[0])[num_cols[-1]]
+                .dropna()
+                .sort_values(ascending=False)
+            )
         else:
-            num_cols = [c for c in df_correlated.columns if c != feature_col and df_correlated[c].dtype.kind in "fiub"]
-            corr_series = df_correlated.set_index(feature_col)[num_cols[0]].dropna().sort_values(ascending=False)
+            num_cols = [
+                c
+                for c in df_correlated.columns
+                if c != feature_col and df_correlated[c].dtype.kind in "fiub"
+            ]
+            corr_series = (
+                df_correlated.set_index(feature_col)[num_cols[0]]
+                .dropna()
+                .sort_values(ascending=False)
+            )
     encoded: Union[str, Dict] = ""
     try:
         # matplotlib horizontal bar — works for both formats
@@ -342,6 +364,7 @@ def generate_correlation_funnel(
     fig_dict = None
     try:
         import plotly.graph_objects as go
+
         top = corr_series.head(20)
         fig = go.Figure(go.Bar(x=top.values, y=top.index, orientation="h"))
         fig.update_layout(

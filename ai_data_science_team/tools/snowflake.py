@@ -71,9 +71,7 @@ class BaseConnector:
         """
         # A non-empty SELECT statement is the only validation.
         if not query.strip().lower().startswith("select"):
-            raise ConnectorError(
-                f"only SELECT queries allowed as probes, got {query!r}"
-            )
+            raise ConnectorError(f"only SELECT queries allowed as probes, got {query!r}")
         return [{"ok": 1}]
 
     def schema_introspect(self, table: str) -> List[Dict[str, str]]:
@@ -117,9 +115,7 @@ class SnowflakeConnector(BaseConnector):
             self.config.require("password")
         elif auth == "sso":
             if not self.config.get("sso_token"):
-                raise ConnectorError(
-                    "auth='sso' requires 'sso_token' param"
-                )
+                raise ConnectorError("auth='sso' requires 'sso_token' param")
         else:
             raise ConnectorError(f"unknown auth method {auth!r}")
         self._auth = auth
@@ -150,8 +146,7 @@ class SnowflakeConnector(BaseConnector):
         cache = getattr(self, "_schema_cache", {})
         if table not in cache:
             raise ConnectorError(
-                f"unknown Snowflake table {table!r}; seed "
-                "_schema_cache or use a real driver"
+                f"unknown Snowflake table {table!r}; seed _schema_cache or use a real driver"
             )
         return cache[table]
 

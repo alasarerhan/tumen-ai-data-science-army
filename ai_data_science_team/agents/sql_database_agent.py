@@ -1,44 +1,40 @@
-
-from typing_extensions import TypedDict, Annotated, Sequence, Literal
-from typing import Optional
-import operator
-import re
-import logging
-
-from langchain_core.prompts import PromptTemplate
-from langchain_core.messages import BaseMessage
-from langchain_core.output_parsers import JsonOutputParser
-
-from langgraph.types import Command
-from langgraph.checkpoint.memory import MemorySaver
-
-import os
 import json
+import logging
+import operator
+import os
+import re
+from typing import Optional
+
 import pandas as pd
 import sqlalchemy as sql
-
 from IPython.display import Markdown
+from langchain_core.messages import BaseMessage
+from langchain_core.output_parsers import JsonOutputParser
+from langchain_core.prompts import PromptTemplate
+from langgraph.checkpoint.memory import MemorySaver
+from langgraph.types import Command
+from typing_extensions import Annotated, Literal, Sequence, TypedDict
 
 logger = logging.getLogger(__name__)
 
-from ai_data_science_team.templates import (  # noqa: E402, F401
-    node_func_execute_agent_from_sql_connection,
-    node_func_human_review,
-    node_func_fix_agent_code,
-    node_func_report_agent_outputs,
-    create_coding_agent_graph,
-    BaseAgent,
-)
 from ai_data_science_team.parsers.parsers import SQLOutputParser  # noqa: E402, F401
+from ai_data_science_team.templates import (  # noqa: E402, F401
+    BaseAgent,
+    create_coding_agent_graph,
+    node_func_execute_agent_from_sql_connection,
+    node_func_fix_agent_code,
+    node_func_human_review,
+    node_func_report_agent_outputs,
+)
+from ai_data_science_team.tools.sql import get_database_metadata  # noqa: E402, F401
+from ai_data_science_team.utils.logging import log_ai_error, log_ai_function  # noqa: E402, F401
+from ai_data_science_team.utils.messages import get_last_user_message_content  # noqa: E402, F401
 from ai_data_science_team.utils.regex import (  # noqa: E402, F401
     add_comments_to_top,
     format_agent_name,
     format_recommended_steps,
     get_generic_summary,
 )
-from ai_data_science_team.tools.sql import get_database_metadata  # noqa: E402, F401
-from ai_data_science_team.utils.logging import log_ai_function, log_ai_error  # noqa: E402, F401
-from ai_data_science_team.utils.messages import get_last_user_message_content  # noqa: E402, F401
 
 # Setup
 AGENT_NAME = "sql_database_agent"
@@ -258,9 +254,7 @@ class SQLDatabaseAgent(BaseAgent):
         self.response = response
         return None
 
-    def invoke_agent(
-        self, user_instructions: str = None, max_retries=3, retry_count=0, **kwargs
-    ):
+    def invoke_agent(self, user_instructions: str = None, max_retries=3, retry_count=0, **kwargs):
         """
         Synchronously runs the SQL Database Agent based on user instructions.
 
@@ -337,9 +331,7 @@ class SQLDatabaseAgent(BaseAgent):
         Retrieves the agent's workflow summary, if logging is enabled.
         """
         if self.response and self.response.get("messages"):
-            summary = get_generic_summary(
-                json.loads(self.response.get("messages")[-1].content)
-            )
+            summary = get_generic_summary(json.loads(self.response.get("messages")[-1].content))
             if markdown:
                 return Markdown(summary)
             else:
@@ -832,9 +824,7 @@ def {function_name}(connection):
             error_key="sql_database_error",
             code_snippet_key="sql_database_function",
             agent_function_name=state.get("sql_database_function_name"),
-            post_processing=lambda df: df.to_dict()
-            if isinstance(df, pd.DataFrame)
-            else df,
+            post_processing=lambda df: df.to_dict() if isinstance(df, pd.DataFrame) else df,
             error_message_prefix="An error occurred during executing the sql database pipeline: ",
         )
 
@@ -929,9 +919,7 @@ def {function_name}(connection):
     return app
 
 
-def smart_schema_filter(
-    llm, user_instructions, all_sql_database_summary, smart_filtering=True
-):
+def smart_schema_filter(llm, user_instructions, all_sql_database_summary, smart_filtering=True):
     """
     This function filters the tables and columns based on the user instructions and the recommended steps.
     """
@@ -991,7 +979,7 @@ def _validate_sql(sql_text: str, safe_mode: bool = True) -> Optional[str]:
     """
     Safety checks to keep execution read-only.
     Returns an error message string if unsafe, else None.
-    
+
     SECURITY WARNING: This validation is NOT sufficient for production use.
     Always use parameterized queries and never trust user input directly in SQL.
     """
@@ -999,47 +987,64 @@ def _validate_sql(sql_text: str, safe_mode: bool = True) -> Optional[str]:
         return "SQL generation failed: empty query."
     if not isinstance(sql_text, str):
         return "SQL must be a string."
-    
+
     if not safe_mode:
         return None
-    
+
     sql_text = sql_text.strip()
     if not sql_text:
         return "SQL generation failed: empty query after stripping whitespace."
-    
+
     lowered = sql_text.lower()
-    
+
     if not lowered.startswith("select"):
         return "Only read-only SELECT queries are allowed (safe_mode=True)."
-    
+
     dangerous_keywords = [
-        "insert", "update", "delete", "drop", "alter", "truncate", 
-        "create", "replace", "merge", "call", "exec", "execute",
-        "grant", "revoke", "into outfile", "into dumpfile",
-        "load_file", "benchmark", "sleep", "waitfor", "pg_sleep"
+        "insert",
+        "update",
+        "delete",
+        "drop",
+        "alter",
+        "truncate",
+        "create",
+        "replace",
+        "merge",
+        "call",
+        "exec",
+        "execute",
+        "grant",
+        "revoke",
+        "into outfile",
+        "into dumpfile",
+        "load_file",
+        "benchmark",
+        "sleep",
+        "waitfor",
+        "pg_sleep",
     ]
-    
+
     for kw in dangerous_keywords:
-        if re.search(rf'\b{re.escape(kw)}\b', lowered):
+        if re.search(rf"\b{re.escape(kw)}\b", lowered):
             return f"Write operations are not allowed; detected forbidden keyword: '{kw}' (safe_mode=True)."
-    
+
     comment_patterns = ["--", "/*", "*/", "#"]
     for pattern in comment_patterns:
         if pattern in sql_text:
             return f"SQL comments are not allowed for security reasons; detected: '{pattern}' (safe_mode=True)."
-    
+
     semicolon_count = sql_text.count(";")
     if semicolon_count > 1:
         return "Multiple SQL statements are not allowed (safe_mode=True)."
     if semicolon_count == 1 and not sql_text.strip().endswith(";"):
         return "Semicolon detected in unexpected position - potential injection attempt (safe_mode=True)."
-    
-    union_pattern = re.search(r'\bunion\b\s+(all\s+)?\bselect\b', lowered)
+
+    union_pattern = re.search(r"\bunion\b\s+(all\s+)?\bselect\b", lowered)
     if union_pattern:
         return "UNION SELECT is not allowed for security reasons (safe_mode=True)."
-    
-    subquery_pattern = re.search(r'\(\s*select\b', lowered)
+
+    subquery_pattern = re.search(r"\(\s*select\b", lowered)
     if subquery_pattern:
         pass
-    
+
     return None

@@ -28,7 +28,6 @@ from typing import Any, Dict, List, Optional, Sequence, Tuple  # noqa: E402, F40
 import numpy as np  # noqa: E402, F401
 import pandas as pd  # noqa: E402, F401
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
@@ -111,7 +110,7 @@ def mcnemar_test(
         k = min(b_count, c_count)
         p = 0.0
         for j in range(k + 1):
-            p += comb(n, j) * (0.5 ** n)
+            p += comb(n, j) * (0.5**n)
         p_value = min(1.0, 2 * p)
         statistic = float(min(b_count, c_count))
     else:
@@ -343,9 +342,7 @@ def delong_pvalue(
         }
     v10_a = _placement_values(y_int, sa)
     v10_b = _placement_values(y_int, sb)
-    s10 = np.cov(
-        np.stack([v10_a, v10_b], axis=0), ddof=1
-    )
+    s10 = np.cov(np.stack([v10_a, v10_b], axis=0), ddof=1)
     # S10 is 2x2; we want S10[0,0]/m + S10[1,1]/m - 2*S10[0,1]/m
     var = float(s10[0, 0] / m + s10[1, 1] / m - 2 * s10[0, 1] / m)
     if var <= 0:
@@ -458,10 +455,7 @@ def compare_models(
         }
 
     # Wilcoxon when residuals are provided
-    if (
-        regression_residuals_a is not None
-        and regression_residuals_b is not None
-    ):
+    if regression_residuals_a is not None and regression_residuals_b is not None:
         wil = wilcoxon_signed_rank(regression_residuals_a, regression_residuals_b)
         tests["wilcoxon"] = wil
 
@@ -499,22 +493,15 @@ def compare_models(
         )
     elif auc_diff > 0 and p_value < alpha:
         recommendation = "wait"
-        rationale = (
-            f"Challenger positive ({auc_diff:.4f}) but below "
-            f"min_effect {min_effect}."
-        )
+        rationale = f"Challenger positive ({auc_diff:.4f}) but below min_effect {min_effect}."
     else:
         recommendation = "reject"
         if auc_diff <= 0:
             rationale = (
-                f"Challenger AUC {auc_diff:+.4f} does not improve on "
-                f"champion (p={p_value:.4f})."
+                f"Challenger AUC {auc_diff:+.4f} does not improve on champion (p={p_value:.4f})."
             )
         else:
-            rationale = (
-                f"Difference not significant (p={p_value:.4f}, "
-                f"alpha={alpha})."
-            )
+            rationale = f"Difference not significant (p={p_value:.4f}, alpha={alpha})."
 
     return {
         "metrics": metrics,
@@ -527,9 +514,7 @@ def compare_models(
     }
 
 
-def _iter_segments(
-    segment_columns: Sequence[Any], n: int
-) -> List[Tuple[str, np.ndarray]]:
+def _iter_segments(segment_columns: Sequence[Any], n: int) -> List[Tuple[str, np.ndarray]]:
     """Iterate segments as ``(label, boolean_index)`` pairs.
 
     For 1-D column → groups by unique value.
@@ -572,5 +557,3 @@ __all__ = [
     "delong_pvalue",
     "compare_models",
 ]
-
-

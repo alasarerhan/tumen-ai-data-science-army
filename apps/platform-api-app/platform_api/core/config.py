@@ -9,7 +9,9 @@ REPO_ROOT_ENV = Path(__file__).resolve().parents[4] / ".env"
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=str(REPO_ROOT_ENV), env_file_encoding="utf-8", extra="ignore")
+    model_config = SettingsConfigDict(
+        env_file=str(REPO_ROOT_ENV), env_file_encoding="utf-8", extra="ignore"
+    )
 
     api_host: str = "127.0.0.1"
     api_port: int = 8000

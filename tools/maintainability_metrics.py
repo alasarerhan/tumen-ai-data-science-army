@@ -34,9 +34,7 @@ DEFAULT_EXCLUDES = {
     ".codex",
 }
 
-FUNCTION_SIGNATURE_RE = re.compile(
-    r"^\s*(export\s+)?(async\s+)?function\s+([A-Za-z_$][\w$]*)\s*\("
-)
+FUNCTION_SIGNATURE_RE = re.compile(r"^\s*(export\s+)?(async\s+)?function\s+([A-Za-z_$][\w$]*)\s*\(")
 ASSIGNMENT_FUNCTION_RE = re.compile(
     r"^\s*(export\s+)?(const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*(async\s*)?\("
 )

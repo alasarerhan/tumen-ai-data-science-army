@@ -24,6 +24,7 @@ Skip LLM tests:
 Run only integration:
     pytest tests/test_m24_agents.py -v -m integration
 """
+
 from __future__ import annotations
 
 import os
@@ -106,9 +107,7 @@ def classification_data(churn_df: pd.DataFrame) -> Dict[str, Any]:
     X = df[["tenure", "MonthlyCharges", "TotalCharges"]].fillna(0)
     y = df["Churn"]
 
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.3, random_state=42
-    )
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
     clf = RandomForestClassifier(n_estimators=20, random_state=42)
     clf.fit(X_train, y_train)
     y_pred = clf.predict(X_test)
@@ -117,7 +116,9 @@ def classification_data(churn_df: pd.DataFrame) -> Dict[str, Any]:
         "y_true": pd.Series(y_test.values, name="Churn"),
         "y_pred": pd.Series(y_pred, name="Churn_pred"),
         "baseline": {
-            "accuracy": round(accuracy_score(y_test, y_pred) - 0.05, 6),  # artificially lower baseline
+            "accuracy": round(
+                accuracy_score(y_test, y_pred) - 0.05, 6
+            ),  # artificially lower baseline
             "f1_weighted": round(f1_score(y_test, y_pred, average="weighted") - 0.05, 6),
         },
     }
@@ -129,6 +130,7 @@ def llm():
     if not OPENAI_API_KEY:
         pytest.skip("OPENAI_API_KEY is not set — skipping LLM fixture")
     from langchain_openai import ChatOpenAI
+
     return ChatOpenAI(model="gpt-4o-mini", temperature=0)
 
 
@@ -285,9 +287,7 @@ class TestModelMonitoringToolUnit:
                 assert "psi" in feat
                 assert "ks_statistic" in feat
 
-    def test_compute_performance_classification(
-        self, classification_data: Dict[str, Any]
-    ):
+    def test_compute_performance_classification(self, classification_data: Dict[str, Any]):
         """compute_performance returns accuracy and f1 for classification."""
         from ai_data_science_team.agents.model_monitoring_agent import compute_performance
 
@@ -304,9 +304,7 @@ class TestModelMonitoringToolUnit:
         assert "f1_weighted" in artifact["metrics"]
         assert 0 <= artifact["metrics"]["accuracy"] <= 1.0
 
-    def test_compute_performance_with_baseline(
-        self, classification_data: Dict[str, Any]
-    ):
+    def test_compute_performance_with_baseline(self, classification_data: Dict[str, Any]):
         """compute_performance detects degradation vs lower baseline."""
         from ai_data_science_team.agents.model_monitoring_agent import compute_performance
 
@@ -397,9 +395,7 @@ class TestModelMonitoringIntegration:
     """Integration tests for ModelMonitoringAgent.invoke_agent()."""
 
     @skip_no_key
-    def test_invoke_drift_psi(
-        self, llm, reference_df: pd.DataFrame, current_df: pd.DataFrame
-    ):
+    def test_invoke_drift_psi(self, llm, reference_df: pd.DataFrame, current_df: pd.DataFrame):
         """invoke_agent detects drift between reference and current data."""
         from ai_data_science_team.agents.model_monitoring_agent import ModelMonitoringAgent
 

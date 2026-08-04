@@ -12,10 +12,15 @@ PowerAnalysisAgent.
 Node type: ``model.train.deep``
 """
 
-from typing import (Dict, Optional, Tuple)  # noqa: E402
 import logging  # noqa: E402, F401
-from typing import Any  # noqa: E402, F401
+from typing import (  # noqa: E402
+    Any,  # noqa: E402, F401
+    Dict,
+    Optional,
+    Tuple,
+)
 
+import numpy as np  # noqa: E402, F401
 from langchain.tools import tool  # noqa: E402, F401
 from langchain_core.messages import AIMessage, BaseMessage  # noqa: E402, F401
 from langgraph.graph import END, START, StateGraph  # noqa: E402, F401
@@ -24,11 +29,6 @@ from langgraph.types import Checkpointer  # noqa: E402, F401
 from typing_extensions import Annotated, Sequence, TypedDict  # noqa: E402, F401
 
 from ai_data_science_team.templates import BaseAgent  # noqa: E402, F401
-from ai_data_science_team.utils.regex import format_agent_name  # noqa: E402, F401
-
-import numpy as np  # noqa: E402, F401
-
-
 from ai_data_science_team.tools.deep_learning import (  # noqa: E402, F401
     build_lstm_classifier,
     build_lstm_forecaster,
@@ -38,7 +38,7 @@ from ai_data_science_team.tools.deep_learning import (  # noqa: E402, F401
     train_lstm_forecaster,
     train_mlp_classifier,
 )
-
+from ai_data_science_team.utils.regex import format_agent_name  # noqa: E402, F401
 
 logger = logging.getLogger(__name__)
 
@@ -50,6 +50,7 @@ NODE_TYPE = "model.train.deep"
 # Tool wrappers
 # ---------------------------------------------------------------------------
 
+
 @tool(response_format="content_and_artifact")
 def detect_device_wrapped(prefer: Optional[str]) -> Tuple[str, dict]:
     """Tool wrapper for ``detect_device``.
@@ -59,7 +60,7 @@ def detect_device_wrapped(prefer: Optional[str]) -> Tuple[str, dict]:
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: e3_detect_device")
-    kwargs = {'prefer': prefer}
+    kwargs = {"prefer": prefer}
     try:
         result = detect_device(**kwargs)
     except Exception as exc:
@@ -79,7 +80,9 @@ def detect_device_wrapped(prefer: Optional[str]) -> Tuple[str, dict]:
 
 
 @tool(response_format="content_and_artifact")
-def build_mlp_classifier_wrapped(n_features: int, n_classes: int, hidden: Sequence[int], dropout: float) -> Tuple[str, dict]:
+def build_mlp_classifier_wrapped(
+    n_features: int, n_classes: int, hidden: Sequence[int], dropout: float
+) -> Tuple[str, dict]:
     """Tool wrapper for ``build_mlp_classifier``.
 
     See underlying tool module.
@@ -87,7 +90,12 @@ def build_mlp_classifier_wrapped(n_features: int, n_classes: int, hidden: Sequen
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: e3_build_mlp_classifier")
-    kwargs = {'n_features': n_features, 'n_classes': n_classes, 'hidden': hidden, 'dropout': dropout}
+    kwargs = {
+        "n_features": n_features,
+        "n_classes": n_classes,
+        "hidden": hidden,
+        "dropout": dropout,
+    }
     try:
         result = build_mlp_classifier(**kwargs)
     except Exception as exc:
@@ -107,7 +115,9 @@ def build_mlp_classifier_wrapped(n_features: int, n_classes: int, hidden: Sequen
 
 
 @tool(response_format="content_and_artifact")
-def build_mlp_regressor_wrapped(n_features: int, hidden: Sequence[int], dropout: float) -> Tuple[str, dict]:
+def build_mlp_regressor_wrapped(
+    n_features: int, hidden: Sequence[int], dropout: float
+) -> Tuple[str, dict]:
     """Tool wrapper for ``build_mlp_regressor``.
 
     See underlying tool module.
@@ -115,7 +125,7 @@ def build_mlp_regressor_wrapped(n_features: int, hidden: Sequence[int], dropout:
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: e3_build_mlp_regressor")
-    kwargs = {'n_features': n_features, 'hidden': hidden, 'dropout': dropout}
+    kwargs = {"n_features": n_features, "hidden": hidden, "dropout": dropout}
     try:
         result = build_mlp_regressor(**kwargs)
     except Exception as exc:
@@ -135,7 +145,9 @@ def build_mlp_regressor_wrapped(n_features: int, hidden: Sequence[int], dropout:
 
 
 @tool(response_format="content_and_artifact")
-def build_lstm_forecaster_wrapped(n_features: int, hidden: int, layers: int, horizon: int) -> Tuple[str, dict]:
+def build_lstm_forecaster_wrapped(
+    n_features: int, hidden: int, layers: int, horizon: int
+) -> Tuple[str, dict]:
     """Tool wrapper for ``build_lstm_forecaster``.
 
     See underlying tool module.
@@ -143,7 +155,7 @@ def build_lstm_forecaster_wrapped(n_features: int, hidden: int, layers: int, hor
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: e3_build_lstm_forecaster")
-    kwargs = {'n_features': n_features, 'hidden': hidden, 'layers': layers, 'horizon': horizon}
+    kwargs = {"n_features": n_features, "hidden": hidden, "layers": layers, "horizon": horizon}
     try:
         result = build_lstm_forecaster(**kwargs)
     except Exception as exc:
@@ -163,7 +175,9 @@ def build_lstm_forecaster_wrapped(n_features: int, hidden: int, layers: int, hor
 
 
 @tool(response_format="content_and_artifact")
-def build_lstm_classifier_wrapped(n_features: int, n_classes: int, hidden: int, layers: int) -> Tuple[str, dict]:
+def build_lstm_classifier_wrapped(
+    n_features: int, n_classes: int, hidden: int, layers: int
+) -> Tuple[str, dict]:
     """Tool wrapper for ``build_lstm_classifier``.
 
     See underlying tool module.
@@ -171,7 +185,7 @@ def build_lstm_classifier_wrapped(n_features: int, n_classes: int, hidden: int, 
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: e3_build_lstm_classifier")
-    kwargs = {'n_features': n_features, 'n_classes': n_classes, 'hidden': hidden, 'layers': layers}
+    kwargs = {"n_features": n_features, "n_classes": n_classes, "hidden": hidden, "layers": layers}
     try:
         result = build_lstm_classifier(**kwargs)
     except Exception as exc:
@@ -199,7 +213,7 @@ def train_mlp_classifier_wrapped(X: np.ndarray, y: np.ndarray) -> Tuple[str, dic
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: e3_train_mlp_classifier")
-    kwargs = {'X': X, 'y': y}
+    kwargs = {"X": X, "y": y}
     try:
         result = train_mlp_classifier(**kwargs)
     except Exception as exc:
@@ -227,7 +241,7 @@ def train_lstm_forecaster_wrapped(X: np.ndarray, y: np.ndarray) -> Tuple[str, di
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: e3_train_lstm_forecaster")
-    kwargs = {'X': X, 'y': y}
+    kwargs = {"X": X, "y": y}
     try:
         result = train_lstm_forecaster(**kwargs)
     except Exception as exc:
@@ -300,7 +314,12 @@ def make_deep_learning_agent(
     def run_react_agent(state: GraphState):
         logger.info("    * RUN REACT AGENT FOR E3")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
-        messages = [("system", "You are the E3 agent. Use the available tools to complete the user's request.")] + list(base)
+        messages = [
+            (
+                "system",
+                "You are the E3 agent. Use the available tools to complete the user's request.",
+            )
+        ] + list(base)
         input_payload = {"messages": messages}
         return react_agent.invoke(input_payload, invoke_react_agent_kwargs)
 
@@ -319,7 +338,9 @@ def make_deep_learning_agent(
             last_ai = AIMessage(content=getattr(internal[-1], "content", ""), name=AGENT_NAME)
         tool_calls = []
         for msg in internal:
-            name = getattr(getattr(msg, "tool_call_id", None), "name", None) or getattr(msg, "name", None)
+            name = getattr(getattr(msg, "tool_call_id", None), "name", None) or getattr(
+                msg, "name", None
+            )
             if name:
                 tool_calls.append(name)
         if log_tool_calls and tool_calls:
@@ -387,6 +408,7 @@ class DeepLearningAgent(BaseAgent):
         if not self.response or "messages" not in self.response:
             return None
         from IPython.display import Markdown as _Markdown  # noqa: E402, F401
+
         for msg in reversed(self.response.get("messages", [])):
             content = getattr(msg, "content", "")
             if content:

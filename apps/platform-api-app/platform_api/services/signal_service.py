@@ -11,7 +11,11 @@ from sqlalchemy.orm import Session
 
 from platform_api.control_plane.actions import ALLOWED_SIGNAL_TYPES
 from platform_api.core.config import settings
-from platform_api.core.service_errors import NotFoundError, UnprocessableEntityError, ValidationError
+from platform_api.core.service_errors import (
+    NotFoundError,
+    UnprocessableEntityError,
+    ValidationError,
+)
 from platform_api.db.models import WorkflowRun, WorkflowSignalEvent
 from platform_api.orchestration.runtime_state import get_orchestration_signal_store
 
@@ -62,9 +66,7 @@ def emit_signal(
 ) -> WorkflowSignalEvent:
     if signal_type not in ALLOWED_SIGNAL_TYPES:
         allowed = ", ".join(sorted(ALLOWED_SIGNAL_TYPES))
-        raise UnprocessableEntityError(
-            f"Unsupported signal_type. Allowed values: {allowed}"
-        )
+        raise UnprocessableEntityError(f"Unsupported signal_type. Allowed values: {allowed}")
 
     event = WorkflowSignalEvent(
         tenant_id=tenant_id,
@@ -143,7 +145,9 @@ def list_signals(
     since_id: str | None = None,
     limit: int | None = None,
 ) -> list[WorkflowSignalEvent]:
-    query = select(WorkflowSignalEvent).where(WorkflowSignalEvent.workflow_run_id == workflow_run_id)
+    query = select(WorkflowSignalEvent).where(
+        WorkflowSignalEvent.workflow_run_id == workflow_run_id
+    )
     cursor_uuid: uuid.UUID | None = None
     if since_id:
         cursor_uuid = _parse_uuid(since_id, "since_id")
@@ -169,7 +173,8 @@ def signal_to_dict(event: WorkflowSignalEvent) -> dict:
         except json.JSONDecodeError as e:
             logger.warning(
                 "Failed to parse payload JSON for signal %s: %s",
-                event.id, e,
+                event.id,
+                e,
             )
             payload = {}
     return {
@@ -180,7 +185,7 @@ def signal_to_dict(event: WorkflowSignalEvent) -> dict:
         "note": event.note,
         "payload": payload,
         "created_by_user_id": str(event.created_by_user_id) if event.created_by_user_id else None,
-        "created_at": event.created_at.isoformat() if event.created_at else datetime.now(UTC).isoformat(),
+        "created_at": event.created_at.isoformat()
+        if event.created_at
+        else datetime.now(UTC).isoformat(),
     }
-
-

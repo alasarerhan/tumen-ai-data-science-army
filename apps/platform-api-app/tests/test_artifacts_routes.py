@@ -9,7 +9,9 @@ from platform_api.main import create_app
 from platform_api.services.artifact_service import create_artifact_record
 
 
-def test_list_artifacts_returns_safe_lineage_fields_and_honors_kind_filter(seeded_db: dict[str, object]) -> None:
+def test_list_artifacts_returns_safe_lineage_fields_and_honors_kind_filter(
+    seeded_db: dict[str, object],
+) -> None:
     app = create_app()
     db = seeded_db["db"]
     tenant = seeded_db["tenant"]

@@ -19,8 +19,8 @@ from __future__ import annotations
 import contextlib
 import logging
 import uuid
+from collections.abc import Generator
 from contextvars import ContextVar
-from typing import Generator
 
 from sqlalchemy import event, text
 from sqlalchemy.orm import Session, sessionmaker
@@ -28,7 +28,9 @@ from sqlalchemy.orm import Session, sessionmaker
 logger = logging.getLogger(__name__)
 
 _current_tenant_id: ContextVar[uuid.UUID | None] = ContextVar("current_tenant_id", default=None)
-_current_workspace_id: ContextVar[uuid.UUID | None] = ContextVar("current_workspace_id", default=None)
+_current_workspace_id: ContextVar[uuid.UUID | None] = ContextVar(
+    "current_workspace_id", default=None
+)
 _current_system_actor: ContextVar[bool] = ContextVar("current_system_actor", default=False)
 
 
@@ -47,7 +49,9 @@ def get_current_system_actor() -> bool:
     return _current_system_actor.get()
 
 
-def set_tenant_context(tenant_id: uuid.UUID | str, workspace_id: uuid.UUID | str | None = None) -> None:
+def set_tenant_context(
+    tenant_id: uuid.UUID | str, workspace_id: uuid.UUID | str | None = None
+) -> None:
     """Set the tenant context for the current request.
 
     This should be called at the start of each request after authentication.
@@ -80,7 +84,9 @@ def clear_tenant_context() -> None:
 
 
 @contextlib.contextmanager
-def tenant_context(tenant_id: uuid.UUID | str, workspace_id: uuid.UUID | str | None = None) -> Generator[None, None, None]:
+def tenant_context(
+    tenant_id: uuid.UUID | str, workspace_id: uuid.UUID | str | None = None
+) -> Generator[None, None, None]:
     """Context manager for tenant context.
 
     Usage:
@@ -129,7 +135,6 @@ def system_actor_context(db: Session | None = None) -> Generator[None, None, Non
 
 class TenantContextError(Exception):
     """Raised when tenant context cannot be set or reset."""
-    pass
 
 
 def _set_postgres_rls_context(
@@ -142,7 +147,7 @@ def _set_postgres_rls_context(
 
     This executes SET app.current_tenant_id = '...' on the database connection.
     PostgreSQL RLS policies will use this value to filter queries.
-    
+
     Raises
     ------
     TenantContextError
@@ -249,10 +254,16 @@ class TenantSession:
             items = session.execute(select(Item)).scalars().all()
     """
 
-    def __init__(self, db: Session, tenant_id: uuid.UUID | str, workspace_id: uuid.UUID | str | None = None):
+    def __init__(
+        self, db: Session, tenant_id: uuid.UUID | str, workspace_id: uuid.UUID | str | None = None
+    ):
         self.db = db
         self.tenant_id = uuid.UUID(str(tenant_id)) if isinstance(tenant_id, str) else tenant_id
-        self.workspace_id = uuid.UUID(str(workspace_id)) if workspace_id and isinstance(workspace_id, str) else workspace_id
+        self.workspace_id = (
+            uuid.UUID(str(workspace_id))
+            if workspace_id and isinstance(workspace_id, str)
+            else workspace_id
+        )
         self._original_tenant = get_current_tenant_id()
         self._original_workspace = get_current_workspace_id()
         self._original_system_actor = get_current_system_actor()
@@ -281,7 +292,9 @@ class TenantSession:
         set_system_actor_context(self._original_system_actor)
 
 
-def with_tenant_session(db: Session, tenant_id: uuid.UUID | str, workspace_id: uuid.UUID | str | None = None) -> TenantSession:
+def with_tenant_session(
+    db: Session, tenant_id: uuid.UUID | str, workspace_id: uuid.UUID | str | None = None
+) -> TenantSession:
     """Create a tenant-scoped session.
 
     Usage:
@@ -331,7 +344,7 @@ def validate_tenant_context_at_startup() -> None:
         If tenant context configuration is invalid.
     """
     import os
-    
+
     auth_mode = os.environ.get("AUTH_MODE", "oidc")
     deployment_profile = os.environ.get("DEPLOYMENT_PROFILE", "release")
 
@@ -344,5 +357,5 @@ def validate_tenant_context_at_startup() -> None:
         logger.info(
             "Tenant context validation: AUTH_MODE=%s. "
             "Tenant context enforcement is lenient for development.",
-            auth_mode
+            auth_mode,
         )

@@ -15,9 +15,7 @@ def validate_runtime_state_settings(*, raise_runtime: bool = False) -> None:
 
     redis_url = settings.orchestration_state_redis_url.strip()
     if not redis_url:
-        message = (
-            "orchestration_state_redis_url must be set when orchestration_execution_mode=staged_m22."
-        )
+        message = "orchestration_state_redis_url must be set when orchestration_execution_mode=staged_m22."
         if raise_runtime:
             raise RuntimeError(message)
         raise ValidationError(message)

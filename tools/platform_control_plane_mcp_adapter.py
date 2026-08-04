@@ -7,7 +7,6 @@ from typing import Any
 
 from platform_control_plane_cli import _call
 
-
 API_URL = os.getenv("PLATFORM_API_URL", "http://127.0.0.1:8010")
 TOKEN = os.getenv("PLATFORM_API_TOKEN")
 
@@ -34,9 +33,13 @@ def handle(payload: dict[str, Any]) -> dict[str, Any]:
     elif method == "query":
         result = _call(API_URL, "/v1/control-plane/query", method="POST", body=params, token=TOKEN)
     elif method == "actions.plan":
-        result = _call(API_URL, "/v1/control-plane/actions/plan", method="POST", body=params, token=TOKEN)
+        result = _call(
+            API_URL, "/v1/control-plane/actions/plan", method="POST", body=params, token=TOKEN
+        )
     elif method == "actions.execute":
-        result = _call(API_URL, "/v1/control-plane/actions/execute", method="POST", body=params, token=TOKEN)
+        result = _call(
+            API_URL, "/v1/control-plane/actions/execute", method="POST", body=params, token=TOKEN
+        )
     else:
         raise ValueError("Unsupported method")
     return {"ok": True, "result": result}

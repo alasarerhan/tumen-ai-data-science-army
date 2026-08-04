@@ -23,8 +23,8 @@ SECURITY NOTE: Table names are validated and quoted to prevent SQL injection.
 from __future__ import annotations
 
 import re
-from alembic import op
 
+from alembic import op
 
 revision = "0008_rls"
 down_revision = "0007_tenant_quota_events"
@@ -34,11 +34,11 @@ depends_on = None
 
 def _quote_identifier(identifier: str) -> str:
     """Safely quote a SQL identifier to prevent injection.
-    
+
     Validates that the identifier contains only safe characters
     and wraps it in double quotes for PostgreSQL.
     """
-    if not re.match(r'^[a-zA-Z_][a-zA-Z0-9_]*$', identifier):
+    if not re.match(r"^[a-zA-Z_][a-zA-Z0-9_]*$", identifier):
         raise ValueError(f"Invalid SQL identifier: {identifier}")
     return f'"{identifier}"'
 
@@ -170,9 +170,7 @@ def upgrade() -> None:
 
     for table in TENANT_SCOPED_TABLES:
         quoted_table = _quote_identifier(table)
-        op.execute(
-            f"CREATE INDEX IF NOT EXISTS ix_{table}_tenant_id ON {quoted_table} (tenant_id)"
-        )
+        op.execute(f"CREATE INDEX IF NOT EXISTS ix_{table}_tenant_id ON {quoted_table} (tenant_id)")
 
     op.execute(
         "CREATE INDEX IF NOT EXISTS ix_workspace_memberships_workspace_id ON workspace_memberships (workspace_id)"

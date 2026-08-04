@@ -6,15 +6,17 @@ from enum import Enum
 
 from sqlalchemy import (
     DateTime,
-    Enum as SAEnum,
+    Float,
     ForeignKey,
     ForeignKeyConstraint,
-    Float,
     Index,
     String,
     Text,
     UniqueConstraint,
     func,
+)
+from sqlalchemy import (
+    Enum as SAEnum,
 )
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -47,7 +49,9 @@ class Tenant(Base):
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name: Mapped[str] = mapped_column(String(200), nullable=False)
 
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.current_timestamp(), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.current_timestamp(), nullable=False
+    )
 
     workspaces: Mapped[list[Workspace]] = relationship(back_populates="tenant")  # type: ignore[name-defined]
 
@@ -59,7 +63,9 @@ class User(Base):
     sub: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
     email: Mapped[str | None] = mapped_column(String(320), nullable=True, unique=True)
 
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.current_timestamp(), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.current_timestamp(), nullable=False
+    )
 
 
 class TenantMembership(Base):
@@ -69,11 +75,19 @@ class TenantMembership(Base):
     )
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    tenant_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
-    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
-    role: Mapped[TenantRole] = mapped_column(SAEnum(TenantRole, name="tenant_role", native_enum=False), nullable=False)
+    tenant_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False
+    )
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+    role: Mapped[TenantRole] = mapped_column(
+        SAEnum(TenantRole, name="tenant_role", native_enum=False), nullable=False
+    )
 
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.current_timestamp(), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.current_timestamp(), nullable=False
+    )
 
 
 class Workspace(Base):
@@ -84,10 +98,14 @@ class Workspace(Base):
     )
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    tenant_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
+    tenant_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False
+    )
     name: Mapped[str] = mapped_column(String(200), nullable=False)
 
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.current_timestamp(), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.current_timestamp(), nullable=False
+    )
 
     tenant: Mapped[Tenant] = relationship(back_populates="workspaces")
 
@@ -99,20 +117,32 @@ class WorkspaceMembership(Base):
     )
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    workspace_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=False)
-    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    workspace_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=False
+    )
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
     role: Mapped[WorkspaceRole] = mapped_column(
         SAEnum(WorkspaceRole, name="workspace_role", native_enum=False),
         nullable=False,
     )
 
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.current_timestamp(), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.current_timestamp(), nullable=False
+    )
 
 
 class Invite(Base):
     __tablename__ = "invites"
     __table_args__ = (
-        Index("ix_invites_tenant_workspace_email_status", "tenant_id", "workspace_id", "email", "status"),
+        Index(
+            "ix_invites_tenant_workspace_email_status",
+            "tenant_id",
+            "workspace_id",
+            "email",
+            "status",
+        ),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -136,7 +166,9 @@ class Invite(Base):
         UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
 
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.current_timestamp(), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.current_timestamp(), nullable=False
+    )
 
 
 class AuditLog(Base):
@@ -155,7 +187,9 @@ class AuditLog(Base):
     )
     details: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.current_timestamp(), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.current_timestamp(), nullable=False
+    )
 
 
 class WorkflowRun(Base):
@@ -194,7 +228,9 @@ class WorkflowRun(Base):
     started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.current_timestamp(), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.current_timestamp(), nullable=False
+    )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.current_timestamp(),
@@ -238,7 +274,9 @@ class WorkflowNodeExecution(Base):
     produced_artifact_ids_json: Mapped[str | None] = mapped_column(Text, nullable=True)
     started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.current_timestamp(), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.current_timestamp(), nullable=False
+    )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.current_timestamp(),
@@ -271,7 +309,9 @@ class AgentExecutionTrace(Base):
         UUID(as_uuid=True), ForeignKey("workflow_runs.id", ondelete="CASCADE"), nullable=False
     )
     workflow_node_execution_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("workflow_node_executions.id", ondelete="CASCADE"), nullable=False
+        UUID(as_uuid=True),
+        ForeignKey("workflow_node_executions.id", ondelete="CASCADE"),
+        nullable=False,
     )
     node_id: Mapped[str] = mapped_column(String(150), nullable=False)
     node_type: Mapped[str] = mapped_column(String(120), nullable=False)
@@ -290,7 +330,9 @@ class AgentExecutionTrace(Base):
     started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     duration_ms: Mapped[int | None] = mapped_column(nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.current_timestamp(), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.current_timestamp(), nullable=False
+    )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.current_timestamp(),
@@ -301,15 +343,15 @@ class AgentExecutionTrace(Base):
 
 class TenantQuotaEvent(Base):
     __tablename__ = "tenant_quota_events"
-    __table_args__ = (
-        Index("ix_tenant_quota_events_tenant_created", "tenant_id", "created_at"),
-    )
+    __table_args__ = (Index("ix_tenant_quota_events_tenant_created", "tenant_id", "created_at"),)
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     tenant_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False
     )
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.current_timestamp(), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.current_timestamp(), nullable=False
+    )
 
 
 class Artifact(Base):
@@ -341,17 +383,19 @@ class Artifact(Base):
     created_by_user_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
-    expires_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.current_timestamp(), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.current_timestamp(), nullable=False
+    )
 
 
 class ModelRegistryEntry(Base):
     __tablename__ = "model_registry_entries"
     __table_args__ = (
-        UniqueConstraint("workspace_id", "model_name", "version", name="uq_model_registry_workspace_name_version"),
+        UniqueConstraint(
+            "workspace_id", "model_name", "version", name="uq_model_registry_workspace_name_version"
+        ),
         ForeignKeyConstraint(
             ["workspace_id", "tenant_id"],
             ["workspaces.id", "workspaces.tenant_id"],
@@ -380,15 +424,21 @@ class ModelRegistryEntry(Base):
         UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
     approval_state: Mapped[str] = mapped_column(String(50), nullable=False, default="not_reviewed")
-    deployment_state: Mapped[str] = mapped_column(String(50), nullable=False, default="not_deployed")
-    monitoring_status: Mapped[str] = mapped_column(String(50), nullable=False, default="not_configured")
+    deployment_state: Mapped[str] = mapped_column(
+        String(50), nullable=False, default="not_deployed"
+    )
+    monitoring_status: Mapped[str] = mapped_column(
+        String(50), nullable=False, default="not_configured"
+    )
     drift_status: Mapped[str] = mapped_column(String(50), nullable=False, default="unknown")
     performance_status: Mapped[str] = mapped_column(String(50), nullable=False, default="unknown")
     model_card_json: Mapped[str | None] = mapped_column(Text, nullable=True)
     rollback_artifact_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("artifacts.id", ondelete="SET NULL"), nullable=True
     )
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.current_timestamp(), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.current_timestamp(), nullable=False
+    )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.current_timestamp(),
@@ -417,7 +467,9 @@ class ModelMonitorSnapshot(Base):
         UUID(as_uuid=True), ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=False
     )
     model_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("model_registry_entries.id", ondelete="CASCADE"), nullable=False
+        UUID(as_uuid=True),
+        ForeignKey("model_registry_entries.id", ondelete="CASCADE"),
+        nullable=False,
     )
     artifact_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("artifacts.id", ondelete="SET NULL"), nullable=True
@@ -432,7 +484,9 @@ class ModelMonitorSnapshot(Base):
         UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
     remediation_workflow: Mapped[str | None] = mapped_column(String(200), nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.current_timestamp(), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.current_timestamp(), nullable=False
+    )
 
 
 class ModelDeploymentRecord(Base):
@@ -455,22 +509,30 @@ class ModelDeploymentRecord(Base):
         UUID(as_uuid=True), ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=False
     )
     model_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("model_registry_entries.id", ondelete="CASCADE"), nullable=False
+        UUID(as_uuid=True),
+        ForeignKey("model_registry_entries.id", ondelete="CASCADE"),
+        nullable=False,
     )
     environment: Mapped[str] = mapped_column(String(80), nullable=False)
     status: Mapped[str] = mapped_column(String(50), nullable=False, default="planned")
     endpoint_url: Mapped[str | None] = mapped_column(Text, nullable=True)
     deployed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     rollback_model_id: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("model_registry_entries.id", ondelete="SET NULL"), nullable=True
+        UUID(as_uuid=True),
+        ForeignKey("model_registry_entries.id", ondelete="SET NULL"),
+        nullable=True,
     )
     rollback_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     health_status: Mapped[str] = mapped_column(String(50), nullable=False, default="unknown")
-    last_health_check_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    last_health_check_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     created_by_user_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.current_timestamp(), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.current_timestamp(), nullable=False
+    )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.current_timestamp(),
@@ -482,7 +544,9 @@ class ModelDeploymentRecord(Base):
 class WorkflowSpec(Base):
     __tablename__ = "workflow_specs"
     __table_args__ = (
-        UniqueConstraint("workspace_id", "name", "version", name="uq_workflow_specs_workspace_name_version"),
+        UniqueConstraint(
+            "workspace_id", "name", "version", name="uq_workflow_specs_workspace_name_version"
+        ),
         ForeignKeyConstraint(
             ["workspace_id", "tenant_id"],
             ["workspaces.id", "workspaces.tenant_id"],
@@ -506,7 +570,9 @@ class WorkflowSpec(Base):
         UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
 
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.current_timestamp(), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.current_timestamp(), nullable=False
+    )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.current_timestamp(),
@@ -541,7 +607,9 @@ class DataSource(Base):
         UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
 
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.current_timestamp(), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.current_timestamp(), nullable=False
+    )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.current_timestamp(),
@@ -577,7 +645,9 @@ class DataSourceSecret(Base):
         UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
 
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.current_timestamp(), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.current_timestamp(), nullable=False
+    )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.current_timestamp(),
@@ -631,13 +701,16 @@ class HitlApproval(Base):
         UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
 
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.current_timestamp(), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.current_timestamp(), nullable=False
+    )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.current_timestamp(),
         onupdate=func.current_timestamp(),
         nullable=False,
     )
+
 
 class ChatSessionStatus(str, Enum):
     active = "active"
@@ -671,7 +744,9 @@ class ChatSession(Base):
         nullable=False,
         default=ChatSessionStatus.active,
     )
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.current_timestamp(), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.current_timestamp(), nullable=False
+    )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.current_timestamp(),
@@ -688,9 +763,7 @@ class ChatMessageRole(str, Enum):
 
 class ChatMessage(Base):
     __tablename__ = "chat_messages"
-    __table_args__ = (
-        Index("ix_chat_messages_session_created", "session_id", "created_at"),
-    )
+    __table_args__ = (Index("ix_chat_messages_session_created", "session_id", "created_at"),)
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     session_id: Mapped[uuid.UUID] = mapped_column(
@@ -702,7 +775,9 @@ class ChatMessage(Base):
     )
     content: Mapped[str] = mapped_column(Text, nullable=False)
     artifacts_json: Mapped[str | None] = mapped_column(Text, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.current_timestamp(), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.current_timestamp(), nullable=False
+    )
 
 
 class ChatUpload(Base):
@@ -733,7 +808,9 @@ class ChatUpload(Base):
     created_by_user_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.current_timestamp(), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.current_timestamp(), nullable=False
+    )
 
 
 class WorkflowSignalEvent(Base):
@@ -764,7 +841,9 @@ class WorkflowSignalEvent(Base):
     created_by_user_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.current_timestamp(), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.current_timestamp(), nullable=False
+    )
 
 
 class OutboxDlq(Base):
@@ -775,6 +854,7 @@ class OutboxDlq(Base):
 
     Reference: https://microservices.io/patterns/data/transactional-outbox.html
     """
+
     __tablename__ = "outbox_dlq"
     __table_args__ = (
         Index("ix_outbox_dlq_created_at", "created_at"),
@@ -812,6 +892,7 @@ class ScheduledJob(Base):
 
     Supports cron-based scheduling with leader election for distributed execution.
     """
+
     __tablename__ = "scheduled_jobs"
     __table_args__ = (
         Index("ix_scheduled_jobs_next_run", "next_run_at"),
@@ -829,7 +910,9 @@ class ScheduledJob(Base):
     last_run_status: Mapped[str | None] = mapped_column(String(50), nullable=True)
     last_run_error: Mapped[str | None] = mapped_column(Text, nullable=True)
     leader_id: Mapped[str | None] = mapped_column(String(100), nullable=True)
-    leader_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    leader_expires_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.current_timestamp(), nullable=False
     )

@@ -1,6 +1,7 @@
-import pandas as pd
 import sys
 from pathlib import Path
+
+import pandas as pd
 
 APP_DIR = Path(__file__).resolve().parents[1] / "apps" / "ai-pipeline-studio-app"
 if str(APP_DIR) not in sys.path:
@@ -16,10 +17,10 @@ from pipeline_studio_runtime import (  # noqa: E402
     _exec_python_merge_transform,
     _exec_python_transform,
     _hard_delete_branch_from_team_state,
-    _normalize_readonly_sql,
     _normalize_pipeline_stage,
-    _topological_order_for_stale_set,
+    _normalize_readonly_sql,
     _pipeline_studio_branch_ids_for_datasets,
+    _topological_order_for_stale_set,
 )
 
 

@@ -23,7 +23,7 @@ def get_dataframe_summary(
         Number of rows to display in the "Data (first 30 rows)" section.
     skip_stats : bool, default False
         If True, skip the descriptive statistics and DataFrame info sections.
-        
+
     Example:
     --------
     ``` python
@@ -76,17 +76,12 @@ def get_dataframe_summary(
     return summaries
 
 
-def _summarize_dataframe(
-    df: pd.DataFrame, 
-    dataset_name: str, 
-    n_sample=30, 
-    skip_stats=False
-) -> str:
+def _summarize_dataframe(df: pd.DataFrame, dataset_name: str, n_sample=30, skip_stats=False) -> str:
     """Generate a summary string for a single DataFrame."""
     # 1. Convert dictionary-type cells to strings
     #    This prevents unhashable dict errors during df.nunique().
     df = df.apply(lambda col: col.map(lambda x: str(x) if isinstance(x, dict) else x))
-    
+
     # 2. Capture df.info() output
     buffer = io.StringIO()
     df.info(buf=buffer)
@@ -140,6 +135,5 @@ def _summarize_dataframe(
         Data (first {n_sample} rows):
         {df.head(n_sample).to_string()}
         """
-        
-    return summary_text.strip()
 
+    return summary_text.strip()

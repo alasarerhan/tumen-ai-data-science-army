@@ -32,12 +32,32 @@ async def _mock_log_stream(run_id: str, run_status: str):
         {"ts": datetime.now(UTC).isoformat(), "level": "INFO", "msg": f"Starting run {run_id}…"},
         {"ts": datetime.now(UTC).isoformat(), "level": "INFO", "msg": "Initialising agents…"},
         {"ts": datetime.now(UTC).isoformat(), "level": "INFO", "msg": "Loading data sources…"},
-        {"ts": datetime.now(UTC).isoformat(), "level": "INFO", "msg": "Running data cleaning agent…"},
-        {"ts": datetime.now(UTC).isoformat(), "level": "INFO", "msg": "Running feature engineering agent…"},
+        {
+            "ts": datetime.now(UTC).isoformat(),
+            "level": "INFO",
+            "msg": "Running data cleaning agent…",
+        },
+        {
+            "ts": datetime.now(UTC).isoformat(),
+            "level": "INFO",
+            "msg": "Running feature engineering agent…",
+        },
         {"ts": datetime.now(UTC).isoformat(), "level": "INFO", "msg": "Running ML training agent…"},
-        {"ts": datetime.now(UTC).isoformat(), "level": "INFO", "msg": "Evaluating model performance…"},
-        {"ts": datetime.now(UTC).isoformat(), "level": "INFO", "msg": "Generating strategy report…"},
-        {"ts": datetime.now(UTC).isoformat(), "level": "INFO", "msg": f"Run {run_id} finished with status: {run_status}"},
+        {
+            "ts": datetime.now(UTC).isoformat(),
+            "level": "INFO",
+            "msg": "Evaluating model performance…",
+        },
+        {
+            "ts": datetime.now(UTC).isoformat(),
+            "level": "INFO",
+            "msg": "Generating strategy report…",
+        },
+        {
+            "ts": datetime.now(UTC).isoformat(),
+            "level": "INFO",
+            "msg": f"Run {run_id} finished with status: {run_status}",
+        },
         {"ts": datetime.now(UTC).isoformat(), "level": "INFO", "msg": "__STREAM_END__"},
     ]
     for line in lines:
@@ -57,12 +77,16 @@ async def stream_run_logs(
 
     # Try Prefect logs first; fall back to mock stream only for local verification.
     try:
-        from platform_api.orchestration.prefect_gateway import get_prefect_flow_run_logs  # type: ignore[import]
+        from platform_api.orchestration.prefect_gateway import (
+            get_prefect_flow_run_logs,  # type: ignore[import]
+        )
 
         async def prefect_stream():
             async for chunk in get_prefect_flow_run_logs(run.prefect_flow_run_id):
                 yield await _sse_event(chunk)
-            yield await _sse_event({"ts": datetime.now(UTC).isoformat(), "level": "INFO", "msg": "__STREAM_END__"})
+            yield await _sse_event(
+                {"ts": datetime.now(UTC).isoformat(), "level": "INFO", "msg": "__STREAM_END__"}
+            )
 
         return StreamingResponse(prefect_stream(), media_type="text/event-stream")
     except (ImportError, AttributeError, Exception) as exc:

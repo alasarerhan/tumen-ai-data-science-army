@@ -3,7 +3,6 @@ from __future__ import annotations
 import json
 import logging
 from pathlib import Path
-from typing import Optional
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile
@@ -27,9 +26,7 @@ from platform_api.core.file_security import (
 from platform_api.core.malware_scan import enforce_scan_mode
 from platform_api.db.models import ChatMessageRole, ChatSessionStatus, ChatUpload
 from platform_api.db.session import get_db
-from platform_api.schemas.pagination import build_paginated_response, MAX_PAGE_SIZE
-from platform_api.services.identity_service import get_or_create_user
-from platform_api.services.run_service import get_workspace_for_member
+from platform_api.schemas.pagination import MAX_PAGE_SIZE, build_paginated_response
 from platform_api.services.chat_service import (
     create_chat_session,
     create_message,
@@ -46,6 +43,8 @@ from platform_api.services.chat_service import (
     update_message,
     upload_to_dict,
 )
+from platform_api.services.identity_service import get_or_create_user
+from platform_api.services.run_service import get_workspace_for_member
 
 logger = logging.getLogger(__name__)
 
@@ -97,7 +96,7 @@ async def create_session(
 @router.get("/sessions")
 async def get_sessions(
     workspace_id: str,
-    cursor: Optional[str] = Query(default=None, description="Pagination cursor (session ID)"),
+    cursor: str | None = Query(default=None, description="Pagination cursor (session ID)"),
     limit: int = Query(default=20, ge=1, le=MAX_PAGE_SIZE, description="Items per page"),
     principal: Principal = Depends(get_principal),
     db: Session = Depends(get_db),
@@ -122,7 +121,9 @@ async def get_session(
     db: Session = Depends(get_db),
 ) -> dict:
     user, workspace = _resolve_context(db, principal, workspace_id)
-    session = get_chat_session(db, session_id=session_id, workspace_id=workspace.id, user_id=user.id)
+    session = get_chat_session(
+        db, session_id=session_id, workspace_id=workspace.id, user_id=user.id
+    )
     return session_to_dict(session)
 
 
@@ -134,7 +135,9 @@ async def delete_session(
     db: Session = Depends(get_db),
 ) -> dict:
     user, workspace = _resolve_context(db, principal, workspace_id)
-    session = get_chat_session(db, session_id=session_id, workspace_id=workspace.id, user_id=user.id)
+    session = get_chat_session(
+        db, session_id=session_id, workspace_id=workspace.id, user_id=user.id
+    )
     session.status = ChatSessionStatus.archived
     db.add(session)
     db.commit()
@@ -146,13 +149,15 @@ async def delete_session(
 async def get_session_messages(
     session_id: str,
     workspace_id: str,
-    cursor: Optional[str] = Query(default=None, description="Pagination cursor (message ID)"),
+    cursor: str | None = Query(default=None, description="Pagination cursor (message ID)"),
     limit: int = Query(default=50, ge=1, le=100, description="Items per page"),
     principal: Principal = Depends(get_principal),
     db: Session = Depends(get_db),
 ) -> dict:
     user, workspace = _resolve_context(db, principal, workspace_id)
-    session = get_chat_session(db, session_id=session_id, workspace_id=workspace.id, user_id=user.id)
+    session = get_chat_session(
+        db, session_id=session_id, workspace_id=workspace.id, user_id=user.id
+    )
     messages = list_messages(db, session_id=session.id, cursor=cursor, limit=limit)
     paginated = build_paginated_response(messages, limit)
     return {
@@ -170,7 +175,9 @@ async def create_session_message(
     db: Session = Depends(get_db),
 ) -> dict:
     user, workspace = _resolve_context(db, principal, body.workspace_id)
-    session = get_chat_session(db, session_id=session_id, workspace_id=workspace.id, user_id=user.id)
+    session = get_chat_session(
+        db, session_id=session_id, workspace_id=workspace.id, user_id=user.id
+    )
 
     create_message(db, session=session, role=ChatMessageRole.user, content=body.content)
     assistant_text, artifacts = generate_assistant_reply(db, session=session, prompt=body.content)
@@ -210,11 +217,11 @@ async def stream_session_message(
     https://ithy.com/article/sse-streaming-retries-v0p7rdp1
     """
     user, workspace = _resolve_context(db, principal, body.workspace_id)
-    session = get_chat_session(db, session_id=session_id, workspace_id=workspace.id, user_id=user.id)
-
-    create_pending_message(
-        db, session=session, role=ChatMessageRole.user, content=body.content
+    session = get_chat_session(
+        db, session_id=session_id, workspace_id=workspace.id, user_id=user.id
     )
+
+    create_pending_message(db, session=session, role=ChatMessageRole.user, content=body.content)
 
     pending_assistant = create_pending_message(
         db, session=session, role=ChatMessageRole.assistant, content="", artifacts=None
@@ -270,7 +277,9 @@ async def stream_session_message(
             elif "timeout" in str(exc).lower():
                 error_msg = "Request timed out. Please try again."
             logger.error("Chat streaming error: %s", type(exc).__name__)
-            yield _sse_event({"type": "error", "error": error_msg, "message_id": str(pending_assistant.id)})
+            yield _sse_event(
+                {"type": "error", "error": error_msg, "message_id": str(pending_assistant.id)}
+            )
         finally:
             yield _sse_event({"type": "done", "message_id": str(pending_assistant.id)})
 
@@ -286,21 +295,23 @@ async def upload_file(
     db: Session = Depends(get_db),
 ) -> dict:
     user, workspace = _resolve_context(db, principal, workspace_id)
-    session = get_chat_session(db, session_id=session_id, workspace_id=workspace.id, user_id=user.id)
+    session = get_chat_session(
+        db, session_id=session_id, workspace_id=workspace.id, user_id=user.id
+    )
     data = await file.read()
-    
+
     if len(data) < MIN_UPLOAD_SIZE_BYTES:
         raise HTTPException(
             status_code=400,
-            detail=f"File is too small. Minimum size is {MIN_UPLOAD_SIZE_BYTES} bytes."
+            detail=f"File is too small. Minimum size is {MIN_UPLOAD_SIZE_BYTES} bytes.",
         )
-    
+
     if len(data) > MAX_UPLOAD_SIZE_BYTES:
         raise HTTPException(
             status_code=413,
-            detail=f"File is too large. Maximum size is {settings.chat_upload_max_mb}MB."
+            detail=f"File is too large. Maximum size is {settings.chat_upload_max_mb}MB.",
         )
-    
+
     upload = save_upload(
         db,
         session=session,
@@ -334,7 +345,9 @@ async def upload_file_streaming(
     Use this endpoint for large file uploads to avoid memory exhaustion.
     """
     user, workspace = _resolve_context(db, principal, workspace_id)
-    session = get_chat_session(db, session_id=session_id, workspace_id=workspace.id, user_id=user.id)
+    session = get_chat_session(
+        db, session_id=session_id, workspace_id=workspace.id, user_id=user.id
+    )
 
     validate_file_extension(file.filename or "upload.bin")
 
@@ -360,7 +373,7 @@ async def upload_file_streaming(
         temp_path.unlink()
         raise HTTPException(
             status_code=400,
-            detail=f"File is too small. Minimum size is {MIN_UPLOAD_SIZE_BYTES} bytes."
+            detail=f"File is too small. Minimum size is {MIN_UPLOAD_SIZE_BYTES} bytes.",
         )
 
     detected_ext, detected_mime = detect_mime_from_magic_bytes(first_chunk)
@@ -381,7 +394,9 @@ async def upload_file_streaming(
 
     original_name = sanitize_filename(file.filename or "upload.bin")
 
-    relative_path = Path(str(session.tenant_id)) / str(session.workspace_id) / str(session.id) / secure_filename
+    relative_path = (
+        Path(str(session.tenant_id)) / str(session.workspace_id) / str(session.id) / secure_filename
+    )
     storage_uri = str(relative_path)
 
     try:
@@ -414,7 +429,8 @@ async def get_uploads(
     db: Session = Depends(get_db),
 ) -> dict:
     user, workspace = _resolve_context(db, principal, workspace_id)
-    session = get_chat_session(db, session_id=session_id, workspace_id=workspace.id, user_id=user.id)
+    session = get_chat_session(
+        db, session_id=session_id, workspace_id=workspace.id, user_id=user.id
+    )
     items = list_uploads(db, session_id=session.id)
     return {"items": [upload_to_dict(i) for i in items]}
-

@@ -12,9 +12,13 @@ PowerAnalysisAgent.
 Node type: ``model.hypothesis_test``
 """
 
-from typing import (Dict, Optional, Tuple)  # noqa: E402
 import logging  # noqa: E402, F401
-from typing import Any  # noqa: E402, F401
+from typing import (  # noqa: E402
+    Any,  # noqa: E402, F401
+    Dict,
+    Optional,
+    Tuple,
+)
 
 from langchain.tools import tool  # noqa: E402, F401
 from langchain_core.messages import AIMessage, BaseMessage  # noqa: E402, F401
@@ -24,16 +28,12 @@ from langgraph.types import Checkpointer  # noqa: E402, F401
 from typing_extensions import Annotated, Sequence, TypedDict  # noqa: E402, F401
 
 from ai_data_science_team.templates import BaseAgent  # noqa: E402, F401
-from ai_data_science_team.utils.regex import format_agent_name  # noqa: E402, F401
-
-
-
 from ai_data_science_team.tools.hypothesis_testing import (  # noqa: E402, F401
     interpret_result,
     recommend_test,
     run_test,
 )
-
+from ai_data_science_team.utils.regex import format_agent_name  # noqa: E402, F401
 
 logger = logging.getLogger(__name__)
 
@@ -45,6 +45,7 @@ NODE_TYPE = "model.hypothesis_test"
 # Tool wrappers
 # ---------------------------------------------------------------------------
 
+
 @tool(response_format="content_and_artifact")
 def recommend_test_wrapped(values: Sequence[float]) -> Tuple[str, dict]:
     """Tool wrapper for ``recommend_test``.
@@ -54,7 +55,7 @@ def recommend_test_wrapped(values: Sequence[float]) -> Tuple[str, dict]:
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: a4_recommend_test")
-    kwargs = {'values': values}
+    kwargs = {"values": values}
     try:
         result = recommend_test(**kwargs)
     except Exception as exc:
@@ -82,7 +83,7 @@ def run_test_wrapped(values: Sequence[float]) -> Tuple[str, dict]:
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: a4_run_test")
-    kwargs = {'values': values}
+    kwargs = {"values": values}
     try:
         result = run_test(**kwargs)
     except Exception as exc:
@@ -110,7 +111,7 @@ def interpret_result_wrapped(p_value: float, effect_size: float) -> Tuple[str, d
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: a4_interpret_result")
-    kwargs = {'p_value': p_value, 'effect_size': effect_size}
+    kwargs = {"p_value": p_value, "effect_size": effect_size}
     try:
         result = interpret_result(**kwargs)
     except Exception as exc:
@@ -179,7 +180,12 @@ def make_hypothesis_testing_agent(
     def run_react_agent(state: GraphState):
         logger.info("    * RUN REACT AGENT FOR A4")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
-        messages = [("system", "You are the A4 agent. Use the available tools to complete the user's request.")] + list(base)
+        messages = [
+            (
+                "system",
+                "You are the A4 agent. Use the available tools to complete the user's request.",
+            )
+        ] + list(base)
         input_payload = {"messages": messages}
         return react_agent.invoke(input_payload, invoke_react_agent_kwargs)
 
@@ -198,7 +204,9 @@ def make_hypothesis_testing_agent(
             last_ai = AIMessage(content=getattr(internal[-1], "content", ""), name=AGENT_NAME)
         tool_calls = []
         for msg in internal:
-            name = getattr(getattr(msg, "tool_call_id", None), "name", None) or getattr(msg, "name", None)
+            name = getattr(getattr(msg, "tool_call_id", None), "name", None) or getattr(
+                msg, "name", None
+            )
             if name:
                 tool_calls.append(name)
         if log_tool_calls and tool_calls:
@@ -266,6 +274,7 @@ class HypothesisTestingAgent(BaseAgent):
         if not self.response or "messages" not in self.response:
             return None
         from IPython.display import Markdown as _Markdown  # noqa: E402, F401
+
         for msg in reversed(self.response.get("messages", [])):
             content = getattr(msg, "content", "")
             if content:

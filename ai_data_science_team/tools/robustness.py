@@ -12,7 +12,6 @@ from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple  # noqa:
 import numpy as np  # noqa: E402, F401
 import pandas as pd  # noqa: E402, F401
 
-
 # ---------------------------------------------------------------------------
 # Perturbation primitives
 # ---------------------------------------------------------------------------
@@ -27,7 +26,10 @@ def _accuracy(y_true, y_pred) -> float:
 
 
 def add_gaussian_noise(
-    X: np.ndarray, *, sigma: float = 0.1, rng: np.random.Generator | None = None,
+    X: np.ndarray,
+    *,
+    sigma: float = 0.1,
+    rng: np.random.Generator | None = None,
 ) -> np.ndarray:
     """Add N(0, sigma) noise to numeric columns of ``X``.
 
@@ -45,8 +47,11 @@ def add_gaussian_noise(
 
 
 def mask_features(
-    X: np.ndarray, mask_rate: float = 0.3, *,
-    fill_value: float = 0.0, rng: np.random.Generator | None = None,
+    X: np.ndarray,
+    mask_rate: float = 0.3,
+    *,
+    fill_value: float = 0.0,
+    rng: np.random.Generator | None = None,
     columns: Optional[Sequence[int]] = None,
 ) -> np.ndarray:
     """Randomly mask ``mask_rate`` of cells to ``fill_value``."""
@@ -111,9 +116,9 @@ def default_scenarios(
     for m in mask_levels:
         out.append(
             Scenario(
-                f"mask_{int(m*100)}pct",
+                f"mask_{int(m * 100)}pct",
                 lambda X, y, m=m: mask_features(X, mask_rate=m),
-                f"{int(m*100)}% feature mask",
+                f"{int(m * 100)}% feature mask",
             )
         )
     return out
@@ -141,12 +146,10 @@ class RobustnessResult:
             "model_name": self.model_name,
             "metric": self.metric,
             "matrix": {
-                str(idx): {str(c): v for c, v in row.items()}
-                for idx, row in self.matrix.iterrows()
+                str(idx): {str(c): v for c, v in row.items()} for idx, row in self.matrix.iterrows()
             },
             "summary": {
-                str(idx): {k: v for k, v in row.items()}
-                for idx, row in self.summary.iterrows()
+                str(idx): {k: v for k, v in row.items()} for idx, row in self.summary.iterrows()
             },
             "metadata": self.metadata,
         }
@@ -187,8 +190,7 @@ def evaluate_robustness(
 
     unique_scenarios = list(dict.fromkeys(s for (s, _) in rows.keys()))
     matrix = pd.DataFrame(
-        {r: [v for (s, rr), v in rows.items() if rr == r]
-         for r in range(replicates)},
+        {r: [v for (s, rr), v in rows.items() if rr == r] for r in range(replicates)},
         index=unique_scenarios,
     )
     matrix.index.name = "scenario"
@@ -197,11 +199,7 @@ def evaluate_robustness(
     for s in scenarios:
         vals = [rows[(s.name, r)] for r in range(replicates)]
         clean_vals = rows.get(("clean", 0))
-        delta = (
-            float(np.mean(vals)) - clean_vals
-            if clean_vals is not None
-            else float("nan")
-        )
+        delta = float(np.mean(vals)) - clean_vals if clean_vals is not None else float("nan")
         summary_rows.append(
             {
                 "scenario": s.name,
@@ -225,5 +223,3 @@ def evaluate_robustness(
             "n_features": int(X.shape[1]) if X.ndim > 1 else 0,
         },
     )
-
-

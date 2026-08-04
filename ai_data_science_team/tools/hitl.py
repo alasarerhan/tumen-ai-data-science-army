@@ -70,6 +70,7 @@ def _reset_stores() -> None:
 # 1. create_approval_request
 # ---------------------------------------------------------------------------
 
+
 @tool(response_format="content_and_artifact")
 def create_approval_request(
     step_name: str,
@@ -103,7 +104,11 @@ def create_approval_request(
     risk_level = risk_level.lower() if risk_level.lower() in valid_risk else "medium"
 
     request_id = str(uuid.uuid4())
-    timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
+    timestamp = (
+        datetime.datetime.now(datetime.timezone.utc)
+        .isoformat(timespec="seconds")
+        .replace("+00:00", "Z")
+    )
 
     record: Dict = {
         "request_id": request_id,
@@ -136,6 +141,7 @@ def create_approval_request(
 # 2. format_approval_notification
 # ---------------------------------------------------------------------------
 
+
 @tool(response_format="content_and_artifact")
 def format_approval_notification(
     request_json: str,
@@ -166,9 +172,7 @@ def format_approval_notification(
         artifact = {"error": "invalid_json", "raw": str(request_json)}
         return "ERROR: request_json is not valid JSON.", artifact
 
-    urgency_icon = {"low": "🟢", "normal": "🟡", "high": "🔴"}.get(
-        urgency.lower(), "🟡"
-    )
+    urgency_icon = {"low": "🟢", "normal": "🟡", "high": "🔴"}.get(urgency.lower(), "🟡")
     risk_icon = {"low": "🟢", "medium": "🟡", "high": "🔴"}.get(
         request.get("risk_level", "medium"), "🟡"
     )
@@ -191,8 +195,7 @@ def format_approval_notification(
         markdown += f"### Data Summary\n{request['data_summary']}\n\n"
 
     markdown += (
-        "### Action Required\n"
-        "Reply **`yes`** to approve, or provide modification instructions.\n"
+        "### Action Required\nReply **`yes`** to approve, or provide modification instructions.\n"
     )
 
     artifact: Dict = {
@@ -210,6 +213,7 @@ def format_approval_notification(
 # ---------------------------------------------------------------------------
 # 3. check_approval_status
 # ---------------------------------------------------------------------------
+
 
 @tool(response_format="content_and_artifact")
 def check_approval_status(
@@ -239,10 +243,8 @@ def check_approval_status(
             return f"Approval request '{request_id}' not found.", artifact
 
         status = record.get("status", "unknown")
-        content = (
-            f"Request '{request_id}' | Step: {record.get('step_name')}"
-            f" | Status: {status}"
-            + (f" | Decision: {record.get('decision')}" if record.get("decision") else "")
+        content = f"Request '{request_id}' | Step: {record.get('step_name')} | Status: {status}" + (
+            f" | Decision: {record.get('decision')}" if record.get("decision") else ""
         )
 
         artifact: Dict = {
@@ -261,6 +263,7 @@ def check_approval_status(
 # ---------------------------------------------------------------------------
 # 4. log_approval_decision
 # ---------------------------------------------------------------------------
+
 
 @tool(response_format="content_and_artifact")
 def log_approval_decision(
@@ -290,7 +293,11 @@ def log_approval_decision(
     valid_decisions = {"approved", "rejected", "modified"}
     decision_norm = decision.lower() if decision.lower() in valid_decisions else "modified"
 
-    timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
+    timestamp = (
+        datetime.datetime.now(datetime.timezone.utc)
+        .isoformat(timespec="seconds")
+        .replace("+00:00", "Z")
+    )
 
     log_entry: Dict = {
         "request_id": request_id,
@@ -303,9 +310,11 @@ def log_approval_decision(
     with _hitl_lock:
         if request_id in _APPROVAL_STORE:
             _APPROVAL_STORE[request_id]["status"] = (
-                "approved" if decision_norm == "approved" else
-                "rejected" if decision_norm == "rejected" else
-                "modified"
+                "approved"
+                if decision_norm == "approved"
+                else "rejected"
+                if decision_norm == "rejected"
+                else "modified"
             )
             _APPROVAL_STORE[request_id]["decision"] = decision_norm
             _APPROVAL_STORE[request_id]["decision_reason"] = reason
@@ -314,9 +323,8 @@ def log_approval_decision(
 
         _DECISION_LOG.append(log_entry)
 
-    content = (
-        f"Decision logged: request '{request_id}' → {decision_norm}"
-        + (f" (by {modifier})" if modifier else "")
+    content = f"Decision logged: request '{request_id}' → {decision_norm}" + (
+        f" (by {modifier})" if modifier else ""
     )
     return content, log_entry
 
@@ -324,6 +332,7 @@ def log_approval_decision(
 # ---------------------------------------------------------------------------
 # 5. summarize_for_approval
 # ---------------------------------------------------------------------------
+
 
 @tool(response_format="content_and_artifact")
 def summarize_for_approval(
@@ -353,28 +362,19 @@ def summarize_for_approval(
         artifact = {"error": "invalid_json", "raw": str(agent_output_json)}
         return "ERROR: agent_output_json is not valid JSON.", artifact
 
-    focus_list = (
-        [k.strip() for k in focus_keys.split(",") if k.strip()]
-        if focus_keys
-        else []
-    )
+    focus_list = [k.strip() for k in focus_keys.split(",") if k.strip()] if focus_keys else []
 
     lines = []
     char_count = 0
 
     # Prioritise focus keys first
-    ordered_keys = (
-        [k for k in focus_list if k in output]
-        + [k for k in output if k not in focus_list]
-    )
+    ordered_keys = [k for k in focus_list if k in output] + [
+        k for k in output if k not in focus_list
+    ]
 
     for key in ordered_keys:
         val = output[key]
-        val_str = (
-            json.dumps(val, default=str)
-            if isinstance(val, (dict, list))
-            else str(val)
-        )
+        val_str = json.dumps(val, default=str) if isinstance(val, (dict, list)) else str(val)
         if len(val_str) > 120:
             val_str = val_str[:117] + "..."
         line = f"- **{key}**: {val_str}"

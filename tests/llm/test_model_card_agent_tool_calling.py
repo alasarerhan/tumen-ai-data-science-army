@@ -43,6 +43,7 @@ pytestmark = pytest.mark.llm
 # 1. PURE: model-driven tool'lar (registry'ye yazar)
 # ---------------------------------------------------------------------------
 
+
 def test_generate_card_real(llm_or_skip, llm_model):
     """generate_card_wrapped: registry'ye yeni ModelCard yazar."""
     tool = generate_card_wrapped
@@ -50,8 +51,7 @@ def test_generate_card_real(llm_or_skip, llm_model):
         _drive_tool_call(
             llm_model,
             tool,
-            "generate_card_wrapped tool'unu TEK çağrı ile çağır; "
-            "model_id='model-demo' ver.",
+            "generate_card_wrapped tool'unu TEK çağrı ile çağır; model_id='model-demo' ver.",
         ),
         tool.name,
     )
@@ -67,8 +67,7 @@ def test_get_card_real(llm_or_skip, llm_model):
         _drive_tool_call(
             llm_model,
             tool,
-            f"get_card_wrapped tool'unu TEK çağrı ile çağır; "
-            f"card_id='{seed.card_id}' ver.",
+            f"get_card_wrapped tool'unu TEK çağrı ile çağır; card_id='{seed.card_id}' ver.",
         ),
         tool.name,
     )
@@ -81,8 +80,7 @@ def test_list_cards_real(llm_or_skip, llm_model):
         _drive_tool_call(
             llm_model,
             tool,
-            "list_cards_wrapped tool'unu TEK çağrı ile çağır; "
-            "model_id='model-demo' ver.",
+            "list_cards_wrapped tool'unu TEK çağrı ile çağır; model_id='model-demo' ver.",
         ),
         tool.name,
     )
@@ -91,6 +89,7 @@ def test_list_cards_real(llm_or_skip, llm_model):
 # ---------------------------------------------------------------------------
 # 2. STATEFUL: ModelCard Pydantic dataclass
 # ---------------------------------------------------------------------------
+
 
 def _fresh_card(model_id: str = "test-model") -> ModelCard:
     """Test için izole ModelCard — generate_card tüm bölüm şablonlarıyla gelir."""
@@ -110,13 +109,12 @@ def test_update_section_real():
         section="intended_use",
         content="Yeni içerik: high-risk churn prediction.",
     )
-    assert new_card.sections["intended_use"].content == (
-        "Yeni içerik: high-risk churn prediction."
-    )
+    assert new_card.sections["intended_use"].content == ("Yeni içerik: high-risk churn prediction.")
     assert new_card.version == card.version + 1
     # Esnek bölüm ekleme (draft=True)
     new_card2 = update_section(
-        card, section="limitations",
+        card,
+        section="limitations",
         content="Noisy labels in 5% of training set.",
         is_draft=True,
     )

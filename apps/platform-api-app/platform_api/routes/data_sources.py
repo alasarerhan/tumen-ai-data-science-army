@@ -45,21 +45,21 @@ ALLOWED_CONNECTION_SCHEMES = [
 
 def _validate_connection_uri(uri: str) -> str:
     """Validate connection URI for security.
-    
+
     SECURITY: Prevents SSRF and credential exfiltration attacks.
     Only allows known database connection schemes.
     """
     if not uri or not isinstance(uri, str):
         raise ValueError("Connection URI is required")
-    
+
     uri_lower = uri.lower().strip()
-    
+
     if not any(uri_lower.startswith(scheme) for scheme in ALLOWED_CONNECTION_SCHEMES):
         raise ValueError(
             f"Connection URI scheme not allowed. "
             f"Allowed schemes: {', '.join(s.replace('://', '') for s in ALLOWED_CONNECTION_SCHEMES)}"
         )
-    
+
     return uri
 
 
@@ -118,8 +118,8 @@ class CreateDataSourceRequest(BaseModel):
     kind: str
     connection_uri: str | None = None
     metadata: dict = Field(default_factory=dict)
-    
-    @field_validator('connection_uri')
+
+    @field_validator("connection_uri")
     @classmethod
     def validate_connection_uri(cls, v: str | None) -> str | None:
         if v is None:
@@ -159,8 +159,8 @@ class UpdateDataSourceRequest(BaseModel):
     kind: str | None = None
     connection_uri: str | None = None
     metadata: dict | None = None
-    
-    @field_validator('connection_uri')
+
+    @field_validator("connection_uri")
     @classmethod
     def validate_connection_uri(cls, v: str | None) -> str | None:
         if v is None:

@@ -39,9 +39,7 @@ class ExperimentStore:
     def add(self, record: ExperimentRecord) -> None:
         self.records.append(record)
 
-    def by_experiment(
-        self, experiment_id: str
-    ) -> List[ExperimentRecord]:
+    def by_experiment(self, experiment_id: str) -> List[ExperimentRecord]:
         return [r for r in self.records if r.experiment_id == experiment_id]
 
     def by_model(self, model_id: str) -> List[ExperimentRecord]:
@@ -116,9 +114,7 @@ def leaderboard(
             break
     entries: List[LeaderboardEntry] = []
     for rank, rec in enumerate(ordered, start=1):
-        secondaries = {
-            k: v for k, v in rec.metrics.items() if k != primary_metric
-        }
+        secondaries = {k: v for k, v in rec.metrics.items() if k != primary_metric}
         delta = None
         if champion_value is not None and not rec.is_champion:
             delta = rec.metrics[primary_metric] - champion_value
@@ -144,8 +140,13 @@ def summarise_metrics(
     rows = store.by_experiment(experiment_id)
     vals = [r.metrics[metric] for r in rows if metric in r.metrics]
     if not vals:
-        return {"n": 0.0, "mean": float("nan"), "std": float("nan"),
-                "min": float("nan"), "max": float("nan")}
+        return {
+            "n": 0.0,
+            "mean": float("nan"),
+            "std": float("nan"),
+            "min": float("nan"),
+            "max": float("nan"),
+        }
     arr = np.asarray(vals, dtype=float)
     return {
         "n": float(len(vals)),

@@ -1,4 +1,5 @@
 """Tests for D3 Feature Store tool."""
+
 from __future__ import annotations
 
 import pytest
@@ -14,19 +15,31 @@ def store():
 @pytest.fixture
 def populated_store(store):
     d3.register_feature(
-        store, name="user_age", dtype="int",
-        transform="raw_age", owner="alice",
-        tags=["user", "demographic"], description="user age in years",
+        store,
+        name="user_age",
+        dtype="int",
+        transform="raw_age",
+        owner="alice",
+        tags=["user", "demographic"],
+        description="user age in years",
     )
     d3.register_feature(
-        store, name="user_age", dtype="int",
-        transform="raw_age_v2", owner="alice",
-        tags=["user"], version="2.0.0",
+        store,
+        name="user_age",
+        dtype="int",
+        transform="raw_age_v2",
+        owner="alice",
+        tags=["user"],
+        version="2.0.0",
     )
     d3.register_feature(
-        store, name="txn_amount_30d", dtype="float",
-        transform="rolling_sum", owner="bob",
-        tags=["transaction"], description="sum of last 30d txns",
+        store,
+        name="txn_amount_30d",
+        dtype="float",
+        transform="rolling_sum",
+        owner="bob",
+        tags=["transaction"],
+        description="sum of last 30d txns",
     )
     return store
 
@@ -34,8 +47,11 @@ def populated_store(store):
 class TestRegisterFeature:
     def test_returns_definition(self, store):
         d = d3.register_feature(
-            store, name="x", dtype="float",
-            transform="raw", owner="alice",
+            store,
+            name="x",
+            dtype="float",
+            transform="raw",
+            owner="alice",
         )
         assert d.name == "x"
         assert d.dtype == "float"
@@ -46,14 +62,20 @@ class TestRegisterFeature:
     def test_invalid_dtype(self, store):
         with pytest.raises(ValueError):
             d3.register_feature(
-                store, name="x", dtype="datetime",
-                transform="raw", owner="alice",
+                store,
+                name="x",
+                dtype="datetime",
+                transform="raw",
+                owner="alice",
             )
 
     def test_with_lineage(self, store):
         d = d3.register_feature(
-            store, name="x", dtype="int",
-            transform="raw", owner="alice",
+            store,
+            name="x",
+            dtype="int",
+            transform="raw",
+            owner="alice",
             lineage_node_id="node-abc",
         )
         assert d.lineage_node_id == "node-abc"
@@ -99,7 +121,9 @@ class TestSearch:
 
     def test_combined_filters(self, populated_store):
         out = d3.search_features(
-            populated_store, tag="user", owner="alice",
+            populated_store,
+            tag="user",
+            owner="alice",
         )
         assert len(out) == 2
 
@@ -120,12 +144,20 @@ class TestLatestVersion:
     def test_three_part_version(self):
         s = d3.FeatureStore()
         d3.register_feature(
-            s, name="x", dtype="int",
-            transform="raw", owner="alice", version="1.2.3",
+            s,
+            name="x",
+            dtype="int",
+            transform="raw",
+            owner="alice",
+            version="1.2.3",
         )
         d3.register_feature(
-            s, name="x", dtype="int",
-            transform="raw", owner="alice", version="1.10.0",
+            s,
+            name="x",
+            dtype="int",
+            transform="raw",
+            owner="alice",
+            version="1.10.0",
         )
         latest = d3.latest_version(s, "x")
         assert latest.version == "1.10.0"
@@ -135,7 +167,8 @@ class TestConsistency:
     def test_consistent(self):
         r = d3.check_consistency(
             feature_id="f1",
-            online_dtype="float", offline_dtype="float",
+            online_dtype="float",
+            offline_dtype="float",
             online_value_sample=[1.0, 2.0, 3.0],
             offline_value_sample=[1.0, 2.0, 3.0],
         )
@@ -145,7 +178,8 @@ class TestConsistency:
     def test_dtype_mismatch(self):
         r = d3.check_consistency(
             feature_id="f1",
-            online_dtype="float", offline_dtype="string",
+            online_dtype="float",
+            offline_dtype="string",
             online_value_sample=["1.0", "2.0"],
             offline_value_sample=["1.0", "2.0"],
         )
@@ -156,7 +190,8 @@ class TestConsistency:
     def test_sample_mismatch(self):
         r = d3.check_consistency(
             feature_id="f1",
-            online_dtype="float", offline_dtype="float",
+            online_dtype="float",
+            offline_dtype="float",
             online_value_sample=[1.0, 2.0],
             offline_value_sample=[1.0, 2.5],
         )
@@ -166,7 +201,8 @@ class TestConsistency:
     def test_length_mismatch(self):
         r = d3.check_consistency(
             feature_id="f1",
-            online_dtype="float", offline_dtype="float",
+            online_dtype="float",
+            offline_dtype="float",
             online_value_sample=[1.0, 2.0],
             offline_value_sample=[1.0],
         )
@@ -175,7 +211,8 @@ class TestConsistency:
     def test_online_dtype_none(self):
         r = d3.check_consistency(
             feature_id="f1",
-            online_dtype=None, offline_dtype="float",
+            online_dtype=None,
+            offline_dtype="float",
             online_value_sample=[],
             offline_value_sample=[],
         )
@@ -204,10 +241,8 @@ class TestFreshness:
 
     def test_bulk(self):
         recs = [
-            d3.FreshnessRecord(feature_id="a", last_updated_at=0,
-                                freshness_sla_seconds=10),
-            d3.FreshnessRecord(feature_id="b", last_updated_at=0,
-                                freshness_sla_seconds=1000),
+            d3.FreshnessRecord(feature_id="a", last_updated_at=0, freshness_sla_seconds=10),
+            d3.FreshnessRecord(feature_id="b", last_updated_at=0, freshness_sla_seconds=1000),
         ]
         reports = d3.bulk_probe_freshness(recs, now=50)
         assert reports[0].is_stale is True
@@ -227,7 +262,9 @@ class TestLineageAttach:
     def test_unknown_feature(self, store):
         with pytest.raises(KeyError):
             d3.attach_lineage(
-                store, feature_id="nope", lineage_node_id="x",
+                store,
+                feature_id="nope",
+                lineage_node_id="x",
             )
 
 
@@ -242,4 +279,3 @@ class TestCatalogPayload:
     def test_unknown_skipped(self, populated_store):
         p = d3.catalog_payload(populated_store, ["nope"])
         assert p["n"] == 0
-

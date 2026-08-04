@@ -12,7 +12,9 @@ import pytest
 
 @pytest.fixture(scope="module")
 def pipeline_module() -> ModuleType:
-    module_path = Path(__file__).resolve().parents[1] / "ai_data_science_team" / "utils" / "pipeline.py"
+    module_path = (
+        Path(__file__).resolve().parents[1] / "ai_data_science_team" / "utils" / "pipeline.py"
+    )
     spec = importlib.util.spec_from_file_location("pipeline_utils_under_test", module_path)
     assert spec is not None
     assert spec.loader is not None
@@ -103,7 +105,9 @@ def test_as_float_preserves_nan(pipeline_module: ModuleType) -> None:
     assert math.isnan(result)
 
 
-def test_pick_latest_dataset_id_filters_stage_and_uses_last_tie(pipeline_module: ModuleType) -> None:
+def test_pick_latest_dataset_id_filters_stage_and_uses_last_tie(
+    pipeline_module: ModuleType,
+) -> None:
     # Arrange
     datasets = {
         "ignored": [],
@@ -143,7 +147,9 @@ def test_pick_latest_dataset_id_handles_empty_and_invalid_inputs(
     assert result == expected
 
 
-def test_pick_latest_dataset_id_any_stage_ignores_non_dict_entries(pipeline_module: ModuleType) -> None:
+def test_pick_latest_dataset_id_any_stage_ignores_non_dict_entries(
+    pipeline_module: ModuleType,
+) -> None:
     # Arrange
     datasets = {
         "empty": {},
@@ -209,7 +215,9 @@ def test_parent_ids_normalizes_parent_shapes(
     assert result == expected
 
 
-def test_build_dataset_dag_ids_orders_parents_before_merge_child(pipeline_module: ModuleType) -> None:
+def test_build_dataset_dag_ids_orders_parents_before_merge_child(
+    pipeline_module: ModuleType,
+) -> None:
     # Arrange
     datasets = {
         "root": {},
@@ -254,9 +262,7 @@ def test_compute_pipeline_hash_prefers_stable_dataset_properties(
             "label": "Features",
             "parent_id": "session-id-1",
             "schema_hash": "schema-feature",
-            "provenance": {
-                "transform": {"kind": "python_function", "code_sha256": "abc"}
-            },
+            "provenance": {"transform": {"kind": "python_function", "code_sha256": "abc"}},
         },
     }
     second = {
@@ -271,9 +277,7 @@ def test_compute_pipeline_hash_prefers_stable_dataset_properties(
             "label": "Features",
             "parent_id": "new-id-1",
             "schema_hash": "schema-feature",
-            "provenance": {
-                "transform": {"kind": "python_function", "code_sha256": "abc"}
-            },
+            "provenance": {"transform": {"kind": "python_function", "code_sha256": "abc"}},
         },
     }
 
@@ -490,11 +494,20 @@ def test_append_root_source_lines_handles_sql_and_missing_sources(
             },
             "df = transform(df)",
         ),
-        ({"kind": "sql_query", "sql_query_code": "SELECT 1"}, "df = pd.read_sql_query(sql_query, engine)"),
+        (
+            {"kind": "sql_query", "sql_query_code": "SELECT 1"},
+            "df = pd.read_sql_query(sql_query, engine)",
+        ),
         ({"kind": "mlflow_predict", "run_id": "run-1"}, "model_uri = 'runs:/run-1/model'"),
         ({"kind": "h2o_predict", "model_id": "model-1"}, "model = h2o.get_model('model-1')"),
-        ({"kind": "unknown"}, "# TODO: transform not recorded in a runnable form; see datasets provenance."),
-        ({"kind": "python_function"}, "# TODO: missing function code/name for this step; see datasets provenance."),
+        (
+            {"kind": "unknown"},
+            "# TODO: transform not recorded in a runnable form; see datasets provenance.",
+        ),
+        (
+            {"kind": "python_function"},
+            "# TODO: missing function code/name for this step; see datasets provenance.",
+        ),
     ],
 )
 def test_append_transform_lines_emits_runnable_transform_stubs(
@@ -611,7 +624,10 @@ def test_build_reproducible_pipeline_script_generates_merge_branches(
     # Arrange
     datasets = {
         "left": {"label": "left.csv", "provenance": {"source_type": "file", "source": "left.csv"}},
-        "right": {"label": "right.csv", "provenance": {"source_type": "file", "source": "right.csv"}},
+        "right": {
+            "label": "right.csv",
+            "provenance": {"source_type": "file", "source": "right.csv"},
+        },
         "merge": {
             "parent_ids": ["left", "right"],
             "provenance": {

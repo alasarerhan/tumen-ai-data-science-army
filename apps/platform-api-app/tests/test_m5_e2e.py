@@ -15,6 +15,7 @@ Scenarios covered:
   S9  Lifecycle idempotency: get-by-id at each state transition
   S10 Quota path: create 5 specs rapidly, none lost (no actual rate limit hit)
 """
+
 from __future__ import annotations
 
 from unittest.mock import patch
@@ -32,7 +33,9 @@ from platform_api.main import create_app
 # ---------------------------------------------------------------------------
 
 _SPEC_A = {"steps": [{"id": "load", "tool": "data_load"}, {"id": "clean", "tool": "data_clean"}]}
-_SPEC_B = {"steps": [{"id": "feat", "tool": "feature_engineering"}, {"id": "train", "tool": "model_train"}]}
+_SPEC_B = {
+    "steps": [{"id": "feat", "tool": "feature_engineering"}, {"id": "train", "tool": "model_train"}]
+}
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -307,11 +310,14 @@ def test_s7_error_boundary_state_transitions(clients):
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize("method,path_template", [
-    ("GET", "/v1/workflows?workspace_id={ws}"),
-    ("POST", "/v1/workflows"),
-    ("GET", "/v1/workflows/latest?workspace_id={ws}&name=x"),
-])
+@pytest.mark.parametrize(
+    "method,path_template",
+    [
+        ("GET", "/v1/workflows?workspace_id={ws}"),
+        ("POST", "/v1/workflows"),
+        ("GET", "/v1/workflows/latest?workspace_id={ws}&name=x"),
+    ],
+)
 def test_s8_anonymous_gets_401(clients, method, path_template):
     _, _, anon, sdb = clients
     ws = _ws(sdb)

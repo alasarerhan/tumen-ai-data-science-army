@@ -42,58 +42,81 @@ def register_all_tools() -> None:
     This function imports all tool modules, which automatically registers
     them via the @register_tool decorator.
     """
-    from ai_data_science_team.tools.visualization import VISUALIZATION_TOOLS  # noqa: F401, E402
-    from ai_data_science_team.tools.b1_profiling import PROFILING_TOOLS  # noqa: F401, E402
-    from ai_data_science_team.tools.database import DATABASE_TOOLS  # noqa: F401, E402
-    from ai_data_science_team.tools.wrangling import WRANGLING_TOOLS  # noqa: F401, E402
-    from ai_data_science_team.tools.cleaning import CLEANING_TOOLS  # noqa: F401, E402
     from ai_data_science_team.tools.anomaly import ANOMALY_TOOLS  # noqa: F401, E402
-    from ai_data_science_team.tools.feature_engineering import FEATURE_ENGINEERING_TOOLS  # noqa: F401, E402
+    from ai_data_science_team.tools.b1_profiling import PROFILING_TOOLS  # noqa: F401, E402
+    from ai_data_science_team.tools.cleaning import CLEANING_TOOLS  # noqa: F401, E402
+    from ai_data_science_team.tools.database import DATABASE_TOOLS  # noqa: F401, E402
+    from ai_data_science_team.tools.feature_engineering import (
+        FEATURE_ENGINEERING_TOOLS,  # noqa: F401, E402
+    )
     from ai_data_science_team.tools.model import MODEL_TOOLS  # noqa: F401, E402
+    from ai_data_science_team.tools.visualization import VISUALIZATION_TOOLS  # noqa: F401, E402
+    from ai_data_science_team.tools.wrangling import WRANGLING_TOOLS  # noqa: F401, E402
 
 
 register_all_tools()
 
 
 VISUALIZATION_TOOLS = [
-    "scatter_plot", "bar_chart", "line_chart", "histogram",
-    "box_plot", "violin_plot", "heatmap", "pie_chart"
+    "scatter_plot",
+    "bar_chart",
+    "line_chart",
+    "histogram",
+    "box_plot",
+    "violin_plot",
+    "heatmap",
+    "pie_chart",
 ]
 PROFILING_TOOLS = [
-    "profile_dataframe", "infer_units", "resolve_column_aliases", "format_profile_for_prompt"
+    "profile_dataframe",
+    "infer_units",
+    "resolve_column_aliases",
+    "format_profile_for_prompt",
 ]
-DATABASE_TOOLS = [
-    "introspect_schema", "sample_table", "execute_sql", "validate_sql_safety"
-]
+DATABASE_TOOLS = ["introspect_schema", "sample_table", "execute_sql", "validate_sql_safety"]
 WRANGLING_TOOLS = [
-    "filter_rows", "select_columns", "rename_columns", "aggregate_data",
-    "merge_datasets", "pivot_data", "transform_column"
+    "filter_rows",
+    "select_columns",
+    "rename_columns",
+    "aggregate_data",
+    "merge_datasets",
+    "pivot_data",
+    "transform_column",
 ]
 CLEANING_TOOLS = [
-    "remove_missing_columns", "impute_missing", "remove_duplicates",
-    "remove_outliers", "convert_types"
+    "remove_missing_columns",
+    "impute_missing",
+    "remove_duplicates",
+    "remove_outliers",
+    "convert_types",
 ]
 ANOMALY_TOOLS = [
-    "isolation_forest_detect", "lof_detect", "hbos_detect",
-    "copod_detect", "ensemble_detect"
+    "isolation_forest_detect",
+    "lof_detect",
+    "hbos_detect",
+    "copod_detect",
+    "ensemble_detect",
 ]
 FEATURE_ENGINEERING_TOOLS = [
-    "one_hot_encode", "label_encode", "create_datetime_features",
-    "scale_features", "create_polynomial_features", "bin_numeric", "select_features"
+    "one_hot_encode",
+    "label_encode",
+    "create_datetime_features",
+    "scale_features",
+    "create_polynomial_features",
+    "bin_numeric",
+    "select_features",
 ]
-MODEL_TOOLS = [
-    "load_model", "predict_classification", "predict_regression", "evaluate_model"
-]
+MODEL_TOOLS = ["load_model", "predict_classification", "predict_regression", "evaluate_model"]
 
 ALL_TOOLS = (
-    VISUALIZATION_TOOLS +
-    PROFILING_TOOLS +
-    DATABASE_TOOLS +
-    WRANGLING_TOOLS +
-    CLEANING_TOOLS +
-    ANOMALY_TOOLS +
-    FEATURE_ENGINEERING_TOOLS +
-    MODEL_TOOLS
+    VISUALIZATION_TOOLS
+    + PROFILING_TOOLS
+    + DATABASE_TOOLS
+    + WRANGLING_TOOLS
+    + CLEANING_TOOLS
+    + ANOMALY_TOOLS
+    + FEATURE_ENGINEERING_TOOLS
+    + MODEL_TOOLS
 )
 
 

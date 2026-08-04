@@ -13,6 +13,7 @@
 These fixtures avoid external dependencies (no running Postgres) while
 exercising real SQLAlchemy queries.
 """
+
 from __future__ import annotations
 
 import os
@@ -70,6 +71,7 @@ def tmp_path():
 # SQLite engine with UUID support
 # ---------------------------------------------------------------------------
 
+
 @pytest.fixture(scope="function")
 def db_engine():
     """Create a fresh in-memory SQLite engine.
@@ -110,6 +112,7 @@ def db_session(db_engine):
 # ---------------------------------------------------------------------------
 # Seeded DB — canonical set of objects
 # ---------------------------------------------------------------------------
+
 
 @pytest.fixture(scope="function")
 def seeded_db(db_session: Session):

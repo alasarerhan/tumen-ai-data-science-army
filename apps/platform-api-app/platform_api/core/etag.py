@@ -34,6 +34,7 @@ Best Practices Reference:
 https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/ETag
 https://datatracker.ietf.org/doc/html/rfc7232
 """
+
 from __future__ import annotations
 
 import hashlib

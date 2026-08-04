@@ -13,10 +13,11 @@ Best Practices Reference:
 https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/413
 https://owasp.org/www-community/vulnerabilities/Unrestricted_File_Upload
 """
+
 from __future__ import annotations
 
 import logging
-from typing import Callable, List, Optional, Tuple
+from collections.abc import Callable
 
 from fastapi import Request, Response
 from fastapi.responses import JSONResponse
@@ -47,8 +48,8 @@ class RequestSizeLimitMiddleware(BaseHTTPMiddleware):
         self,
         app: ASGIApp,
         max_body_bytes: int = _DEFAULT_MAX_BODY_BYTES,
-        skip_paths: Optional[List[str]] = None,
-        route_limits: Optional[List[Tuple[str, int]]] = None,
+        skip_paths: list[str] | None = None,
+        route_limits: list[tuple[str, int]] | None = None,
     ) -> None:
         super().__init__(app)
         self._max_body_bytes = max_body_bytes
@@ -76,7 +77,9 @@ class RequestSizeLimitMiddleware(BaseHTTPMiddleware):
                 if length > limit:
                     logger.warning(
                         "Request body too large: %d bytes (limit: %d) for %s",
-                        length, limit, request.url.path,
+                        length,
+                        limit,
+                        request.url.path,
                     )
                     return JSONResponse(
                         content={

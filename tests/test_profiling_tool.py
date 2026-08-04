@@ -1,6 +1,7 @@
 """
 Tests for ``ai_data_science_team.tools.profiling`` (B1 tool layer).
 """
+
 from __future__ import annotations
 
 import numpy as np
@@ -86,7 +87,9 @@ class TestProfileDataframe:
 
     def test_low_cardinality_numeric_detected(self):
         rng = np.random.RandomState(42)
-        df = pd.DataFrame({"flag": rng.randint(0, 3, size=100).astype(float), "value": rng.normal(size=100)})
+        df = pd.DataFrame(
+            {"flag": rng.randint(0, 3, size=100).astype(float), "value": rng.normal(size=100)}
+        )
         prof = profile_dataframe(df)
         assert "flag" in prof["low_cardinality_numeric"]
         assert "value" not in prof["low_cardinality_numeric"]

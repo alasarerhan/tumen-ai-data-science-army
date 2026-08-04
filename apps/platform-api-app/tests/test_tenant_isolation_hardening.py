@@ -76,7 +76,17 @@ async def test_finops_routes_pass_tenant_scope():
     db = MagicMock()
     context = {"tenant_id": tenant_id}
 
-    with patch.object(finops, "cleanup_expired_artifacts", return_value={"dry_run": True, "artifacts_deleted": 0, "files_deleted": 0, "bytes_freed": 0, "errors": []}) as cleanup_mock:
+    with patch.object(
+        finops,
+        "cleanup_expired_artifacts",
+        return_value={
+            "dry_run": True,
+            "artifacts_deleted": 0,
+            "files_deleted": 0,
+            "bytes_freed": 0,
+            "errors": [],
+        },
+    ) as cleanup_mock:
         await finops.run_artifact_cleanup(
             body=finops.CleanupRequest(dry_run=True),
             context=context,
@@ -85,8 +95,12 @@ async def test_finops_routes_pass_tenant_scope():
 
     cleanup_mock.assert_called_once_with(db, tenant_id=tenant_id, dry_run=True)
 
-    fake_artifact = SimpleNamespace(id=uuid.uuid4(), kind="report", uri="tenant-a/file.csv", expires_at=None)
-    with patch.object(finops, "list_expired_artifacts", return_value=[fake_artifact]) as expired_mock:
+    fake_artifact = SimpleNamespace(
+        id=uuid.uuid4(), kind="report", uri="tenant-a/file.csv", expires_at=None
+    )
+    with patch.object(
+        finops, "list_expired_artifacts", return_value=[fake_artifact]
+    ) as expired_mock:
         response = await finops.list_expired(context=context, db=db)
 
     expired_mock.assert_called_once_with(db, tenant_id=tenant_id)
@@ -135,7 +149,9 @@ async def test_scheduler_stats_only_count_workspace_jobs():
         "status": "queued",
     }
     fake_queue = MagicMock()
-    fake_queue.get_jobs_by_status.side_effect = lambda status: ["local", "foreign"] if status == "queued" else []
+    fake_queue.get_jobs_by_status.side_effect = lambda status: (
+        ["local", "foreign"] if status == "queued" else []
+    )
     fake_queue.get_job.side_effect = lambda job_id: local_job if job_id == "local" else foreign_job
 
     with patch.object(scheduler, "ScheduledJobQueue", return_value=fake_queue):
@@ -152,10 +168,17 @@ async def test_workflow_schedule_routes_pass_workspace_scope():
     workspace = SimpleNamespace(id=uuid.uuid4(), tenant_id=uuid.uuid4())
     service = MagicMock()
     service.list_scheduled_deployments = AsyncMock(return_value=[{"id": "dep-1"}])
-    service.pause_scheduled_deployment = AsyncMock(return_value={"deployment_id": "dep-1", "status": "paused"})
-    service.resume_scheduled_deployment = AsyncMock(return_value={"deployment_id": "dep-1", "status": "resumed"})
+    service.pause_scheduled_deployment = AsyncMock(
+        return_value={"deployment_id": "dep-1", "status": "paused"}
+    )
+    service.resume_scheduled_deployment = AsyncMock(
+        return_value={"deployment_id": "dep-1", "status": "resumed"}
+    )
 
-    with patch("platform_api.services.workflow_scheduler_service.WorkflowSchedulerService", return_value=service):
+    with patch(
+        "platform_api.services.workflow_scheduler_service.WorkflowSchedulerService",
+        return_value=service,
+    ):
         await workflows.list_schedules(
             context={"workspace": workspace},
             db=MagicMock(),

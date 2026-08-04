@@ -3,13 +3,13 @@
 Tool tests run without a real LLM (direct .func() calls).
 Agent construction tests use a deterministic FakeChatModel mock.
 """
+
 from __future__ import annotations
 
 import random
 from typing import List
 
 import numpy as np
-
 
 # ---------------------------------------------------------------------------
 # Helpers — synthetic data
@@ -135,8 +135,15 @@ def test_dbscan_result_keys():
 
     data = _make_blob_data()
     _, result = run_dbscan.func(data=data, eps=0.5, min_samples=3)
-    for k in ("labels", "n_clusters", "noise_count", "core_sample_count",
-              "cluster_sizes", "eps", "min_samples"):
+    for k in (
+        "labels",
+        "n_clusters",
+        "noise_count",
+        "core_sample_count",
+        "cluster_sizes",
+        "eps",
+        "min_samples",
+    ):
         assert k in result
 
 
@@ -170,8 +177,14 @@ def test_pca_result_keys():
 
     data = _make_random_data()
     _, result = reduce_pca.func(data=data, n_components=2)
-    for k in ("transformed", "explained_variance_ratio", "cumulative_variance",
-              "n_components", "component_loadings", "feature_names"):
+    for k in (
+        "transformed",
+        "explained_variance_ratio",
+        "cumulative_variance",
+        "n_components",
+        "component_loadings",
+        "feature_names",
+    ):
         assert k in result
 
 
@@ -233,9 +246,7 @@ def test_cluster_profile_keys():
 
     data = _make_blob_data()
     labels = [0] * 30 + [1] * 30 + [2] * 30
-    text, result = compute_cluster_profile.func(
-        data=data, labels=labels, feature_names=["x", "y"]
-    )
+    text, result = compute_cluster_profile.func(data=data, labels=labels, feature_names=["x", "y"])
     assert "profiles" in result
     assert "0" in result["profiles"]
     assert "Cluster Profile" in text
@@ -324,9 +335,7 @@ def _fake_llm():
             return "fake"
 
         def _generate(self, messages, stop=None, _run_manager=None, **kw) -> ChatResult:
-            return ChatResult(
-                generations=[ChatGeneration(message=LCAIMessage(content="Done."))]
-            )
+            return ChatResult(generations=[ChatGeneration(message=LCAIMessage(content="Done."))])
 
         def bind_tools(self, tools, **kw):
             return self

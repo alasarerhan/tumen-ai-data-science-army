@@ -6,6 +6,7 @@ They serve as automated governance to prevent architectural drift.
 
 Run with: pytest tests/test_architecture_fitness.py -v
 """
+
 from __future__ import annotations
 
 import ast
@@ -14,7 +15,6 @@ from pathlib import Path
 
 import pytest
 from fastapi import FastAPI
-
 
 ROOT_DIR = Path(__file__).parent.parent
 PLATFORM_API_DIR = ROOT_DIR / "platform_api"
@@ -109,7 +109,9 @@ class TestServiceLayerPurity:
                     )
                 elif isinstance(node, ast.Import):
                     bad_modules = [
-                        alias.name for alias in node.names if alias.name.startswith(forbidden_modules)
+                        alias.name
+                        for alias in node.names
+                        if alias.name.startswith(forbidden_modules)
                     ]
                     assert not bad_modules, (
                         f"Service {service_file.name} imports FastAPI modules {bad_modules}. "
@@ -138,13 +140,13 @@ class TestTenantIsolation:
         ]
 
         for model in tenant_scoped_models:
-            assert f'class {model}(Base)' in content, f"Model {model} not found"
-            model_class_start = content.find(f'class {model}(Base)')
-            model_class_end = content.find('\nclass ', model_class_start + 1)
+            assert f"class {model}(Base)" in content, f"Model {model} not found"
+            model_class_start = content.find(f"class {model}(Base)")
+            model_class_end = content.find("\nclass ", model_class_start + 1)
             if model_class_end == -1:
                 model_class_end = len(content)
             model_content = content[model_class_start:model_class_end]
-            assert 'tenant_id' in model_content, (
+            assert "tenant_id" in model_content, (
                 f"Model {model} missing tenant_id. All tenant-scoped models must have tenant isolation."
             )
 
@@ -187,7 +189,7 @@ class TestADRCompliance:
         """ADR-0001: POST /v1/runs is the single orchestration entrypoint."""
         runs_route = ROUTES_DIR / "runs.py"
         content = _read_source(runs_route)
-        assert 'POST' in content or 'post' in content, "ADR-0001: runs.py should have POST endpoint"
+        assert "POST" in content or "post" in content, "ADR-0001: runs.py should have POST endpoint"
         assert '"/v1/runs"' in content or 'prefix="/v1/runs"' in content, (
             "ADR-0001: /v1/runs should be orchestration entrypoint"
         )
@@ -238,7 +240,9 @@ class TestCodeOrganization:
                 imported_modules.extend(alias.name for alias in node.names)
 
         forbidden_prefixes = ("platform_api.services", "platform_api.db")
-        bad_imports = [module for module in imported_modules if module.startswith(forbidden_prefixes)]
+        bad_imports = [
+            module for module in imported_modules if module.startswith(forbidden_prefixes)
+        ]
         assert not bad_imports, (
             f"main.py imports business-layer modules directly: {bad_imports}. "
             "Keep business logic in routes/services."
@@ -274,13 +278,15 @@ class TestObservabilityRequirements:
         setup_observability(app)
         setup_observability(app)
 
-        metrics_routes = [route for route in app.routes if getattr(route, "path", None) == "/metrics"]
+        metrics_routes = [
+            route for route in app.routes if getattr(route, "path", None) == "/metrics"
+        ]
         assert len(metrics_routes) == 1, "setup_observability() should only register /metrics once"
 
     def test_create_app_does_not_start_scheduler(self, monkeypatch):
         """App construction should not start the scheduler before lifespan enters."""
-        import platform_api.services.scheduler_service as scheduler_service
         from platform_api.main import create_app
+        from platform_api.services import scheduler_service
 
         calls: list[tuple] = []
 
@@ -299,10 +305,10 @@ class TestSecurityRequirements:
     def test_no_hardcoded_secrets(self):
         """No hardcoded secrets in source files."""
         secret_patterns = [
-            "password = \"",
-            "secret_key = \"",
-            "api_key = \"",
-            "token = \"",
+            'password = "',
+            'secret_key = "',
+            'api_key = "',
+            'token = "',
         ]
 
         for py_file in PLATFORM_API_DIR.rglob("*.py"):

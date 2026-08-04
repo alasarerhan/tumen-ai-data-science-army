@@ -9,7 +9,9 @@ import ai_data_science_team.tools.powerbi as h4
 
 def _cfg(**kw):
     p = {
-        "tenant_id": "t", "client_id": "c", "client_secret": "s",
+        "tenant_id": "t",
+        "client_id": "c",
+        "client_secret": "s",
         "workspace_id": "ws-1",
     }
     p.update(kw)
@@ -25,9 +27,9 @@ class TestBuild:
         with pytest.raises(ValueError):
             h4.build_powerbi_connector(
                 h4.ConnectorConfig(
-                    name="x", kind="powerbi",
-                    params={"client_id": "c", "client_secret": "s",
-                            "workspace_id": "ws"},
+                    name="x",
+                    kind="powerbi",
+                    params={"client_id": "c", "client_secret": "s", "workspace_id": "ws"},
                 )
             )
 
@@ -35,15 +37,14 @@ class TestBuild:
         with pytest.raises(h4.ConnectorError):
             h4.build_powerbi_connector(
                 h4.ConnectorConfig(
-                    name="x", kind="powerbi",
-                    params={"tenant_id": "t", "client_id": "c",
-                            "client_secret": "s"},
+                    name="x",
+                    kind="powerbi",
+                    params={"tenant_id": "t", "client_id": "c", "client_secret": "s"},
                 )
             )
 
     def test_workspace_name_alternative(self):
-        c = h4.build_powerbi_connector(_cfg(workspace_id=None,
-                                            workspace_name="Sales"))
+        c = h4.build_powerbi_connector(_cfg(workspace_id=None, workspace_name="Sales"))
         assert c.config.get("workspace_name") == "Sales"
 
 
@@ -81,7 +82,7 @@ class TestBehaviors:
 
     def test_sample_query_dax(self):
         c = h4.build_powerbi_connector(_cfg())
-        rows = c.sample_query("EVALUATE ROW(\"k\", 1)")
+        rows = c.sample_query('EVALUATE ROW("k", 1)')
         assert rows[0]["value"] == 1
 
     def test_sample_query_rejects_non_evaluate(self):
@@ -91,6 +92,5 @@ class TestBehaviors:
 
     def test_run_dax_alias(self):
         c = h4.build_powerbi_connector(_cfg())
-        rows = c.run_dax("EVALUATE ROW(\"k\", 1)")
+        rows = c.run_dax('EVALUATE ROW("k", 1)')
         assert rows[0]["value"] == 1
-

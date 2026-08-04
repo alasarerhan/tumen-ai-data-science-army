@@ -1,10 +1,11 @@
 """Rate limiting middleware with X-RateLimit headers."""
+
 from __future__ import annotations
 
 import logging
 import threading
 import time
-from typing import Callable, Dict, List, Optional
+from collections.abc import Callable
 
 from fastapi import Request, Response
 from fastapi.responses import JSONResponse
@@ -13,14 +14,15 @@ from starlette.types import ASGIApp
 
 logger = logging.getLogger(__name__)
 
+
 def _normalize_redis_url(url):
     """Prepend the default redis scheme if a URL has only host:port/db."""
     if not url:
         return url
-    for prefix in ('redis://', 'redis://' + 's' + '://', 'unix://'):
+    for prefix in ("redis://", "redis://" + "s" + "://", "unix://"):
         if url.startswith(prefix):
             return url
-    return 'redis://' + url
+    return "redis://" + url
 
 
 REDIS_AVAILABLE = False
@@ -39,10 +41,10 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         self,
         app: ASGIApp,
         requests_per_minute: int = 60,
-        redis_url: Optional[str] = None,
+        redis_url: str | None = None,
         key_header: str = "X-User-Id",
-        skip_paths: Optional[List[str]] = None,
-        auth_paths: Optional[Dict[str, int]] = None,
+        skip_paths: list[str] | None = None,
+        auth_paths: dict[str, int] | None = None,
         **redis_kwargs,
     ) -> None:
         super().__init__(app)
@@ -64,8 +66,10 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         self._lock = threading.Lock()
 
         if redis_url and REDIS_AVAILABLE:
-            self._redis: Optional[redis.Redis] = redis.from_url(_normalize_redis_url(redis_url), **redis_kwargs)
-            self._in_memory: Optional[Dict[str, List[float]]] = None
+            self._redis: redis.Redis | None = redis.from_url(
+                _normalize_redis_url(redis_url), **redis_kwargs
+            )
+            self._in_memory: dict[str, list[float]] | None = None
             logger.info("RateLimitMiddleware connected to Redis: %s", redis_url)
         else:
             self._redis = None
@@ -202,5 +206,4 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         )
 
 
-__all__ = ["RateLimitMiddleware", "REDIS_AVAILABLE"]
-
+__all__ = ["REDIS_AVAILABLE", "RateLimitMiddleware"]

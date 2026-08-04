@@ -32,7 +32,6 @@ import uuid  # noqa: E402, F401
 from dataclasses import dataclass, field  # noqa: E402, F401
 from typing import Any, Dict, List, Mapping, Optional, Sequence  # noqa: E402, F401
 
-
 # ---------------------------------------------------------------------------
 # Policy model
 # ---------------------------------------------------------------------------
@@ -60,27 +59,16 @@ class Trigger:
         """
         if not (self.feature_drift or self.performance_drift):
             return True
-        feature_ok = (
-            not self.feature_drift
-            or bool(signal.get("feature_drift_trigger"))
-        )
-        perf_ok = (
-            not self.performance_drift
-            or bool(signal.get("performance_trigger"))
-        )
+        feature_ok = not self.feature_drift or bool(signal.get("feature_drift_trigger"))
+        perf_ok = not self.performance_drift or bool(signal.get("performance_trigger"))
         if self.performance_drift:
             perf = signal.get("performance") or {}
             threshold_breach = bool(perf.get("threshold_breached"))
             if self.relative_threshold is not None:
-                if (
-                    threshold_breach
-                    and abs(perf.get("delta_pct", 0.0)) < self.relative_threshold
-                ):
+                if threshold_breach and abs(perf.get("delta_pct", 0.0)) < self.relative_threshold:
                     threshold_breach = False
             elif self.absolute_threshold is not None:
-                threshold_breach = (
-                    abs(perf.get("delta", 0.0)) >= abs(self.absolute_threshold)
-                )
+                threshold_breach = abs(perf.get("delta", 0.0)) >= abs(self.absolute_threshold)
             perf_ok = perf_ok and threshold_breach
         return feature_ok and perf_ok
 
@@ -142,9 +130,7 @@ def build_policy(spec: Mapping[str, Any]) -> Policy:
                 kind=str(trig.get("kind", "drift")),
                 feature_drift=bool(trig.get("feature_drift", False)),
                 performance_drift=bool(trig.get("performance_drift", False)),
-                relative_threshold=float(
-                    trig.get("relative_threshold", 0.05)
-                ),
+                relative_threshold=float(trig.get("relative_threshold", 0.05)),
                 absolute_threshold=trig.get("absolute_threshold"),
                 on_metric=trig.get("on_metric"),
                 cooldown_s=float(trig.get("cooldown_s", 0.0)),
@@ -207,18 +193,13 @@ def simulate(
     triggers = 0
     decisions: List[Dict[str, Any]] = []
     last_trigger_ts: Optional[float] = None
-    cooldown_default = max(
-        (t.cooldown_s for t in policy.triggers), default=0.0
-    )
+    cooldown_default = max((t.cooldown_s for t in policy.triggers), default=0.0)
     base_ts = time.monotonic()
     for i, sig in enumerate(signals):
         ts = base_ts + i * 60.0  # 60-second synthetic spacing
         decision = decide_action(sig, policy)
         if decision["should_trigger"]:
-            if (
-                last_trigger_ts is None
-                or (ts - last_trigger_ts) >= cooldown_default
-            ):
+            if last_trigger_ts is None or (ts - last_trigger_ts) >= cooldown_default:
                 triggers += 1
                 last_trigger_ts = ts
                 decision["recorded"] = True
@@ -297,5 +278,3 @@ __all__ = [
     "event_to_dict",
     "build_audit_trail",
 ]
-
-

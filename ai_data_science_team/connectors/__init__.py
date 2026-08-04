@@ -45,6 +45,7 @@ def load_connector_plugins() -> dict[str, type]:
     """
     try:
         from importlib.metadata import entry_points  # noqa: F401
+
         eps = entry_points(group="ai_data_science_team.connectors")
         return {ep.name: ep.load() for ep in eps}
     except Exception:

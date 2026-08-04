@@ -29,7 +29,9 @@ from ai_data_science_team.tool_registry import (  # noqa: E402, F401
     description="Remove columns with missing values above a threshold.",
     parameters={
         "data": ToolParameter(type="object", description="Input DataFrame as dict", required=True),
-        "threshold": ToolParameter(type="number", description="Missing value threshold (0-1)", required=False, default=0.4),
+        "threshold": ToolParameter(
+            type="number", description="Missing value threshold (0-1)", required=False, default=0.4
+        ),
     },
     returns="DataFrame with columns removed as dict",
     namespace="core.cleaning",
@@ -70,9 +72,20 @@ def remove_missing_columns(
     description="Impute missing values in a DataFrame.",
     parameters={
         "data": ToolParameter(type="object", description="Input DataFrame as dict", required=True),
-        "strategy": ToolParameter(type="string", description="Imputation strategy: mean, median, mode, constant", required=False, default="mean"),
-        "fill_value": ToolParameter(type="any", description="Value for constant strategy", required=False),
-        "columns": ToolParameter(type="array", description="Columns to impute (optional, defaults to all)", required=False),
+        "strategy": ToolParameter(
+            type="string",
+            description="Imputation strategy: mean, median, mode, constant",
+            required=False,
+            default="mean",
+        ),
+        "fill_value": ToolParameter(
+            type="any", description="Value for constant strategy", required=False
+        ),
+        "columns": ToolParameter(
+            type="array",
+            description="Columns to impute (optional, defaults to all)",
+            required=False,
+        ),
     },
     returns="DataFrame with imputed values as dict",
     namespace="core.cleaning",
@@ -144,8 +157,15 @@ def impute_missing(
     description="Remove duplicate rows from a DataFrame.",
     parameters={
         "data": ToolParameter(type="object", description="Input DataFrame as dict", required=True),
-        "subset": ToolParameter(type="array", description="Columns to consider for duplicates", required=False),
-        "keep": ToolParameter(type="string", description="Which duplicates to keep: first, last, or none", required=False, default="first"),
+        "subset": ToolParameter(
+            type="array", description="Columns to consider for duplicates", required=False
+        ),
+        "keep": ToolParameter(
+            type="string",
+            description="Which duplicates to keep: first, last, or none",
+            required=False,
+            default="first",
+        ),
     },
     returns="DataFrame with duplicates removed as dict",
     namespace="core.cleaning",
@@ -188,8 +208,15 @@ def remove_duplicates(
     description="Remove outliers using IQR method.",
     parameters={
         "data": ToolParameter(type="object", description="Input DataFrame as dict", required=True),
-        "columns": ToolParameter(type="array", description="Columns to check for outliers", required=True),
-        "iqr_multiplier": ToolParameter(type="number", description="IQR multiplier for outlier threshold", required=False, default=1.5),
+        "columns": ToolParameter(
+            type="array", description="Columns to check for outliers", required=True
+        ),
+        "iqr_multiplier": ToolParameter(
+            type="number",
+            description="IQR multiplier for outlier threshold",
+            required=False,
+            default=1.5,
+        ),
     },
     returns="DataFrame with outliers removed as dict",
     namespace="core.cleaning",
@@ -243,7 +270,11 @@ def remove_outliers(
     parameters={
         "data": ToolParameter(type="object", description="Input DataFrame as dict", required=True),
         "column": ToolParameter(type="string", description="Column to convert", required=True),
-        "dtype": ToolParameter(type="string", description="Target dtype: int, float, str, bool, datetime", required=True),
+        "dtype": ToolParameter(
+            type="string",
+            description="Target dtype: int, float, str, bool, datetime",
+            required=True,
+        ),
     },
     returns="DataFrame with converted types as dict",
     namespace="core.cleaning",

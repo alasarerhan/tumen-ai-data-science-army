@@ -27,7 +27,6 @@ from typing import Any, Dict, List, Optional, Sequence, Tuple  # noqa: E402, F40
 
 import pandas as pd  # noqa: E402, F401
 
-
 # ---------------------------------------------------------------------------
 # Job registry
 # ---------------------------------------------------------------------------
@@ -178,14 +177,16 @@ def incremental_diff(
         current.insert(0, "__rowid__", range(len(current)))
         key_columns = ["__rowid__"]
         compare_columns_final = list(
-            compare_columns if compare_columns is not None
+            compare_columns
+            if compare_columns is not None
             else [c for c in baseline.columns if c != "__rowid__"]
         )
         # Strip the synthetic column from the keys.
         key_only = ["__rowid__"]
     else:
         compare_columns_final = list(
-            compare_columns if compare_columns is not None
+            compare_columns
+            if compare_columns is not None
             else sorted(set(baseline.columns) & set(current.columns))
         )
         key_only = list(key_columns)
@@ -297,5 +298,3 @@ __all__ = [
     "incremental_diff",
     "record_run",
 ]
-
-

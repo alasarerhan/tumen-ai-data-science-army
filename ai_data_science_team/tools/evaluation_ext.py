@@ -27,7 +27,6 @@ from typing import Any, Dict, List, Mapping, Sequence, Tuple  # noqa: E402, F401
 import numpy as np  # noqa: E402, F401
 import pandas as pd  # noqa: E402, F401
 
-
 # ---------------------------------------------------------------------------
 # Calibration
 # ---------------------------------------------------------------------------
@@ -86,9 +85,7 @@ def evaluate_calibration(
     y_true_arr = np.asarray(y_true, dtype=float)
     y_prob_arr = np.asarray(y_prob, dtype=float).ravel()
     if y_true_arr.shape != y_prob_arr.shape:
-        raise ValueError(
-            f"shape mismatch: y_true {y_true_arr.shape} vs y_prob {y_prob_arr.shape}"
-        )
+        raise ValueError(f"shape mismatch: y_true {y_true_arr.shape} vs y_prob {y_prob_arr.shape}")
     if y_true_arr.size == 0:
         return CalibrationReport(
             brier_score=0.0,
@@ -148,9 +145,7 @@ class ThresholdReport:
         }
 
 
-def _cost_matrix(
-    fp: float, fn: float, tp: float, tn: float
-) -> Dict[str, float]:
+def _cost_matrix(fp: float, fn: float, tp: float, tn: float) -> Dict[str, float]:
     cm = {
         "fp": float(fp),
         "fn": float(fn),
@@ -195,9 +190,7 @@ def optimize_threshold(
     y_true_arr = np.asarray(y_true, dtype=float)
     y_prob_arr = np.asarray(y_prob, dtype=float).ravel()
     if y_true_arr.shape != y_prob_arr.shape:
-        raise ValueError(
-            f"shape mismatch: y_true {y_true_arr.shape} vs y_prob {y_prob_arr.shape}"
-        )
+        raise ValueError(f"shape mismatch: y_true {y_true_arr.shape} vs y_prob {y_prob_arr.shape}")
     if y_true_arr.size == 0:
         return ThresholdReport(
             optimal_threshold=0.5,
@@ -213,17 +206,13 @@ def optimize_threshold(
     curve: List[Dict[str, float]] = []
     t = 0.0
     while t <= 1.0 + 1e-9:
-        cost = _expected_cost_at_threshold(
-            y_true_arr, y_prob_arr, float(t), cm
-        )
+        cost = _expected_cost_at_threshold(y_true_arr, y_prob_arr, float(t), cm)
         curve.append({"threshold": float(round(t, 4)), "expected_cost": float(cost)})
         if cost < best_cost:
             best_cost = cost
             best_t = float(t)
         t += step
-    baseline_cost = float(
-        _expected_cost_at_threshold(y_true_arr, y_prob_arr, 0.5, cm)
-    )
+    baseline_cost = float(_expected_cost_at_threshold(y_true_arr, y_prob_arr, 0.5, cm))
     return ThresholdReport(
         optimal_threshold=best_t,
         expected_cost=float(best_cost),
@@ -271,9 +260,7 @@ def evaluate_segments(
     if not segment_columns:
         raise ValueError("segment_columns must be non-empty")
     if df.shape[0] != len(list(y_true)):
-        raise ValueError(
-            f"df has {df.shape[0]} rows but y_true has {len(list(y_true))}"
-        )
+        raise ValueError(f"df has {df.shape[0]} rows but y_true has {len(list(y_true))}")
     if metric == "accuracy":
         from sklearn.metrics import accuracy_score  # noqa: E402, F401
 
@@ -292,8 +279,7 @@ def evaluate_segments(
             return float(roc_auc_score(yt, yp))
     else:
         raise ValueError(
-            f"Unsupported metric '{metric}'. Use one of accuracy, f1, "
-            "roc_auc or supply a callable."
+            f"Unsupported metric '{metric}'. Use one of accuracy, f1, roc_auc or supply a callable."
         )
 
     yt_arr = np.asarray(y_true)
@@ -319,9 +305,7 @@ def evaluate_segments(
         for key, group_df in grouped:
             idx = group_df.index.to_numpy()
             score = float(score_fn(yt_arr[idx], yp_arr[idx]))
-            seg_label = ",".join(
-                f"{col}={v}" for col, v in zip(segment_columns, key)
-            )
+            seg_label = ",".join(f"{col}={v}" for col, v in zip(segment_columns, key))
             rows.append(
                 SegmentRow(
                     segment=seg_label,
@@ -340,5 +324,3 @@ __all__ = [
     "optimize_threshold",
     "evaluate_segments",
 ]
-
-

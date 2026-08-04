@@ -33,7 +33,6 @@ from typing import Any, Dict, List, Optional, Sequence, Tuple  # noqa: E402, F40
 import numpy as np  # noqa: E402, F401
 import pandas as pd  # noqa: E402, F401
 
-
 # ---------------------------------------------------------------------------
 # Finding dataclasses
 # ---------------------------------------------------------------------------
@@ -114,11 +113,7 @@ def find_anomalies(
         if max_z < z_threshold:
             continue
         # Severity bucket
-        sev = (
-            "significant" if max_z >= 5.0
-            else "moderate" if max_z >= 4.0
-            else "low"
-        )
+        sev = "significant" if max_z >= 5.0 else "moderate" if max_z >= 4.0 else "low"
         if max_z / (z_threshold * 2) < min_severity:
             continue
         out.append(
@@ -232,8 +227,7 @@ def find_missing_patterns(
                 kind=KIND_MISSING,
                 title=f"High null rate in `{c}`",
                 description=(
-                    f"{rate*100:.1f}% of `{c}` is missing; either impute "
-                    "or drop the column."
+                    f"{rate * 100:.1f}% of `{c}` is missing; either impute or drop the column."
                 ),
                 columns=[c],
                 score=float(min(1.0, rate * 2.0)),
@@ -247,7 +241,7 @@ def find_missing_patterns(
         co = miss.corr().abs()
         seen: set = set()
         for i, a in enumerate(co.columns):
-            for b in co.columns[i + 1:]:
+            for b in co.columns[i + 1 :]:
                 key = (a, b) if a < b else (b, a)
                 if key in seen:
                     continue
@@ -294,7 +288,7 @@ def find_class_imbalance(
                 kind=KIND_IMBALANCE,
                 title=f"Class imbalance in `{col}`",
                 description=(
-                    f"Top class of `{col}` is {top*100:.1f}% of "
+                    f"Top class of `{col}` is {top * 100:.1f}% of "
                     f"non-null rows; consider class-weight / resampling."
                 ),
                 columns=[col],
@@ -325,8 +319,7 @@ def find_constants_and_outliers(
                     kind=KIND_CONSTANT,
                     title=f"Constant column `{col}`",
                     description=(
-                        f"`{col}` has {nunique} distinct values; "
-                        "drop it before training."
+                        f"`{col}` has {nunique} distinct values; drop it before training."
                     ),
                     columns=[col],
                     score=1.0,
@@ -362,9 +355,7 @@ def mine_insights(
         return []
     findings: List[Insight] = []
     findings.extend(find_anomalies(work, z_threshold=z_threshold))
-    findings.extend(
-        find_strong_correlations(work, top_k=top_k, threshold=corr_threshold)
-    )
+    findings.extend(find_strong_correlations(work, top_k=top_k, threshold=corr_threshold))
     findings.extend(find_skewness(work, abs_threshold=skew_threshold))
     findings.extend(find_missing_patterns(work, rate_threshold=null_threshold))
     findings.extend(find_class_imbalance(work, top_k=top_k, min_imbalance=0.85))
@@ -402,7 +393,7 @@ def _skew(x: np.ndarray) -> float:
     if sd == 0:
         return 0.0
     m3 = float(((x - mu) ** 3).mean())
-    return m3 / (sd ** 3)
+    return m3 / (sd**3)
 
 
 def _filter_columns(
@@ -434,5 +425,3 @@ __all__ = [
     "find_constants_and_outliers",
     "mine_insights",
 ]
-
-

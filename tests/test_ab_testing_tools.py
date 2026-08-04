@@ -25,7 +25,6 @@ from ai_data_science_team.tools.ab_testing import (
     recommend_decision,
 )
 
-
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
@@ -83,9 +82,7 @@ def srm_skewed_experiment() -> pd.DataFrame:
 
 
 def test_srm_passes_with_balanced_split(continuous_experiment) -> None:
-    result = check_sample_ratio_mismatch(
-        continuous_experiment, group_column="group"
-    )
+    result = check_sample_ratio_mismatch(continuous_experiment, group_column="group")
     assert result["srm_detected"] is False
     assert result["n_per_group"]["control"] == 5000
     assert result["n_per_group"]["treatment"] == 5000
@@ -149,9 +146,7 @@ def test_continuous_returns_null_effect_for_identical_groups() -> None:
     df = pd.DataFrame(
         {
             "group": ["control"] * n + ["treatment"] * n,
-            "x": np.concatenate(
-                [rng.normal(5, 1, n), rng.normal(5, 1, n)]
-            ),
+            "x": np.concatenate([rng.normal(5, 1, n), rng.normal(5, 1, n)]),
         }
     )
     result = analyze_continuous_metric(df, "group", "x")
@@ -166,9 +161,7 @@ def test_continuous_uses_nonparametric_for_skewed() -> None:
     df = pd.DataFrame(
         {
             "group": ["control"] * n + ["treatment"] * n,
-            "x": np.concatenate(
-                [rng.exponential(1.0, n), rng.exponential(1.2, n)]
-            ),
+            "x": np.concatenate([rng.exponential(1.0, n), rng.exponential(1.2, n)]),
         }
     )
     result = analyze_continuous_metric(df, "group", "x")
@@ -233,9 +226,7 @@ def test_cuped_reduces_variance_when_covariate_correlates() -> None:
             "pre": np.concatenate([covariate, covariate]),
         }
     )
-    result = apply_cuped(
-        df, group_column="group", metric_column="metric", covariate_column="pre"
-    )
+    result = apply_cuped(df, group_column="group", metric_column="metric", covariate_column="pre")
     assert result["variance_reduction_pct"] > 30.0
     # Adjusted lift should be close to the true lift of 0.5.
     assert abs(result["absolute_lift_adjusted"] - 0.5) < 0.1
@@ -402,12 +393,13 @@ def test_recommend_decision_ship_without_mde_when_significant() -> None:
 def test_agent_module_exports() -> None:
     """The agent module must expose the public API the catalog expects."""
     from ai_data_science_team.agents.ab_testing_agent import (  # noqa: F401
+        AB_TESTING_TOOLS,
         AGENT_NAME,
         NODE_TYPE,
         ABTestingAgent,
         make_ab_testing_agent,
-        AB_TESTING_TOOLS,
     )
+
     assert AGENT_NAME == "ab_testing_agent"
     assert NODE_TYPE == "experiment.analyze"
     assert {t.name for t in AB_TESTING_TOOLS} >= {
@@ -453,8 +445,7 @@ def test_end_to_end_pipeline_on_synthetic_dataset() -> None:
             "user_id": range(2 * n),
             "group": ["control"] * n + ["treatment"] * n,
             "revenue": np.concatenate(
-                [10 + 2 * covariate[:n] + noise[:n],
-                 10.5 + 2 * covariate[n:] + noise[n:]]
+                [10 + 2 * covariate[:n] + noise[:n], 10.5 + 2 * covariate[n:] + noise[n:]]
             ),
             "pre_revenue": np.concatenate([covariate[:n], covariate[n:]]),
             "converted": rng.binomial(1, 0.10, 2 * n),
@@ -470,13 +461,9 @@ def test_end_to_end_pipeline_on_synthetic_dataset() -> None:
     cuped = apply_cuped(df, "group", "revenue", "pre_revenue")
     assert cuped["variance_reduction_pct"] > 0
 
-    mcc = apply_multiple_comparison_correction(
-        [rev["p_value"], conv["p_value"]], method="bh"
-    )
+    mcc = apply_multiple_comparison_correction([rev["p_value"], conv["p_value"]], method="bh")
     assert len(mcc["adjusted"]) == 2
 
-    decision = recommend_decision(
-        rev, min_detectable_lift=0.02, required_sample_ratio=1.0
-    )
+    decision = recommend_decision(rev, min_detectable_lift=0.02, required_sample_ratio=1.0)
     # +5% lift at n=3000/arm should ship confidently.
     assert decision["decision"] == "ship"

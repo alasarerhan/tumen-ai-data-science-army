@@ -24,6 +24,7 @@ References
 https://modelcontextprotocol.io/docs/concepts/architecture
 https://spec.modelcontextprotocol.io/specification/basic/messages/
 """
+
 from __future__ import annotations
 
 import argparse
@@ -131,9 +132,7 @@ class MCPServer:
         try:
             self._connector.connect()
         except Exception as exc:
-            self._write_error(
-                None, code=-32603, message=f"Connector connect() failed: {exc}"
-            )
+            self._write_error(None, code=-32603, message=f"Connector connect() failed: {exc}")
 
         for raw_line in self._in:
             raw_line = raw_line.strip()
@@ -191,9 +190,7 @@ class MCPServer:
         else:
             if is_notification:
                 return None
-            return self._error_response(
-                req_id, code=-32601, message=f"Method not found: {method}"
-            )
+            return self._error_response(req_id, code=-32601, message=f"Method not found: {method}")
 
         if is_notification:
             return None
@@ -329,9 +326,11 @@ def main() -> None:
 
     if args.db:
         from ai_data_science_team.connectors import SQLConnector
+
         connector: DataConnector = SQLConnector(args.db)
     else:
         from ai_data_science_team.connectors import LocalFileConnector
+
         connector = LocalFileConnector(
             base_dir=args.base_dir,
             recursive=args.recursive,

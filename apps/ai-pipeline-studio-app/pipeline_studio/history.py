@@ -1,4 +1,4 @@
-from typing import List, Optional, Dict, Any, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from ai_data_science_team.constants import PipelineStudioLimits
 
@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 class HistoryManager:
     def __init__(self, state: "PipelineStudioState"):
         self._state = state
-    
+
     def push(self, action: dict) -> None:
         try:
             self._init_stacks()
@@ -22,7 +22,7 @@ class HistoryManager:
             self._state.redo_stack = []
         except Exception:
             pass
-    
+
     def pop_undo(self) -> Optional[dict]:
         self._init_stacks()
         undo = list(self._state.undo_stack)
@@ -31,7 +31,7 @@ class HistoryManager:
         action = undo.pop()
         self._state.undo_stack = undo
         return action if isinstance(action, dict) else {}
-    
+
     def push_redo(self, action: dict) -> None:
         try:
             redo = list(self._state.redo_stack)
@@ -39,7 +39,7 @@ class HistoryManager:
             self._state.redo_stack = redo
         except Exception:
             pass
-    
+
     def pop_redo(self) -> Optional[dict]:
         redo = list(self._state.redo_stack)
         if not redo:
@@ -47,13 +47,13 @@ class HistoryManager:
         action = redo.pop()
         self._state.redo_stack = redo
         return action if isinstance(action, dict) else {}
-    
+
     def can_undo(self) -> bool:
         return len(self._state.undo_stack) > 0
-    
+
     def can_redo(self) -> bool:
         return len(self._state.redo_stack) > 0
-    
+
     def _init_stacks(self) -> None:
         if not self._state.undo_stack:
             self._state.undo_stack = []
@@ -128,11 +128,11 @@ def _apply_snapshot_action(
 
 def undo_last_action(state: "PipelineStudioState") -> None:
     manager = HistoryManager(state)
-    
+
     action = manager.pop_undo()
     if not action:
         return
-    
+
     action_type = str(action.get("type") or "")
     if _apply_snapshot_action(state=state, action=action, phase="before", verb="Undid"):
         manager.push_redo(action)
@@ -142,10 +142,10 @@ def undo_last_action(state: "PipelineStudioState") -> None:
         state.history_notice = f"Undo not implemented for action type `{action_type}`."
         manager.push_redo(action)
         return
-    
+
     prev_active = action.get("prev_active_dataset_id")
     prev_active = prev_active if isinstance(prev_active, str) and prev_active else None
-    
+
     remove_ids: List[str] = []
     if action_type == "create_dataset":
         dataset_id = action.get("dataset_id")
@@ -155,19 +155,21 @@ def undo_last_action(state: "PipelineStudioState") -> None:
         ids = action.get("dataset_ids")
         ids = ids if isinstance(ids, list) else []
         remove_ids = [str(x) for x in ids if isinstance(x, str) and x]
-    
+
     if not remove_ids:
         state.history_notice = "Undo failed: missing dataset id(s)."
         return
-    
+
     datasets = state.datasets
     remove_set = set(remove_ids)
     existing_to_remove = [did for did in remove_ids if did in datasets]
-    
+
     if not existing_to_remove:
-        state.history_notice = f"Undo skipped: dataset(s) already gone: {', '.join([f'`{x}`' for x in remove_ids])}."
+        state.history_notice = (
+            f"Undo skipped: dataset(s) already gone: {', '.join([f'`{x}`' for x in remove_ids])}."
+        )
         return
-    
+
     for did, ent in datasets.items():
         if did in remove_set or not isinstance(ent, dict):
             continue
@@ -182,18 +184,18 @@ def undo_last_action(state: "PipelineStudioState") -> None:
             state.history_notice = f"Cannot undo: dataset(s) have downstream dataset `{did}`."
             manager.push_redo(action)
             return
-    
+
     new_datasets = {k: v for k, v in datasets.items() if k not in remove_set}
     team = dict(state.team_state)
     team["datasets"] = new_datasets
-    
+
     active_now = state.active_dataset_id
     if prev_active and prev_active in new_datasets:
         team["active_dataset_id"] = prev_active
     elif active_now in remove_set or (active_now and active_now not in new_datasets):
         best_id = _pick_newest_dataset(new_datasets)
         team["active_dataset_id"] = best_id
-    
+
     state.team_state = team
     manager.push_redo(action)
     state.history_notice = f"Undid last action: removed {len(existing_to_remove)} dataset(s)."
@@ -201,11 +203,11 @@ def undo_last_action(state: "PipelineStudioState") -> None:
 
 def redo_last_action(state: "PipelineStudioState") -> None:
     manager = HistoryManager(state)
-    
+
     action = manager.pop_redo()
     if not action:
         return
-    
+
     action_type = str(action.get("type") or "")
     if _apply_snapshot_action(state=state, action=action, phase="after", verb="Redid"):
         manager.push(action)
@@ -215,10 +217,10 @@ def redo_last_action(state: "PipelineStudioState") -> None:
         state.history_notice = f"Redo not implemented for action type `{action_type}`."
         manager.push_redo(action)
         return
-    
+
     dataset_ids: List[str] = []
     entries_by_id: Dict[str, dict] = {}
-    
+
     if action_type == "create_dataset":
         dataset_id = action.get("dataset_id")
         dataset_entry = action.get("dataset_entry")
@@ -232,28 +234,26 @@ def redo_last_action(state: "PipelineStudioState") -> None:
         eby = action.get("dataset_entries_by_id")
         eby = eby if isinstance(eby, dict) else {}
         entries_by_id = {
-            str(k): v
-            for k, v in eby.items()
-            if isinstance(k, str) and isinstance(v, dict)
+            str(k): v for k, v in eby.items() if isinstance(k, str) and isinstance(v, dict)
         }
-    
+
     if not dataset_ids or any(did not in entries_by_id for did in dataset_ids):
         state.history_notice = "Redo failed: missing dataset payload."
         return
-    
+
     datasets = dict(state.datasets)
     for did in dataset_ids:
         datasets[did] = entries_by_id[did]
-    
+
     team = dict(state.team_state)
     team["datasets"] = datasets
     team["active_dataset_id"] = dataset_ids[-1]
     state.team_state = team
-    
+
     state.node_id_pending = dataset_ids[-1]
     state.autofollow_pending = True
     state.history_notice = f"Redid last action: restored {len(dataset_ids)} dataset(s)."
-    
+
     manager.push(action)
 
 

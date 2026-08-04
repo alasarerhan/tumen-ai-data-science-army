@@ -3,6 +3,7 @@
 Each test creates an *isolated* CollectorRegistry so Prometheus global state
 does not bleed between tests.
 """
+
 from __future__ import annotations
 
 import json
@@ -22,16 +23,15 @@ from prometheus_client import (
 )
 
 from platform_api.core.observability import (
+    _REGISTRY,
     SLO_AVAILABILITY_BUDGET,
     SLO_ERROR_RATE_BUDGET,
     SLO_LATENCY_P99_MS,
     _JsonFormatter,
-    _REGISTRY,
     _normalise_path,
     configure_logging,
     setup_observability,
 )
-
 
 # ---------------------------------------------------------------------------
 # SLO constant sanity checks
@@ -58,7 +58,10 @@ def test_slo_availability_budget_constant():
 @pytest.mark.parametrize(
     "raw, expected",
     [
-        ("/api/workspaces/3fa85f64-5717-4562-b3fc-2c963f66afa6/workflows", "/api/workspaces/{id}/workflows"),
+        (
+            "/api/workspaces/3fa85f64-5717-4562-b3fc-2c963f66afa6/workflows",
+            "/api/workspaces/{id}/workflows",
+        ),
         ("/health", "/health"),
         ("/api/tenants/00000000-0000-0000-0000-000000000000", "/api/tenants/{id}"),
         ("/no-uuid-here", "/no-uuid-here"),
@@ -75,8 +78,13 @@ def test_normalise_path(raw: str, expected: str):
 
 def _make_record(msg: str, level: int = logging.INFO) -> logging.LogRecord:
     record = logging.LogRecord(
-        name="test", level=level, pathname="", lineno=0,
-        msg=msg, args=(), exc_info=None,
+        name="test",
+        level=level,
+        pathname="",
+        lineno=0,
+        msg=msg,
+        args=(),
+        exc_info=None,
     )
     return record
 
@@ -135,6 +143,7 @@ def _build_app_with_isolated_registry() -> tuple[FastAPI, CollectorRegistry]:
     @app.get("/error")
     async def boom():
         from fastapi import HTTPException
+
         raise HTTPException(status_code=500, detail="boom")
 
     # Minimal middleware that uses the isolated counters
@@ -159,6 +168,7 @@ def _build_app_with_isolated_registry() -> tuple[FastAPI, CollectorRegistry]:
     @app.get("/metrics", include_in_schema=False)
     async def metrics():
         from fastapi import Response
+
         return Response(content=generate_latest(reg), media_type=CONTENT_TYPE_LATEST)
 
     return app, reg

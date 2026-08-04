@@ -39,12 +39,19 @@ Node type
 import logging  # noqa: E402, F401
 
 logger = logging.getLogger(__name__)
-from typing import (# noqa: E402, F401
-    Any, Dict, List, Optional, Sequence, Tuple, TypedDict, Annotated)
+from typing import (  # noqa: E402, F401
+    Annotated,
+    Any,
+    Dict,
+    List,
+    Optional,
+    Sequence,
+    Tuple,
+    TypedDict,
+)
 
 import pandas as pd  # noqa: E402, F401
 from IPython.display import Markdown  # noqa: E402, F401
-
 from langchain.agents import create_agent  # noqa: E402, F401
 from langchain.tools import tool  # noqa: E402, F401
 from langchain_core.messages import AIMessage, BaseMessage  # noqa: E402, F401
@@ -54,9 +61,6 @@ from langgraph.prebuilt import InjectedState  # noqa: E402, F401
 from langgraph.types import Checkpointer  # noqa: E402, F401
 
 from ai_data_science_team.templates import BaseAgent  # noqa: E402, F401
-from ai_data_science_team.utils.messages import get_tool_call_names  # noqa: E402, F401
-from ai_data_science_team.utils.regex import format_agent_name  # noqa: E402, F401
-
 from ai_data_science_team.tools.power_analysis import (  # noqa: E402, F401
     design_experiment,
     estimate_runtime_days,
@@ -65,7 +69,8 @@ from ai_data_science_team.tools.power_analysis import (  # noqa: E402, F401
     solve_power,
     suggest_stratification,
 )
-
+from ai_data_science_team.utils.messages import get_tool_call_names  # noqa: E402, F401
+from ai_data_science_team.utils.regex import format_agent_name  # noqa: E402, F401
 
 AGENT_NAME = "power_analysis_agent"
 NODE_TYPE = "experiment.design"
@@ -321,9 +326,7 @@ def pa_suggest_stratification(
         f"candidate column(s) (group_column={group_column})."
     )
     if recs:
-        content += " Top-3: " + ", ".join(
-            f"{r['column']} (score={r['score']})" for r in recs[:3]
-        )
+        content += " Top-3: " + ", ".join(f"{r['column']} (score={r['score']})" for r in recs[:3])
     return content, result
 
 
@@ -342,9 +345,7 @@ def pa_design_experiment(
     daily_traffic: Optional[int] = None,
     traffic_allocation: float = 1.0,
     ramp_up_days: int = 0,
-    historical_data_raw: Annotated[
-        Optional[dict], InjectedState("historical_data_raw")
-    ] = None,
+    historical_data_raw: Annotated[Optional[dict], InjectedState("historical_data_raw")] = None,
     stratification_group_column: Optional[str] = None,
 ) -> Tuple[str, Dict]:
     """
@@ -370,11 +371,7 @@ def pa_design_experiment(
     """
     logger.info("    * Tool: pa_design_experiment")
 
-    historical_df = (
-        pd.DataFrame(historical_data_raw)
-        if historical_data_raw is not None
-        else None
-    )
+    historical_df = pd.DataFrame(historical_data_raw) if historical_data_raw is not None else None
 
     result = design_experiment(
         metric_type=metric_type,
@@ -540,10 +537,7 @@ def make_power_analysis_agent(
             )
         if not getattr(last_ai_message, "content", "").strip():
             last_ai_message = AIMessage(
-                content=(
-                    "Experiment design ready. "
-                    "See design_results for the per-tool output."
-                ),
+                content=("Experiment design ready. See design_results for the per-tool output."),
                 name=AGENT_NAME,
             )
 
@@ -742,9 +736,7 @@ class PowerAnalysisAgent(BaseAgent):
                 "user_instructions": user_instructions,
                 "data_raw": data_raw.to_dict() if data_raw is not None else {},
                 "historical_data_raw": (
-                    historical_data_raw.to_dict()
-                    if historical_data_raw is not None
-                    else {}
+                    historical_data_raw.to_dict() if historical_data_raw is not None else {}
                 ),
                 "alpha": eff_alpha,
                 "power": eff_power,

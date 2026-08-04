@@ -24,10 +24,10 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
 
+from ai_data_science_team.utils.agent_cache import get_agent_cache
 from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
-from ai_data_science_team.utils.agent_cache import get_agent_cache
 from platform_api.core.config import settings
 from platform_api.core.service_errors import ForbiddenError, NotFoundError
 from platform_api.db.models import (
@@ -155,7 +155,9 @@ def _delete_azure_blob_uri(uri: str) -> None:
 
     if not container or not blob_name:
         raise ValueError(f"Invalid Azure blob URI: {uri}")
-    client.get_blob_client(container=container, blob=blob_name).delete_blob(delete_snapshots="include")
+    client.get_blob_client(container=container, blob=blob_name).delete_blob(
+        delete_snapshots="include"
+    )
 
 
 def _delete_cloud_artifact(uri: str) -> None:
@@ -209,7 +211,11 @@ def _cleanup_prefect_deployments(db: Session, tenant_id: uuid.UUID) -> tuple[int
 
 
 def _cleanup_redis_state(tenant_id: uuid.UUID) -> tuple[dict[str, int], list[str]]:
-    stats = {"cache_entries_deleted": 0, "scheduled_jobs_deleted": 0, "scheduled_stream_entries_deleted": 0}
+    stats = {
+        "cache_entries_deleted": 0,
+        "scheduled_jobs_deleted": 0,
+        "scheduled_stream_entries_deleted": 0,
+    }
     errors: list[str] = []
 
     try:
@@ -273,22 +279,24 @@ def delete_tenant(
     cloud_uris_to_delete: list[str] = []
 
     try:
-        workspaces = db.execute(
-            select(Workspace).where(Workspace.tenant_id == tenant_id)
-        ).scalars().all()
+        workspaces = (
+            db.execute(select(Workspace).where(Workspace.tenant_id == tenant_id)).scalars().all()
+        )
         stats["workspaces_deleted"] = len(workspaces)
 
-        memberships = db.execute(
-            select(TenantMembership).where(TenantMembership.tenant_id == tenant_id)
-        ).scalars().all()
+        memberships = (
+            db.execute(select(TenantMembership).where(TenantMembership.tenant_id == tenant_id))
+            .scalars()
+            .all()
+        )
         stats["users_removed"] = len(memberships)
 
-        artifacts = db.execute(
-            select(Artifact).where(Artifact.tenant_id == tenant_id)
-        ).scalars().all()
-        uploads = db.execute(
-            select(ChatUpload).where(ChatUpload.tenant_id == tenant_id)
-        ).scalars().all()
+        artifacts = (
+            db.execute(select(Artifact).where(Artifact.tenant_id == tenant_id)).scalars().all()
+        )
+        uploads = (
+            db.execute(select(ChatUpload).where(ChatUpload.tenant_id == tenant_id)).scalars().all()
+        )
 
         for artifact in artifacts:
             uri = artifact.uri

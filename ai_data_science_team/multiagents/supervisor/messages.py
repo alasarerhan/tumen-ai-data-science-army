@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-
 from collections.abc import Sequence
 from typing import Optional
 
@@ -98,6 +97,4 @@ def append_error_message(
     lines = [str(error_text)]
     if isinstance(log_path, str) and log_path:
         lines.append(f"Log: {log_path}")
-    merged["messages"].append(
-        AIMessage(content=f"{prefix}:\n" + "\n".join(lines), name=agent_name)
-    )
+    merged["messages"].append(AIMessage(content=f"{prefix}:\n" + "\n".join(lines), name=agent_name))

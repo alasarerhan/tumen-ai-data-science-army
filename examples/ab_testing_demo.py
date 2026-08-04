@@ -67,29 +67,29 @@ def main() -> None:
     rev = analyze_continuous_metric(df, "group", "revenue")
     print("\n[2] Revenue (continuous):")
     print(f"    control={rev['control_mean']:.3f} → treatment={rev['treatment_mean']:.3f}")
-    print(f"    lift={rev['relative_lift']:.2%}, "
-          f"CI=[{rev['ci_low']:.3f}, {rev['ci_high']:.3f}], "
-          f"p={rev['p_value']:.4f} ({rev['test_used']})")
+    print(
+        f"    lift={rev['relative_lift']:.2%}, "
+        f"CI=[{rev['ci_low']:.3f}, {rev['ci_high']:.3f}], "
+        f"p={rev['p_value']:.4f} ({rev['test_used']})"
+    )
     print(f"    Cohen's d = {rev['effect_size']:.3f}")
 
     # 3) Proportion metric
     conv = analyze_proportion_metric(df, "group", "converted")
     print("\n[3] Conversion (proportion):")
     print(f"    control={conv['control_mean']:.3%} → treatment={conv['treatment_mean']:.3%}")
-    print(f"    lift={conv['relative_lift']:.2%}, p={conv['p_value']:.4f}, "
-          f"z={conv['z_stat']:.2f}")
+    print(f"    lift={conv['relative_lift']:.2%}, p={conv['p_value']:.4f}, z={conv['z_stat']:.2f}")
 
     # 4) CUPED
     cuped = apply_cuped(df, "group", "revenue", "pre_metric")
     print("\n[4] CUPED variance reduction:")
-    print(f"    theta={cuped['theta']:.3f}, "
-          f"variance reduction={cuped['variance_reduction_pct']:.1f}%")
+    print(
+        f"    theta={cuped['theta']:.3f}, variance reduction={cuped['variance_reduction_pct']:.1f}%"
+    )
     print(f"    adjusted lift={cuped['absolute_lift_adjusted']:.3f}")
 
     # 5) Multiple-comparison correction
-    mcc = apply_multiple_comparison_correction(
-        [rev["p_value"], conv["p_value"]], method="bh"
-    )
+    mcc = apply_multiple_comparison_correction([rev["p_value"], conv["p_value"]], method="bh")
     print("\n[5] BH correction across 2 metrics:")
     print(f"    adjusted p = {mcc['adjusted']}, rejected = {mcc['rejected']}")
 

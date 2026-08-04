@@ -12,9 +12,14 @@ PowerAnalysisAgent.
 Node type: ``catalog.search``
 """
 
-from typing import (Dict, Optional, Tuple)  # noqa: E402
 import logging  # noqa: E402, F401
-from typing import Any  # noqa: E402, F401
+from typing import (  # noqa: E402
+    Any,  # noqa: E402, F401
+    Dict,
+    Mapping,  # noqa: E402
+    Optional,
+    Tuple,
+)
 
 from langchain.tools import tool  # noqa: E402, F401
 from langchain_core.messages import AIMessage, BaseMessage  # noqa: E402, F401
@@ -24,10 +29,6 @@ from langgraph.types import Checkpointer  # noqa: E402, F401
 from typing_extensions import Annotated, Sequence, TypedDict  # noqa: E402, F401
 
 from ai_data_science_team.templates import BaseAgent  # noqa: E402, F401
-from ai_data_science_team.utils.regex import format_agent_name  # noqa: E402, F401
-
-from typing import Mapping  # noqa: E402
-
 from ai_data_science_team.tools.catalog import (  # noqa: E402, F401
     Catalog,
     add_pii_badges,
@@ -43,7 +44,7 @@ from ai_data_science_team.tools.catalog import (  # noqa: E402, F401
     resolve_data,
     search,
 )
-
+from ai_data_science_team.utils.regex import format_agent_name  # noqa: E402, F401
 
 logger = logging.getLogger(__name__)
 
@@ -55,6 +56,7 @@ NODE_TYPE = "catalog.search"
 # Tool wrappers
 # ---------------------------------------------------------------------------
 
+
 @tool(response_format="content_and_artifact")
 def add_source_wrapped(catalog: Catalog) -> Tuple[str, dict]:
     """Tool wrapper for ``add_source``.
@@ -64,7 +66,7 @@ def add_source_wrapped(catalog: Catalog) -> Tuple[str, dict]:
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: i2_add_source")
-    kwargs = {'catalog': catalog}
+    kwargs = {"catalog": catalog}
     try:
         result = add_source(**kwargs)
     except Exception as exc:
@@ -84,7 +86,13 @@ def add_source_wrapped(catalog: Catalog) -> Tuple[str, dict]:
 
 
 @tool(response_format="content_and_artifact")
-def add_table_wrapped(catalog: Catalog, source_name: str, table_name: str, columns: Sequence[Mapping[str, Any]], description: Optional[str]) -> Tuple[str, dict]:
+def add_table_wrapped(
+    catalog: Catalog,
+    source_name: str,
+    table_name: str,
+    columns: Sequence[Mapping[str, Any]],
+    description: Optional[str],
+) -> Tuple[str, dict]:
     """Tool wrapper for ``add_table``.
 
     Append a new table to an existing source.
@@ -92,7 +100,13 @@ def add_table_wrapped(catalog: Catalog, source_name: str, table_name: str, colum
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: i2_add_table")
-    kwargs = {'catalog': catalog, 'source_name': source_name, 'table_name': table_name, 'columns': columns, 'description': description}
+    kwargs = {
+        "catalog": catalog,
+        "source_name": source_name,
+        "table_name": table_name,
+        "columns": columns,
+        "description": description,
+    }
     try:
         result = add_table(**kwargs)
     except Exception as exc:
@@ -112,7 +126,9 @@ def add_table_wrapped(catalog: Catalog, source_name: str, table_name: str, colum
 
 
 @tool(response_format="content_and_artifact")
-def attach_profile_wrapped(catalog: Catalog, source_name: str, profile: Mapping[str, Any]) -> Tuple[str, dict]:
+def attach_profile_wrapped(
+    catalog: Catalog, source_name: str, profile: Mapping[str, Any]
+) -> Tuple[str, dict]:
     """Tool wrapper for ``attach_profile``.
 
     Fold a ``profile_dataframe`` (B1) result onto ``source_name``.
@@ -120,7 +136,7 @@ def attach_profile_wrapped(catalog: Catalog, source_name: str, profile: Mapping[
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: i2_attach_profile")
-    kwargs = {'catalog': catalog, 'source_name': source_name, 'profile': profile}
+    kwargs = {"catalog": catalog, "source_name": source_name, "profile": profile}
     try:
         result = attach_profile(**kwargs)
     except Exception as exc:
@@ -140,7 +156,9 @@ def attach_profile_wrapped(catalog: Catalog, source_name: str, profile: Mapping[
 
 
 @tool(response_format="content_and_artifact")
-def add_pii_badges_wrapped(catalog: Catalog, source_name: str, pii_scan: Mapping[str, Any]) -> Tuple[str, dict]:
+def add_pii_badges_wrapped(
+    catalog: Catalog, source_name: str, pii_scan: Mapping[str, Any]
+) -> Tuple[str, dict]:
     """Tool wrapper for ``add_pii_badges``.
 
     Fold a ``scan_pii`` (B5) result onto ``source_name``.
@@ -148,7 +166,7 @@ def add_pii_badges_wrapped(catalog: Catalog, source_name: str, pii_scan: Mapping
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: i2_add_pii_badges")
-    kwargs = {'catalog': catalog, 'source_name': source_name, 'pii_scan': pii_scan}
+    kwargs = {"catalog": catalog, "source_name": source_name, "pii_scan": pii_scan}
     try:
         result = add_pii_badges(**kwargs)
     except Exception as exc:
@@ -176,7 +194,7 @@ def catalog_tree_wrapped(catalog: Catalog) -> Tuple[str, dict]:
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: i2_catalog_tree")
-    kwargs = {'catalog': catalog}
+    kwargs = {"catalog": catalog}
     try:
         result = catalog_tree(**kwargs)
     except Exception as exc:
@@ -204,7 +222,7 @@ def add_term_wrapped(catalog: Catalog, term: str) -> Tuple[str, dict]:
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: i2_add_term")
-    kwargs = {'catalog': catalog, 'term': term}
+    kwargs = {"catalog": catalog, "term": term}
     try:
         result = add_term(**kwargs)
     except Exception as exc:
@@ -232,7 +250,7 @@ def bind_term_column_wrapped(catalog: Catalog, term: str) -> Tuple[str, dict]:
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: i2_bind_term_column")
-    kwargs = {'catalog': catalog, 'term': term}
+    kwargs = {"catalog": catalog, "term": term}
     try:
         result = bind_term_column(**kwargs)
     except Exception as exc:
@@ -260,7 +278,7 @@ def search_wrapped(catalog: Catalog, query: str) -> Tuple[str, dict]:
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: i2_search")
-    kwargs = {'catalog': catalog, 'query': query}
+    kwargs = {"catalog": catalog, "query": query}
     try:
         result = search(**kwargs)
     except Exception as exc:
@@ -288,7 +306,7 @@ def resolve_data_wrapped(catalog: Catalog, term: str) -> Tuple[str, dict]:
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: i2_resolve_data")
-    kwargs = {'catalog': catalog, 'term': term}
+    kwargs = {"catalog": catalog, "term": term}
     try:
         result = resolve_data(**kwargs)
     except Exception as exc:
@@ -316,7 +334,7 @@ def record_lineage_wrapped(catalog: Catalog) -> Tuple[str, dict]:
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: i2_record_lineage")
-    kwargs = {'catalog': catalog}
+    kwargs = {"catalog": catalog}
     try:
         result = record_lineage(**kwargs)
     except Exception as exc:
@@ -336,7 +354,9 @@ def record_lineage_wrapped(catalog: Catalog) -> Tuple[str, dict]:
 
 
 @tool(response_format="content_and_artifact")
-def lineage_for_wrapped(catalog: Catalog, source_name: str, table: Optional[str]) -> Tuple[str, dict]:
+def lineage_for_wrapped(
+    catalog: Catalog, source_name: str, table: Optional[str]
+) -> Tuple[str, dict]:
     """Tool wrapper for ``lineage_for``.
 
     Return all lineage records that consume the given source (and table).
@@ -344,7 +364,7 @@ def lineage_for_wrapped(catalog: Catalog, source_name: str, table: Optional[str]
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: i2_lineage_for")
-    kwargs = {'catalog': catalog, 'source_name': source_name, 'table': table}
+    kwargs = {"catalog": catalog, "source_name": source_name, "table": table}
     try:
         result = lineage_for(**kwargs)
     except Exception as exc:
@@ -450,7 +470,12 @@ def make_catalog_agent(
     def run_react_agent(state: GraphState):
         logger.info("    * RUN REACT AGENT FOR I2")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
-        messages = [("system", "You are the I2 agent. Use the available tools to complete the user's request.")] + list(base)
+        messages = [
+            (
+                "system",
+                "You are the I2 agent. Use the available tools to complete the user's request.",
+            )
+        ] + list(base)
         input_payload = {"messages": messages}
         return react_agent.invoke(input_payload, invoke_react_agent_kwargs)
 
@@ -469,7 +494,9 @@ def make_catalog_agent(
             last_ai = AIMessage(content=getattr(internal[-1], "content", ""), name=AGENT_NAME)
         tool_calls = []
         for msg in internal:
-            name = getattr(getattr(msg, "tool_call_id", None), "name", None) or getattr(msg, "name", None)
+            name = getattr(getattr(msg, "tool_call_id", None), "name", None) or getattr(
+                msg, "name", None
+            )
             if name:
                 tool_calls.append(name)
         if log_tool_calls and tool_calls:
@@ -537,6 +564,7 @@ class DataCatalogAgent(BaseAgent):
         if not self.response or "messages" not in self.response:
             return None
         from IPython.display import Markdown as _Markdown  # noqa: E402, F401
+
         for msg in reversed(self.response.get("messages", [])):
             content = getattr(msg, "content", "")
             if content:

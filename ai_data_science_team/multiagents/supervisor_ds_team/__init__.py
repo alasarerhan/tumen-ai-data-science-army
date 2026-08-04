@@ -1,45 +1,44 @@
 from __future__ import annotations
 
 import logging  # noqa: F401
+from typing import Any, Optional, Sequence  # noqa: F401
 
-from typing import Sequence, Optional, Any  # noqa: F401
-
-from langchain_core.messages import BaseMessage, HumanMessage, AIMessage  # noqa: F401
 from IPython.display import Markdown  # noqa: F401
+from langchain_core.messages import AIMessage, BaseMessage, HumanMessage  # noqa: F401
 from langchain_openai import ChatOpenAI  # noqa: F401
-
-from langgraph.graph import StateGraph, END  # noqa: F401
-from langgraph.types import Checkpointer  # noqa: F401
+from langgraph.graph import END, StateGraph  # noqa: F401
 from langgraph.graph.message import add_messages  # noqa: F401
+from langgraph.types import Checkpointer  # noqa: F401
 
 from ai_data_science_team.multiagents.supervisor import (  # noqa: F401
-    SupervisorDSState,
     DATASET_REGISTRY_MAX,
+    SupervisorDSState,
     _clean_messages,
     _get_last_human_text,
     append_agent_feedback,
     append_error_message,
+    available_datasets_lines,
     build_route_options,
     build_supervisor_chain,
+    collect_loader_errors,
     ensure_dataset_registry,
     ensure_df,
     execute_merge_plan,
+    extract_loader_artifact_results,
     format_dataset_with_llm,
     format_listing_with_llm,
     format_result_with_llm,
     get_active_data,
-    is_empty_df,
-    collect_loader_errors,
-    extract_loader_artifact_results,
     infer_requested_load_labels,
+    is_empty_df,
     merge_messages,
     normalize_loader_artifacts,
     parse_intent,
     register_dataset,
-    resolve_selected_dataset_ids,
     register_python_transform_dataset,
-    shape_of,
+    resolve_selected_dataset_ids,
     sha256_text,
+    shape_of,
     summarize_directory_listing,
     summarize_loaded_dataset,
     summarize_loader_failure,
@@ -48,42 +47,18 @@ from ai_data_science_team.multiagents.supervisor import (  # noqa: F401
     tag_messages,
     trim_messages,
     truncate_text,
-    available_datasets_lines,
-)
-
-
-
-# L2 split: node factories are imported from per-file modules under
-# ``nodes/``.  Each factory takes a NodeDeps dataclass (defined in its
-# module) that holds the closure dependencies the node used to capture
-# in the original monolith.
-from ai_data_science_team.multiagents.supervisor_ds_team.nodes.viz import (  # noqa: F401
-    VizNodeDeps,
-    make_node_viz,
-)
-from ai_data_science_team.multiagents.supervisor_ds_team.nodes.loader import (  # noqa: F401
-    LoaderNodeDeps,
-    make_node_loader,
-)
-from ai_data_science_team.multiagents.supervisor_ds_team.nodes.merge import (  # noqa: F401
-    MergeNodeDeps,
-    make_node_merge,
-)
-from ai_data_science_team.multiagents.supervisor_ds_team.nodes.wrangling import (  # noqa: F401
-    WranglingNodeDeps,
-    make_node_wrangling,
 )
 from ai_data_science_team.multiagents.supervisor_ds_team.nodes.cleaning import (  # noqa: F401
     CleaningNodeDeps,
     make_node_cleaning,
 )
-from ai_data_science_team.multiagents.supervisor_ds_team.nodes.sql import (  # noqa: F401
-    SqlNodeDeps,
-    make_node_sql,
-)
 from ai_data_science_team.multiagents.supervisor_ds_team.nodes.eda import (  # noqa: F401
     EdaNodeDeps,
     make_node_eda,
+)
+from ai_data_science_team.multiagents.supervisor_ds_team.nodes.eval import (  # noqa: F401
+    EvalNodeDeps,
+    make_node_eval,
 )
 from ai_data_science_team.multiagents.supervisor_ds_team.nodes.fe import (  # noqa: F401
     FeNodeDeps,
@@ -93,18 +68,40 @@ from ai_data_science_team.multiagents.supervisor_ds_team.nodes.h2o import (  # n
     H2oNodeDeps,
     make_node_h2o,
 )
+from ai_data_science_team.multiagents.supervisor_ds_team.nodes.loader import (  # noqa: F401
+    LoaderNodeDeps,
+    make_node_loader,
+)
+from ai_data_science_team.multiagents.supervisor_ds_team.nodes.merge import (  # noqa: F401
+    MergeNodeDeps,
+    make_node_merge,
+)
 from ai_data_science_team.multiagents.supervisor_ds_team.nodes.mlflow import (  # noqa: F401
     MlflowNodeDeps,
     make_node_mlflow,
-)
-from ai_data_science_team.multiagents.supervisor_ds_team.nodes.eval import (  # noqa: F401
-    EvalNodeDeps,
-    make_node_eval,
 )
 from ai_data_science_team.multiagents.supervisor_ds_team.nodes.mlflow_log import (  # noqa: F401
     MlflowLogNodeDeps,
     make_node_mlflow_log,
 )
+from ai_data_science_team.multiagents.supervisor_ds_team.nodes.sql import (  # noqa: F401
+    SqlNodeDeps,
+    make_node_sql,
+)
+
+# L2 split: node factories are imported from per-file modules under
+# ``nodes/``.  Each factory takes a NodeDeps dataclass (defined in its
+# module) that holds the closure dependencies the node used to capture
+# in the original monolith.
+from ai_data_science_team.multiagents.supervisor_ds_team.nodes.viz import (  # noqa: F401
+    VizNodeDeps,
+    make_node_viz,
+)
+from ai_data_science_team.multiagents.supervisor_ds_team.nodes.wrangling import (  # noqa: F401
+    WranglingNodeDeps,
+    make_node_wrangling,
+)
+
 
 # Bind the closure-derived helpers (used by inline code in the
 # orchestrator body).  Each helper is reachable through deps.<name>.
@@ -186,9 +183,7 @@ def make_supervisor_ds_team(
 
     _get_last_human = _get_last_human_text
 
-    def _suggest_next_worker(
-        state: SupervisorDSState, clean_msgs: Sequence[BaseMessage]
-    ):
+    def _suggest_next_worker(state: SupervisorDSState, clean_msgs: Sequence[BaseMessage]):
         """
         Disabled LLM hinting to keep routing deterministic.
         """
@@ -210,17 +205,11 @@ def make_supervisor_ds_team(
             hydrated["data_wrangled"] = data_wrangled
         data_sql = state.get("data_sql")
         sql_art = artifacts.get("sql") if isinstance(artifacts, dict) else None
-        if (
-            data_sql is None
-            and isinstance(sql_art, dict)
-            and sql_art.get("data_sql") is not None
-        ):
+        if data_sql is None and isinstance(sql_art, dict) and sql_art.get("data_sql") is not None:
             data_sql = sql_art.get("data_sql")
             hydrated["data_sql"] = data_sql
         feature_data = state.get("feature_data")
-        fe_art = (
-            artifacts.get("feature_engineering") if isinstance(artifacts, dict) else None
-        )
+        fe_art = artifacts.get("feature_engineering") if isinstance(artifacts, dict) else None
         if (
             feature_data is None
             and isinstance(fe_art, dict)
@@ -255,16 +244,12 @@ def make_supervisor_ds_team(
             if role in ("human", "user"):
                 last_human_msg = m
                 break
-        current_request_id = (
-            getattr(last_human_msg, "id", None) if last_human_msg else None
-        )
+        current_request_id = getattr(last_human_msg, "id", None) if last_human_msg else None
 
         handled_request_id = state.get("handled_request_id")
         handled_steps: dict[str, bool] = dict(state.get("handled_steps") or {})
         attempted_steps: dict[str, bool] = dict(state.get("attempted_steps") or {})
-        is_new_request = (
-            current_request_id is not None and current_request_id != handled_request_id
-        )
+        is_new_request = current_request_id is not None and current_request_id != handled_request_id
         if is_new_request:
             handled_request_id = current_request_id
             handled_steps = {}
@@ -321,9 +306,11 @@ def make_supervisor_ds_team(
                 if token.isdigit():
                     ordered = sorted(
                         datasets.items(),
-                        key=lambda kv: float(kv[1].get("created_ts") or 0.0)
-                        if isinstance(kv[1], dict)
-                        else 0.0,
+                        key=lambda kv: (
+                            float(kv[1].get("created_ts") or 0.0)
+                            if isinstance(kv[1], dict)
+                            else 0.0
+                        ),
                         reverse=True,
                     )
                     idx = int(token) - 1
@@ -358,16 +345,8 @@ def make_supervisor_ds_team(
             requested_dataset_id = None
 
         if requested_dataset_id and requested_dataset_id != active_dataset_id:
-            selected = (
-                datasets.get(requested_dataset_id)
-                if isinstance(datasets, dict)
-                else None
-            )
-            label = (
-                selected.get("label")
-                if isinstance(selected, dict)
-                else requested_dataset_id
-            )
+            selected = datasets.get(requested_dataset_id) if isinstance(datasets, dict) else None
+            label = selected.get("label") if isinstance(selected, dict) else requested_dataset_id
             msg = AIMessage(
                 content=f"Switched active dataset to `{label}` (`{requested_dataset_id}`).",
                 name="supervisor",
@@ -457,52 +436,31 @@ def make_supervisor_ds_team(
                 and (state.get("artifacts") or {}).get("merge") is not None
             ):
                 handled_steps["merge"] = True
-            elif (
-                last_worker == "SQL_Database_Agent"
-                and state.get("data_sql") is not None
-            ):
+            elif last_worker == "SQL_Database_Agent" and state.get("data_sql") is not None:
                 handled_steps["sql"] = True
-            elif (
-                last_worker == "Data_Wrangling_Agent"
-                and state.get("data_wrangled") is not None
-            ):
+            elif last_worker == "Data_Wrangling_Agent" and state.get("data_wrangled") is not None:
                 handled_steps["wrangle"] = True
-            elif (
-                last_worker == "Data_Cleaning_Agent"
-                and state.get("data_cleaned") is not None
-            ):
+            elif last_worker == "Data_Cleaning_Agent" and state.get("data_cleaned") is not None:
                 handled_steps["clean"] = True
-            elif (
-                last_worker == "EDA_Tools_Agent"
-                and state.get("eda_artifacts") is not None
-            ):
+            elif last_worker == "EDA_Tools_Agent" and state.get("eda_artifacts") is not None:
                 handled_steps["eda"] = True
-            elif (
-                last_worker == "Data_Visualization_Agent"
-                and state.get("viz_graph") is not None
-            ):
+            elif last_worker == "Data_Visualization_Agent" and state.get("viz_graph") is not None:
                 handled_steps["viz"] = True
             elif (
-                last_worker == "Feature_Engineering_Agent"
-                and state.get("feature_data") is not None
+                last_worker == "Feature_Engineering_Agent" and state.get("feature_data") is not None
             ):
                 handled_steps["feature"] = True
             elif last_worker == "H2O_ML_Agent" and state.get("model_info") is not None:
                 handled_steps["model"] = True
             elif (
-                last_worker == "Model_Evaluation_Agent"
-                and state.get("eval_artifacts") is not None
+                last_worker == "Model_Evaluation_Agent" and state.get("eval_artifacts") is not None
             ):
                 handled_steps["evaluate"] = True
             elif (
-                last_worker == "MLflow_Logging_Agent"
-                and state.get("mlflow_artifacts") is not None
+                last_worker == "MLflow_Logging_Agent" and state.get("mlflow_artifacts") is not None
             ):
                 handled_steps["mlflow_log"] = True
-            elif (
-                last_worker == "MLflow_Tools_Agent"
-                and state.get("mlflow_artifacts") is not None
-            ):
+            elif last_worker == "MLflow_Tools_Agent" and state.get("mlflow_artifacts") is not None:
                 handled_steps["mlflow_tools"] = True
 
         step_to_worker = {
@@ -558,16 +516,10 @@ def make_supervisor_ds_team(
         plan_notes: list[str] = []
         planner_messages: list[BaseMessage] = []
         planned_target: Optional[str] = state.get("target_variable")
-        if (
-            use_planner
-            and workflow_planner_agent is not None
-            and current_request_id is not None
-        ):
+        if use_planner and workflow_planner_agent is not None and current_request_id is not None:
             if state_plan_req == current_request_id and isinstance(state_plan, dict):
                 planned_steps = (
-                    state_plan.get("steps")
-                    if isinstance(state_plan.get("steps"), list)
-                    else None
+                    state_plan.get("steps") if isinstance(state_plan.get("steps"), list) else None
                 )
                 plan_questions = (
                     state_plan.get("questions")
@@ -575,9 +527,7 @@ def make_supervisor_ds_team(
                     else []
                 )
                 plan_notes = (
-                    state_plan.get("notes")
-                    if isinstance(state_plan.get("notes"), list)
-                    else []
+                    state_plan.get("notes") if isinstance(state_plan.get("notes"), list) else []
                 )
             else:
                 # Provide a minimal context snapshot to help planning.
@@ -600,17 +550,11 @@ def make_supervisor_ds_team(
                     plan = workflow_planner_agent.response or {}
                 except Exception:
                     plan = {}
-                planned_steps = (
-                    plan.get("steps") if isinstance(plan.get("steps"), list) else None
-                )
+                planned_steps = plan.get("steps") if isinstance(plan.get("steps"), list) else None
                 plan_questions = (
-                    plan.get("questions")
-                    if isinstance(plan.get("questions"), list)
-                    else []
+                    plan.get("questions") if isinstance(plan.get("questions"), list) else []
                 )
-                plan_notes = (
-                    plan.get("notes") if isinstance(plan.get("notes"), list) else []
-                )
+                plan_notes = plan.get("notes") if isinstance(plan.get("notes"), list) else []
                 planned_target = plan.get("target_variable") or planned_target
                 state_plan_req = current_request_id
                 state_plan = {
@@ -621,9 +565,7 @@ def make_supervisor_ds_team(
                 }
                 if planned_steps:
                     pretty_steps = " → ".join(str(s) for s in planned_steps)
-                    note_text = (
-                        "\n".join(f"- {n}" for n in plan_notes) if plan_notes else ""
-                    )
+                    note_text = "\n".join(f"- {n}" for n in plan_notes) if plan_notes else ""
                     plan_msg_text: str = f"Planned workflow: {pretty_steps}"
                     if note_text:
                         plan_msg_text = plan_msg_text + "\n\nNotes:\n" + note_text
@@ -634,9 +576,7 @@ def make_supervisor_ds_team(
             # If the planner needs user input, ask and stop.
             if plan_questions and not (planned_steps and len(planned_steps) > 0):
                 question_text = "\n".join(f"- {q}" for q in plan_questions)
-                note_text = (
-                    "\n".join(f"- {n}" for n in plan_notes) if plan_notes else ""
-                )
+                note_text = "\n".join(f"- {n}" for n in plan_notes) if plan_notes else ""
                 ask_msg_text: str = "To run the workflow, I need:\n" + question_text
                 if note_text:
                     ask_msg_text = ask_msg_text + "\n\nNotes:\n" + note_text
@@ -712,11 +652,7 @@ def make_supervisor_ds_team(
                 if (
                     not data_ready
                     and needs_data
-                    and not (
-                        intents.get("load")
-                        or intents.get("load_only")
-                        or intents.get("sql")
-                    )
+                    and not (intents.get("load") or intents.get("load_only") or intents.get("sql"))
                 ):
                     steps.insert(0, "load")
 
@@ -768,11 +704,7 @@ def make_supervisor_ds_team(
                     if attempted_steps.get(step) and not handled_steps.get(step):
                         logger.info(f"  step '{step}' already attempted -> FINISH")
                         return {
-                            **(
-                                {"messages": planner_messages}
-                                if planner_messages
-                                else {}
-                            ),
+                            **({"messages": planner_messages} if planner_messages else {}),
                             "next": "FINISH",
                             "active_data_key": active_data_key,
                             "datasets": datasets,
@@ -805,11 +737,7 @@ def make_supervisor_ds_team(
                         )
                         attempted_steps["load"] = True
                         return {
-                            **(
-                                {"messages": planner_messages}
-                                if planner_messages
-                                else {}
-                            ),
+                            **({"messages": planner_messages} if planner_messages else {}),
                             "next": "Data_Loader_Tools_Agent",
                             **base_update,
                             "active_data_key": active_data_key,
@@ -1145,10 +1073,11 @@ def make_supervisor_ds_team(
     return app
 
 
-
-from ai_data_science_team.multiagents.supervisor_ds_team._class import SupervisorDSTeam  # noqa: F401, E402
+from ai_data_science_team.multiagents.supervisor_ds_team._class import (
+    SupervisorDSTeam,  # noqa: F401, E402
+)
 
 logger = logging.getLogger(__name__)
 
 
-__all__ = ['make_supervisor_ds_team', 'SupervisorDSTeam']
+__all__ = ["make_supervisor_ds_team", "SupervisorDSTeam"]

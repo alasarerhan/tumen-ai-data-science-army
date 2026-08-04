@@ -42,9 +42,10 @@ def test_build_object_storage_connector_real(llm_or_skip, llm_model):
     """build_object_storage_connector Pydantic ConnectorConfig alır; in-memory nesne döndürür."""
     tool = build_object_storage_connector_wrapped
     result = _invoke(
-        tool, llm_model,
+        tool,
+        llm_model,
         "build_object_storage_connector tool'unu TEK çağrı ile çağır. "
-        "config = {\"kind\": \"object_storage\", \"name\": \"s3_demo\", \"params\": {}}.",
+        'config = {"kind": "object_storage", "name": "s3_demo", "params": {}}.',
     )
     assert isinstance(result, tuple) and len(result) == 2
     content, artifact = result

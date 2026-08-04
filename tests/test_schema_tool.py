@@ -14,7 +14,6 @@ from ai_data_science_team.tools.schema import (
     mapping_summary,
 )
 
-
 # ---------------------------------------------------------------------------
 # Inference
 # ---------------------------------------------------------------------------
@@ -34,9 +33,7 @@ class TestInferColumnType:
         assert out.confidence >= 0.9
 
     def test_currency_strings(self):
-        s = pd.Series(
-            ["₺1.234,50", "₺10,00", "₺99,99", "₺1.000,00", "₺5,00"]
-        )
+        s = pd.Series(["₺1.234,50", "₺10,00", "₺99,99", "₺1.000,00", "₺5,00"])
         out = infer_column_type(s)
         assert out.name == "currency"
         assert out.detected_currency == "₺"
@@ -113,9 +110,7 @@ class TestInferSchema:
         assert types["id"] in {"id", "integer"}
 
     def test_skips_internal_columns(self):
-        df = pd.DataFrame(
-            {"__rowid__": range(10), "email": ["a@b.com"] * 10}
-        )
+        df = pd.DataFrame({"__rowid__": range(10), "email": ["a@b.com"] * 10})
         schema = infer_schema(df)
         names = [c.source for c in schema.columns]
         assert "__rowid__" not in names

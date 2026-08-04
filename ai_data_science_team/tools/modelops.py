@@ -31,7 +31,6 @@ Public surface
 from dataclasses import dataclass, field  # noqa: E402, F401
 from typing import Any, Dict, List, Mapping, Optional, Sequence  # noqa: E402, F401
 
-
 # ---------------------------------------------------------------------------
 # Common stages + state taxonomy
 # ---------------------------------------------------------------------------
@@ -228,5 +227,3 @@ __all__ = [
     "build_model_detail",
     "record_champion_change",
 ]
-
-

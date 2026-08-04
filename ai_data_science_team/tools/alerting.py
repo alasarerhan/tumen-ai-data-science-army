@@ -12,7 +12,6 @@ import uuid  # noqa: E402, F401
 from dataclasses import dataclass, field  # noqa: E402, F401
 from typing import Any, Callable, Dict, List, Mapping, Optional, Sequence  # noqa: E402, F401
 
-
 VALID_SEVERITIES = {"info", "warning", "critical"}
 VALID_COMPARATORS = {">", ">=", "<", "<=", "==", "!="}
 VALID_CHANNELS = {"slack", "email", "webhook"}
@@ -27,6 +26,7 @@ def _now() -> float:
 
 
 # ----- Alert rules ---------------------------------------------------------
+
 
 @dataclass
 class AlertRule:
@@ -64,18 +64,12 @@ def define_rule(
     rule_id: Optional[str] = None,
 ) -> AlertRule:
     if comparator not in VALID_COMPARATORS:
-        raise ValueError(
-            f"comparator must be one of {sorted(VALID_COMPARATORS)}"
-        )
+        raise ValueError(f"comparator must be one of {sorted(VALID_COMPARATORS)}")
     if severity not in VALID_SEVERITIES:
-        raise ValueError(
-            f"severity must be one of {sorted(VALID_SEVERITIES)}"
-        )
+        raise ValueError(f"severity must be one of {sorted(VALID_SEVERITIES)}")
     for ch in channels:
         if ch not in VALID_CHANNELS:
-            raise ValueError(
-                f"channel {ch!r} not in {sorted(VALID_CHANNELS)}"
-            )
+            raise ValueError(f"channel {ch!r} not in {sorted(VALID_CHANNELS)}")
     rule = AlertRule(
         rule_id=rule_id or _new_id(),
         name=name,
@@ -107,12 +101,15 @@ def _compare(value: float, comparator: str, threshold: float) -> bool:
 
 
 def evaluate_rule(
-    rule: AlertRule, *, metric_value: float,
+    rule: AlertRule,
+    *,
+    metric_value: float,
 ) -> bool:
     return _compare(float(metric_value), rule.comparator, rule.threshold)
 
 
 # ----- Incidents -----------------------------------------------------------
+
 
 @dataclass
 class EscalationStep:
@@ -154,9 +151,7 @@ def raise_incident(
     if rule is None:
         raise KeyError(f"rule_id not found: {rule_id}")
     if not evaluate_rule(rule, metric_value=metric_value):
-        raise ValueError(
-            "rule not triggered; metric_value does not violate threshold"
-        )
+        raise ValueError("rule not triggered; metric_value does not violate threshold")
     esc_steps = [
         EscalationStep(
             level=int(s["level"]),
@@ -182,12 +177,13 @@ def raise_incident(
 
 
 def acknowledge_incident(
-    inc: Incident, *, by: str, note: str = "",
+    inc: Incident,
+    *,
+    by: str,
+    note: str = "",
 ) -> None:
     if inc.status not in ("open", "acknowledged"):
-        raise ValueError(
-            f"cannot acknowledge incident in status {inc.status!r}"
-        )
+        raise ValueError(f"cannot acknowledge incident in status {inc.status!r}")
     if inc.status == "open":
         inc.acknowledged_at = _now()
         inc.acknowledged_by = by
@@ -199,7 +195,9 @@ def acknowledge_incident(
 
 
 def resolve_incident(
-    inc: Incident, *, note: str = "",
+    inc: Incident,
+    *,
+    note: str = "",
 ) -> None:
     if inc.status == "resolved":
         return
@@ -213,8 +211,11 @@ def resolve_incident(
 
 # ----- Escalation ticks ---------------------------------------------------
 
+
 def tick_escalation(
-    inc: Incident, *, now: Optional[float] = None,
+    inc: Incident,
+    *,
+    now: Optional[float] = None,
 ) -> List[EscalationStep]:
     """Walk the escalation chain. Trigger any step whose
     timeout has elapsed since the previous trigger / raised_at.
@@ -238,6 +239,7 @@ def tick_escalation(
 
 
 # ----- Channel routing ----------------------------------------------------
+
 
 def route_to_channels(
     inc: Incident,
@@ -302,6 +304,7 @@ def channel_template(channel: str, payload: Mapping[str, Any]) -> str:
 
 # ----- Aggregation --------------------------------------------------------
 
+
 @dataclass
 class IncidentStore:
     incidents: List[Incident] = field(default_factory=list)
@@ -310,7 +313,9 @@ class IncidentStore:
         self.incidents.append(inc)
 
     def filter(
-        self, *, status: Optional[str] = None,
+        self,
+        *,
+        status: Optional[str] = None,
         severity: Optional[str] = None,
     ) -> List[Incident]:
         out = list(self.incidents)
@@ -326,12 +331,14 @@ def summarise(
 ) -> Dict[str, int]:
     counts: Dict[str, int] = {
         "total": len(store.incidents),
-        "open": 0, "acknowledged": 0, "resolved": 0,
-        "info": 0, "warning": 0, "critical": 0,
+        "open": 0,
+        "acknowledged": 0,
+        "resolved": 0,
+        "info": 0,
+        "warning": 0,
+        "critical": 0,
     }
     for inc in store.incidents:
         counts[inc.status] = counts.get(inc.status, 0) + 1
         counts[inc.severity] = counts.get(inc.severity, 0) + 1
     return counts
-
-

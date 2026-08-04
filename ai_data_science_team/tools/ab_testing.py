@@ -28,7 +28,6 @@ import numpy as np  # noqa: E402, F401
 import pandas as pd  # noqa: E402, F401
 from scipy import stats  # noqa: E402, F401
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
@@ -65,7 +64,9 @@ def _wilson_ci(successes: int, n: int, alpha: float = 0.05) -> Tuple[float, floa
     return max(0.0, centre - margin), min(1.0, centre + margin)
 
 
-def _mean_diff_ci(x: np.ndarray, y: np.ndarray, alpha: float = 0.05) -> Tuple[float, float, float, float]:
+def _mean_diff_ci(
+    x: np.ndarray, y: np.ndarray, alpha: float = 0.05
+) -> Tuple[float, float, float, float]:
     """Welch two-sample CI for the difference in means (y - x)."""
     nx, ny = len(x), len(y)
     mean_x = float(np.mean(x))
@@ -167,12 +168,8 @@ def check_sample_ratio_mismatch(
     return {
         "n_per_group": dict(zip(variants, observed.astype(int).tolist())),
         "expected_per_group": dict(zip(variants, expected_counts.round(1).tolist())),
-        "observed_proportions": dict(
-            zip(variants, (observed / total).round(4).tolist())
-        ),
-        "expected_proportions": dict(
-            zip(variants, expected.round(4).tolist())
-        ),
+        "observed_proportions": dict(zip(variants, (observed / total).round(4).tolist())),
+        "expected_proportions": dict(zip(variants, expected.round(4).tolist())),
         "chi2": round(chi2, 4),
         "p_value": round(p_value, 6),
         "srm_detected": srm_detected,
@@ -212,9 +209,7 @@ def analyze_continuous_metric(
     treatment = _to_float_array(data.loc[data[group_column] != control_name, metric_column])
 
     if len(control) < 2 or len(treatment) < 2:
-        raise ValueError(
-            "Each variant must have at least 2 observations for a variance estimate"
-        )
+        raise ValueError("Each variant must have at least 2 observations for a variance estimate")
 
     mean_x, mean_y, ci_low, ci_high = _mean_diff_ci(control, treatment, alpha=alpha)
     diff = mean_y - mean_x
@@ -224,9 +219,7 @@ def analyze_continuous_metric(
         t_stat, p_value = stats.ttest_ind(treatment, control, equal_var=False)
         test_used = "welch_t"
     else:
-        u_stat, p_value = stats.mannwhitneyu(
-            treatment, control, alternative="two-sided"
-        )
+        u_stat, p_value = stats.mannwhitneyu(treatment, control, alternative="two-sided")
         test_used = "mann_whitney_u"
 
     return {
@@ -583,10 +576,7 @@ def recommend_decision(
         direction = "increase" if (lift is not None and lift > 0) else "change"
         decision = "ship"
         lift_str = f"{lift:.2%}" if lift is not None else "n/a"
-        mde_str = (
-            f"{min_detectable_lift:.2%}" if min_detectable_lift is not None
-            else "n/a"
-        )
+        mde_str = f"{min_detectable_lift:.2%}" if min_detectable_lift is not None else "n/a"
         rationale = (
             f"Significant at alpha={alpha} (p={p:.4f}) with lift "
             f"{lift_str} meeting MDE {mde_str} → "
@@ -595,10 +585,7 @@ def recommend_decision(
     elif significant and mde_met is False:
         decision = "iterate"
         lift_str = f"{lift:.2%}" if lift is not None else "n/a"
-        mde_str = (
-            f"{min_detectable_lift:.2%}" if min_detectable_lift is not None
-            else "n/a"
-        )
+        mde_str = f"{min_detectable_lift:.2%}" if min_detectable_lift is not None else "n/a"
         rationale = (
             f"Significant at alpha={alpha} (p={p:.4f}) but lift {lift_str} "
             f"is below the practical-significance MDE of {mde_str}; "
@@ -636,5 +623,3 @@ __all__ = [
     "detect_sequential_peeking",
     "recommend_decision",
 ]
-
-

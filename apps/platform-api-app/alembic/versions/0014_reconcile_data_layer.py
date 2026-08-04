@@ -8,8 +8,9 @@ Create Date: 2026-04-13
 from __future__ import annotations
 
 import sqlalchemy as sa
-from alembic import op
 from sqlalchemy.dialects import postgresql
+
+from alembic import op
 
 revision = "0014_reconcile_data_layer"
 down_revision = "0013_fix_canary_version_fk"
@@ -33,11 +34,18 @@ def upgrade() -> None:
         sa.Column("max_retries", sa.Integer(), nullable=False, server_default="5"),
         sa.Column("last_error", sa.Text(), nullable=True),
         sa.Column("next_retry_at", sa.DateTime(timezone=True), nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.current_timestamp()),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            nullable=False,
+            server_default=sa.func.current_timestamp(),
+        ),
         sa.Column("published_at", sa.DateTime(timezone=True), nullable=True),
     )
     op.create_index("ix_outbox_events_status_created", "outbox_events", ["status", "created_at"])
-    op.create_index("ix_outbox_events_aggregate", "outbox_events", ["aggregate_type", "aggregate_id"])
+    op.create_index(
+        "ix_outbox_events_aggregate", "outbox_events", ["aggregate_type", "aggregate_id"]
+    )
     op.create_index(
         "ix_outbox_events_status_retry_created",
         "outbox_events",
@@ -54,8 +62,18 @@ def upgrade() -> None:
         sa.Column("connection_uri", sa.Text(), nullable=False),
         sa.Column("metadata_json", sa.Text(), nullable=True),
         sa.Column("created_by_user_id", postgresql.UUID(as_uuid=True), nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("CURRENT_TIMESTAMP"), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.text("CURRENT_TIMESTAMP"), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("CURRENT_TIMESTAMP"),
+            nullable=False,
+        ),
+        sa.Column(
+            "updated_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("CURRENT_TIMESTAMP"),
+            nullable=False,
+        ),
         sa.ForeignKeyConstraint(["tenant_id"], ["tenants.id"], ondelete="CASCADE"),
         sa.ForeignKeyConstraint(["workspace_id"], ["workspaces.id"], ondelete="CASCADE"),
         sa.ForeignKeyConstraint(["created_by_user_id"], ["users.id"], ondelete="SET NULL"),
@@ -66,7 +84,9 @@ def upgrade() -> None:
             name="fk_data_sources_workspace_tenant",
         ),
     )
-    op.create_index("ix_data_sources_workspace_created", "data_sources", ["workspace_id", "created_at"])
+    op.create_index(
+        "ix_data_sources_workspace_created", "data_sources", ["workspace_id", "created_at"]
+    )
 
     op.create_table(
         "hitl_approvals",
@@ -82,8 +102,18 @@ def upgrade() -> None:
         sa.Column("reviewed_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("expires_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("created_by_user_id", postgresql.UUID(as_uuid=True), nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("CURRENT_TIMESTAMP"), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.text("CURRENT_TIMESTAMP"), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("CURRENT_TIMESTAMP"),
+            nullable=False,
+        ),
+        sa.Column(
+            "updated_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("CURRENT_TIMESTAMP"),
+            nullable=False,
+        ),
         sa.ForeignKeyConstraint(["tenant_id"], ["tenants.id"], ondelete="CASCADE"),
         sa.ForeignKeyConstraint(["workspace_id"], ["workspaces.id"], ondelete="CASCADE"),
         sa.ForeignKeyConstraint(["workflow_run_id"], ["workflow_runs.id"], ondelete="SET NULL"),
@@ -150,7 +180,9 @@ def upgrade() -> None:
             ["id", "tenant_id"],
             ondelete="CASCADE",
         )
-    op.create_index("ix_workflow_runs_workspace_created", "workflow_runs", ["workspace_id", "created_at"])
+    op.create_index(
+        "ix_workflow_runs_workspace_created", "workflow_runs", ["workspace_id", "created_at"]
+    )
 
     op.create_index(
         "ix_invites_tenant_workspace_email_status",
@@ -162,8 +194,12 @@ def upgrade() -> None:
         "chat_sessions",
         ["workspace_id", "user_id", "updated_at"],
     )
-    op.create_index("ix_workflow_specs_workspace_created", "workflow_specs", ["workspace_id", "created_at"])
-    op.create_index("ix_chat_uploads_workspace_created", "chat_uploads", ["workspace_id", "created_at"])
+    op.create_index(
+        "ix_workflow_specs_workspace_created", "workflow_specs", ["workspace_id", "created_at"]
+    )
+    op.create_index(
+        "ix_chat_uploads_workspace_created", "chat_uploads", ["workspace_id", "created_at"]
+    )
     op.create_index(
         "ix_workflow_signal_events_run_created",
         "workflow_signal_events",

@@ -8,7 +8,6 @@ simple workbook export.
 
 from typing import Any, Dict, List, Mapping, Sequence  # noqa: E402, F401
 
-
 from ai_data_science_team.tools.snowflake import (  # noqa: E402, F401
     BaseConnector,
     ConnectorConfig,
@@ -51,9 +50,7 @@ class TableauConnector(BaseConnector):
             ]
         return cache
 
-    def register_workbooks(
-        self, workbooks: Sequence[Mapping[str, str]]
-    ) -> None:
+    def register_workbooks(self, workbooks: Sequence[Mapping[str, str]]) -> None:
         self._workbook_cache = [dict(w) for w in workbooks]
 
     def sample_query(self, query: str = "SELECT 1") -> List[Dict[str, Any]]:
@@ -70,18 +67,12 @@ class TableauConnector(BaseConnector):
             pass
         cache = getattr(self, "_schema_cache", {})
         if table not in cache:
-            raise ConnectorError(
-                f"unknown Tableau datasource {table!r}; seed _schema_cache"
-            )
+            raise ConnectorError(f"unknown Tableau datasource {table!r}; seed _schema_cache")
         return cache[table]
 
-    def export_workbook(
-        self, workbook_id: str, fmt: str = "pdf"
-    ) -> Dict[str, Any]:
+    def export_workbook(self, workbook_id: str, fmt: str = "pdf") -> Dict[str, Any]:
         if fmt not in {"pdf", "png", "csv", "xlsx"}:
-            raise ConnectorError(
-                f"unsupported export format {fmt!r}; expected pdf/png/csv/xlsx"
-            )
+            raise ConnectorError(f"unsupported export format {fmt!r}; expected pdf/png/csv/xlsx")
         return {
             "workbook_id": workbook_id,
             "format": fmt,

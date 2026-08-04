@@ -23,6 +23,7 @@ Skip LLM tests:
 Run only integration:
     pytest tests/test_m23_agents.py -v -m integration
 """
+
 from __future__ import annotations
 
 import os

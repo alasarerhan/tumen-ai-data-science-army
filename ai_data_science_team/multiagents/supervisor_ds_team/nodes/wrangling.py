@@ -16,7 +16,8 @@ from langchain_core.messages import AIMessage  # noqa: E402, F401
 from ai_data_science_team.multiagents.supervisor import (  # noqa: E402, F401
     SupervisorDSState,
     append_agent_feedback,
-    register_python_transform_dataset)
+    register_python_transform_dataset,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -24,6 +25,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class WranglingNodeDeps:
     """Dependencies for the wrangling node."""
+
     data_wrangling_agent: Any
     ensure_dataset_registry: Any  # was _ensure_dataset_registry
     ensure_df: Any  # was _ensure_df
@@ -58,26 +60,25 @@ def make_node_wrangling(deps: WranglingNodeDeps) -> Callable[[SupervisorDSState]
                     "data_wrangled",
                     "data_cleaned",
                     "feature_data",
-                ])
+                ],
+            )
         )
         if deps.is_empty_df(active_df):
             return {
                 "messages": [
                     AIMessage(
                         content="No dataset is available to wrangle. Load a file (or run a SQL query) first.",
-                        name="data_wrangling_agent")
+                        name="data_wrangling_agent",
+                    )
                 ],
                 "last_worker": "Data_Wrangling_Agent",
             }
         deps.data_wrangling_agent.invoke_messages(
-            messages=before_msgs,
-            user_instructions=last_human,
-            data_raw=active_df)
+            messages=before_msgs, user_instructions=last_human, data_raw=active_df
+        )
         response = deps.data_wrangling_agent.response or {}
         merged = deps.merge_messages(before_msgs, response)
-        merged["messages"] = deps.tag_messages(
-            merged.get("messages"), "data_wrangling_agent"
-        )
+        merged["messages"] = deps.tag_messages(merged.get("messages"), "data_wrangling_agent")
         append_agent_feedback(
             merged,
             agent_name="data_wrangling_agent",
@@ -87,7 +88,8 @@ def make_node_wrangling(deps: WranglingNodeDeps) -> Callable[[SupervisorDSState]
             extra_text="Wrangling steps completed.",
             error_text=response.get("data_wrangler_error"),
             error_log_path=response.get("data_wrangler_error_log_path"),
-            error_prefix="Data wrangling error")
+            error_prefix="Data wrangling error",
+        )
         data_wrangled = response.get("data_wrangled")
         if data_wrangled is not None:
             try:
@@ -105,7 +107,8 @@ def make_node_wrangling(deps: WranglingNodeDeps) -> Callable[[SupervisorDSState]
                     parent_id=active_dataset_id,
                     error_text=response.get("data_wrangler_error"),
                     error_log_path=response.get("data_wrangler_error_log_path"),
-                    summary=response.get("data_wrangling_summary"))
+                    summary=response.get("data_wrangling_summary"),
+                )
             except Exception:
                 pass
         downstream_resets = (
@@ -133,16 +136,10 @@ def make_node_wrangling(deps: WranglingNodeDeps) -> Callable[[SupervisorDSState]
                 "data_wrangling": data_wrangled,
                 "data_wrangling_details": {
                     "data_wrangler_function": response.get("data_wrangler_function"),
-                    "data_wrangler_function_path": response.get(
-                        "data_wrangler_function_path"
-                    ),
-                    "data_wrangler_function_name": response.get(
-                        "data_wrangler_function_name"
-                    ),
+                    "data_wrangler_function_path": response.get("data_wrangler_function_path"),
+                    "data_wrangler_function_name": response.get("data_wrangler_function_name"),
                     "data_wrangler_error": response.get("data_wrangler_error"),
-                    "data_wrangler_error_log_path": response.get(
-                        "data_wrangler_error_log_path"
-                    ),
+                    "data_wrangler_error_log_path": response.get("data_wrangler_error_log_path"),
                     "data_wrangling_summary": response.get("data_wrangling_summary"),
                     "recommended_steps": response.get("recommended_steps"),
                 },
@@ -151,9 +148,7 @@ def make_node_wrangling(deps: WranglingNodeDeps) -> Callable[[SupervisorDSState]
             **downstream_resets,
         }
 
-
     return node_wrangling
-
 
 
 __all__ = ["WranglingNodeDeps", "make_node_wrangling"]

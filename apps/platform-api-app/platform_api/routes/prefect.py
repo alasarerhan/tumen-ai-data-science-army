@@ -9,7 +9,10 @@ from platform_api.auth.models import Principal
 from platform_api.db.session import get_db
 from platform_api.schemas.runs import CreateHelloRunRequest
 from platform_api.services.identity_service import get_or_create_user
-from platform_api.services.run_orchestration_service import create_orchestration_run_id, read_orchestration_run
+from platform_api.services.run_orchestration_service import (
+    create_orchestration_run_id,
+    read_orchestration_run,
+)
 from platform_api.services.run_service import (
     create_workflow_run_record,
     get_workspace_for_member,
@@ -103,10 +106,12 @@ async def read_flow_run(
         end_time=result.get("end_time"),
     )
     db.commit()
-    
+
     result["deprecated"] = True
-    result["deprecation_message"] = f"This endpoint is deprecated and will be removed on {SUNSET_DATE}. Migrate to /v1/runs endpoint."
+    result["deprecation_message"] = (
+        f"This endpoint is deprecated and will be removed on {SUNSET_DATE}. Migrate to /v1/runs endpoint."
+    )
     result["migration_guide"] = DEPRECATION_LINK
-    
+
     response = JSONResponse(content=result)
     return _add_deprecation_headers(response)

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-
 from typing import Any, Dict, List, Optional, Sequence
 
 SCRIPT_HEADER_LINES = [
@@ -338,7 +337,9 @@ def _append_root_source_lines(
         return
 
     if stage == "sql" and transform.get("sql_query_code"):
-        _append_sql_loader_lines(lines, df_var=df_var, sql_query=str(transform.get("sql_query_code") or ""))
+        _append_sql_loader_lines(
+            lines, df_var=df_var, sql_query=str(transform.get("sql_query_code") or "")
+        )
         return
 
     lines.append(missing_source_todo)
@@ -355,7 +356,9 @@ def _append_transform_lines(lines: List[str], *, df_var: str, transform: Dict[st
         else:
             code = strip_markdown_code_fences(str(transform.get("function_code") or ""))
         fn_name = transform.get("function_name")
-        function_name = str(fn_name) if isinstance(fn_name, str) and fn_name else _infer_function_name(code)
+        function_name = (
+            str(fn_name) if isinstance(fn_name, str) and fn_name else _infer_function_name(code)
+        )
         if code and function_name:
             lines.append("")
             lines.append(code)
@@ -366,7 +369,9 @@ def _append_transform_lines(lines: List[str], *, df_var: str, transform: Dict[st
         return
 
     if kind == "sql_query" and transform.get("sql_query_code"):
-        _append_sql_loader_lines(lines, df_var=df_var, sql_query=str(transform.get("sql_query_code") or ""))
+        _append_sql_loader_lines(
+            lines, df_var=df_var, sql_query=str(transform.get("sql_query_code") or "")
+        )
         return
 
     if kind == "mlflow_predict":
@@ -382,7 +387,9 @@ def _append_transform_lines(lines: List[str], *, df_var: str, transform: Dict[st
         lines.append(f"model_uri = {model_uri!r}")
         lines.append("model = mlflow.pyfunc.load_model(model_uri)")
         lines.append(f"preds = model.predict({df_var})")
-        lines.append(f"{df_var} = preds if isinstance(preds, pd.DataFrame) else pd.DataFrame(preds)")
+        lines.append(
+            f"{df_var} = preds if isinstance(preds, pd.DataFrame) else pd.DataFrame(preds)"
+        )
         return
 
     if kind == "h2o_predict":
@@ -413,7 +420,9 @@ def _build_chain_lines(
             continue
 
         provenance = entry.get("provenance") if isinstance(entry.get("provenance"), dict) else {}
-        transform = provenance.get("transform") if isinstance(provenance.get("transform"), dict) else {}
+        transform = (
+            provenance.get("transform") if isinstance(provenance.get("transform"), dict) else {}
+        )
         label = str(entry.get("label") or dataset_id)
         stage = str(entry.get("stage") or "")
 
@@ -538,7 +547,9 @@ def build_pipeline_snapshot(
     if target == "active":
         target_dataset_id = active_dataset_id
     elif target == "latest":
-        target_dataset_id = pick_latest_dataset_id_any_stage(datasets) or model_dataset_id or active_dataset_id
+        target_dataset_id = (
+            pick_latest_dataset_id_any_stage(datasets) or model_dataset_id or active_dataset_id
+        )
     elif target == "all":
         target = "all"
         target_dataset_id = None
@@ -550,9 +561,9 @@ def build_pipeline_snapshot(
     if target == "all":
         ordered = sorted(
             datasets.items(),
-            key=lambda kv: float(kv[1].get("created_ts") or 0.0)
-            if isinstance(kv[1], dict)
-            else 0.0,
+            key=lambda kv: (
+                float(kv[1].get("created_ts") or 0.0) if isinstance(kv[1], dict) else 0.0
+            ),
         )
         lineage_ids = [did for did, _e in ordered if isinstance(did, str) and did]
     elif isinstance(target_dataset_id, str) and target_dataset_id:
@@ -611,4 +622,3 @@ def build_pipeline_snapshot(
         "lineage": lineage,
         "script": script,
     }
-

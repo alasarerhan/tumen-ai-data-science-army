@@ -1,44 +1,63 @@
 import ast
+import json
 import logging
 import re
 
-from langchain_core.messages import AIMessage, BaseMessage
-from langgraph.graph import StateGraph, END
-from langgraph.types import interrupt, Command, StreamMode
-from langgraph.graph.state import CompiledStateGraph
-
-from langchain_core.runnables import RunnableConfig
-
 import pandas as pd
 import sqlalchemy as sql
-import json
-
-from typing_extensions import Any, Callable, Dict, Type, Optional, Union, List, Sequence, Annotated
+from IPython.display import Image, display  # noqa: E402, F401
+from langchain_core.messages import AIMessage, BaseMessage
+from langchain_core.runnables import RunnableConfig
+from langgraph.graph import END, StateGraph
+from langgraph.graph.state import CompiledStateGraph
+from langgraph.types import Command, StreamMode, interrupt
+from typing_extensions import Annotated, Any, Callable, Dict, List, Optional, Sequence, Type, Union
 
 from ai_data_science_team.parsers.parsers import PythonOutputParser
 from ai_data_science_team.utils.regex import (
-    relocate_imports_inside_function,
     add_comments_to_top,
+    relocate_imports_inside_function,
     remove_consecutive_duplicates,
 )
 from ai_data_science_team.utils.sandbox import run_code_sandboxed_subprocess  # noqa: E402, F401
-
-from IPython.display import Image, display  # noqa: E402, F401
 
 logger = logging.getLogger(__name__)
 
 
 def _sanitize_log_message(msg: str) -> str:
     """Sanitize log message to prevent log injection."""
-    return re.sub(r'[\n\r\t\x00-\x1f]', ' ', str(msg))[:500]
+    return re.sub(r"[\n\r\t\x00-\x1f]", " ", str(msg))[:500]
 
 
 BLOCKED_IMPORTS = {
-    "os", "sys", "subprocess", "socket", "http", "urllib", "requests",
-    "pathlib", "shutil", "ssl", "ftplib", "telnetlib", "webbrowser",
-    "pexpect", "psutil", "paramiko", "ctypes", "pickle", "marshal",
-    "code", "codeop", "importlib.util", "builtins", "__builtins__",
-    "eval", "exec", "compile", "open",
+    "os",
+    "sys",
+    "subprocess",
+    "socket",
+    "http",
+    "urllib",
+    "requests",
+    "pathlib",
+    "shutil",
+    "ssl",
+    "ftplib",
+    "telnetlib",
+    "webbrowser",
+    "pexpect",
+    "psutil",
+    "paramiko",
+    "ctypes",
+    "pickle",
+    "marshal",
+    "code",
+    "codeop",
+    "importlib.util",
+    "builtins",
+    "__builtins__",
+    "eval",
+    "exec",
+    "compile",
+    "open",
 }
 
 
@@ -49,12 +68,12 @@ def _validate_code_safety(code: str) -> Optional[str]:
     """
     if not code or not isinstance(code, str):
         return "Code must be a non-empty string."
-    
+
     try:
         tree = ast.parse(code)
     except SyntaxError as e:
         return f"Code has syntax errors: {e}"
-    
+
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
             for alias in node.names:
@@ -69,16 +88,24 @@ def _validate_code_safety(code: str) -> Optional[str]:
             if isinstance(node.func, ast.Name):
                 if node.func.id in ("eval", "exec", "compile", "open", "__import__"):
                     return f"Call to '{node.func.id}()' is blocked for security reasons."
-    
+
     dangerous_patterns = [
-        "__import__", "globals()", "locals()", "vars()", "dir()",
-        "getattr(", "setattr(", "delattr(", "hasattr(",
-        "breakpoint(", "input(",
+        "__import__",
+        "globals()",
+        "locals()",
+        "vars()",
+        "dir()",
+        "getattr(",
+        "setattr(",
+        "delattr(",
+        "hasattr(",
+        "breakpoint(",
+        "input(",
     ]
     for pattern in dangerous_patterns:
         if pattern in code:
             return f"Potentially dangerous pattern detected: '{pattern}'"
-    
+
     return None
 
 
@@ -96,10 +123,27 @@ def _validate_read_only_sql_query(sql_text: str) -> Optional[str]:
         return "Only read-only SELECT queries are allowed."
 
     forbidden_keywords = [
-        "insert", "update", "delete", "drop", "alter", "truncate",
-        "create", "replace", "merge", "call", "exec", "execute",
-        "grant", "revoke", "into outfile", "into dumpfile",
-        "load_file", "benchmark", "sleep", "waitfor", "pg_sleep",
+        "insert",
+        "update",
+        "delete",
+        "drop",
+        "alter",
+        "truncate",
+        "create",
+        "replace",
+        "merge",
+        "call",
+        "exec",
+        "execute",
+        "grant",
+        "revoke",
+        "into outfile",
+        "into dumpfile",
+        "load_file",
+        "benchmark",
+        "sleep",
+        "waitfor",
+        "pg_sleep",
     ]
     for keyword in forbidden_keywords:
         if re.search(rf"\b{re.escape(keyword)}\b", lowered):
@@ -143,7 +187,11 @@ def _extract_sql_query_from_agent_code(code: str, function_name: str) -> Optiona
                 isinstance(target, ast.Name) and target.id == "sql_query"
                 for target in child.targets
             )
-            if has_sql_query_target and isinstance(child.value, ast.Constant) and isinstance(child.value.value, str):
+            if (
+                has_sql_query_target
+                and isinstance(child.value, ast.Constant)
+                and isinstance(child.value.value, str)
+            ):
                 return child.value.value
             if (
                 has_sql_query_target
@@ -191,11 +239,11 @@ class BaseAgent(CompiledStateGraph):
         self.interrupt_after_nodes = self._compiled_graph.interrupt_after_nodes
         self.interrupt_before_nodes = self._compiled_graph.interrupt_before_nodes
         self.config = self._compiled_graph.config
-    
+
     @property
     def input_schema(self):
         return self._input_schema
-    
+
     @property
     def output_schema(self):
         return self._output_schema
@@ -204,9 +252,7 @@ class BaseAgent(CompiledStateGraph):
         """
         Subclasses should override this method to create a specific compiled graph.
         """
-        raise NotImplementedError(
-            "Subclasses must implement the `_make_compiled_graph` method."
-        )
+        raise NotImplementedError("Subclasses must implement the `_make_compiled_graph` method.")
 
     def update_params(self, **kwargs):
         """
@@ -247,14 +293,10 @@ class BaseAgent(CompiledStateGraph):
         Returns:
             Any: The agent's response.
         """
-        self.response = self._compiled_graph.invoke(
-            input=input, config=config, **kwargs
-        )
+        self.response = self._compiled_graph.invoke(input=input, config=config, **kwargs)
 
         if self.response.get("messages"):
-            self.response["messages"] = remove_consecutive_duplicates(
-                self.response["messages"]
-            )
+            self.response["messages"] = remove_consecutive_duplicates(self.response["messages"])
 
         return self.response
 
@@ -275,14 +317,10 @@ class BaseAgent(CompiledStateGraph):
         Returns:
             Any: The agent's response.
         """
-        self.response = await self._compiled_graph.ainvoke(
-            input=input, config=config, **kwargs
-        )
+        self.response = await self._compiled_graph.ainvoke(input=input, config=config, **kwargs)
 
         if self.response.get("messages"):
-            self.response["messages"] = remove_consecutive_duplicates(
-                self.response["messages"]
-            )
+            self.response["messages"] = remove_consecutive_duplicates(self.response["messages"])
 
         return self.response
 
@@ -315,9 +353,7 @@ class BaseAgent(CompiledStateGraph):
         )
 
         if self.response.get("messages"):
-            self.response["messages"] = remove_consecutive_duplicates(
-                self.response["messages"]
-            )
+            self.response["messages"] = remove_consecutive_duplicates(self.response["messages"])
 
         return self.response
 
@@ -350,9 +386,7 @@ class BaseAgent(CompiledStateGraph):
         )
 
         if self.response.get("messages"):
-            self.response["messages"] = remove_consecutive_duplicates(
-                self.response["messages"]
-            )
+            self.response["messages"] = remove_consecutive_duplicates(self.response["messages"])
 
         return self.response
 
@@ -388,10 +422,11 @@ class BaseAgent(CompiledStateGraph):
     def _get_messages(self, user_instructions: Optional[str] = None) -> List[BaseMessage]:
         """
         Build messages list from user instructions.
-        
+
         Subclasses can override this to customize message construction.
         """
         from langchain_core.messages import HumanMessage  # noqa: E402, F401
+
         if user_instructions:
             return [HumanMessage(content=user_instructions)]
         return []
@@ -406,7 +441,7 @@ class BaseAgent(CompiledStateGraph):
     ):
         """
         Common invoke method for data processing agents.
-        
+
         Parameters:
         ----------
         data_raw : pd.DataFrame, optional
@@ -419,14 +454,14 @@ class BaseAgent(CompiledStateGraph):
             Current retry count.
         **kwargs : dict
             Additional agent-specific parameters.
-            
+
         Returns:
         -------
         dict
             The agent response.
         """
         messages = self._get_messages(user_instructions)
-        
+
         state_input = {
             "messages": messages,
             "user_instructions": user_instructions,
@@ -434,10 +469,10 @@ class BaseAgent(CompiledStateGraph):
             "retry_count": retry_count,
             **kwargs,
         }
-        
+
         if data_raw is not None:
             state_input["data_raw"] = data_raw
-        
+
         return self.invoke(state_input)
 
     async def ainvoke_agent(
@@ -452,7 +487,7 @@ class BaseAgent(CompiledStateGraph):
         Async version of invoke_agent.
         """
         messages = self._get_messages(user_instructions)
-        
+
         state_input = {
             "messages": messages,
             "user_instructions": user_instructions,
@@ -460,10 +495,10 @@ class BaseAgent(CompiledStateGraph):
             "retry_count": retry_count,
             **kwargs,
         }
-        
+
         if data_raw is not None:
             state_input["data_raw"] = data_raw
-        
+
         return await self.ainvoke(state_input)
 
     def get_response(self) -> Optional[Dict[str, Any]]:
@@ -474,9 +509,7 @@ class BaseAgent(CompiledStateGraph):
             Any: The agent's response.
         """
         if self.response and self.response.get("messages"):
-            self.response["messages"] = remove_consecutive_duplicates(
-                self.response["messages"]
-            )
+            self.response["messages"] = remove_consecutive_duplicates(self.response["messages"])
 
         return self.response
 
@@ -504,11 +537,11 @@ class BaseAgent(CompiledStateGraph):
         if self.response and self.response.get("messages"):
             try:
                 from ai_data_science_team.utils.regex import get_generic_summary  # noqa: E402, F401
-                summary = get_generic_summary(
-                    json.loads(self.response.get("messages")[-1].content)
-                )
+
+                summary = get_generic_summary(json.loads(self.response.get("messages")[-1].content))
                 if markdown:
                     from IPython.display import Markdown  # noqa: E402, F401
+
                     return Markdown(summary)
                 return summary
             except Exception:
@@ -620,30 +653,20 @@ def create_coding_agent_graph(
 
     # Conditionally add the recommended-steps node
     if not bypass_recommended_steps:
-        workflow.add_node(
-            recommended_steps_node_name, node_functions[recommended_steps_node_name]
-        )
+        workflow.add_node(recommended_steps_node_name, node_functions[recommended_steps_node_name])
 
     # Conditionally add the human review node
     if human_in_the_loop:
-        workflow.add_node(
-            human_review_node_name, node_functions[human_review_node_name]
-        )
+        workflow.add_node(human_review_node_name, node_functions[human_review_node_name])
 
     # Conditionally add the explanation node
     if not bypass_explain_code:
-        workflow.add_node(
-            explain_code_node_name, node_functions[explain_code_node_name]
-        )
+        workflow.add_node(explain_code_node_name, node_functions[explain_code_node_name])
 
     # * EDGES
 
     # Set the entry point
-    entry_point = (
-        create_code_node_name
-        if bypass_recommended_steps
-        else recommended_steps_node_name
-    )
+    entry_point = create_code_node_name if bypass_recommended_steps else recommended_steps_node_name
 
     workflow.set_entry_point(entry_point)
 
@@ -759,15 +782,9 @@ def node_func_human_review(
         update = {}
     else:
         goto = no_goto
-        modifications = (
-            "User Has Requested Modifications To Previous Code: \n" + user_input
-        )
+        modifications = "User Has Requested Modifications To Previous Code: \n" + user_input
         if state.get(user_instructions_key) is None:
-            update = {
-                user_instructions_key: modifications
-                + "\n\nPrevious Code:\n"
-                + code_markdown
-            }
+            update = {user_instructions_key: modifications + "\n\nPrevious Code:\n" + code_markdown}
         else:
             update = {
                 user_instructions_key: state.get(user_instructions_key)
@@ -840,14 +857,17 @@ def node_func_execute_agent_code_on_data(
             elif isinstance(data, list):
                 df_data = data
             else:
-                return {result_key: None, error_key: f"{error_message_prefix}Data is not a dictionary or list and no pre_processing function was provided."}
+                return {
+                    result_key: None,
+                    error_key: f"{error_message_prefix}Data is not a dictionary or list and no pre_processing function was provided.",
+                }
         else:
             df_data = pre_processing(data)
     except Exception as e:
         return {result_key: None, error_key: f"{error_message_prefix}{str(e)}"}
 
     data_format = "dataframe_list" if isinstance(df_data, list) else "dataframe"
-    
+
     result, exec_error = run_code_sandboxed_subprocess(
         code_snippet=agent_code,
         function_name=agent_function_name,
@@ -1138,9 +1158,7 @@ def node_func_report_agent_outputs(
 
     # Wrap it in a list of messages (like the current "messages" pattern).
     # You can serialize this dictionary as JSON or just cast it to string.
-    return {
-        result_key: [AIMessage(content=json.dumps(final_report, indent=2), role=role)]
-    }
+    return {result_key: [AIMessage(content=json.dumps(final_report, indent=2), role=role)]}
 
 
 def create_react_agent_graph(
@@ -1211,17 +1229,19 @@ def create_react_agent_graph(
         })
     """
     from langchain_core.messages import SystemMessage, ToolMessage  # noqa: E402, F401
-    from langgraph.graph import StateGraph, START, END  # noqa: E402, F401
+    from langgraph.graph import END, START, StateGraph  # noqa: E402, F401
     from langgraph.graph.message import add_messages  # noqa: E402, F401
     from typing_extensions import TypedDict  # noqa: E402, F401
 
     if GraphState is None:
+
         class ReActState(TypedDict):
             messages: Annotated[Sequence[BaseMessage], add_messages]
             iteration: int
             data_raw: Optional[dict]
             result: Optional[Any]
             error: Optional[str]
+
         GraphState = ReActState
 
     tool_defs = []
@@ -1267,10 +1287,10 @@ def create_react_agent_graph(
                     if "data_raw" in tool_args and tool_args["data_raw"] is None:
                         tool_args["data_raw"] = state.get("data_raw")
                     result = tool_executors[tool_name](**tool_args)
-                    result_str = json.dumps(result) if isinstance(result, (dict, list)) else str(result)
-                    new_messages.append(
-                        ToolMessage(content=result_str, tool_call_id=tool_id)
+                    result_str = (
+                        json.dumps(result) if isinstance(result, (dict, list)) else str(result)
                     )
+                    new_messages.append(ToolMessage(content=result_str, tool_call_id=tool_id))
                 except Exception as e:
                     logger.error(f"Tool '{tool_name}' execution failed: {e}")
                     new_messages.append(

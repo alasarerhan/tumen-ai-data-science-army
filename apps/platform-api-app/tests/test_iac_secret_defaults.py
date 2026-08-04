@@ -4,7 +4,6 @@ from pathlib import Path
 
 import yaml
 
-
 APP_ROOT = Path(__file__).resolve().parents[1]
 CHART_ROOT = APP_ROOT / "helm" / "platform"
 

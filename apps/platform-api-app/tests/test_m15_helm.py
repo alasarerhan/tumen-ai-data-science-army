@@ -3,12 +3,13 @@
 Verifies that the platform Helm chart at ``helm/platform/`` has all required
 files with correct structure, without needing the ``helm`` CLI installed.
 """
+
 from __future__ import annotations
 
-import yaml
 from pathlib import Path
 
 import pytest
+import yaml
 
 # Root of the Helm chart relative to this test file
 _CHART_ROOT = Path(__file__).parent.parent / "helm" / "platform"
@@ -221,17 +222,17 @@ def test_secret_db_gated_by_existing_secret():
 
 def test_helpers_defines_fullname():
     content = _template_content("templates/_helpers.tpl")
-    assert "define \"platform.fullname\"" in content
+    assert 'define "platform.fullname"' in content
 
 
 def test_helpers_defines_labels():
     content = _template_content("templates/_helpers.tpl")
-    assert "define \"platform.labels\"" in content
+    assert 'define "platform.labels"' in content
 
 
 def test_helpers_defines_selector_labels():
     content = _template_content("templates/_helpers.tpl")
-    assert "define \"platform.selectorLabels\"" in content
+    assert 'define "platform.selectorLabels"' in content
 
 
 # ---------------------------------------------------------------------------

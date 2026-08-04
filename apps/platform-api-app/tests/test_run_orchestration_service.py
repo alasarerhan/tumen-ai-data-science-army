@@ -12,8 +12,12 @@ from platform_api.services import run_orchestration_service
 
 def test_gateway_uses_settings_for_prefect_configuration(monkeypatch: pytest.MonkeyPatch) -> None:
     # Arrange
-    monkeypatch.setattr(run_orchestration_service.settings, "prefect_hello_deployment_id", "hello-deploy")
-    monkeypatch.setattr(run_orchestration_service.settings, "prefect_default_deployment_id", "default-deploy")
+    monkeypatch.setattr(
+        run_orchestration_service.settings, "prefect_hello_deployment_id", "hello-deploy"
+    )
+    monkeypatch.setattr(
+        run_orchestration_service.settings, "prefect_default_deployment_id", "default-deploy"
+    )
 
     # Act
     gateway = run_orchestration_service._gateway()
@@ -46,7 +50,11 @@ async def test_create_orchestration_run_id_returns_gateway_run_id() -> None:
     ("side_effect", "expected_status", "expected_detail"),
     [
         (ValueError("Missing deployment id"), 400, "Missing deployment id"),
-        (RuntimeError("Prefect unavailable"), 502, "Failed to create orchestration run: Prefect unavailable"),
+        (
+            RuntimeError("Prefect unavailable"),
+            502,
+            "Failed to create orchestration run: Prefect unavailable",
+        ),
     ],
 )
 async def test_create_orchestration_run_id_raises_http_exception_when_fallback_disabled(
@@ -61,11 +69,15 @@ async def test_create_orchestration_run_id_raises_http_exception_when_fallback_d
     monkeypatch.setattr(run_orchestration_service.settings, "allow_local_run_fallback", False)
 
     # Act
-    with patch("platform_api.services.run_orchestration_service._gateway", return_value=gateway), patch.object(
-        type(run_orchestration_service.settings),
-        "is_local_profile",
-        return_value=False,
-    ), pytest.raises(HTTPException, match=expected_detail) as exc_info:
+    with (
+        patch("platform_api.services.run_orchestration_service._gateway", return_value=gateway),
+        patch.object(
+            type(run_orchestration_service.settings),
+            "is_local_profile",
+            return_value=False,
+        ),
+        pytest.raises(HTTPException, match=expected_detail) as exc_info,
+    ):
         await run_orchestration_service.create_orchestration_run_id(
             flow_key="unknown-flow",
             parameters={"k": "v"},
@@ -95,11 +107,17 @@ async def test_create_orchestration_run_id_returns_local_fallback_when_enabled(
     fixed_uuid = uuid.UUID("12345678-1234-5678-9abc-def012345678")
 
     # Act
-    with patch("platform_api.services.run_orchestration_service._gateway", return_value=gateway), patch.object(
-        type(run_orchestration_service.settings),
-        "is_local_profile",
-        return_value=True,
-    ), patch("platform_api.services.run_orchestration_service.uuid.uuid4", return_value=fixed_uuid):
+    with (
+        patch("platform_api.services.run_orchestration_service._gateway", return_value=gateway),
+        patch.object(
+            type(run_orchestration_service.settings),
+            "is_local_profile",
+            return_value=True,
+        ),
+        patch(
+            "platform_api.services.run_orchestration_service.uuid.uuid4", return_value=fixed_uuid
+        ),
+    ):
         run_id = await run_orchestration_service.create_orchestration_run_id(
             flow_key="any",
             parameters={"x": 1},
@@ -129,12 +147,17 @@ async def test_read_orchestration_run_returns_gateway_payload() -> None:
 def test_validate_orchestration_runtime_settings_rejects_staged_mode_in_release(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(run_orchestration_service.settings, "orchestration_execution_mode", "staged_m22")
-    with patch.object(
-        type(run_orchestration_service.settings),
-        "is_local_or_staging_profile",
-        return_value=False,
-    ), pytest.raises(RuntimeError, match="only allowed in local or staging profiles"):
+    monkeypatch.setattr(
+        run_orchestration_service.settings, "orchestration_execution_mode", "staged_m22"
+    )
+    with (
+        patch.object(
+            type(run_orchestration_service.settings),
+            "is_local_or_staging_profile",
+            return_value=False,
+        ),
+        pytest.raises(RuntimeError, match="only allowed in local or staging profiles"),
+    ):
         run_orchestration_service.validate_orchestration_runtime_settings(raise_runtime=True)
 
 
@@ -149,15 +172,23 @@ async def test_staged_m22_mode_bootstraps_context_session(
         create_session=MagicMock(),
         set=MagicMock(),
     )
-    monkeypatch.setattr(run_orchestration_service.settings, "orchestration_execution_mode", "staged_m22")
-    monkeypatch.setattr(run_orchestration_service.settings, "orchestration_state_redis_url", "redis://runtime-state")
-    with patch.object(
-        type(run_orchestration_service.settings),
-        "is_local_or_staging_profile",
-        return_value=True,
-    ), patch("platform_api.services.run_orchestration_service._gateway", return_value=gateway), patch(
-        "platform_api.services.run_orchestration_service.get_orchestration_context_store",
-        return_value=store,
+    monkeypatch.setattr(
+        run_orchestration_service.settings, "orchestration_execution_mode", "staged_m22"
+    )
+    monkeypatch.setattr(
+        run_orchestration_service.settings, "orchestration_state_redis_url", "redis://runtime-state"
+    )
+    with (
+        patch.object(
+            type(run_orchestration_service.settings),
+            "is_local_or_staging_profile",
+            return_value=True,
+        ),
+        patch("platform_api.services.run_orchestration_service._gateway", return_value=gateway),
+        patch(
+            "platform_api.services.run_orchestration_service.get_orchestration_context_store",
+            return_value=store,
+        ),
     ):
         run_id = await run_orchestration_service.create_orchestration_run_id(
             flow_key="hello",
@@ -173,17 +204,24 @@ async def test_staged_m22_mode_bootstraps_context_session(
     assert kwargs["session_id"] == "prefect-run-123"
     assert kwargs["workspace_id"] == "ws-1"
     assert kwargs["metadata"]["execution_mode"] == "staged_m22"
-    store.set.assert_called_once_with("prefect-run-123", "run_parameters", {"requested_by": "user-1", "x": 1})
+    store.set.assert_called_once_with(
+        "prefect-run-123", "run_parameters", {"requested_by": "user-1", "x": 1}
+    )
 
 
 def test_validate_orchestration_runtime_settings_requires_redis_url_for_staged_mode(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(run_orchestration_service.settings, "orchestration_execution_mode", "staged_m22")
+    monkeypatch.setattr(
+        run_orchestration_service.settings, "orchestration_execution_mode", "staged_m22"
+    )
     monkeypatch.setattr(run_orchestration_service.settings, "orchestration_state_redis_url", "")
-    with patch.object(
-        type(run_orchestration_service.settings),
-        "is_local_or_staging_profile",
-        return_value=True,
-    ), pytest.raises(HTTPException, match="orchestration_state_redis_url must be set"):
+    with (
+        patch.object(
+            type(run_orchestration_service.settings),
+            "is_local_or_staging_profile",
+            return_value=True,
+        ),
+        pytest.raises(HTTPException, match="orchestration_state_redis_url must be set"),
+    ):
         run_orchestration_service.validate_orchestration_runtime_settings()

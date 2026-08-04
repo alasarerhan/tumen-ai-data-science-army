@@ -166,8 +166,14 @@ def infer_units(columns: list[str]) -> dict[str, str]:
     name="resolve_column_aliases",
     description="Match user-provided column names to actual DataFrame column names using fuzzy matching.",
     parameters={
-        "text": ToolParameter(type="string", description="User-provided text to search for column names", required=True),
-        "columns": ToolParameter(type="array", description="List of actual column names", required=True),
+        "text": ToolParameter(
+            type="string",
+            description="User-provided text to search for column names",
+            required=True,
+        ),
+        "columns": ToolParameter(
+            type="array", description="List of actual column names", required=True
+        ),
     },
     returns="Dict mapping user terms to actual column names",
     namespace="core.profiling",
@@ -189,6 +195,7 @@ def resolve_column_aliases(text: str, columns: list[str]) -> dict[str, str]:
     dict
         Mapping of user terms to actual column names.
     """
+
     def _normalize(value: str) -> str:
         if not isinstance(value, str):
             return ""
@@ -234,7 +241,9 @@ def resolve_column_aliases(text: str, columns: list[str]) -> dict[str, str]:
     name="format_profile_for_prompt",
     description="Format a DataFrame profile for inclusion in an LLM prompt.",
     parameters={
-        "profile": ToolParameter(type="object", description="Profile dict from profile_dataframe", required=True),
+        "profile": ToolParameter(
+            type="object", description="Profile dict from profile_dataframe", required=True
+        ),
     },
     returns="Formatted string for LLM prompt",
     namespace="core.profiling",
@@ -292,6 +301,7 @@ __all__ = [
 # Compatibility shims — modernized profiling module dropped these names but the
 # agent file expects them. Each is a thin forwarder to the modernized equivalent
 # or a minimal local implementation.
+
 
 def profile_column(series, *, top_categories=5, hist_bins=10):
     """Profile a single column — returns dict with dtype, null_rate, uniques, etc."""

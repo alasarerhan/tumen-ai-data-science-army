@@ -37,16 +37,13 @@ def session():
 def _build_due_query(session):
     """scheduler_service.py:479-491 — düzeltme sonrası ifade."""
     now = datetime.now(UTC)
-    return (
-        select(ScheduledJob.id)
-        .where(
-            ScheduledJob.enabled,
-            ScheduledJob.next_run_at <= now,
-            or_(
-                ScheduledJob.last_run_status.is_(None),
-                ScheduledJob.last_run_status != "running",
-            ),
-        )
+    return select(ScheduledJob.id).where(
+        ScheduledJob.enabled,
+        ScheduledJob.next_run_at <= now,
+        or_(
+            ScheduledJob.last_run_status.is_(None),
+            ScheduledJob.last_run_status != "running",
+        ),
     )
 
 
@@ -66,30 +63,46 @@ def test_due_job_ids_returns_pending_and_failed_jobs(session):
 
     # hiç çalışmamış
     s1 = ScheduledJob(
-        job_name="pending", job_type="test", enabled=True,
-        next_run_at=past, last_run_status=None,
+        job_name="pending",
+        job_type="test",
+        enabled=True,
+        next_run_at=past,
+        last_run_status=None,
     )
     # başarısız → yeniden due olabilir
     s2 = ScheduledJob(
-        job_name="failed", job_type="test", enabled=True,
-        next_run_at=past, last_run_status="failed",
+        job_name="failed",
+        job_type="test",
+        enabled=True,
+        next_run_at=past,
+        last_run_status="failed",
     )
     # şu an çalışıyor → due olmamalı
     s3 = ScheduledJob(
-        job_name="running", job_type="test", enabled=True,
-        next_run_at=past, last_run_status="running",
+        job_name="running",
+        job_type="test",
+        enabled=True,
+        next_run_at=past,
+        last_run_status="running",
     )
     # disabled → due olmamalı
     s4 = ScheduledJob(
-        job_name="disabled", job_type="test", enabled=False,
-        next_run_at=past, last_run_status=None,
+        job_name="disabled",
+        job_type="test",
+        enabled=False,
+        next_run_at=past,
+        last_run_status=None,
     )
     # gelecekte → due olmamalı
     from datetime import timedelta
+
     future = now + timedelta(hours=1)
     s5 = ScheduledJob(
-        job_name="future", job_type="test", enabled=True,
-        next_run_at=future, last_run_status=None,
+        job_name="future",
+        job_type="test",
+        enabled=True,
+        next_run_at=future,
+        last_run_status=None,
     )
 
     session.add_all([s1, s2, s3, s4, s5])
@@ -110,6 +123,7 @@ def test_old_or_is_none_pattern_is_noop():
     Bu test eski desenin artık TypeError üretmediğini belgeleyerek regresyon
     için "fix gerekliydi" kanıtını korur."""
     from sqlalchemy import select
+
     q = select(ScheduledJob.id).where(
         or_(
             ScheduledJob.last_run_status is None,

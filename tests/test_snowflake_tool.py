@@ -35,7 +35,8 @@ class TestSnowflakeConnector:
         with pytest.raises(ValueError):
             h1.build_snowflake_connector(
                 h1.ConnectorConfig(
-                    name="x", kind="snowflake",
+                    name="x",
+                    kind="snowflake",
                     params={"user": "u", "password": "p"},
                 )
             )
@@ -90,4 +91,3 @@ class TestSnowflakeConnector:
         assert d["pushdown_eligible"] is True
         d2 = c.pushdown_query_plan("DELETE FROM t")
         assert d2["pushdown_eligible"] is False
-

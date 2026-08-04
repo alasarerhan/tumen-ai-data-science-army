@@ -17,8 +17,7 @@ from typing import Any, Callable  # noqa: E402, F401
 
 from langchain_core.messages import AIMessage  # noqa: E402, F401
 
-from ai_data_science_team.multiagents.supervisor import (  # noqa: E402, F401
-    SupervisorDSState)
+from ai_data_science_team.multiagents.supervisor import SupervisorDSState  # noqa: E402, F401
 
 logger = logging.getLogger(__name__)
 
@@ -26,6 +25,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class MlflowLogNodeDeps:
     """Dependencies for the mlflow_log node."""
+
     mlflow_tools_agent: Any
     ensure_df: Any  # was _ensure_df
     get_active_data: Any  # was _get_active_data
@@ -47,12 +47,8 @@ def make_node_mlflow_log(deps: MlflowLogNodeDeps) -> Callable[[SupervisorDSState
             cfg = {}
 
         tracking_uri = cfg.get("mlflow_tracking_uri") if isinstance(cfg, dict) else None
-        artifact_root = (
-            cfg.get("mlflow_artifact_root") if isinstance(cfg, dict) else None
-        )
-        experiment_name = (
-            cfg.get("mlflow_experiment_name") if isinstance(cfg, dict) else None
-        )
+        artifact_root = cfg.get("mlflow_artifact_root") if isinstance(cfg, dict) else None
+        experiment_name = cfg.get("mlflow_experiment_name") if isinstance(cfg, dict) else None
 
         # Attempt to reuse an existing run id (from H2O training) if present.
         run_id = None
@@ -85,9 +81,10 @@ def make_node_mlflow_log(deps: MlflowLogNodeDeps) -> Callable[[SupervisorDSState
         message_lines: list[str] = []
 
         try:
-            import mlflow  # noqa: E402, F401
             import json  # noqa: E402, F401
             from pathlib import Path  # noqa: E402, F401
+
+            import mlflow  # noqa: E402, F401
 
             if tracking_uri:
                 mlflow.set_tracking_uri(tracking_uri)
@@ -95,23 +92,24 @@ def make_node_mlflow_log(deps: MlflowLogNodeDeps) -> Callable[[SupervisorDSState
                 # Best-effort: if an artifact root is configured, ensure the experiment exists
                 # with that artifact location (applies only when creating new experiments).
                 try:
-                    from mlflow.tracking import MlflowClient  # noqa: E402, F401
                     import re  # noqa: E402, F401
+
+                    from mlflow.tracking import MlflowClient  # noqa: E402, F401
 
                     if isinstance(artifact_root, str) and artifact_root.strip():
                         root = Path(artifact_root).expanduser().resolve()
                         root.mkdir(parents=True, exist_ok=True)
-                        safe_name = re.sub(
-                            r"[^A-Za-z0-9._-]+", "_", str(experiment_name)
-                        ).strip("_")
+                        safe_name = re.sub(r"[^A-Za-z0-9._-]+", "_", str(experiment_name)).strip(
+                            "_"
+                        )
                         safe_name = safe_name or "experiment"
                         artifact_location = (root / safe_name).as_uri()
                         client = MlflowClient(tracking_uri=tracking_uri)
                         exp = client.get_experiment_by_name(str(experiment_name))
                         if exp is None:
                             client.create_experiment(
-                                name=str(experiment_name),
-                                artifact_location=artifact_location)
+                                name=str(experiment_name), artifact_location=artifact_location
+                            )
                 except Exception:
                     pass
                 mlflow.set_experiment(experiment_name)
@@ -136,8 +134,8 @@ def make_node_mlflow_log(deps: MlflowLogNodeDeps) -> Callable[[SupervisorDSState
                 if active_df is not None and not deps.is_empty_df(active_df):
                     try:
                         mlflow.log_table(
-                            active_df.head(200),
-                            artifact_file="tables/data_preview.json")
+                            active_df.head(200), artifact_file="tables/data_preview.json"
+                        )
                         logged["tables"].append("tables/data_preview.json")
                     except Exception:
                         pass
@@ -157,7 +155,8 @@ def make_node_mlflow_log(deps: MlflowLogNodeDeps) -> Callable[[SupervisorDSState
                 # Log pipeline (dataset lineage + reproduction script)
                 try:
                     from ai_data_science_team.utils.pipeline import (  # noqa: E402, F401
-                        build_pipeline_snapshot)
+                        build_pipeline_snapshot,
+                    )
 
                     ds = state.get("datasets")
                     ds = ds if isinstance(ds, dict) else {}
@@ -167,26 +166,20 @@ def make_node_mlflow_log(deps: MlflowLogNodeDeps) -> Callable[[SupervisorDSState
                     if isinstance(pipe, dict) and pipe.get("lineage"):
                         pipe_spec = dict(pipe)
                         script = pipe_spec.pop("script", None)
-                        mlflow.log_dict(
-                            pipe_spec, artifact_file="pipeline/pipeline_spec.json"
-                        )
+                        mlflow.log_dict(pipe_spec, artifact_file="pipeline/pipeline_spec.json")
                         logged["dicts"].append("pipeline/pipeline_spec.json")
                         if isinstance(script, str) and script.strip():
                             if hasattr(mlflow, "log_text"):
-                                mlflow.log_text(
-                                    script, artifact_file="pipeline/pipeline_repro.py"
-                                )
+                                mlflow.log_text(script, artifact_file="pipeline/pipeline_repro.py")
                                 logged["dicts"].append("pipeline/pipeline_repro.py")
                             else:
                                 mlflow.log_dict(
-                                    {"script": script},
-                                    artifact_file="pipeline/pipeline_repro.json")
+                                    {"script": script}, artifact_file="pipeline/pipeline_repro.json"
+                                )
                                 logged["dicts"].append("pipeline/pipeline_repro.json")
                         try:
                             if pipe.get("pipeline_hash"):
-                                mlflow.set_tag(
-                                    "pipeline_hash", str(pipe.get("pipeline_hash"))
-                                )
+                                mlflow.set_tag("pipeline_hash", str(pipe.get("pipeline_hash")))
                         except Exception:
                             pass
                 except Exception:
@@ -212,8 +205,8 @@ def make_node_mlflow_log(deps: MlflowLogNodeDeps) -> Callable[[SupervisorDSState
                 if eval_artifacts:
                     try:
                         mlflow.log_dict(
-                            eval_artifacts,
-                            artifact_file="evaluation/eval_artifacts.json")
+                            eval_artifacts, artifact_file="evaluation/eval_artifacts.json"
+                        )
                         logged["dicts"].append("evaluation/eval_artifacts.json")
                     except Exception:
                         pass
@@ -237,9 +230,7 @@ def make_node_mlflow_log(deps: MlflowLogNodeDeps) -> Callable[[SupervisorDSState
                         pass
                 if eval_plot:
                     try:
-                        mlflow.log_dict(
-                            eval_plot, artifact_file="evaluation/eval_plot.json"
-                        )
+                        mlflow.log_dict(eval_plot, artifact_file="evaluation/eval_plot.json")
                         logged["dicts"].append("evaluation/eval_plot.json")
                     except Exception:
                         pass
@@ -247,9 +238,7 @@ def make_node_mlflow_log(deps: MlflowLogNodeDeps) -> Callable[[SupervisorDSState
                         import plotly.io as pio  # noqa: E402, F401
 
                         fig = pio.from_json(json.dumps(eval_plot))
-                        mlflow.log_figure(
-                            fig, artifact_file="evaluation/eval_plot.html"
-                        )
+                        mlflow.log_figure(fig, artifact_file="evaluation/eval_plot.html")
                         logged["figures"].append("evaluation/eval_plot.html")
                     except Exception:
                         pass
@@ -264,26 +253,10 @@ def make_node_mlflow_log(deps: MlflowLogNodeDeps) -> Callable[[SupervisorDSState
                 "Logged: "
                 + ", ".join(
                     [
-                        *(
-                            [f"{len(logged['tables'])} table(s)"]
-                            if logged["tables"]
-                            else []
-                        ),
-                        *(
-                            [f"{len(logged['figures'])} figure(s)"]
-                            if logged["figures"]
-                            else []
-                        ),
-                        *(
-                            [f"{len(logged['dicts'])} json artifact(s)"]
-                            if logged["dicts"]
-                            else []
-                        ),
-                        *(
-                            [f"{len(logged['metrics'])} metric(s)"]
-                            if logged["metrics"]
-                            else []
-                        ),
+                        *([f"{len(logged['tables'])} table(s)"] if logged["tables"] else []),
+                        *([f"{len(logged['figures'])} figure(s)"] if logged["figures"] else []),
+                        *([f"{len(logged['dicts'])} json artifact(s)"] if logged["dicts"] else []),
+                        *([f"{len(logged['metrics'])} metric(s)"] if logged["metrics"] else []),
                     ]
                 )
                 + "."
@@ -295,9 +268,7 @@ def make_node_mlflow_log(deps: MlflowLogNodeDeps) -> Callable[[SupervisorDSState
 
         msg = "\n".join(message_lines)
         merged = {"messages": [AIMessage(content=msg, name="mlflow_logging_agent")]}
-        merged["messages"] = deps.tag_messages(
-            merged.get("messages"), "mlflow_logging_agent"
-        )
+        merged["messages"] = deps.tag_messages(merged.get("messages"), "mlflow_logging_agent")
         return {
             **merged,
             "mlflow_artifacts": {"run_id": run_id, "logged": logged},
@@ -308,9 +279,7 @@ def make_node_mlflow_log(deps: MlflowLogNodeDeps) -> Callable[[SupervisorDSState
             "last_worker": "MLflow_Logging_Agent",
         }
 
-
     return node_mlflow_log
-
 
 
 __all__ = ["MlflowLogNodeDeps", "make_node_mlflow_log"]

@@ -12,6 +12,7 @@ Covers:
 Run with:
     pytest tests/test_m22_orchestration.py -v
 """
+
 from __future__ import annotations
 
 import uuid
@@ -19,6 +20,10 @@ from typing import Any, Dict
 from unittest.mock import MagicMock
 
 import pytest
+
+from ai_data_science_team.agent_registry import AgentRegistry
+from ai_data_science_team.context_store import ContextStore
+from ai_data_science_team.runtime_engine import RuntimeEngine
 
 # ---------------------------------------------------------------------------
 # Imports under test
@@ -29,16 +34,12 @@ from ai_data_science_team.signals import (
     WorkflowSignal,
     get_signal_store,
 )
-from ai_data_science_team.agent_registry import AgentRegistry
-from ai_data_science_team.context_store import ContextStore
 from ai_data_science_team.workflow_resolver import (
     WorkflowResolver,
     build_spec,
     build_step,
     validate_spec,
 )
-from ai_data_science_team.runtime_engine import RuntimeEngine
-
 
 # ===========================================================================
 # Fixtures
@@ -159,6 +160,7 @@ class TestSignalStore:
 
 class _MockAgent:
     """Dummy agent class for registry tests."""
+
     pass
 
 
@@ -232,6 +234,7 @@ class TestAgentRegistry:
     def test_to_catalog_json_serialisable(self):
         AgentRegistry.register("Serialisable", _MockAgent, capabilities=["test"])
         import json
+
         catalog = AgentRegistry.to_catalog()
         json.dumps(catalog)  # must not raise
 
@@ -626,9 +629,7 @@ class TestRuntimeEngineSignals:
             return {"ok": True}
 
         # Pre-emit a cancel signal before the run starts
-        signal_store.emit(
-            WorkflowSignal(type=SignalType.CANCEL, session_id=session_id)
-        )
+        signal_store.emit(WorkflowSignal(type=SignalType.CANCEL, session_id=session_id))
 
         engine = RuntimeEngine(
             agent_executor=executor,
@@ -769,6 +770,7 @@ class TestOrchestratorAgent:
 
     def test_construction_defaults(self):
         from ai_data_science_team.agents.orchestrator_agent import OrchestratorAgent
+
         mock_model = self._make_mock_model()
         orch = OrchestratorAgent(model=mock_model)
         assert orch is not None
@@ -776,6 +778,7 @@ class TestOrchestratorAgent:
 
     def test_invoke_agent_supervised_scenario(self):
         from ai_data_science_team.agents.orchestrator_agent import OrchestratorAgent
+
         mock_model = self._make_mock_model("Workflow completed successfully.")
         spec = _make_spec(n_steps=1)
 
@@ -791,6 +794,7 @@ class TestOrchestratorAgent:
 
     def test_invoke_agent_returns_ai_message(self):
         from ai_data_science_team.agents.orchestrator_agent import OrchestratorAgent
+
         mock_model = self._make_mock_model("This is the summary.")
         spec = _make_spec(n_steps=1)
 
@@ -806,6 +810,7 @@ class TestOrchestratorAgent:
 
     def test_get_run_result_contains_status(self):
         from ai_data_science_team.agents.orchestrator_agent import OrchestratorAgent
+
         mock_model = self._make_mock_model()
         spec = _make_spec(n_steps=2)
 
@@ -820,6 +825,7 @@ class TestOrchestratorAgent:
 
     def test_get_workflow_spec_after_run(self):
         from ai_data_science_team.agents.orchestrator_agent import OrchestratorAgent
+
         mock_model = self._make_mock_model()
         spec = _make_spec("my_spec")
 
@@ -833,6 +839,7 @@ class TestOrchestratorAgent:
 
     def test_get_orchestrator_log_non_empty(self):
         from ai_data_science_team.agents.orchestrator_agent import OrchestratorAgent
+
         mock_model = self._make_mock_model()
         spec = _make_spec()
 
@@ -846,6 +853,7 @@ class TestOrchestratorAgent:
 
     def test_update_params_rebuilds_graph(self):
         from ai_data_science_team.agents.orchestrator_agent import OrchestratorAgent
+
         mock_model = self._make_mock_model()
         orch = OrchestratorAgent(model=mock_model)
         orch.update_params(max_retries=5)
@@ -854,6 +862,7 @@ class TestOrchestratorAgent:
     def test_invoke_agent_dry_run_no_executor(self):
         """With default no-op executor, run should complete as dry_run."""
         from ai_data_science_team.agents.orchestrator_agent import OrchestratorAgent
+
         mock_model = self._make_mock_model()
         spec = _make_spec(n_steps=1)
 
@@ -869,17 +878,18 @@ class TestOrchestratorAgent:
     def test_top_level_import(self):
         """OrchestratorAgent accessible from top-level package."""
         from ai_data_science_team import OrchestratorAgent  # noqa: F401
+
         assert OrchestratorAgent is not None
 
     def test_orchestration_primitives_from_package(self):
         """All M22 primitives accessible from top-level package (facade removed)."""
         from ai_data_science_team import (  # noqa: F401
-            AgentRegistry,
             AgentMetadata,
+            AgentRegistry,
             ContextStore,
             OrchestratorAgent,
-            RuntimeEngine,
             RunResult,
+            RuntimeEngine,
             SignalStore,
             WorkflowResolver,
             WorkflowSignal,

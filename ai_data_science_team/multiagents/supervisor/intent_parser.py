@@ -1,6 +1,6 @@
-import re
 import logging
-from typing import Sequence, Dict, Any, Optional
+import re
+from typing import Any, Dict, Optional, Sequence
 
 from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
 
@@ -106,9 +106,7 @@ def _detect_wrangling_intent(text: str) -> bool:
 
 
 def _detect_eda_intent(text: str) -> bool:
-    return _has(
-        text, "describe", "eda", "summary", "correlation", "sweetviz", "missingness"
-    )
+    return _has(text, "describe", "eda", "summary", "correlation", "sweetviz", "missingness")
 
 
 def _detect_feature_intent(text: str) -> bool:
@@ -149,7 +147,7 @@ def _detect_model_intent(text: str) -> bool:
         "cv",
         "hyperparameter",
     ) or _has_word(text, "predict")
-    
+
     ml_context = _has(
         text,
         "classification",
@@ -163,7 +161,7 @@ def _detect_model_intent(text: str) -> bool:
         "neural network",
         "deep learning",
     )
-    
+
     model_word = "model" in text.lower()
     product_model_context = _has(
         text,
@@ -174,13 +172,13 @@ def _detect_model_intent(text: str) -> bool:
         "phone model",
         "vehicle model",
     ) or (_detect_viz_intent(text) and _has(text, "by model", "per model", "for each model"))
-    
+
     model_ready_context = _has(
         text, "model-ready", "model ready", "model-ready data", "model ready data"
     )
-    
+
     ml_signal = explicit_modeling or (ml_context and not _detect_feature_intent(text))
-    
+
     return bool(
         ml_signal
         or (
@@ -232,11 +230,11 @@ def _detect_workflow_intent(text: str) -> bool:
 def parse_heuristic_intents(text: str) -> Dict[str, bool]:
     """
     Parse user intent using heuristic rules.
-    
+
     Returns a dictionary of intent flags.
     """
     lower = text.lower()
-    
+
     wants_workflow = _detect_workflow_intent(lower)
     wants_list_files = _detect_list_files_intent(lower)
     wants_preview = _detect_preview_intent(lower)
@@ -251,14 +249,11 @@ def parse_heuristic_intents(text: str) -> Dict[str, bool]:
     wants_eval = _detect_eval_intent(lower)
     wants_load = _detect_load_intent(lower)
     wants_mlflow = _detect_mlflow_intent(lower)
-    
+
     mentions_file = (
-        (".csv" in lower)
-        or (".parquet" in lower)
-        or (".xlsx" in lower)
-        or ("file" in lower)
+        (".csv" in lower) or (".parquet" in lower) or (".xlsx" in lower) or ("file" in lower)
     )
-    
+
     wants_mlflow_tools = wants_mlflow and _has(
         lower,
         "ui",
@@ -276,7 +271,7 @@ def parse_heuristic_intents(text: str) -> Dict[str, bool]:
         "registered model",
         "model version",
     )
-    
+
     wants_mlflow_log = wants_mlflow and _has(
         lower,
         "log",
@@ -285,28 +280,30 @@ def parse_heuristic_intents(text: str) -> Dict[str, bool]:
         "track",
         "record",
     )
-    
+
     if wants_workflow:
         wants_clean = True
         wants_eda = True
         wants_viz = True
         wants_model = True
         wants_eval = True
-    
-    wants_more_processing = any([
-        wants_preview,
-        wants_viz,
-        wants_sql,
-        wants_merge,
-        wants_clean,
-        wants_wrangling,
-        wants_eda,
-        wants_feature,
-        wants_model,
-    ])
-    
+
+    wants_more_processing = any(
+        [
+            wants_preview,
+            wants_viz,
+            wants_sql,
+            wants_merge,
+            wants_clean,
+            wants_wrangling,
+            wants_eda,
+            wants_feature,
+            wants_model,
+        ]
+    )
+
     load_only = wants_load and mentions_file and not wants_more_processing
-    
+
     return {
         "list_files": wants_list_files,
         "preview": wants_preview,
@@ -337,9 +334,9 @@ def parse_llm_intents(
     Parse user intent using an LLM for ambiguous cases.
     """
     import json  # noqa: E402, F401
-    
+
     llm_intents: Dict[str, bool] = {}
-    
+
     try:
         intent_prompt = (
             "You classify user intent for a data-science assistant router.\n"
@@ -354,24 +351,28 @@ def parse_llm_intents(
             "- If `mlflow_log` or `mlflow_tools` is true, set `mlflow` true.\n"
             "- If `workflow` is true, you may also set common steps true (clean/eda/viz/model/evaluate).\n"
         )
-        
+
         intent_llm = llm.bind(temperature=1.0) if hasattr(llm, "bind") else llm
-        raw = intent_llm.invoke([
-            SystemMessage(content=intent_prompt),
-            HumanMessage(content=text),
-        ])
-        
+        raw = intent_llm.invoke(
+            [
+                SystemMessage(content=intent_prompt),
+                HumanMessage(content=text),
+            ]
+        )
+
         content = getattr(raw, "content", raw)
         if not isinstance(content, str):
             content = str(content)
-        
+
         try:
             parsed = json.loads(content)
         except Exception as e:
-            logger.debug("Failed to parse JSON from LLM response, attempting regex extraction: %s", e)
+            logger.debug(
+                "Failed to parse JSON from LLM response, attempting regex extraction: %s", e
+            )
             match_obj = re.search(r"\{.*\}", content, flags=re.DOTALL)
             parsed = json.loads(match_obj.group(0)) if match_obj else {}
-        
+
         if isinstance(parsed, dict):
             for k in allowed_keys:
                 if k in parsed:
@@ -379,7 +380,7 @@ def parse_llm_intents(
     except Exception as e:
         logger.warning("Failed to parse LLM intents: %s", e)
         llm_intents = {}
-    
+
     if llm_intents.get("load_only"):
         llm_intents["load"] = True
     if llm_intents.get("mlflow_log") or llm_intents.get("mlflow_tools"):
@@ -390,7 +391,7 @@ def parse_llm_intents(
         llm_intents["viz"] = True
         llm_intents["model"] = True
         llm_intents["evaluate"] = True
-    
+
     return llm_intents
 
 
@@ -402,15 +403,15 @@ def parse_intent(
 ) -> Dict[str, bool]:
     """
     Parse user intent from messages.
-    
+
     Combines heuristic parsing with optional LLM-based parsing for ambiguous cases.
     """
     last_human_text = _get_last_human_text(msgs)
     heuristic_intents = parse_heuristic_intents(last_human_text)
-    
+
     if not use_llm or llm is None:
         return heuristic_intents
-    
+
     lower = last_human_text.lower()
     llm_intents = parse_llm_intents(
         last_human_text,
@@ -427,9 +428,7 @@ def parse_intent(
         "profiling report",
         "eda report",
     )
-    explicit_plot_request = _has(lower, "plot", "chart", "graph") or _has_word(
-        lower, "visualize"
-    )
+    explicit_plot_request = _has(lower, "plot", "chart", "graph") or _has_word(lower, "visualize")
     if wants_eda_report:
         llm_intents["eda"] = True
     if wants_eda_report and not explicit_plot_request:
@@ -437,15 +436,12 @@ def parse_intent(
 
     feature_action = _detect_feature_intent(lower)
     references_feature_engineered_data = (
-        (
-            ("feature-engineered" in lower or "feature engineered" in lower)
-            and ("data" in lower or "dataset" in lower)
-            and ("from" in lower or "using" in lower or "on" in lower)
-        )
-        or (
-            ("engineered features" in lower or "engineered feature" in lower)
-            and ("from" in lower or "using" in lower or "on" in lower)
-        )
+        ("feature-engineered" in lower or "feature engineered" in lower)
+        and ("data" in lower or "dataset" in lower)
+        and ("from" in lower or "using" in lower or "on" in lower)
+    ) or (
+        ("engineered features" in lower or "engineered feature" in lower)
+        and ("from" in lower or "using" in lower or "on" in lower)
     )
     if references_feature_engineered_data and not feature_action:
         llm_intents["feature"] = False
@@ -485,5 +481,5 @@ def parse_intent(
         llm_intents["clean"] = False
     if llm_intents.get("preview") and not llm_intents.get("workflow"):
         llm_intents["merge"] = False
-    
+
     return {**heuristic_intents, **llm_intents}

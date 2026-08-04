@@ -14,7 +14,6 @@ from ai_data_science_team.tools.pii import (
     scan_pii,
 )
 
-
 # ---------------------------------------------------------------------------
 # Scan
 # ---------------------------------------------------------------------------
@@ -22,9 +21,7 @@ from ai_data_science_team.tools.pii import (
 
 class TestScanPII:
     def test_email_detected(self):
-        df = pd.DataFrame(
-            {"email": [f"user{i}@example.com" for i in range(20)]}
-        )
+        df = pd.DataFrame({"email": [f"user{i}@example.com" for i in range(20)]})
         r = scan_pii(df)
         assert "email" in r.pii_columns
         f = next(x for x in r.findings if x.column == "email")
@@ -49,7 +46,10 @@ class TestScanPII:
 
     def test_phone_detected(self):
         phones = [
-            "+905551234567", "05551234567", "0 555 123 45 67", "5551234567",
+            "+905551234567",
+            "05551234567",
+            "0 555 123 45 67",
+            "5551234567",
         ] + ["n/a"] * 16
         df = pd.DataFrame({"phone": phones})
         r = scan_pii(df)
@@ -218,9 +218,7 @@ class TestAnonymizeDataframe:
                 assert a["rows_changed"] == 1
 
     def test_fail_on_unhandled_pii(self):
-        df = pd.DataFrame(
-            {"email": ["a@b.com"] * 10, "other": [str(i) for i in range(10)]}
-        )
+        df = pd.DataFrame({"email": ["a@b.com"] * 10, "other": [str(i) for i in range(10)]})
         scan = scan_pii(df)
         with pytest.raises(ValueError):
             anonymize_dataframe(
@@ -231,9 +229,7 @@ class TestAnonymizeDataframe:
             )
 
     def test_fail_disabled_warns(self):
-        df = pd.DataFrame(
-            {"email": ["a@b.com"] * 10, "other": [str(i) for i in range(10)]}
-        )
+        df = pd.DataFrame({"email": ["a@b.com"] * 10, "other": [str(i) for i in range(10)]})
         scan = scan_pii(df)
         out = anonymize_dataframe(
             df,

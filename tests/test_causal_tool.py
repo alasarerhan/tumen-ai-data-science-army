@@ -23,9 +23,8 @@ class TestDidLift:
         pre_t_pre = rng.normal(size=50, loc=10)
         pre_t_post = pre_t_pre + 10  # +10 lifted
         ctl_pre = rng.normal(size=50, loc=8)
-        ctl_post = ctl_pre + 5      # +5 secular
-        out = did_lift(pre_t_pre.tolist(), pre_t_post.tolist(),
-                       ctl_pre.tolist(), ctl_post.tolist())
+        ctl_post = ctl_pre + 5  # +5 secular
+        out = did_lift(pre_t_pre.tolist(), pre_t_post.tolist(), ctl_pre.tolist(), ctl_post.tolist())
         assert abs(out["ate"] - 5.0) < 0.01
         assert out["n_treated"] == 50
         assert out["n_control"] == 50

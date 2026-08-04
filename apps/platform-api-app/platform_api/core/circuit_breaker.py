@@ -14,28 +14,30 @@ Best Practices Reference:
 https://martinfowler.com/bliki/CircuitBreaker.html
 https://learn.microsoft.com/en-us/azure/architecture/patterns/circuit-breaker
 """
+
 from __future__ import annotations
 
 import logging
 import time
 from dataclasses import dataclass
-from typing import Optional
 
 logger = logging.getLogger(__name__)
+
 
 def _normalize_redis_url(url):
     """Prepend the default redis scheme if a URL has only host:port/db."""
     if not url:
         return url
-    for prefix in ('redis://', 'rediss://', 'unix://'):
+    for prefix in ("redis://", "rediss://", "unix://"):
         if url.startswith(prefix):
             return url
-    return 'redis://' + url
+    return "redis://" + url
 
 
 REDIS_AVAILABLE = False
 try:
     import redis
+
     REDIS_AVAILABLE = True
 except ImportError:
     pass
@@ -44,6 +46,7 @@ except ImportError:
 @dataclass
 class CircuitBreakerConfig:
     """Configuration for circuit breaker."""
+
     name: str
     failure_threshold: int = 3
     reset_timeout_seconds: int = 60
@@ -98,7 +101,7 @@ class DistributedCircuitBreaker:
     def __init__(
         self,
         config: CircuitBreakerConfig,
-        redis_url: Optional[str] = None,
+        redis_url: str | None = None,
         key_prefix: str = "circuit_breaker:",
     ) -> None:
         self._config = config
@@ -111,18 +114,15 @@ class DistributedCircuitBreaker:
         self._half_open_calls: int = 0
 
         if redis_url and REDIS_AVAILABLE:
-            self._redis: Optional[redis.Redis] = redis.from_url(_normalize_redis_url(redis_url))
-            logger.info(
-                "DistributedCircuitBreaker '%s' connected to Redis",
-                config.name
-            )
+            self._redis: redis.Redis | None = redis.from_url(_normalize_redis_url(redis_url))
+            logger.info("DistributedCircuitBreaker '%s' connected to Redis", config.name)
         else:
             self._redis = None
             if redis_url and not REDIS_AVAILABLE:
                 logger.warning(
                     "Redis not available for circuit breaker '%s'. "
                     "Using in-memory state (not distributed).",
-                    config.name
+                    config.name,
                 )
 
     def _get_state_from_redis(self) -> tuple[str, int, float]:
@@ -141,9 +141,7 @@ class DistributedCircuitBreaker:
             return state, failure_count, last_failure_time
         except Exception as e:
             logger.warning(
-                "Failed to get circuit breaker state from Redis: %s. "
-                "Using local state.",
-                e
+                "Failed to get circuit breaker state from Redis: %s. Using local state.", e
             )
             return self._local_state, self._local_failure_count, self._local_last_failure_time
 
@@ -162,7 +160,7 @@ class DistributedCircuitBreaker:
                     "state": state,
                     "failure_count": str(failure_count),
                     "last_failure_time": str(last_failure_time),
-                }
+                },
             )
             self._redis.expire(self._redis_key, self._config.reset_timeout_seconds * 2)
         except Exception as e:
@@ -189,7 +187,7 @@ class DistributedCircuitBreaker:
             if now - last_failure_time > self._config.reset_timeout_seconds:
                 logger.info(
                     "Circuit breaker '%s' transitioning to HALF_OPEN after timeout",
-                    self._config.name
+                    self._config.name,
                 )
                 self._set_state_in_redis(self.STATE_HALF_OPEN, failure_count, last_failure_time)
                 self._half_open_calls = 0
@@ -206,10 +204,7 @@ class DistributedCircuitBreaker:
 
         Resets the circuit breaker to closed state.
         """
-        logger.debug(
-            "Circuit breaker '%s' recording success",
-            self._config.name
-        )
+        logger.debug("Circuit breaker '%s' recording success", self._config.name)
         self._set_state_in_redis(self.STATE_CLOSED, 0, 0.0)
         self._half_open_calls = 0
 
@@ -226,16 +221,14 @@ class DistributedCircuitBreaker:
 
         if state == self.STATE_HALF_OPEN:
             logger.warning(
-                "Circuit breaker '%s' failure in HALF_OPEN, reopening",
-                self._config.name
+                "Circuit breaker '%s' failure in HALF_OPEN, reopening", self._config.name
             )
             self._set_state_in_redis(self.STATE_OPEN, failure_count, now)
             return
 
         if failure_count >= self._config.failure_threshold:
             logger.error(
-                "Circuit breaker '%s' OPEN after %d failures. "
-                "Will retry after %d seconds.",
+                "Circuit breaker '%s' OPEN after %d failures. Will retry after %d seconds.",
                 self._config.name,
                 failure_count,
                 self._config.reset_timeout_seconds,
@@ -275,7 +268,7 @@ class DistributedCircuitBreaker:
 
 
 __all__ = [
+    "REDIS_AVAILABLE",
     "CircuitBreakerConfig",
     "DistributedCircuitBreaker",
-    "REDIS_AVAILABLE",
 ]

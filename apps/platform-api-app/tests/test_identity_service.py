@@ -77,7 +77,9 @@ def test_get_or_create_user_rejects_email_reuse_across_subjects(db_session: Sess
     assert exc_info.value.status_code == 409
 
 
-def test_list_tenant_memberships_returns_only_requested_user_rows(seeded_db: dict[str, object]) -> None:
+def test_list_tenant_memberships_returns_only_requested_user_rows(
+    seeded_db: dict[str, object],
+) -> None:
     # Arrange
     db = seeded_db["db"]
     tenant = seeded_db["tenant"]

@@ -1,5 +1,5 @@
-from typing_extensions import Optional, Dict, Any, List
 from langchain.tools import tool
+from typing_extensions import Any, Dict, List, Optional
 
 
 @tool("train_h2o_automl", return_direct=True, response_format="content_and_artifact")
@@ -77,10 +77,11 @@ def train_h2o_automl(
         }
     """
 
-    import h2o  # noqa: E402, F401
-    from h2o.automl import H2OAutoML  # noqa: E402, F401
-    import pandas as pd  # noqa: E402, F401
     import json  # noqa: E402, F401
+
+    import h2o  # noqa: E402, F401
+    import pandas as pd  # noqa: E402, F401
+    from h2o.automl import H2OAutoML  # noqa: E402, F401
 
     # Optional MLflow usage
     if enable_mlflow:
@@ -531,4 +532,3 @@ If you're using 3.34.0.1 or later, AutoML should use all the time that it's give
 The H2O AutoML algorithm was first released in H2O 3.12.0.1 on June 6, 2017 by Erin LeDell, and is based on research from her PhD thesis. New features and performance improvements have been made in every major version of H2O since the initial release.
 
 """
-

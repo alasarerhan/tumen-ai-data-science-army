@@ -10,15 +10,13 @@ Calistirmak icin:
 Atlamak icin (API anahtari olmadan):
     python -m pytest tests/ -v -m "not integration"
 """
+
 from __future__ import annotations
 
-
-
-from _llm import make_chat_model, skip_no_key
 import pytest
+from _llm import make_chat_model, skip_no_key
 
 pytestmark = pytest.mark.integration
-
 
 
 langchain_openai = pytest.importorskip(
@@ -49,6 +47,7 @@ def llm():
 
 def _run_iac(llm) -> dict:
     from ai_data_science_team.agents.cloudops_agents import IaCAgent
+
     agent = IaCAgent(model=llm)
     _inv(
         agent,
@@ -64,6 +63,7 @@ def _run_iac(llm) -> dict:
 
 def _run_containerization(llm, iac_artifacts: dict) -> dict:
     from ai_data_science_team.agents.cloudops_agents import ContainerizationAgent
+
     agent = ContainerizationAgent(model=llm)
     _inv(
         agent,
@@ -80,6 +80,7 @@ def _run_containerization(llm, iac_artifacts: dict) -> dict:
 
 def _run_cicd(llm, container_artifacts: dict) -> dict:
     from ai_data_science_team.agents.cloudops_agents import CICDAgent
+
     agent = CICDAgent(model=llm)
     _inv(
         agent,
@@ -119,9 +120,7 @@ def test_e2e_cloudops_full_pipeline(llm):
     combined = {**iac_out, **container_out}
     cicd_out = _run_cicd(llm, combined)
     assert isinstance(cicd_out, dict), "CICDAgent must return a dict"
-    assert len(cicd_out.get("_cicd_ai_message", "")) > 0, (
-        "CICDAgent must produce an AI message"
-    )
+    assert len(cicd_out.get("_cicd_ai_message", "")) > 0, "CICDAgent must produce an AI message"
 
 
 @skip_no_key
@@ -139,18 +138,23 @@ def test_e2e_cloudops_artifacts_propagate(llm):
 def test_e2e_cloudops_each_stage_uses_tools(llm):
     """Each stage must invoke at least one tool call."""
     from ai_data_science_team.agents.cloudops_agents import (
-        IaCAgent,
-        ContainerizationAgent,
         CICDAgent,
+        ContainerizationAgent,
+        IaCAgent,
     )
 
     iac = IaCAgent(model=llm)
-    _inv(iac, user_instructions="List available Terraform providers and estimate cost for an AWS t3.micro.")
+    _inv(
+        iac,
+        user_instructions="List available Terraform providers and estimate cost for an AWS t3.micro.",
+    )
     assert len(iac.get_tool_calls()) > 0, "IaCAgent must invoke at least one tool"
 
     container = ContainerizationAgent(model=llm)
     _inv(container, user_instructions="Generate a Dockerfile for a Node.js 20 app.")
-    assert len(container.get_tool_calls()) > 0, "ContainerizationAgent must invoke at least one tool"
+    assert len(container.get_tool_calls()) > 0, (
+        "ContainerizationAgent must invoke at least one tool"
+    )
 
     cicd = CICDAgent(model=llm)
     _inv(cicd, user_instructions="Generate a GitLab CI pipeline with a test stage.")

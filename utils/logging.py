@@ -1,7 +1,13 @@
 import os
 
 
-def log_ai_function(response: str, file_name: str, log: bool = True, log_path: str = './logs', overwrite:bool =True):
+def log_ai_function(
+    response: str,
+    file_name: str,
+    log: bool = True,
+    log_path: str = "./logs",
+    overwrite: bool = True,
+):
     """
     Logs the response of an AI function to a file.
 
@@ -43,15 +49,14 @@ def log_ai_function(response: str, file_name: str, log: bool = True, log_path: s
                         file_name = new_file_name
                         break
                     i += 1
-                
+
         #! Write the file
-        with open(file_path, 'w', encoding='utf-8') as file:
+        with open(file_path, "w", encoding="utf-8") as file:
             file.write(response)
 
         print(f"File saved to {file_path}")
 
         return (file_path, file_name)
 
-    else: 
+    else:
         return (None, None)
-        

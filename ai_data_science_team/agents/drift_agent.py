@@ -12,10 +12,16 @@ PowerAnalysisAgent.
 Node type: ``monitor.drift``
 """
 
-from typing import (Dict, Optional, Tuple)  # noqa: E402
 import logging  # noqa: E402, F401
-from typing import Any  # noqa: E402, F401
+from typing import (  # noqa: E402
+    Any,  # noqa: E402, F401
+    Dict,
+    Optional,
+    Tuple,
+)
 
+import numpy as np  # noqa: E402, F401
+import pandas as pd  # noqa: E402, F401
 from langchain.tools import tool  # noqa: E402, F401
 from langchain_core.messages import AIMessage, BaseMessage  # noqa: E402, F401
 from langgraph.graph import END, START, StateGraph  # noqa: E402, F401
@@ -24,12 +30,6 @@ from langgraph.types import Checkpointer  # noqa: E402, F401
 from typing_extensions import Annotated, Sequence, TypedDict  # noqa: E402, F401
 
 from ai_data_science_team.templates import BaseAgent  # noqa: E402, F401
-from ai_data_science_team.utils.regex import format_agent_name  # noqa: E402, F401
-
-import pandas as pd  # noqa: E402, F401
-import numpy as np  # noqa: E402, F401
-
-
 from ai_data_science_team.tools.drift import (  # noqa: E402, F401
     drift_signal_payload,
     feature_drift_report,
@@ -37,7 +37,7 @@ from ai_data_science_team.tools.drift import (  # noqa: E402, F401
     performance_drift,
     psi,
 )
-
+from ai_data_science_team.utils.regex import format_agent_name  # noqa: E402, F401
 
 logger = logging.getLogger(__name__)
 
@@ -49,8 +49,14 @@ NODE_TYPE = "monitor.drift"
 # Tool wrappers
 # ---------------------------------------------------------------------------
 
+
 @tool(response_format="content_and_artifact")
-def psi_wrapped(baseline: Sequence[float] | np.ndarray, current: Sequence[float] | np.ndarray, n_bins: int, eps: float) -> Tuple[str, dict]:
+def psi_wrapped(
+    baseline: Sequence[float] | np.ndarray,
+    current: Sequence[float] | np.ndarray,
+    n_bins: int,
+    eps: float,
+) -> Tuple[str, dict]:
     """Tool wrapper for ``psi``.
 
     Population Stability Index between two numerical samples.
@@ -58,7 +64,7 @@ def psi_wrapped(baseline: Sequence[float] | np.ndarray, current: Sequence[float]
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: g1_psi")
-    kwargs = {'baseline': baseline, 'current': current, 'n_bins': n_bins, 'eps': eps}
+    kwargs = {"baseline": baseline, "current": current, "n_bins": n_bins, "eps": eps}
     try:
         result = psi(**kwargs)
     except Exception as exc:
@@ -78,7 +84,9 @@ def psi_wrapped(baseline: Sequence[float] | np.ndarray, current: Sequence[float]
 
 
 @tool(response_format="content_and_artifact")
-def ks2_wrapped(baseline: Sequence[float] | np.ndarray, current: Sequence[float] | np.ndarray) -> Tuple[str, dict]:
+def ks2_wrapped(
+    baseline: Sequence[float] | np.ndarray, current: Sequence[float] | np.ndarray
+) -> Tuple[str, dict]:
     """Tool wrapper for ``ks2``.
 
     Two-sample Kolmogorov–Smirnov statistic (no p-value).
@@ -86,7 +94,7 @@ def ks2_wrapped(baseline: Sequence[float] | np.ndarray, current: Sequence[float]
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: g1_ks2")
-    kwargs = {'baseline': baseline, 'current': current}
+    kwargs = {"baseline": baseline, "current": current}
     try:
         result = ks2(**kwargs)
     except Exception as exc:
@@ -106,7 +114,9 @@ def ks2_wrapped(baseline: Sequence[float] | np.ndarray, current: Sequence[float]
 
 
 @tool(response_format="content_and_artifact")
-def feature_drift_report_wrapped(baseline_df: pd.DataFrame, current_df: pd.DataFrame) -> Tuple[str, dict]:
+def feature_drift_report_wrapped(
+    baseline_df: pd.DataFrame, current_df: pd.DataFrame
+) -> Tuple[str, dict]:
     """Tool wrapper for ``feature_drift_report``.
 
     Compute per-feature drift between two DataFrames of the same schema.
@@ -114,7 +124,7 @@ def feature_drift_report_wrapped(baseline_df: pd.DataFrame, current_df: pd.DataF
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: g1_feature_drift_report")
-    kwargs = {'baseline_df': baseline_df, 'current_df': current_df}
+    kwargs = {"baseline_df": baseline_df, "current_df": current_df}
     try:
         result = feature_drift_report(**kwargs)
     except Exception as exc:
@@ -142,7 +152,7 @@ def performance_drift_wrapped(baseline_metric: float, current_metric: float) -> 
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: g1_performance_drift")
-    kwargs = {'baseline_metric': baseline_metric, 'current_metric': current_metric}
+    kwargs = {"baseline_metric": baseline_metric, "current_metric": current_metric}
     try:
         result = performance_drift(**kwargs)
     except Exception as exc:
@@ -162,7 +172,9 @@ def performance_drift_wrapped(baseline_metric: float, current_metric: float) -> 
 
 
 @tool(response_format="content_and_artifact")
-def drift_signal_payload_wrapped(baseline_df: pd.DataFrame, current_df: pd.DataFrame) -> Tuple[str, dict]:
+def drift_signal_payload_wrapped(
+    baseline_df: pd.DataFrame, current_df: pd.DataFrame
+) -> Tuple[str, dict]:
     """Tool wrapper for ``drift_signal_payload``.
 
     Combine feature-drift and performance-drift into a single payload.
@@ -170,7 +182,7 @@ def drift_signal_payload_wrapped(baseline_df: pd.DataFrame, current_df: pd.DataF
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: g1_drift_signal_payload")
-    kwargs = {'baseline_df': baseline_df, 'current_df': current_df}
+    kwargs = {"baseline_df": baseline_df, "current_df": current_df}
     try:
         result = drift_signal_payload(**kwargs)
     except Exception as exc:
@@ -241,7 +253,12 @@ def make_drift_agent(
     def run_react_agent(state: GraphState):
         logger.info("    * RUN REACT AGENT FOR G1")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
-        messages = [("system", "You are the G1 agent. Use the available tools to complete the user's request.")] + list(base)
+        messages = [
+            (
+                "system",
+                "You are the G1 agent. Use the available tools to complete the user's request.",
+            )
+        ] + list(base)
         input_payload = {"messages": messages}
         return react_agent.invoke(input_payload, invoke_react_agent_kwargs)
 
@@ -260,7 +277,9 @@ def make_drift_agent(
             last_ai = AIMessage(content=getattr(internal[-1], "content", ""), name=AGENT_NAME)
         tool_calls = []
         for msg in internal:
-            name = getattr(getattr(msg, "tool_call_id", None), "name", None) or getattr(msg, "name", None)
+            name = getattr(getattr(msg, "tool_call_id", None), "name", None) or getattr(
+                msg, "name", None
+            )
             if name:
                 tool_calls.append(name)
         if log_tool_calls and tool_calls:
@@ -328,6 +347,7 @@ class DriftDetectionAgent(BaseAgent):
         if not self.response or "messages" not in self.response:
             return None
         from IPython.display import Markdown as _Markdown  # noqa: E402, F401
+
         for msg in reversed(self.response.get("messages", [])):
             content = getattr(msg, "content", "")
             if content:

@@ -40,7 +40,8 @@ def test_did_lift_real(llm_or_skip, llm_model):
     tool = did_lift_wrapped
     result, _ = _assert_result(
         _drive_tool_call(
-            llm_model, tool,
+            llm_model,
+            tool,
             "did_lift tool'unu TEK çağrı ile çağır. "
             "pre_treat_y_pre=[10.0, 11.0, 9.0, 10.5, 9.5], "
             "pre_treat_y_post=[20.0, 19.5, 21.0, 20.2, 19.8], "
@@ -50,9 +51,9 @@ def test_did_lift_real(llm_or_skip, llm_model):
         tool.name,
     )
     s = str(result).lower()
-    assert (
-        "did_lift" in s or "ok" in s or "ate" in s
-    ), f"did_lift beklenen DiD çıktısı üretmedi: {s[:200]}"
+    assert "did_lift" in s or "ok" in s or "ate" in s, (
+        f"did_lift beklenen DiD çıktısı üretmedi: {s[:200]}"
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -65,7 +66,8 @@ def test_adj_lift_real(llm_or_skip, llm_model):
     tool = adj_lift_wrapped
     result, _ = _assert_result(
         _drive_tool_call(
-            llm_model, tool,
+            llm_model,
+            tool,
             "adj_lift tool'unu TEK çağrı ile çağır. "
             "y=[1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0], "
             "treatment=[0, 0, 0, 0, 1, 1, 1, 1], "
@@ -74,9 +76,9 @@ def test_adj_lift_real(llm_or_skip, llm_model):
         tool.name,
     )
     s = str(result).lower()
-    assert (
-        "adj_lift" in s or "ok" in s or "ate" in s or "r2" in s
-    ), f"adj_lift beklenen adjusted lift çıktısı üretmedi: {s[:200]}"
+    assert "adj_lift" in s or "ok" in s or "ate" in s or "r2" in s, (
+        f"adj_lift beklenen adjusted lift çıktısı üretmedi: {s[:200]}"
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -89,7 +91,8 @@ def test_check_propensity_overlap_real(llm_or_skip, llm_model):
     tool = check_propensity_overlap_wrapped
     result, _ = _assert_result(
         _drive_tool_call(
-            llm_model, tool,
+            llm_model,
+            tool,
             "check_propensity_overlap tool'unu TEK çağrı ile çağır. "
             "propensity=[0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9], "
             'label="treatment".',
@@ -97,9 +100,9 @@ def test_check_propensity_overlap_real(llm_or_skip, llm_model):
         tool.name,
     )
     s = str(result).lower()
-    assert (
-        "overlap" in s or "ok" in s or "share" in s
-    ), f"propensity beklenen overlap raporu üretmedi: {s[:200]}"
+    assert "overlap" in s or "ok" in s or "share" in s, (
+        f"propensity beklenen overlap raporu üretmedi: {s[:200]}"
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -112,12 +115,13 @@ def test_e_value_real(llm_or_skip, llm_model):
     tool = e_value_wrapped
     result, _ = _assert_result(
         _drive_tool_call(
-            llm_model, tool,
+            llm_model,
+            tool,
             "e_value tool'unu TEK çağrı ile çağır. point_estimate=2.0.",
         ),
         tool.name,
     )
     s = str(result).lower()
-    assert (
-        "e_value" in s or "ok" in s or "eval" in s
-    ), f"e_value beklenen sensitivity bound üretmedi: {s[:200]}"
+    assert "e_value" in s or "ok" in s or "eval" in s, (
+        f"e_value beklenen sensitivity bound üretmedi: {s[:200]}"
+    )

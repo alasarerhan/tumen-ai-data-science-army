@@ -9,11 +9,11 @@ Tests cover:
   - Manual reset
   - State monitoring
 """
+
 from __future__ import annotations
 
-import time
 import threading
-
+import time
 
 from platform_api.core.circuit_breaker import (
     CircuitBreakerConfig,
@@ -213,10 +213,7 @@ class TestCircuitBreakerThreadSafety:
             for _ in range(count):
                 cb.record_failure()
 
-        threads = [
-            threading.Thread(target=record_failures, args=(25,))
-            for _ in range(4)
-        ]
+        threads = [threading.Thread(target=record_failures, args=(25,)) for _ in range(4)]
 
         for t in threads:
             t.start()

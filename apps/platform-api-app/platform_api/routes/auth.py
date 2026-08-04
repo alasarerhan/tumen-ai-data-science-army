@@ -9,6 +9,7 @@ Security Best Practices (OWASP-aligned):
 
 Reference: https://tools.zamdevai.com/blog/stop-storing-jwts-in-localstorage
 """
+
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response

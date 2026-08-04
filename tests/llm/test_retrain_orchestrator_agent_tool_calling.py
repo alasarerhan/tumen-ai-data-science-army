@@ -153,15 +153,9 @@ def test_event_to_dict_real():
 
 def test_build_audit_trail_real():
     """build_audit_trail(events) → events.timestamp'a göre sıralanmış dict listesi."""
-    ev1 = Event(
-        id="a", timestamp=200.0, policy_name="p", signal={}, decision={}
-    )
-    ev2 = Event(
-        id="b", timestamp=100.0, policy_name="p", signal={}, decision={}
-    )
-    ev3 = Event(
-        id="c", timestamp=300.0, policy_name="p", signal={}, decision={}
-    )
+    ev1 = Event(id="a", timestamp=200.0, policy_name="p", signal={}, decision={})
+    ev2 = Event(id="b", timestamp=100.0, policy_name="p", signal={}, decision={})
+    ev3 = Event(id="c", timestamp=300.0, policy_name="p", signal={}, decision={})
     trail = build_audit_trail(events=[ev1, ev2, ev3])
     assert isinstance(trail, list)
     assert [e["id"] for e in trail] == ["b", "a", "c"]

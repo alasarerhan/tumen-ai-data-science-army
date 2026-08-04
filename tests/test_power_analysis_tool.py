@@ -20,18 +20,18 @@ import pytest
 from statsmodels.stats.proportion import proportion_effectsize
 
 from ai_data_science_team.tools.power_analysis import (
-    solve_power,
-    required_sample_size,
-    minimum_detectable_effect,
-    estimate_runtime_days,
-    suggest_stratification,
     design_experiment,
+    estimate_runtime_days,
+    minimum_detectable_effect,
+    required_sample_size,
+    solve_power,
+    suggest_stratification,
 )
-
 
 # ---------------------------------------------------------------------------
 # 1. solve_power — the canonical dispatcher
 # ---------------------------------------------------------------------------
+
 
 class TestSolvePower:
     def test_solve_n_proportion(self):
@@ -131,6 +131,7 @@ class TestSolvePower:
 # 2. required_sample_size — convenience wrapper around solve_power
 # ---------------------------------------------------------------------------
 
+
 class TestRequiredSampleSize:
     def test_smoke_proportions(self):
         out = required_sample_size(
@@ -168,6 +169,7 @@ class TestRequiredSampleSize:
 # ---------------------------------------------------------------------------
 # 3. minimum_detectable_effect — convenience wrapper (dict with effect_size)
 # ---------------------------------------------------------------------------
+
 
 class TestMinimumDetectableEffect:
     def test_smoke_proportions(self):
@@ -235,6 +237,7 @@ class TestMinimumDetectableEffect:
 # 4. estimate_runtime_days — runtime estimator (returns dict with 'days_needed')
 # ---------------------------------------------------------------------------
 
+
 class TestEstimateRuntimeDays:
     def test_basic_proportion(self):
         out = estimate_runtime_days(
@@ -267,6 +270,7 @@ class TestEstimateRuntimeDays:
 # ---------------------------------------------------------------------------
 # 5. suggest_stratification — column-recommender (dict with 'recommendations')
 # ---------------------------------------------------------------------------
+
 
 class TestSuggestStratification:
     def test_smoke_returns_dict(self):
@@ -301,18 +305,18 @@ class TestSuggestStratification:
         # variant may be present if it's flagged as the assignment column,
         # but the *stratification* candidates should be other columns.
         strat_candidates = [
-            r.get("column") for r in recs if isinstance(r, dict)
-            and r.get("column") not in (None, "variant")
+            r.get("column")
+            for r in recs
+            if isinstance(r, dict) and r.get("column") not in (None, "variant")
         ]
         # At least one non-variant candidate is recommended.
-        assert any(
-            c in {"device", "country"} for c in strat_candidates
-        )
+        assert any(c in {"device", "country"} for c in strat_candidates)
 
 
 # ---------------------------------------------------------------------------
 # 6. design_experiment — end-to-end façade (nested dict)
 # ---------------------------------------------------------------------------
+
 
 class TestDesignExperiment:
     def test_solve_n_branch_returns_nested_dict(self):

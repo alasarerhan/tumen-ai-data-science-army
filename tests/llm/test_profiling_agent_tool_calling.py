@@ -38,6 +38,7 @@ def _sample_df():
 # 1. profile_column_wrapped — pd.Series → dict
 # ---------------------------------------------------------------------------
 
+
 def test_profile_column_real():
     """``profile_column_wrapped`` tek sütunun istatistiklerini üretir.
 
@@ -55,6 +56,7 @@ def test_profile_column_real():
 # 2. profile_dataframe_wrapped — pd.DataFrame → dict
 # ---------------------------------------------------------------------------
 
+
 def test_profile_dataframe_real():
     """``profile_dataframe_wrapped`` tüm DataFrame'in profilini çıkarır.
 
@@ -63,10 +65,6 @@ def test_profile_dataframe_real():
     df = _sample_df()
     out = profile_dataframe_wrapped.func(df=df)
     s = str(out).lower()
-    assert (
-        "n_rows" in s
-        or "column" in s
-        or "numeric" in s
-        or "category" in s
-        or "ok" in s
-    ), f"profile_dataframe beklenen profil üretmedi: {s[:300]}"
+    assert "n_rows" in s or "column" in s or "numeric" in s or "category" in s or "ok" in s, (
+        f"profile_dataframe beklenen profil üretmedi: {s[:300]}"
+    )

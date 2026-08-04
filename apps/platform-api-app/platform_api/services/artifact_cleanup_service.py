@@ -30,9 +30,9 @@ from __future__ import annotations
 
 import logging
 import uuid
+from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from typing import Callable, List
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -47,10 +47,10 @@ MAX_RETENTION_DAYS = 3650
 MIN_BATCH_SIZE = 1
 MAX_BATCH_SIZE = 1000
 
-_deletion_handlers: List[Callable[[List[Artifact]], None]] = []
+_deletion_handlers: list[Callable[[list[Artifact]], None]] = []
 
 
-def register_deletion_handler(handler: Callable[[List[Artifact]], None]) -> None:
+def register_deletion_handler(handler: Callable[[list[Artifact]], None]) -> None:
     """Register a handler to be called before artifact deletion.
 
     Handlers are called with the list of artifacts about to be deleted.
@@ -65,7 +65,7 @@ def register_deletion_handler(handler: Callable[[List[Artifact]], None]) -> None
     logger.info("Registered artifact deletion handler: %s", handler.__name__)
 
 
-def _notify_deletion(artifacts: List[Artifact]) -> None:
+def _notify_deletion(artifacts: list[Artifact]) -> None:
     """Call all registered deletion handlers.
 
     Errors in handlers are logged but do not prevent deletion.
@@ -78,15 +78,13 @@ def _notify_deletion(artifacts: List[Artifact]) -> None:
             handler(artifacts)
         except Exception as e:
             logger.error(
-                "Deletion handler %s failed: %s. Deletion will continue.",
-                handler.__name__,
-                e
+                "Deletion handler %s failed: %s. Deletion will continue.", handler.__name__, e
             )
 
 
 def get_artifact_expiry_date() -> datetime:
     """Calculate expiry date based on retention policy.
-    
+
     Raises
     ------
     ValueError
@@ -134,9 +132,7 @@ def mark_artifacts_for_expiry(
     expiry = expires_at or get_artifact_expiry_date()
 
     result = db.execute(
-        Artifact.__table__.update()
-        .where(Artifact.id.in_(artifact_ids))
-        .values(expires_at=expiry)
+        Artifact.__table__.update().where(Artifact.id.in_(artifact_ids)).values(expires_at=expiry)
     )
     db.flush()
     logger.info("Marked %d artifacts for expiry at %s", result.rowcount, expiry)
@@ -201,7 +197,7 @@ def cleanup_expired_artifacts(
     -------
     dict
         Statistics about the cleanup operation.
-    
+
     Raises
     ------
     ValueError
@@ -209,8 +205,7 @@ def cleanup_expired_artifacts(
     """
     if batch_size < MIN_BATCH_SIZE or batch_size > MAX_BATCH_SIZE:
         raise ValueError(
-            f"batch_size must be between {MIN_BATCH_SIZE} and {MAX_BATCH_SIZE}, "
-            f"got {batch_size}"
+            f"batch_size must be between {MIN_BATCH_SIZE} and {MAX_BATCH_SIZE}, got {batch_size}"
         )
     stats = {
         "dry_run": dry_run,
@@ -253,9 +248,7 @@ def cleanup_expired_artifacts(
     _notify_deletion(artifacts_to_delete)
 
     try:
-        db.execute(
-            Artifact.__table__.delete().where(Artifact.id.in_(artifact_ids_to_delete))
-        )
+        db.execute(Artifact.__table__.delete().where(Artifact.id.in_(artifact_ids_to_delete)))
         db.commit()
         logger.info(
             "Deleted %d artifact records from database",
@@ -278,11 +271,13 @@ def cleanup_expired_artifacts(
         except Exception as e:
             error_msg = f"{artifact.uri}: {e}"
             stats["errors"].append(error_msg)
-            stats["failed_file_deletions"].append({
-                "artifact_id": str(artifact.id),
-                "uri": artifact.uri,
-                "error": str(e),
-            })
+            stats["failed_file_deletions"].append(
+                {
+                    "artifact_id": str(artifact.id),
+                    "uri": artifact.uri,
+                    "error": str(e),
+                }
+            )
             logger.warning("Failed to delete artifact file %s: %s", file_path, e)
 
     logger.info(
@@ -322,7 +317,7 @@ def cleanup_old_artifacts(
     -------
     dict
         Statistics about the cleanup operation.
-    
+
     Raises
     ------
     ValueError
@@ -333,10 +328,9 @@ def cleanup_old_artifacts(
 
     if batch_size < MIN_BATCH_SIZE or batch_size > MAX_BATCH_SIZE:
         raise ValueError(
-            f"batch_size must be between {MIN_BATCH_SIZE} and {MAX_BATCH_SIZE}, "
-            f"got {batch_size}"
+            f"batch_size must be between {MIN_BATCH_SIZE} and {MAX_BATCH_SIZE}, got {batch_size}"
         )
-    
+
     days = older_than_days or (settings.artifact_retention_days * 2)
     if days < MIN_RETENTION_DAYS:
         raise ValueError(
@@ -344,11 +338,8 @@ def cleanup_old_artifacts(
             f"got {days}. Setting to 0 would delete all artifacts."
         )
     if days > MAX_RETENTION_DAYS:
-        raise ValueError(
-            f"older_than_days must be at most {MAX_RETENTION_DAYS} days, "
-            f"got {days}."
-        )
-    
+        raise ValueError(f"older_than_days must be at most {MAX_RETENTION_DAYS} days, got {days}.")
+
     threshold = datetime.now(UTC) - timedelta(days=days)
 
     stats = {
@@ -365,9 +356,7 @@ def cleanup_old_artifacts(
     if tenant_id is not None:
         query = query.where(Artifact.tenant_id == tenant_id)
 
-    artifacts = list(
-        db.execute(query.limit(batch_size)).scalars()
-    )
+    artifacts = list(db.execute(query.limit(batch_size)).scalars())
 
     if not artifacts:
         return stats
@@ -394,11 +383,9 @@ def cleanup_old_artifacts(
         return stats
 
     artifact_ids_to_delete = [a.id for a in artifacts]
-    
+
     try:
-        db.execute(
-            Artifact.__table__.delete().where(Artifact.id.in_(artifact_ids_to_delete))
-        )
+        db.execute(Artifact.__table__.delete().where(Artifact.id.in_(artifact_ids_to_delete)))
         db.commit()
         logger.info(
             "Deleted %d old artifact records from database (older than %d days)",
@@ -422,11 +409,13 @@ def cleanup_old_artifacts(
         except Exception as e:
             error_msg = f"{artifact.uri}: {e}"
             stats["errors"].append(error_msg)
-            stats["failed_file_deletions"].append({
-                "artifact_id": str(artifact.id),
-                "uri": artifact.uri,
-                "error": str(e),
-            })
+            stats["failed_file_deletions"].append(
+                {
+                    "artifact_id": str(artifact.id),
+                    "uri": artifact.uri,
+                    "error": str(e),
+                }
+            )
 
     logger.info(
         "Cleaned up %d old artifacts (older than %d days, %d files, %d errors)",

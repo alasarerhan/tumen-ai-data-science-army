@@ -14,15 +14,13 @@ Calistirmak icin:
 Atlamak icin:
     python -m pytest tests/ -v -m "not integration"
 """
+
 from __future__ import annotations
 
-
-
-from _llm import make_chat_model, skip_no_key
 import pytest
+from _llm import make_chat_model, skip_no_key
 
 pytestmark = pytest.mark.integration
-
 
 
 langchain_openai = pytest.importorskip(
@@ -78,6 +76,7 @@ def llm():
 def _stage_context(llm) -> dict:
     """Stage 1 — ContextualKnowledgeAgent."""
     from ai_data_science_team.agents.strategic_agents import ContextualKnowledgeAgent
+
     agent = ContextualKnowledgeAgent(model=llm)
     _inv(
         agent,
@@ -95,6 +94,7 @@ def _stage_context(llm) -> dict:
 def _stage_synthesize(llm, context_out: dict) -> dict:
     """Stage 2 — ResultsSynthesizerAgent."""
     from ai_data_science_team.agents.strategic_agents import ResultsSynthesizerAgent
+
     combined = {**_RAW_FINDINGS, **context_out}
     agent = ResultsSynthesizerAgent(model=llm)
     _inv(
@@ -113,6 +113,7 @@ def _stage_synthesize(llm, context_out: dict) -> dict:
 def _stage_narrative(llm, synth_out: dict) -> dict:
     """Stage 3 — NarrativeAgent."""
     from ai_data_science_team.agents.strategic_agents import NarrativeAgent
+
     agent = NarrativeAgent(model=llm)
     _inv(
         agent,
@@ -130,6 +131,7 @@ def _stage_narrative(llm, synth_out: dict) -> dict:
 def _stage_recommend(llm, narrative_out: dict) -> dict:
     """Stage 4 — RecommendationAgent."""
     from ai_data_science_team.agents.strategic_agents import RecommendationAgent
+
     agent = RecommendationAgent(model=llm)
     _inv(
         agent,
@@ -190,9 +192,9 @@ def test_e2e_strategic_report_each_stage_uses_tools(llm):
     """Every agent in the pipeline must invoke at least one tool."""
     from ai_data_science_team.agents.strategic_agents import (
         ContextualKnowledgeAgent,
-        ResultsSynthesizerAgent,
         NarrativeAgent,
         RecommendationAgent,
+        ResultsSynthesizerAgent,
     )
 
     agents_and_instructions = [

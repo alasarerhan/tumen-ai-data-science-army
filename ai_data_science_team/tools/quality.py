@@ -38,7 +38,6 @@ from typing import (  # noqa: E402, F401
 
 import pandas as pd  # noqa: E402, F401
 
-
 # ---------------------------------------------------------------------------
 # Built-in expectation templates
 # ---------------------------------------------------------------------------
@@ -121,10 +120,7 @@ def expectation_suite_from_template(
         :func:`validate_against_suite`.
     """
     if template_name not in TEMPLATES:
-        raise ValueError(
-            f"Unknown template '{template_name}'. Known: "
-            f"{sorted(TEMPLATES)}"
-        )
+        raise ValueError(f"Unknown template '{template_name}'. Known: {sorted(TEMPLATES)}")
     rules = [dict(r) for r in TEMPLATES[template_name]]
     # Drop rules whose column does not exist — caller may have a
     # dataset without 'email' or 'transaction_id' columns.  These are
@@ -217,9 +213,11 @@ def _eval_rule(
             min_v = rule.get("min")
             max_v = rule.get("max")
             numeric = pd.to_numeric(series, errors="coerce")
-            mask = (numeric < min_v) | (numeric > max_v) if (
-                min_v is not None or max_v is not None
-            ) else pd.Series(False, index=df.index)
+            mask = (
+                (numeric < min_v) | (numeric > max_v)
+                if (min_v is not None or max_v is not None)
+                else pd.Series(False, index=df.index)
+            )
             mask = mask.fillna(False)
             count = int(mask.sum())
             passed = count == 0
@@ -227,8 +225,12 @@ def _eval_rule(
                 status="passed" if passed else "failed",
                 observed={
                     "out_of_range_count": count,
-                    "min_observed": float(numeric.min(skipna=True)) if numeric.notna().any() else None,
-                    "max_observed": float(numeric.max(skipna=True)) if numeric.notna().any() else None,
+                    "min_observed": float(numeric.min(skipna=True))
+                    if numeric.notna().any()
+                    else None,
+                    "max_observed": float(numeric.max(skipna=True))
+                    if numeric.notna().any()
+                    else None,
                 },
                 violations=df.index[mask].tolist()[:20],
                 threshold={"min": min_v, "max": max_v},
@@ -262,9 +264,9 @@ def _eval_rule(
             base.update(
                 status="passed" if passed else "failed",
                 observed={"non_matching_count": count},
-                violations=df.index[df[column].astype(str).isin(
-                    non_null[failed_mask]
-                )].tolist()[:20],
+                violations=df.index[df[column].astype(str).isin(non_null[failed_mask])].tolist()[
+                    :20
+                ],
                 threshold={"pattern": pattern},
             )
             return base

@@ -7,15 +7,15 @@
 # Imports
 # !pip install git+https://github.com/business-science/ai-data-science-team.git --upgrade
 
-from openai import OpenAI
+import html
+from pathlib import Path
+
+import pandas as pd
 import streamlit as st
 import streamlit.components.v1 as components
-import pandas as pd
-from pathlib import Path
-import html
-
 from langchain_community.chat_message_histories import StreamlitChatMessageHistory
 from langchain_openai import ChatOpenAI
+from openai import OpenAI
 
 from ai_data_science_team.ds_agents import EDAToolsAgent
 from ai_data_science_team.utils.matplotlib import matplotlib_from_base64
@@ -24,9 +24,7 @@ from ai_data_science_team.utils.plotly import plotly_from_dict
 # Helpers
 
 
-def render_report_iframe(
-    report_src, src_type="url", height=620, title="Interactive Report"
-):
+def render_report_iframe(report_src, src_type="url", height=620, title="Interactive Report"):
     """
     Render a report iframe with expandable fullscreen functionality.
 
@@ -160,13 +158,9 @@ if use_demo_data:
         st.write(f"## Preview of {file_name} data:")
         st.dataframe(st.session_state["DATA_RAW"])
     else:
-        st.error(
-            f"Demo data file not found at {demo_file_path}. Please ensure it exists."
-        )
+        st.error(f"Demo data file not found at {demo_file_path}. Please ensure it exists.")
 else:
-    uploaded_file = st.sidebar.file_uploader(
-        "Upload CSV or Excel file", type=["csv", "xlsx"]
-    )
+    uploaded_file = st.sidebar.file_uploader("Upload CSV or Excel file", type=["csv", "xlsx"])
     if uploaded_file:
         if uploaded_file.name.endswith(".csv"):
             df = pd.read_csv(uploaded_file)
@@ -222,10 +216,7 @@ def display_chat_history():
     for i, msg in enumerate(msgs.messages):
         with st.chat_message(msg.type):
             st.write(msg.content)
-            if (
-                "chat_artifacts" in st.session_state
-                and i in st.session_state["chat_artifacts"]
-            ):
+            if "chat_artifacts" in st.session_state and i in st.session_state["chat_artifacts"]:
                 for artifact in st.session_state["chat_artifacts"][i]:
                     with st.expander(artifact["title"], expanded=True):
                         if artifact["render_type"] == "dataframe":
@@ -337,9 +328,7 @@ def process_exploratory(question: str, llm, data: pd.DataFrame) -> dict:
                         corr_plotly = plotly_from_dict(artifacts["plotly_figure"])
                         result["correlation_plotly"] = corr_plotly
                     except Exception as e:
-                        st.error(
-                            f"Error processing correlation funnel Plotly figure: {e}"
-                        )
+                        st.error(f"Error processing correlation funnel Plotly figure: {e}")
 
         elif tool_name == "generate_sweetviz_report":
             if artifacts and isinstance(artifacts, dict):

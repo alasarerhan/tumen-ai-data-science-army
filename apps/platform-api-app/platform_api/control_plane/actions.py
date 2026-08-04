@@ -33,7 +33,6 @@ from platform_api.services.workflow_service import (
     publish_workflow_spec,
 )
 
-
 ALLOWED_SIGNAL_TYPES = {
     "pause",
     "resume",
@@ -223,7 +222,10 @@ async def execute_action(
             status="planned",
             action_name=action_name,
             summary=action_plan.summary,
-            data={"confirmation_required": True, "action_plan": action_plan.model_dump(mode="json")},
+            data={
+                "confirmation_required": True,
+                "action_plan": action_plan.model_dump(mode="json"),
+            },
         )
 
     data = await _execute_supported_action(ctx, action_plan)
@@ -233,7 +235,9 @@ async def execute_action(
         action=f"control_plane.{action_name}",
         tenant_id=ctx.workspace.tenant_id,
         workspace_id=ctx.workspace.id,
-        details=json.dumps({"arguments": _safe_audit_arguments(action_plan.arguments), "result": data}, default=str),
+        details=json.dumps(
+            {"arguments": _safe_audit_arguments(action_plan.arguments), "result": data}, default=str
+        ),
     )
     ctx.db.commit()
     return PlatformActionResult(
@@ -277,7 +281,9 @@ def plan_action_from_text(query: str) -> PlatformActionPlan | None:
     return None
 
 
-async def _execute_supported_action(ctx: ControlPlaneContext, action_plan: PlatformActionPlan) -> dict[str, Any]:
+async def _execute_supported_action(
+    ctx: ControlPlaneContext, action_plan: PlatformActionPlan
+) -> dict[str, Any]:
     action_name = action_plan.action_name
     args = action_plan.arguments
     if action_name == "runs.cancel":
@@ -293,7 +299,9 @@ async def _execute_supported_action(ctx: ControlPlaneContext, action_plan: Platf
     if action_name == "workflows.archive":
         return _archive_workflow(ctx, str(args["workflow_id"]))
     if action_name == "workflows.trigger":
-        return await _trigger_workflow(ctx, str(args["workflow_id"]), dict(args.get("parameters") or {}))
+        return await _trigger_workflow(
+            ctx, str(args["workflow_id"]), dict(args.get("parameters") or {})
+        )
     if action_name == "signals.emit":
         return _emit_signal(
             ctx,
@@ -311,7 +319,9 @@ async def _execute_supported_action(ctx: ControlPlaneContext, action_plan: Platf
 
 
 def _cancel_run(ctx: ControlPlaneContext, run_id: str) -> dict[str, Any]:
-    run = get_run_by_id_for_workspace_for_update(ctx.db, run_id=run_id, workspace_id=ctx.workspace.id)
+    run = get_run_by_id_for_workspace_for_update(
+        ctx.db, run_id=run_id, workspace_id=ctx.workspace.id
+    )
     if run.status in {"COMPLETED", "FAILED", "CANCELLED"}:
         raise ConflictError(f"Run is already in terminal state: {run.status}")
     run.status = "CANCELLED"
@@ -352,14 +362,18 @@ async def _retry_run(ctx: ControlPlaneContext, run_id: str) -> dict[str, Any]:
         workflow_spec_id=original.workflow_spec_id,
         workflow_version=original.workflow_version,
         trigger_type=original.trigger_type,
-        input_artifact_ids=json.loads(original.input_artifact_ids_json) if original.input_artifact_ids_json else [],
+        input_artifact_ids=json.loads(original.input_artifact_ids_json)
+        if original.input_artifact_ids_json
+        else [],
     )
     create_node_executions_for_run(ctx.db, run=new_run, workflow_spec=workflow_spec)
     return {"run_id": str(new_run.id), "prefect_flow_run_id": flow_run_id, "status": new_run.status}
 
 
 def _resume_run(ctx: ControlPlaneContext, run_id: str) -> dict[str, Any]:
-    run = get_run_by_id_for_workspace_for_update(ctx.db, run_id=run_id, workspace_id=ctx.workspace.id)
+    run = get_run_by_id_for_workspace_for_update(
+        ctx.db, run_id=run_id, workspace_id=ctx.workspace.id
+    )
     nodes = resume_run_from_failed_node(ctx.db, run=run)
     queue_result = enqueue_workflow_run(
         run_id=run.id,
@@ -368,11 +382,17 @@ def _resume_run(ctx: ControlPlaneContext, run_id: str) -> dict[str, Any]:
         workflow_spec_id=run.workflow_spec_id,
         trigger_type=run.trigger_type,
     )
-    return {"run_id": str(run.id), "resumed_nodes": [node.node_id for node in nodes], "queue": queue_result}
+    return {
+        "run_id": str(run.id),
+        "resumed_nodes": [node.node_id for node in nodes],
+        "queue": queue_result,
+    }
 
 
 def _retry_node(ctx: ControlPlaneContext, run_id: str, node_id: str) -> dict[str, Any]:
-    run = get_run_by_id_for_workspace_for_update(ctx.db, run_id=run_id, workspace_id=ctx.workspace.id)
+    run = get_run_by_id_for_workspace_for_update(
+        ctx.db, run_id=run_id, workspace_id=ctx.workspace.id
+    )
     node = retry_node_execution(ctx.db, run=run, node_id=node_id)
     queue_result = enqueue_workflow_run(
         run_id=run.id,
@@ -381,7 +401,12 @@ def _retry_node(ctx: ControlPlaneContext, run_id: str, node_id: str) -> dict[str
         workflow_spec_id=run.workflow_spec_id,
         trigger_type=run.trigger_type,
     )
-    return {"run_id": str(run.id), "node_id": node.node_id, "status": node.status, "queue": queue_result}
+    return {
+        "run_id": str(run.id),
+        "node_id": node.node_id,
+        "status": node.status,
+        "queue": queue_result,
+    }
 
 
 def _publish_workflow(ctx: ControlPlaneContext, workflow_id: str) -> dict[str, Any]:
@@ -391,7 +416,12 @@ def _publish_workflow(ctx: ControlPlaneContext, workflow_id: str) -> dict[str, A
         workspace_id=str(ctx.workspace.id),
         user_id=ctx.user.id,
     )
-    return {"workflow_id": str(record.id), "name": record.name, "version": record.version, "status": record.status}
+    return {
+        "workflow_id": str(record.id),
+        "name": record.name,
+        "version": record.version,
+        "status": record.status,
+    }
 
 
 def _archive_workflow(ctx: ControlPlaneContext, workflow_id: str) -> dict[str, Any]:
@@ -401,10 +431,17 @@ def _archive_workflow(ctx: ControlPlaneContext, workflow_id: str) -> dict[str, A
         workspace_id=str(ctx.workspace.id),
         user_id=ctx.user.id,
     )
-    return {"workflow_id": str(record.id), "name": record.name, "version": record.version, "status": record.status}
+    return {
+        "workflow_id": str(record.id),
+        "name": record.name,
+        "version": record.version,
+        "status": record.status,
+    }
 
 
-async def _trigger_workflow(ctx: ControlPlaneContext, workflow_id: str, parameters: dict[str, Any]) -> dict[str, Any]:
+async def _trigger_workflow(
+    ctx: ControlPlaneContext, workflow_id: str, parameters: dict[str, Any]
+) -> dict[str, Any]:
     record = get_workflow_spec_for_workspace(
         ctx.db,
         workflow_id=workflow_id,
@@ -456,7 +493,9 @@ def _emit_signal(
 ) -> dict[str, Any]:
     run = get_run_by_id_for_workspace(ctx.db, run_id=run_id, workspace_id=ctx.workspace.id)
     if signal_type not in ALLOWED_SIGNAL_TYPES:
-        raise ValidationError(f"Unsupported signal_type. Allowed values: {', '.join(sorted(ALLOWED_SIGNAL_TYPES))}")
+        raise ValidationError(
+            f"Unsupported signal_type. Allowed values: {', '.join(sorted(ALLOWED_SIGNAL_TYPES))}"
+        )
     event = WorkflowSignalEvent(
         tenant_id=ctx.workspace.tenant_id,
         workspace_id=ctx.workspace.id,
@@ -473,7 +512,9 @@ def _emit_signal(
     return {"signal_id": str(event.id), "run_id": str(run.id), "signal_type": event.signal_type}
 
 
-async def _toggle_schedule(ctx: ControlPlaneContext, action_name: str, deployment_id: str) -> dict[str, Any]:
+async def _toggle_schedule(
+    ctx: ControlPlaneContext, action_name: str, deployment_id: str
+) -> dict[str, Any]:
     from platform_api.services.workflow_scheduler_service import WorkflowSchedulerService
 
     scheduler = WorkflowSchedulerService(ctx.db)

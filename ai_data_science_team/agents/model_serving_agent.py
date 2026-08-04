@@ -30,9 +30,18 @@ MLflow URIs are trusted as they use MLflow's built-in validation.
 """
 
 import hashlib  # noqa: E402, F401
-import os  # noqa: E402, F401
 import logging  # noqa: E402, F401
+import os  # noqa: E402, F401
 
+import pandas as pd  # noqa: E402, F401
+from IPython.display import Markdown  # noqa: E402, F401
+from langchain.agents import create_agent  # noqa: E402, F401
+from langchain.tools import tool  # noqa: E402, F401
+from langchain_core.messages import AIMessage, BaseMessage  # noqa: E402, F401
+from langgraph.graph import END, START, StateGraph  # noqa: E402, F401
+from langgraph.graph.message import add_messages  # noqa: E402, F401
+from langgraph.prebuilt import InjectedState  # noqa: E402, F401
+from langgraph.types import Checkpointer  # noqa: E402, F401
 from typing_extensions import (  # noqa: E402, F401
     Annotated,
     Any,
@@ -43,17 +52,6 @@ from typing_extensions import (  # noqa: E402, F401
     Tuple,
     TypedDict,
 )
-
-import pandas as pd  # noqa: E402, F401
-from IPython.display import Markdown  # noqa: E402, F401
-
-from langchain.agents import create_agent  # noqa: E402, F401
-from langchain.tools import tool  # noqa: E402, F401
-from langchain_core.messages import AIMessage, BaseMessage  # noqa: E402, F401
-from langgraph.graph import END, START, StateGraph  # noqa: E402, F401
-from langgraph.graph.message import add_messages  # noqa: E402, F401
-from langgraph.prebuilt import InjectedState  # noqa: E402, F401
-from langgraph.types import Checkpointer  # noqa: E402, F401
 
 from ai_data_science_team.templates import BaseAgent  # noqa: E402, F401
 from ai_data_science_team.utils.messages import get_tool_call_names  # noqa: E402, F401
@@ -70,9 +68,9 @@ def _verify_model_signature(uri: str) -> bool:
     """
     if not os.path.exists(uri):
         return False
-    
+
     sig_path = uri + ".sha256"
-    
+
     if not os.path.exists(sig_path):
         logger.warning(
             f"Model signature file not found: {sig_path}. "
@@ -80,21 +78,20 @@ def _verify_model_signature(uri: str) -> bool:
             "Run: sha256sum {uri} > {uri}.sha256"
         )
         return True
-    
+
     try:
         with open(sig_path, "r") as f:
             expected_hash = f.read().strip().split()[0]
-        
+
         with open(uri, "rb") as f:
             actual_hash = hashlib.sha256(f.read()).hexdigest()
-        
+
         if actual_hash != expected_hash:
             logger.error(
-                f"Model signature verification failed for {uri}. "
-                "File may have been tampered with."
+                f"Model signature verification failed for {uri}. File may have been tampered with."
             )
             return False
-        
+
         logger.info(f"Model signature verified for {uri}")
         return True
     except Exception as e:
@@ -105,7 +102,7 @@ def _verify_model_signature(uri: str) -> bool:
 def _safe_pickle_load(uri: str, require_signature: bool = False):
     """
     Safely load a pickle file with optional signature verification.
-    
+
     SECURITY: Pickle files can execute arbitrary code during deserialization.
     Always verify signatures for untrusted model files.
     """
@@ -114,11 +111,12 @@ def _safe_pickle_load(uri: str, require_signature: bool = False):
             f"Model signature verification failed for {uri}. "
             "Refusing to load potentially malicious model file."
         )
-    
+
     import pickle  # noqa: E402, F401
-    
+
     with open(uri, "rb") as fh:
         return pickle.load(fh)
+
 
 AGENT_NAME = "model_serving_agent"
 
@@ -151,7 +149,9 @@ def load_model(
 
     uri = (model_uri or "").strip()
     if not uri:
-        return "model_uri is empty – please provide a valid path or MLflow URI.", {"error": "empty model_uri"}
+        return "model_uri is empty – please provide a valid path or MLflow URI.", {
+            "error": "empty model_uri"
+        }
 
     loaded_model = None
     flavour = "unknown"
@@ -244,9 +244,7 @@ def load_model(
     }
     content = (
         f"Model loaded from '{uri}': type={model_type}, flavour={flavour}, "
-        f"task_type={tt}"
-        + (f", features={feature_names}" if feature_names else "")
-        + "."
+        f"task_type={tt}" + (f", features={feature_names}" if feature_names else "") + "."
     )
     return content, artifact
 
@@ -277,7 +275,6 @@ def run_inference(
     """
     logger.info("    * Tool: run_inference")
 
-
     uri = (model_uri or "").strip()
     model = _MODEL_REGISTRY.get(uri)
 
@@ -303,10 +300,14 @@ def run_inference(
                 with open(uri, "rb") as fh:
                     model = pickle.load(fh)
         else:
-            return f"Model not found – call load_model first. URI: {uri}", {"error": "model not loaded"}
+            return f"Model not found – call load_model first. URI: {uri}", {
+                "error": "model not loaded"
+            }
 
     if not input_data_raw:
-        return "input_data_raw is empty – provide input data to run inference.", {"error": "empty input"}
+        return "input_data_raw is empty – provide input data to run inference.", {
+            "error": "empty input"
+        }
 
     try:
         df = pd.DataFrame(input_data_raw)
@@ -368,9 +369,8 @@ def run_inference(
         "unique_predictions": unique_preds,
     }
 
-    summary = (
-        f"Inference complete on {n_samples} samples (task={tt})."
-        + (f" Unique classes predicted: {unique_preds}." if unique_preds is not None else "")
+    summary = f"Inference complete on {n_samples} samples (task={tt})." + (
+        f" Unique classes predicted: {unique_preds}." if unique_preds is not None else ""
     )
     return summary, artifact
 
@@ -417,8 +417,7 @@ def health_check(
 
     if model is None:
         return (
-            f"HEALTH CHECK FAILED – model '{uri}' not in registry. "
-            "Call load_model first.",
+            f"HEALTH CHECK FAILED – model '{uri}' not in registry. Call load_model first.",
             status,
         )
 
@@ -460,7 +459,7 @@ def health_check(
         f"predict={status['has_predict']}, "
         f"predict_proba={status['has_predict_proba']}, "
         f"smoke_test={'OK' if status['smoke_test_passed'] else 'FAILED'}."
-        + (f" Error: {status['smoke_test_error']}" if status['smoke_test_error'] else "")
+        + (f" Error: {status['smoke_test_error']}" if status["smoke_test_error"] else "")
     )
     return summary, status
 
@@ -485,8 +484,7 @@ def get_serving_params(
     logger.info("    * Tool: get_serving_params")
     loaded = model_uri in _MODEL_REGISTRY
     return (
-        f"Model Serving config → uri='{model_uri}', task_type='{task_type}', "
-        f"model_loaded={loaded}."
+        f"Model Serving config → uri='{model_uri}', task_type='{task_type}', model_loaded={loaded}."
     )
 
 
@@ -832,11 +830,7 @@ class ModelServingAgent(BaseAgent):
         r = self.get_serving_result()
         if r is None:
             return None
-        return {
-            k: r[k]
-            for k in ("model_uri", "model_type", "flavour", "feature_names")
-            if k in r
-        }
+        return {k: r[k] for k in ("model_uri", "model_type", "flavour", "feature_names") if k in r}
 
     def get_health_status(self) -> Optional[Dict]:
         """

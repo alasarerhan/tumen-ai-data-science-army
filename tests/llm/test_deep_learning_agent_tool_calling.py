@@ -38,6 +38,7 @@ pytestmark = pytest.mark.llm
 # 1. PURE: model-driven tool'lar
 # ---------------------------------------------------------------------------
 
+
 def test_detect_device_real(llm_or_skip, llm_model):
     tool = detect_device_wrapped
     _content, _ = _assert_result(
@@ -106,6 +107,7 @@ def test_build_lstm_classifier_real(llm_or_skip, llm_model):
 # 2. STATEFUL: np.ndarray → underlying tool.func() doğrudan çağrı
 # ---------------------------------------------------------------------------
 
+
 def test_train_mlp_classifier_real():
     """``train_mlp_classifier`` np.ndarray alır; küçük eğitim verisi ile test.
 
@@ -117,8 +119,14 @@ def test_train_mlp_classifier_real():
     X = rng.random((40, 4), dtype=np.float32)
     y = np.array([0, 1] * 20, dtype=np.int64)
     out = train_mlp_classifier(
-        X, y, hidden=(8,), dropout=0.1, epochs=2,
-        early_stopping_patience=1, seed=0, verbose=False,
+        X,
+        y,
+        hidden=(8,),
+        dropout=0.1,
+        epochs=2,
+        early_stopping_patience=1,
+        seed=0,
+        verbose=False,
     )
     assert "model" in out
     assert "loss_curve" in out
@@ -132,8 +140,13 @@ def test_train_lstm_forecaster_real():
     X = rng.random((30, 3, 2), dtype=np.float32)
     y = rng.random(30, dtype=np.float32)
     out = train_lstm_forecaster(
-        X, y, hidden=4, layers=1, horizon=1,
-        epochs=2, verbose=False,
+        X,
+        y,
+        hidden=4,
+        layers=1,
+        horizon=1,
+        epochs=2,
+        verbose=False,
     )
     assert "model" in out
     assert "loss_curve" in out

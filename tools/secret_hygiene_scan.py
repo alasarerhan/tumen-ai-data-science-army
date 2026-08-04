@@ -5,7 +5,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parents[1]
 SECRET_PATTERNS = [
     re.compile(r"\bsk-(?!\.\.\.|example|test|redacted)[A-Za-z0-9_-]{20,}\b"),

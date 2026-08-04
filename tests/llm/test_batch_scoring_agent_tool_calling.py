@@ -93,20 +93,17 @@ def test_scoring_report_real(llm_or_skip, llm_model):
     tool = scoring_report_wrapped
     result, _ = _assert_result(
         _drive_tool_call(
-            llm_model, tool,
+            llm_model,
+            tool,
             "scoring_report tool'unu TEK çağrı ile çağır. "
             "n_rows=10000, duration_s=12.5, model_uri='models:/churn_v123/4'.",
         ),
         tool.name,
     )
     s = str(result).lower()
-    assert (
-        "scoring" in s
-        or "report" in s
-        or "rows" in s
-        or "ok" in s
-        or "duration" in s
-    ), f"scoring_report beklenen rapor yapısı üretmedi: {s[:200]}"
+    assert "scoring" in s or "report" in s or "rows" in s or "ok" in s or "duration" in s, (
+        f"scoring_report beklenen rapor yapısı üretmedi: {s[:200]}"
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -156,7 +153,8 @@ def test_align_features_reorder_real(small_df):
 def test_resolve_model_wrapper_real(dummy_model):
     """``resolve_model_wrapped`` tek çalışan wrapper; tool.func() ile doğrula."""
     content, artifact = _invoke_wrapper(
-        resolve_model_wrapped, model=dummy_model,
+        resolve_model_wrapped,
+        model=dummy_model,
     )
     assert "ok" in content
     assert artifact["result"] is dummy_model
@@ -181,7 +179,8 @@ def test_predict_dataframe_real(small_df, dummy_model):
 def test_chunked_predict_real(small_df, dummy_model):
     """``chunked_predict`` DataFrame'i parçalara böler, prediction ekler."""
     scored, alignment, runtime = chunked_predict(
-        df=small_df, model=dummy_model,
+        df=small_df,
+        model=dummy_model,
     )
     assert "prediction" in scored.columns
     assert runtime["rows_scored"] == len(small_df)

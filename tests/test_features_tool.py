@@ -161,9 +161,7 @@ class TestDetectLeakage:
         y = rng.normal(size=50)
         report = detect_leakage(df, pd.Series(y), threshold=0.99)
         assert "metric_after_" in report.suspect_columns
-        f = next(
-            r for r in report.findings if r.column == "metric_after_"
-        )
+        f = next(r for r in report.findings if r.column == "metric_after_")
         assert "suffix" in f.reason
 
     def test_clean_features_no_suspects(self):

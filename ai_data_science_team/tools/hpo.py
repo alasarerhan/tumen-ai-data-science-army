@@ -33,7 +33,6 @@ import time  # noqa: E402, F401
 from dataclasses import dataclass, field  # noqa: E402, F401
 from typing import Any, Callable, Dict, List, Mapping, Optional, Sequence, Tuple  # noqa: E402, F401
 
-
 # ---------------------------------------------------------------------------
 # Built-in default search spaces
 # ---------------------------------------------------------------------------
@@ -75,9 +74,7 @@ DEFAULT_SEARCH_SPACES: Dict[Tuple[str, str], Dict[str, Dict[str, Any]]] = {
 }
 
 
-def suggest_default_search_space(
-    engine: str, task_type: str
-) -> Dict[str, Dict[str, Any]]:
+def suggest_default_search_space(engine: str, task_type: str) -> Dict[str, Dict[str, Any]]:
     """Return the default search space for an ``(engine, task_type)`` pair.
 
     Unknown pairs raise ``ValueError``.
@@ -103,9 +100,7 @@ def _sample_one(rng: random.Random, spec: Mapping[str, Any]) -> Any:
     high = spec.get("high")
     log = bool(spec.get("log", False))
     if log and (low is None or high is None or low <= 0 or high <= 0):
-        raise ValueError(
-            f"'log' requires positive low/high (got {low}, {high})"
-        )
+        raise ValueError(f"'log' requires positive low/high (got {low}, {high})")
     if t == "int":
         if log:
             lo = math.log(low)
@@ -193,9 +188,7 @@ def _median_prune_decision(
     """
     if len(completed) < warmup or current_value is None:
         return False
-    history = [
-        t.value for t in completed if not t.pruned
-    ]
+    history = [t.value for t in completed if not t.pruned]
     if not history:
         return False
     median = sorted(history)[len(history) // 2]
@@ -237,20 +230,14 @@ def _compute_param_importances(
         try:
             ranks = [sorted(col).index(v) for v in col]
             n_bins = min(5, len(set(ranks)))
-            edges = [
-                min(ranks) + i * (max(ranks) - min(ranks)) / n_bins
-                for i in range(n_bins + 1)
-            ]
-            bin_indices = [
-                sum(v > e for e in edges[1:]) for v in ranks
-            ]
+            edges = [min(ranks) + i * (max(ranks) - min(ranks)) / n_bins for i in range(n_bins + 1)]
+            bin_indices = [sum(v > e for e in edges[1:]) for v in ranks]
             bin_means: Dict[int, List[float]] = {}
             for i, bi in enumerate(bin_indices):
                 bin_means.setdefault(bi, []).append(objective[i])
             overall = sum(objective) / len(objective)
             ss_between = sum(
-                len(vals) * (sum(vals) / len(vals) - overall) ** 2
-                for vals in bin_means.values()
+                len(vals) * (sum(vals) / len(vals) - overall) ** 2 for vals in bin_means.values()
             )
             ss_total = sum((v - overall) ** 2 for v in objective)
             importances[k] = ss_between / max(ss_total, 1e-12)
@@ -306,9 +293,7 @@ def run_study(
     with full diagnostic detail.
     """
     if direction not in {"maximize", "minimize"}:
-        raise ValueError(
-            f"direction must be 'maximize' or 'minimize', got {direction!r}"
-        )
+        raise ValueError(f"direction must be 'maximize' or 'minimize', got {direction!r}")
     if n_trials <= 0:
         raise ValueError(f"n_trials must be positive, got {n_trials}")
 
@@ -402,9 +387,11 @@ def run_study(
         )
 
         if not pruned:
-            if best_value is None or (
-                direction == "maximize" and value > best_value
-            ) or (direction == "minimize" and value < best_value):
+            if (
+                best_value is None
+                or (direction == "maximize" and value > best_value)
+                or (direction == "minimize" and value < best_value)
+            ):
                 best_value = value
                 best_params = dict(params)
 
@@ -446,9 +433,7 @@ def run_study(
     result = HPOResult(
         study_name=study_name,
         best_trial={
-            "number": next(
-                (t.number for t in completed if t.value == best_value), -1
-            ),
+            "number": next((t.number for t in completed if t.value == best_value), -1),
             "value": best_value,
             "params": best_params,
         },
@@ -498,13 +483,9 @@ def _sample_via_optuna(
         high = spec.get("high")
         log = bool(spec.get("log", False))
         if t == "int":
-            params[name] = trial.suggest_int(
-                name, int(low), int(high), log=log
-            )
+            params[name] = trial.suggest_int(name, int(low), int(high), log=log)
         else:
-            params[name] = trial.suggest_float(
-                name, float(low), float(high), log=log
-            )
+            params[name] = trial.suggest_float(name, float(low), float(high), log=log)
     # Don't actually run the trial — we just want the params.
     return params
 
@@ -517,5 +498,3 @@ __all__ = [
     "HPOResult",
     "run_study",
 ]
-
-

@@ -1,9 +1,8 @@
 from __future__ import annotations
 
 import json
-from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Header, Query
+from fastapi import APIRouter, Depends, Header, HTTPException, Query
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
@@ -11,18 +10,18 @@ from platform_api.authz.dependencies import require_workspace_member
 from platform_api.core.etag import compute_etag, validate_etag
 from platform_api.db.models import WorkflowRun
 from platform_api.db.session import get_db
-from platform_api.schemas.pagination import build_paginated_response, MAX_PAGE_SIZE
+from platform_api.schemas.pagination import MAX_PAGE_SIZE, build_paginated_response
+from platform_api.services.agent_execution_trace_service import (
+    agent_execution_trace_to_dict,
+    list_agent_execution_traces_for_run,
+)
+from platform_api.services.run_orchestration_service import create_orchestration_run_id
 from platform_api.services.run_service import (
     create_workflow_run_record,
     get_run_by_id_for_workspace,
     get_run_by_id_for_workspace_for_update,
     get_workflow_spec_for_run,
     list_workflow_runs_for_workspace,
-)
-from platform_api.services.run_orchestration_service import create_orchestration_run_id
-from platform_api.services.agent_execution_trace_service import (
-    agent_execution_trace_to_dict,
-    list_agent_execution_traces_for_run,
 )
 from platform_api.services.workflow_node_execution_service import (
     create_node_executions_for_run,
@@ -45,7 +44,9 @@ def _run_to_dict(run: WorkflowRun) -> dict:
         "workflow_spec_id": str(run.workflow_spec_id) if run.workflow_spec_id else None,
         "workflow_version": run.workflow_version,
         "trigger_type": run.trigger_type,
-        "input_artifact_ids": json.loads(run.input_artifact_ids_json) if run.input_artifact_ids_json else [],
+        "input_artifact_ids": json.loads(run.input_artifact_ids_json)
+        if run.input_artifact_ids_json
+        else [],
         "prefect_flow_run_id": run.prefect_flow_run_id,
         "status": run.status,
         "parameters": json.loads(run.parameters_json) if run.parameters_json else {},
@@ -59,7 +60,7 @@ def _run_to_dict(run: WorkflowRun) -> dict:
 @router.get("")
 async def list_runs(
     workspace_id: str,
-    cursor: Optional[str] = Query(default=None, description="Pagination cursor (run ID)"),
+    cursor: str | None = Query(default=None, description="Pagination cursor (run ID)"),
     limit: int = Query(default=20, ge=1, le=MAX_PAGE_SIZE, description="Items per page"),
     context: dict = Depends(require_workspace_member),
     db: Session = Depends(get_db),
@@ -173,19 +174,19 @@ async def cancel_run(
     db: Session = Depends(get_db),
 ) -> dict:
     """Cancel a workflow run.
-    
+
     Uses row-level locking (SELECT FOR UPDATE) to prevent race conditions
     when multiple concurrent requests attempt to modify the same run.
     """
     workspace = context["workspace"]
     # Use FOR UPDATE to prevent race conditions on status transitions
-    run = get_run_by_id_for_workspace_for_update(
-        db, run_id=run_id, workspace_id=workspace.id
-    )
+    run = get_run_by_id_for_workspace_for_update(db, run_id=run_id, workspace_id=workspace.id)
     if if_match:
         validate_etag(run, if_match)
     if run.status in ("COMPLETED", "FAILED", "CANCELLED"):
-        raise HTTPException(status_code=409, detail=f"Run is already in terminal state: {run.status}")
+        raise HTTPException(
+            status_code=409, detail=f"Run is already in terminal state: {run.status}"
+        )
     run.status = "CANCELLED"
     db.add(run)
     db.commit()
@@ -235,7 +236,9 @@ async def retry_run(
         workflow_spec_id=original.workflow_spec_id,
         workflow_version=original.workflow_version,
         trigger_type=original.trigger_type,
-        input_artifact_ids=json.loads(original.input_artifact_ids_json) if original.input_artifact_ids_json else [],
+        input_artifact_ids=json.loads(original.input_artifact_ids_json)
+        if original.input_artifact_ids_json
+        else [],
     )
     create_node_executions_for_run(db, run=new_run, workflow_spec=workflow_spec)
     db.commit()
@@ -320,4 +323,7 @@ async def resume_run(
         trigger_type=run.trigger_type,
     )
     db.commit()
-    return {"resumed_nodes": [node_execution_to_dict(node) for node in nodes], "queue": queue_result}
+    return {
+        "resumed_nodes": [node_execution_to_dict(node) for node in nodes],
+        "queue": queue_result,
+    }

@@ -1,12 +1,13 @@
 from __future__ import annotations
 
+import sys
+import types
+from unittest.mock import AsyncMock
+
 import pytest
 from fastapi import HTTPException
 from fastapi.security import HTTPAuthorizationCredentials
 from starlette.requests import Request
-from unittest.mock import AsyncMock
-import sys
-import types
 
 from platform_api.auth.dependencies import get_principal, reset_oidc_verifier_cache
 from platform_api.core.config import settings
@@ -38,7 +39,9 @@ async def test_dev_auth_is_blocked_in_release_profile():
         with pytest.raises(HTTPException) as exc:
             await get_principal(
                 request=_request_with_cookies(),
-                credentials=HTTPAuthorizationCredentials(scheme="Bearer", credentials="test-dev-token"),
+                credentials=HTTPAuthorizationCredentials(
+                    scheme="Bearer", credentials="test-dev-token"
+                ),
             )
         assert exc.value.status_code == 503
     finally:
@@ -113,11 +116,13 @@ async def test_oidc_requires_verified_email_claim():
             def __init__(self, config: FakeOIDCConfig) -> None:
                 self.config = config
 
-            verify = AsyncMock(return_value={
-                "sub": "oidc-user",
-                "email": "user@example.com",
-                "email_verified": False,
-            })
+            verify = AsyncMock(
+                return_value={
+                    "sub": "oidc-user",
+                    "email": "user@example.com",
+                    "email_verified": False,
+                }
+            )
 
         fake_module.OIDCConfig = FakeOIDCConfig
         fake_module.OIDCVerifier = FakeOIDCVerifier
@@ -163,11 +168,13 @@ async def test_oidc_enforces_allowed_email_domains():
             def __init__(self, config: FakeOIDCConfig) -> None:
                 self.config = config
 
-            verify = AsyncMock(return_value={
-                "sub": "oidc-user",
-                "email": "user@gmail.com",
-                "email_verified": True,
-            })
+            verify = AsyncMock(
+                return_value={
+                    "sub": "oidc-user",
+                    "email": "user@gmail.com",
+                    "email_verified": True,
+                }
+            )
 
         fake_module.OIDCConfig = FakeOIDCConfig
         fake_module.OIDCVerifier = FakeOIDCVerifier

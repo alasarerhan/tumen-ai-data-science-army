@@ -25,6 +25,7 @@ OIDC_JWKS_CACHE_SECONDS = 600  # 10 minutes (reduced from 1 hour for key rotatio
 @dataclass
 class CircuitBreakerState:
     """Circuit breaker state for OIDC endpoint."""
+
     failure_count: int = 0
     last_failure_time: float = 0.0
     is_open: bool = False
@@ -64,7 +65,10 @@ class OIDCVerifier:
         """Check if circuit breaker is open."""
         if not self._circuit_breaker.is_open:
             return False
-        if time.time() - self._circuit_breaker.last_failure_time > OIDC_CIRCUIT_BREAKER_RESET_SECONDS:
+        if (
+            time.time() - self._circuit_breaker.last_failure_time
+            > OIDC_CIRCUIT_BREAKER_RESET_SECONDS
+        ):
             logger.info("OIDC circuit breaker reset, attempting recovery")
             self._circuit_breaker.is_open = False
             self._circuit_breaker.failure_count = 0
@@ -83,8 +87,7 @@ class OIDCVerifier:
         if self._circuit_breaker.failure_count >= OIDC_CIRCUIT_BREAKER_THRESHOLD:
             self._circuit_breaker.is_open = True
             logger.error(
-                "OIDC circuit breaker OPEN after %d failures. "
-                "Will retry after %d seconds.",
+                "OIDC circuit breaker OPEN after %d failures. Will retry after %d seconds.",
                 self._circuit_breaker.failure_count,
                 OIDC_CIRCUIT_BREAKER_RESET_SECONDS,
             )
@@ -122,10 +125,12 @@ class OIDCVerifier:
                 last_error = e
                 logger.warning(
                     "OIDC JWKS fetch attempt %d/%d failed: %s",
-                    attempt + 1, OIDC_MAX_RETRIES, e,
+                    attempt + 1,
+                    OIDC_MAX_RETRIES,
+                    e,
                 )
                 if attempt < OIDC_MAX_RETRIES - 1:
-                    delay = OIDC_RETRY_BASE_DELAY * (2 ** attempt)
+                    delay = OIDC_RETRY_BASE_DELAY * (2**attempt)
                     await asyncio.sleep(delay)
 
         self._record_failure()
@@ -147,5 +152,6 @@ class OIDCVerifier:
             )
         except JWTError:
             raise ValueError("Invalid token") from None
+
 
 __all__ = ["OIDCConfig", "OIDCVerifier"]

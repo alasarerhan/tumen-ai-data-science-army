@@ -1,5 +1,5 @@
-from enum import Enum
 from dataclasses import dataclass
+from enum import Enum
 from typing import ClassVar
 
 
@@ -36,7 +36,7 @@ class ArtifactKeys:
     EDA_KEYS: ClassVar[tuple] = ("eda_reports",)
     MODEL_KEYS: ClassVar[tuple] = ("model_info", "eval_artifacts", "eval_plotly_graph")
     MLFLOW_KEYS: ClassVar[tuple] = ("mlflow_artifacts",)
-    
+
     @classmethod
     def all_keys(cls) -> list[str]:
         return sorted(

@@ -55,13 +55,15 @@ from typing import Any, AsyncIterator, Dict, List, Optional, Tuple  # noqa: E402
 import pandas as pd  # noqa: E402, F401
 from langchain_core.messages import AIMessage  # noqa: E402, F401
 
-from ai_data_science_team.multiagents.chat_router import IntentRouter, RouterDecision  # noqa: E402, F401
+from ai_data_science_team.multiagents.chat_router import (  # noqa: E402, F401
+    IntentRouter,
+    RouterDecision,
+)
 from ai_data_science_team.multiagents.chat_session import (  # noqa: E402, F401
     ChatMessage,
     ChatSession,
     ChatSessionStore,
 )
-
 
 # ---------------------------------------------------------------------------
 # ChatResponse
@@ -228,9 +230,7 @@ class ChatWorkspace:
             raise KeyError(f"Session not found: {session_id}")
 
         df: Optional[pd.DataFrame] = (
-            next(iter(session.datasets.values()), None)
-            if session.datasets
-            else None
+            next(iter(session.datasets.values()), None) if session.datasets else None
         )
 
         # 3. Dispatch
@@ -260,9 +260,7 @@ class ChatWorkspace:
         )
 
         # 5. Persist
-        self._store.add_message(
-            session_id, ChatMessage(role="user", content=message)
-        )
+        self._store.add_message(session_id, ChatMessage(role="user", content=message))
         self._store.add_message(
             session_id,
             ChatMessage(
@@ -296,9 +294,7 @@ class ChatWorkspace:
             raise KeyError(f"Session not found: {session_id}")
 
         df: Optional[pd.DataFrame] = (
-            next(iter(session.datasets.values()), None)
-            if session.datasets
-            else None
+            next(iter(session.datasets.values()), None) if session.datasets else None
         )
 
         merged_kwargs = {**self._agent_kwargs, **agent_kwargs}
@@ -389,8 +385,13 @@ class ChatWorkspace:
     def _run_pandas_analyst(
         self, message: str, df: Optional[pd.DataFrame], **kwargs
     ) -> Tuple[str, Optional[str], Optional[Dict]]:
-        from ai_data_science_team.agents import DataWranglingAgent, DataVisualizationAgent  # noqa: E402, F401
-        from ai_data_science_team.multiagents.pandas_data_analyst import PandasDataAnalyst  # noqa: E402, F401
+        from ai_data_science_team.agents import (  # noqa: E402, F401
+            DataVisualizationAgent,
+            DataWranglingAgent,
+        )
+        from ai_data_science_team.multiagents.pandas_data_analyst import (
+            PandasDataAnalyst,  # noqa: E402, F401
+        )
 
         agent = PandasDataAnalyst(
             model=self._model,
@@ -407,8 +408,13 @@ class ChatWorkspace:
     async def _run_pandas_analyst_async(
         self, message: str, df: Optional[pd.DataFrame], **kwargs
     ) -> Tuple[str, Optional[str], Optional[Dict]]:
-        from ai_data_science_team.agents import DataWranglingAgent, DataVisualizationAgent  # noqa: E402, F401
-        from ai_data_science_team.multiagents.pandas_data_analyst import PandasDataAnalyst  # noqa: E402, F401
+        from ai_data_science_team.agents import (  # noqa: E402, F401
+            DataVisualizationAgent,
+            DataWranglingAgent,
+        )
+        from ai_data_science_team.multiagents.pandas_data_analyst import (
+            PandasDataAnalyst,  # noqa: E402, F401
+        )
 
         agent = PandasDataAnalyst(
             model=self._model,
@@ -448,7 +454,9 @@ class ChatWorkspace:
         if hasattr(agent, "ainvoke_agent"):
             await agent.ainvoke_agent(user_instructions=message, data_raw=df, **kwargs)
         else:
-            await asyncio.to_thread(agent.invoke_agent, user_instructions=message, data_raw=df, **kwargs)
+            await asyncio.to_thread(
+                agent.invoke_agent, user_instructions=message, data_raw=df, **kwargs
+            )
         return _extract_response(agent)
 
     def _run_data_cleaning(
@@ -488,7 +496,9 @@ class ChatWorkspace:
     def _run_document_parser(
         self, message: str, df: Optional[pd.DataFrame], **kwargs
     ) -> Tuple[str, Optional[str], Optional[Dict]]:
-        from ai_data_science_team.agents.document_parser_agent import DocumentParserAgent  # noqa: E402, F401
+        from ai_data_science_team.agents.document_parser_agent import (
+            DocumentParserAgent,  # noqa: E402, F401
+        )
 
         agent = DocumentParserAgent(model=self._model)
         agent.invoke_agent(user_instructions=message, **kwargs)
@@ -502,7 +512,9 @@ class ChatWorkspace:
     def _run_api_connector(
         self, message: str, df: Optional[pd.DataFrame], **kwargs
     ) -> Tuple[str, Optional[str], Optional[Dict]]:
-        from ai_data_science_team.agents.api_connector_agent import APIConnectorAgent  # noqa: E402, F401
+        from ai_data_science_team.agents.api_connector_agent import (
+            APIConnectorAgent,  # noqa: E402, F401
+        )
 
         agent = APIConnectorAgent(model=self._model)
         agent.invoke_agent(user_instructions=message, **kwargs)
@@ -516,7 +528,9 @@ class ChatWorkspace:
     def _run_model_serving(
         self, message: str, df: Optional[pd.DataFrame], **kwargs
     ) -> Tuple[str, Optional[str], Optional[Dict]]:
-        from ai_data_science_team.agents.model_serving_agent import ModelServingAgent  # noqa: E402, F401
+        from ai_data_science_team.agents.model_serving_agent import (
+            ModelServingAgent,  # noqa: E402, F401
+        )
 
         agent = ModelServingAgent(model=self._model)
         agent.invoke_agent(user_instructions=message, **kwargs)
@@ -588,12 +602,7 @@ def _extract_response(
             text = msg.content if hasattr(msg, "content") else str(msg)
             break
     if not text:
-        text = (
-            resp.get("answer")
-            or resp.get("result")
-            or resp.get("output")
-            or ""
-        )
+        text = resp.get("answer") or resp.get("result") or resp.get("output") or ""
     if not text:
         text = str(resp) if resp else "No response."
 

@@ -17,16 +17,15 @@ Gerçek OpenAI API kullanır (gpt-4o-mini).  Bu testler şunları kapsar:
 Atlamak için:
     pytest tests/ -v -m "not integration"
 """
+
 from __future__ import annotations
 
-
-from _llm import make_chat_model, skip_no_key
 from typing import Any, Dict
 
 import pytest
+from _llm import make_chat_model, skip_no_key
 
 pytestmark = pytest.mark.integration
-
 
 
 langchain_openai = pytest.importorskip(
@@ -38,6 +37,7 @@ langchain_openai = pytest.importorskip(
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _invoke_safe(agent, **kw):
     """invoke_agent; API quota sorunlarında testi atlar."""
@@ -81,6 +81,7 @@ def llm():
 @pytest.fixture(autouse=True)
 def clean_registry():
     from ai_data_science_team.agent_registry import AgentRegistry
+
     AgentRegistry.clear()
     yield
     AgentRegistry.clear()
@@ -89,6 +90,7 @@ def clean_registry():
 # ---------------------------------------------------------------------------
 # WorkflowResolver + LLM (Dynamic Scenario)
 # ---------------------------------------------------------------------------
+
 
 @skip_no_key
 def test_resolver_dynamic_generates_valid_spec(llm):
@@ -118,8 +120,8 @@ def test_resolver_dynamic_step_structure(llm):
     spec = result["spec"]
 
     for step in spec.get("steps", []):
-        assert "id" in step,          f"Step 'id' eksik: {step}"
-        assert "agent" in step,       f"Step 'agent' eksik: {step}"
+        assert "id" in step, f"Step 'id' eksik: {step}"
+        assert "agent" in step, f"Step 'agent' eksik: {step}"
         assert "instruction" in step, f"Step 'instruction' eksik: {step}"
 
 
@@ -127,6 +129,7 @@ def test_resolver_dynamic_step_structure(llm):
 def test_resolver_supervised_no_llm_call(llm):
     """Supervised senaryoda LLM çağrısı yapılmaz — spec olduğu gibi döner."""
     from unittest.mock import patch
+
     from ai_data_science_team.workflow_resolver import WorkflowResolver, build_spec, build_step
 
     spec = build_spec("prebuilt", [build_step("s0", "AgentX", "Do task")])
@@ -144,17 +147,26 @@ def test_resolver_supervised_no_llm_call(llm):
 # OrchestratorAgent — Supervised (LLM summary gerçek)
 # ---------------------------------------------------------------------------
 
+
 @skip_no_key
 def test_orchestrator_supervised_ai_message(llm):
     """Supervised senaryoda OrchestratorAgent LLM ile özet oluşturmalı."""
     from ai_data_science_team.agents.orchestrator_agent import OrchestratorAgent
     from ai_data_science_team.workflow_resolver import build_spec, build_step
 
-    spec = build_spec("sales_analysis", [
-        build_step("load", "DataLoaderAgent", "Load sales data from CSV"),
-        build_step("clean", "DataCleaningAgent", "Clean missing values and outliers", depends_on=["load"]),
-        build_step("eda", "EDAAgent", "Generate descriptive statistics", depends_on=["clean"]),
-    ])
+    spec = build_spec(
+        "sales_analysis",
+        [
+            build_step("load", "DataLoaderAgent", "Load sales data from CSV"),
+            build_step(
+                "clean",
+                "DataCleaningAgent",
+                "Clean missing values and outliers",
+                depends_on=["load"],
+            ),
+            build_step("eda", "EDAAgent", "Generate descriptive statistics", depends_on=["clean"]),
+        ],
+    )
 
     orch = OrchestratorAgent(
         model=llm,
@@ -175,10 +187,13 @@ def test_orchestrator_supervised_run_result_complete(llm):
     from ai_data_science_team.agents.orchestrator_agent import OrchestratorAgent
     from ai_data_science_team.workflow_resolver import build_spec, build_step
 
-    spec = build_spec("wf", [
-        build_step("step_a", "AgentA", "Task A"),
-        build_step("step_b", "AgentB", "Task B", depends_on=["step_a"]),
-    ])
+    spec = build_spec(
+        "wf",
+        [
+            build_step("step_a", "AgentA", "Task A"),
+            build_step("step_b", "AgentB", "Task B", depends_on=["step_a"]),
+        ],
+    )
 
     orch = OrchestratorAgent(
         model=llm,
@@ -218,6 +233,7 @@ def test_orchestrator_supervised_getters(llm):
 # OrchestratorAgent — Dynamic (LLM spec üretir + executor çalışır)
 # ---------------------------------------------------------------------------
 
+
 @skip_no_key
 def test_orchestrator_dynamic_end_to_end(llm):
     """Dynamic senaryoda LLM spec üretmeli, executor çalıştırmalı.
@@ -232,10 +248,10 @@ def test_orchestrator_dynamic_end_to_end(llm):
         pass
 
     for name, caps in [
-        ("DataLoaderAgent",        ["data_loading"]),
-        ("DataCleaningAgent",      ["data_cleaning"]),
-        ("DataWranglingAgent",     ["data_wrangling"]),
-        ("EDAAgent",               ["eda"]),
+        ("DataLoaderAgent", ["data_loading"]),
+        ("DataCleaningAgent", ["data_cleaning"]),
+        ("DataWranglingAgent", ["data_wrangling"]),
+        ("EDAAgent", ["eda"]),
         ("DataVisualizationAgent", ["visualization"]),
     ]:
         AgentRegistry.register(name, _Stub, capabilities=caps, description=f"{name} stub")
@@ -255,8 +271,7 @@ def test_orchestrator_dynamic_end_to_end(llm):
     spec = orch.get_workflow_spec()
     assert isinstance(spec, dict)
     # LLM en az bir step üretmiş olmalı
-    assert len(spec.get("steps", [])) >= 1, \
-        f"Dynamic spec steps boş. Spec: {spec}"
+    assert len(spec.get("steps", [])) >= 1, f"Dynamic spec steps boş. Spec: {spec}"
 
     rr = orch.get_run_result()
     assert "status" in rr
@@ -284,7 +299,9 @@ def test_orchestrator_dynamic_spec_contains_meaningful_agents(llm):
     steps = spec.get("steps", [])
     # LLM spec üretemediyse (validation errors) testi bilgilendirici geç
     if len(steps) == 0:
-        pytest.skip("LLM geçerli bir spec üretemedi — spec steps boş; diğer dynamic testler kapsıyor")
+        pytest.skip(
+            "LLM geçerli bir spec üretemedi — spec steps boş; diğer dynamic testler kapsıyor"
+        )
     all_agents = " ".join(s.get("agent", "") for s in steps)
     assert len(all_agents.strip()) > 0, "Step'lerde agent ismi boş"
 
@@ -292,6 +309,7 @@ def test_orchestrator_dynamic_spec_contains_meaningful_agents(llm):
 # ---------------------------------------------------------------------------
 # OrchestratorAgent — Manuel senaryo
 # ---------------------------------------------------------------------------
+
 
 @skip_no_key
 def test_orchestrator_manual_scenario(llm):
@@ -317,6 +335,7 @@ def test_orchestrator_manual_scenario(llm):
 # Signal Integration — SKIP
 # ---------------------------------------------------------------------------
 
+
 @skip_no_key
 def test_orchestrator_skip_signal_respected(llm):
     """Emit edilen SKIP sinyali, ilgili step'i atlamalı."""
@@ -324,10 +343,13 @@ def test_orchestrator_skip_signal_respected(llm):
     from ai_data_science_team.signals import SignalStore, SignalType, WorkflowSignal
     from ai_data_science_team.workflow_resolver import build_spec, build_step
 
-    spec = build_spec("skip_test", [
-        build_step("step_to_skip", "AgentX", "Should be skipped"),
-        build_step("step_normal", "AgentY", "Should run normally"),
-    ])
+    spec = build_spec(
+        "skip_test",
+        [
+            build_step("step_to_skip", "AgentX", "Should be skipped"),
+            build_step("step_normal", "AgentY", "Should run normally"),
+        ],
+    )
 
     signal_store = SignalStore()
     # OrchestratorAgent'tan session_id'yi almak için önce oluştur
@@ -340,23 +362,26 @@ def test_orchestrator_skip_signal_respected(llm):
     session_id = orch.get_session_id()
 
     # Çalışmadan önce sinyal emit et
-    signal_store.emit(WorkflowSignal(
-        type=SignalType.SKIP,
-        session_id=session_id,
-        step_id="step_to_skip",
-    ))
+    signal_store.emit(
+        WorkflowSignal(
+            type=SignalType.SKIP,
+            session_id=session_id,
+            step_id="step_to_skip",
+        )
+    )
 
     _invoke_safe(orch, user_instructions="Run with skip signal.")
 
     rr = orch.get_run_result()
     steps = {s["step_id"]: s["status"] for s in rr.get("steps", [])}
     assert steps.get("step_to_skip") == "skipped", f"step_to_skip atlanmadı: {steps}"
-    assert steps.get("step_normal") == "success",  f"step_normal çalışmadı: {steps}"
+    assert steps.get("step_normal") == "success", f"step_normal çalışmadı: {steps}"
 
 
 # ---------------------------------------------------------------------------
 # Signal Integration — CANCEL
 # ---------------------------------------------------------------------------
+
 
 @skip_no_key
 def test_orchestrator_cancel_signal_stops_run(llm):
@@ -371,11 +396,14 @@ def test_orchestrator_cancel_signal_stops_run(llm):
         call_count["n"] += 1
         return {"ok": True}
 
-    spec = build_spec("cancel_test", [
-        build_step("s0", "A", "task"),
-        build_step("s1", "B", "task"),
-        build_step("s2", "C", "task"),
-    ])
+    spec = build_spec(
+        "cancel_test",
+        [
+            build_step("s0", "A", "task"),
+            build_step("s1", "B", "task"),
+            build_step("s2", "C", "task"),
+        ],
+    )
 
     signal_store = SignalStore()
     orch = OrchestratorAgent(
@@ -386,10 +414,12 @@ def test_orchestrator_cancel_signal_stops_run(llm):
     )
     session_id = orch.get_session_id()
 
-    signal_store.emit(WorkflowSignal(
-        type=SignalType.CANCEL,
-        session_id=session_id,
-    ))
+    signal_store.emit(
+        WorkflowSignal(
+            type=SignalType.CANCEL,
+            session_id=session_id,
+        )
+    )
 
     _invoke_safe(orch, user_instructions="Run with cancel signal.")
 
@@ -401,6 +431,7 @@ def test_orchestrator_cancel_signal_stops_run(llm):
 # ---------------------------------------------------------------------------
 # Signal Integration — MODIFY
 # ---------------------------------------------------------------------------
+
 
 @skip_no_key
 def test_orchestrator_modify_signal_overrides_instruction(llm):
@@ -415,9 +446,12 @@ def test_orchestrator_modify_signal_overrides_instruction(llm):
         received["instruction"] = instruction
         return {"ok": True}
 
-    spec = build_spec("modify_test", [
-        build_step("target_step", "AgentA", "ORIGINAL INSTRUCTION"),
-    ])
+    spec = build_spec(
+        "modify_test",
+        [
+            build_step("target_step", "AgentA", "ORIGINAL INSTRUCTION"),
+        ],
+    )
 
     signal_store = SignalStore()
     orch = OrchestratorAgent(
@@ -428,12 +462,14 @@ def test_orchestrator_modify_signal_overrides_instruction(llm):
     )
     session_id = orch.get_session_id()
 
-    signal_store.emit(WorkflowSignal(
-        type=SignalType.MODIFY,
-        session_id=session_id,
-        step_id="target_step",
-        payload={"instruction": "MODIFIED INSTRUCTION FROM SIGNAL"},
-    ))
+    signal_store.emit(
+        WorkflowSignal(
+            type=SignalType.MODIFY,
+            session_id=session_id,
+            step_id="target_step",
+            payload={"instruction": "MODIFIED INSTRUCTION FROM SIGNAL"},
+        )
+    )
 
     _invoke_safe(orch, user_instructions="Run with modify signal.")
     assert received["instruction"] == "MODIFIED INSTRUCTION FROM SIGNAL"
@@ -443,6 +479,7 @@ def test_orchestrator_modify_signal_overrides_instruction(llm):
 # AgentRegistry + executor entegrasyonu
 # ---------------------------------------------------------------------------
 
+
 @skip_no_key
 def test_orchestrator_registry_based_executor(llm):
     """Registry'den agent_class çeken bir executor ile tam çalıştırma."""
@@ -451,10 +488,14 @@ def test_orchestrator_registry_based_executor(llm):
     from ai_data_science_team.workflow_resolver import build_spec, build_step
 
     class FakeDataAgent:
-        def __init__(self, model=None, **kw): pass
+        def __init__(self, model=None, **kw):
+            pass
+
         def invoke_agent(self, user_instructions="", **kw):
             return {"result": "fake data loaded"}
-        def get_ai_message(self): return "Loaded."
+
+        def get_ai_message(self):
+            return "Loaded."
 
     AgentRegistry.register(
         name="FakeDataAgent",
@@ -469,9 +510,12 @@ def test_orchestrator_registry_based_executor(llm):
         agent.invoke_agent(user_instructions=instruction)
         return {"output": agent.get_ai_message()}
 
-    spec = build_spec("registry_wf", [
-        build_step("s0", "FakeDataAgent", "Load data"),
-    ])
+    spec = build_spec(
+        "registry_wf",
+        [
+            build_step("s0", "FakeDataAgent", "Load data"),
+        ],
+    )
 
     orch = OrchestratorAgent(
         model=llm,
@@ -488,6 +532,7 @@ def test_orchestrator_registry_based_executor(llm):
 # ---------------------------------------------------------------------------
 # Retry + Fallback (LLM summary ile birlikte gerçek run)
 # ---------------------------------------------------------------------------
+
 
 @skip_no_key
 def test_orchestrator_retry_then_success(llm):
@@ -524,9 +569,12 @@ def test_orchestrator_fallback_agent_on_primary_failure(llm):
             raise RuntimeError("primary always fails")
         return {"ok": "fallback_ran"}
 
-    spec = build_spec("fallback_wf", [
-        build_step("s0", "PrimaryAgent", "task", fallbacks=["BackupAgent"]),
-    ])
+    spec = build_spec(
+        "fallback_wf",
+        [
+            build_step("s0", "PrimaryAgent", "task", fallbacks=["BackupAgent"]),
+        ],
+    )
     orch = OrchestratorAgent(
         model=llm,
         agent_executor=executor_with_fallback,
@@ -544,6 +592,7 @@ def test_orchestrator_fallback_agent_on_primary_failure(llm):
 # Bağımlılıklı çok-adımlı workflow
 # ---------------------------------------------------------------------------
 
+
 @skip_no_key
 def test_orchestrator_multi_step_with_dependencies(llm):
     """Bağımlılık zinciri doğru sırayla çalışmalı."""
@@ -556,12 +605,15 @@ def test_orchestrator_multi_step_with_dependencies(llm):
         exec_order.append(agent_name)
         return {"done": True}
 
-    spec = build_spec("dep_chain", [
-        build_step("load",       "Loader",      "Load data"),
-        build_step("clean",      "Cleaner",     "Clean data",         depends_on=["load"]),
-        build_step("transform",  "Transformer", "Transform features", depends_on=["clean"]),
-        build_step("visualize",  "Visualizer",  "Plot charts",        depends_on=["transform"]),
-    ])
+    spec = build_spec(
+        "dep_chain",
+        [
+            build_step("load", "Loader", "Load data"),
+            build_step("clean", "Cleaner", "Clean data", depends_on=["load"]),
+            build_step("transform", "Transformer", "Transform features", depends_on=["clean"]),
+            build_step("visualize", "Visualizer", "Plot charts", depends_on=["transform"]),
+        ],
+    )
 
     orch = OrchestratorAgent(
         model=llm,
@@ -584,6 +636,7 @@ def test_orchestrator_multi_step_with_dependencies(llm):
 # ContextStore entegrasyonu
 # ---------------------------------------------------------------------------
 
+
 @skip_no_key
 def test_orchestrator_context_store_checkpoint(llm):
     """RuntimeEngine, her step sonrası ContextStore'a checkpoint kaydeder."""
@@ -592,10 +645,13 @@ def test_orchestrator_context_store_checkpoint(llm):
     from ai_data_science_team.workflow_resolver import build_spec, build_step
 
     cs = ContextStore()
-    spec = build_spec("ckpt_wf", [
-        build_step("c0", "AgentA", "task A"),
-        build_step("c1", "AgentB", "task B"),
-    ])
+    spec = build_spec(
+        "ckpt_wf",
+        [
+            build_step("c0", "AgentA", "task A"),
+            build_step("c1", "AgentB", "task B"),
+        ],
+    )
 
     orch = OrchestratorAgent(
         model=llm,
@@ -617,16 +673,20 @@ def test_orchestrator_context_store_checkpoint(llm):
 # LLM özet kalitesi
 # ---------------------------------------------------------------------------
 
+
 @skip_no_key
 def test_orchestrator_summary_mentions_workflow(llm):
     """LLM özeti workflow ismine veya adım sayısına atıfta bulunmalı."""
     from ai_data_science_team.agents.orchestrator_agent import OrchestratorAgent
     from ai_data_science_team.workflow_resolver import build_spec, build_step
 
-    spec = build_spec("bike_sales_pipeline", [
-        build_step("load", "DataLoader", "Load bike_sales_data.csv"),
-        build_step("eda", "EDAAgent", "Run EDA", depends_on=["load"]),
-    ])
+    spec = build_spec(
+        "bike_sales_pipeline",
+        [
+            build_step("load", "DataLoader", "Load bike_sales_data.csv"),
+            build_step("eda", "EDAAgent", "Run EDA", depends_on=["load"]),
+        ],
+    )
 
     orch = OrchestratorAgent(
         model=llm,
@@ -641,5 +701,6 @@ def test_orchestrator_summary_mentions_workflow(llm):
 
     msg = orch.get_ai_message().lower()
     # Özet, adım sayısını veya başarı durumunu belirtmeli
-    assert any(kw in msg for kw in ("step", "adım", "complet", "success", "workflow", "pipeline")), \
-        f"Özet workflow/step bilgisi içermiyor: {msg[:200]}"
+    assert any(
+        kw in msg for kw in ("step", "adım", "complet", "success", "workflow", "pipeline")
+    ), f"Özet workflow/step bilgisi içermiyor: {msg[:200]}"

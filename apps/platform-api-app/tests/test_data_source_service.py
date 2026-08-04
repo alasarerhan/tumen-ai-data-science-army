@@ -50,7 +50,7 @@ def test_parse_uuid_rejects_invalid_values(value: str) -> None:
         None,
         {},
         {"schema": "public", "table": "sales"},
-        {"unicode": "\u011f\u00fc\u015f\u00f6\u00e7\u0131\u0130", "emoji": "\U0001F4CA"},
+        {"unicode": "\u011f\u00fc\u015f\u00f6\u00e7\u0131\u0130", "emoji": "\U0001f4ca"},
     ],
 )
 def test_create_data_source_persists_fields(
@@ -187,7 +187,9 @@ def test_get_data_source_success_and_errors(seeded_db: dict[str, object]) -> Non
     assert forbidden_exc.value.status_code == 404
 
 
-def test_update_data_source_updates_selected_fields_and_timestamp(seeded_db: dict[str, object]) -> None:
+def test_update_data_source_updates_selected_fields_and_timestamp(
+    seeded_db: dict[str, object],
+) -> None:
     # Arrange
     db = seeded_db["db"]
     tenant = seeded_db["tenant"]
@@ -224,7 +226,9 @@ def test_update_data_source_updates_selected_fields_and_timestamp(seeded_db: dic
     assert updated.updated_at != previous_updated_at
 
 
-def test_update_data_source_keeps_fields_when_parameters_are_none(seeded_db: dict[str, object]) -> None:
+def test_update_data_source_keeps_fields_when_parameters_are_none(
+    seeded_db: dict[str, object],
+) -> None:
     # Arrange
     db = seeded_db["db"]
     tenant = seeded_db["tenant"]

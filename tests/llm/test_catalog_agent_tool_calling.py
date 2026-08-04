@@ -47,11 +47,13 @@ def _fresh_catalog() -> Catalog:
 # 1. PURE: make_catalog_wrapped — parametresiz, model-driven doğrulanabilir
 # ---------------------------------------------------------------------------
 
+
 def test_make_catalog_real(llm_or_skip, llm_model):
     tool = make_catalog_wrapped
     result, _ = _assert_result(
         _drive_tool_call(
-            llm_model, tool,
+            llm_model,
+            tool,
             "make_catalog tool'unu TEK çağrı ile çağır (parametresiz, boş dict ver).",
         ),
         tool.name,
@@ -70,6 +72,7 @@ def test_make_catalog_real(llm_or_skip, llm_model):
 # test fonksiyonunda simüle eder — gerçek tool çağrılır, mock yok.
 # ---------------------------------------------------------------------------
 
+
 def test_add_source_real():
     """add_source: Catalog() üzerinde gerçek tool çağrısı."""
     catalog = _fresh_catalog()
@@ -82,7 +85,9 @@ def test_add_table_real():
     catalog = _fresh_catalog()
     add_source(catalog, name="src1", kind="csv", description="t")
     add_table(
-        catalog, source_name="src1", table_name="tbl1",
+        catalog,
+        source_name="src1",
+        table_name="tbl1",
         columns=[{"name": "id"}, {"name": "value"}],
     )
     assert any(t.name == "tbl1" for t in catalog.sources[0].tables)
@@ -97,18 +102,14 @@ def test_attach_profile_real():
     """
     catalog = _fresh_catalog()
     add_source(catalog, name="src1", kind="csv", description="t")
-    add_table(catalog, source_name="src1", table_name="tbl1",
-               columns=[{"name": "id"}])
+    add_table(catalog, source_name="src1", table_name="tbl1", columns=[{"name": "id"}])
     # Tool çağrısı hata fırlatmamalı
     try:
-        attach_profile(catalog, source_name="src1",
-                        profile={"row_count": 100, "col_count": 1})
+        attach_profile(catalog, source_name="src1", profile={"row_count": 100, "col_count": 1})
     except TypeError as e:
         # SourceEntry'de profile attribute yoksa dict'te tutuyor olabilir
         if "profile" in str(e):
-            raise AssertionError(
-                "SourceEntry'ye profile eklenmedi (tool bug): " + str(e)
-            )
+            raise AssertionError("SourceEntry'ye profile eklenmedi (tool bug): " + str(e))
         raise
     assert True  # tool exception fırlatmadı
 
@@ -116,8 +117,7 @@ def test_attach_profile_real():
 def test_add_pii_badges_real():
     catalog = _fresh_catalog()
     add_source(catalog, name="src1", kind="csv", description="t")
-    add_pii_badges(catalog, source_name="src1",
-                    pii_scan={"email": 5, "phone": 3})
+    add_pii_badges(catalog, source_name="src1", pii_scan={"email": 5, "phone": 3})
     # Tool çağrısı hata fırlatmamalı
     assert True
 
@@ -125,8 +125,7 @@ def test_add_pii_badges_real():
 def test_catalog_tree_real():
     catalog = _fresh_catalog()
     add_source(catalog, name="src1", kind="csv", description="t")
-    add_table(catalog, source_name="src1", table_name="tbl1",
-               columns=[{"name": "id"}])
+    add_table(catalog, source_name="src1", table_name="tbl1", columns=[{"name": "id"}])
     tree = catalog_tree(catalog)
     s = str(tree)
     assert "src1" in s or "tbl1" in s
@@ -140,8 +139,7 @@ def test_add_term_real():
     """
     catalog = _fresh_catalog()
     add_source(catalog, name="src1", kind="csv", description="t")
-    add_table(catalog, source_name="src1", table_name="tbl1",
-               columns=[{"name": "customer_id"}])
+    add_table(catalog, source_name="src1", table_name="tbl1", columns=[{"name": "customer_id"}])
     add_term(catalog, term="customer", synonyms=["client", "buyer"])
     assert "customer" in catalog.terms
     syns = catalog.terms.get("customer", [])
@@ -156,11 +154,14 @@ def test_bind_term_column_real():
     """
     catalog = _fresh_catalog()
     add_source(catalog, name="src1", kind="csv", description="t")
-    add_table(catalog, source_name="src1", table_name="tbl1",
-               columns=[{"name": "id"}])
+    add_table(catalog, source_name="src1", table_name="tbl1", columns=[{"name": "id"}])
     add_term(catalog, term="user_id")
     out = bind_term_column(
-        catalog, term="user_id", source="src1", table="tbl1", column="id",
+        catalog,
+        term="user_id",
+        source="src1",
+        table="tbl1",
+        column="id",
     )
     assert isinstance(out, bool) or out is not None
     assert "user_id" in catalog.synonym_table or True
@@ -169,8 +170,12 @@ def test_bind_term_column_real():
 def test_search_real():
     catalog = _fresh_catalog()
     add_source(catalog, name="src1", kind="csv", description="t")
-    add_table(catalog, source_name="src1", table_name="tbl1",
-               columns=[{"name": "customer_email"}, {"name": "amount"}])
+    add_table(
+        catalog,
+        source_name="src1",
+        table_name="tbl1",
+        columns=[{"name": "customer_email"}, {"name": "amount"}],
+    )
     hits = search(catalog, query="email")
     assert isinstance(hits, list)
     s = str(hits)
@@ -180,8 +185,7 @@ def test_search_real():
 def test_resolve_data_real():
     catalog = _fresh_catalog()
     add_source(catalog, name="src1", kind="csv", description="t")
-    add_table(catalog, source_name="src1", table_name="tbl1",
-               columns=[{"name": "customer"}])
+    add_table(catalog, source_name="src1", table_name="tbl1", columns=[{"name": "customer"}])
     add_term(catalog, term="customer", synonyms=["client"])
     out = resolve_data(catalog, term="customer")
     assert isinstance(out, list) or out is not None
@@ -191,8 +195,7 @@ def test_record_lineage_real():
     """record_lineage catalog.lineage'a bir kayıt ekler."""
     catalog = _fresh_catalog()
     add_source(catalog, name="src1", kind="csv", description="t")
-    record_lineage(catalog, pipeline_id="src1", source_name="src1",
-                    table=None)
+    record_lineage(catalog, pipeline_id="src1", source_name="src1", table=None)
     assert isinstance(catalog.lineage, list)
     assert len(catalog.lineage) >= 1
 
@@ -200,7 +203,6 @@ def test_record_lineage_real():
 def test_lineage_for_real():
     catalog = _fresh_catalog()
     add_source(catalog, name="src1", kind="csv", description="t")
-    record_lineage(catalog, pipeline_id="src1", source_name="src1",
-                    table=None)
+    record_lineage(catalog, pipeline_id="src1", source_name="src1", table=None)
     out = lineage_for(catalog, source_name="src1")
     assert isinstance(out, list) or out is not None

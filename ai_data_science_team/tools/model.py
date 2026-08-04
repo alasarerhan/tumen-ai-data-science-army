@@ -29,8 +29,17 @@ from ai_data_science_team.tool_registry import (  # noqa: E402, F401
     name="load_model",
     description="Load a model from local file path or MLflow URI.",
     parameters={
-        "model_uri": ToolParameter(type="string", description="Model path or MLflow URI (runs:/<id>/model, models:/<name>/<version>)", required=True),
-        "task_type": ToolParameter(type="string", description="Task type: classification, regression, or auto", required=False, default="auto"),
+        "model_uri": ToolParameter(
+            type="string",
+            description="Model path or MLflow URI (runs:/<id>/model, models:/<name>/<version>)",
+            required=True,
+        ),
+        "task_type": ToolParameter(
+            type="string",
+            description="Task type: classification, regression, or auto",
+            required=False,
+            default="auto",
+        ),
     },
     returns="Dict with model metadata",
     namespace="core.model",
@@ -64,6 +73,7 @@ def load_model(
     if model_uri.startswith("runs:/") or model_uri.startswith("models:/"):
         try:
             import mlflow  # noqa: E402, F401
+
             model = mlflow.sklearn.load_model(model_uri)
             framework = "sklearn"
             model_type = type(model).__name__
@@ -108,7 +118,9 @@ def load_model(
     parameters={
         "model": ToolParameter(type="object", description="Loaded model object", required=True),
         "data": ToolParameter(type="object", description="Input DataFrame as dict", required=True),
-        "return_proba": ToolParameter(type="boolean", description="Return probabilities", required=False, default=False),
+        "return_proba": ToolParameter(
+            type="boolean", description="Return probabilities", required=False, default=False
+        ),
     },
     returns="Dict with predictions and optional probabilities",
     namespace="core.model",
@@ -217,7 +229,9 @@ def predict_regression(
         "model": ToolParameter(type="object", description="Loaded model object", required=True),
         "data": ToolParameter(type="object", description="Input DataFrame as dict", required=True),
         "target": ToolParameter(type="string", description="Target column name", required=True),
-        "task_type": ToolParameter(type="string", description="Task type: classification or regression", required=True),
+        "task_type": ToolParameter(
+            type="string", description="Task type: classification or regression", required=True
+        ),
     },
     returns="Dict with evaluation metrics",
     namespace="core.model",
@@ -250,13 +264,13 @@ def evaluate_model(
     """
     from sklearn.metrics import (  # noqa: E402, F401
         accuracy_score,
-        precision_score,
-        recall_score,
         f1_score,
-        roc_auc_score,
-        mean_squared_error,
         mean_absolute_error,
+        mean_squared_error,
+        precision_score,
         r2_score,
+        recall_score,
+        roc_auc_score,
     )
 
     df = pd.DataFrame(data) if isinstance(data, dict) else data.copy()
@@ -279,7 +293,9 @@ def evaluate_model(
 
     if task_type == "classification":
         metrics["accuracy"] = float(accuracy_score(y_true, y_pred))
-        metrics["precision"] = float(precision_score(y_true, y_pred, average="weighted", zero_division=0))
+        metrics["precision"] = float(
+            precision_score(y_true, y_pred, average="weighted", zero_division=0)
+        )
         metrics["recall"] = float(recall_score(y_true, y_pred, average="weighted", zero_division=0))
         metrics["f1"] = float(f1_score(y_true, y_pred, average="weighted", zero_division=0))
 

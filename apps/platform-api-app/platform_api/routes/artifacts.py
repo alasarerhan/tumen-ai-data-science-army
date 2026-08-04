@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import FileResponse
@@ -11,18 +10,18 @@ from platform_api.auth.dependencies import get_principal
 from platform_api.auth.models import Principal
 from platform_api.authz.dependencies import require_workspace_member
 from platform_api.core.config import settings
+from platform_api.core.egress_policy import enforce_egress_policy
 from platform_api.core.file_security import (
     detect_mime_from_magic_bytes,
     get_content_disposition_header,
 )
-from platform_api.core.egress_policy import enforce_egress_policy
 from platform_api.db.session import get_db
-from platform_api.schemas.pagination import build_paginated_response, MAX_PAGE_SIZE
 from platform_api.schemas.artifacts import CreateArtifactRequest
+from platform_api.schemas.pagination import MAX_PAGE_SIZE, build_paginated_response
 from platform_api.services.artifact_service import (
     create_artifact_record,
-    get_artifact_parent_ids,
     get_artifact_for_workspace,
+    get_artifact_parent_ids,
     list_artifacts_for_workspace,
 )
 from platform_api.services.identity_service import get_or_create_user
@@ -69,10 +68,12 @@ async def create_artifact(
 
 @router.get("")
 async def list_artifacts(
-    cursor: Optional[str] = Query(default=None, description="Pagination cursor (artifact ID)"),
+    cursor: str | None = Query(default=None, description="Pagination cursor (artifact ID)"),
     limit: int = Query(default=20, ge=1, le=MAX_PAGE_SIZE, description="Items per page"),
-    workflow_run_id: Optional[str] = Query(default=None, description="Filter by workflow run ID"),
-    kind: Optional[str] = Query(default=None, min_length=2, max_length=100, description="Filter by artifact kind"),
+    workflow_run_id: str | None = Query(default=None, description="Filter by workflow run ID"),
+    kind: str | None = Query(
+        default=None, min_length=2, max_length=100, description="Filter by artifact kind"
+    ),
     context: dict = Depends(require_workspace_member),
     db: Session = Depends(get_db),
 ) -> dict:
@@ -122,7 +123,9 @@ async def get_artifact_access(
                 purpose="artifact_redirect",
             )
         except ValueError as exc:
-            raise HTTPException(status_code=403, detail="Artifact redirect target is not allowed") from exc
+            raise HTTPException(
+                status_code=403, detail="Artifact redirect target is not allowed"
+            ) from exc
         delivery = {"type": "redirect", "url": uri}
     elif uri.startswith("s3://"):
         delivery = {
@@ -190,8 +193,7 @@ async def stream_artifact(
 
     if uri.startswith(("https://", "http://", "s3://", "gs://", "az://")):
         raise HTTPException(
-            status_code=400,
-            detail="External URIs must be accessed via their respective protocols"
+            status_code=400, detail="External URIs must be accessed via their respective protocols"
         )
 
     artifact_storage_dir = Path(settings.artifact_storage_local_dir).resolve()
@@ -207,10 +209,7 @@ async def stream_artifact(
         allowed_roots = [artifact_storage_dir, chat_upload_dir]
 
     if not any(file_path.is_relative_to(root) for root in allowed_roots):
-        raise HTTPException(
-            status_code=403,
-            detail="Access denied: path traversal attempt"
-        )
+        raise HTTPException(status_code=403, detail="Access denied: path traversal attempt")
 
     if not file_path.exists():
         raise HTTPException(status_code=404, detail="File not found")
@@ -235,5 +234,5 @@ async def stream_artifact(
             "Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'",
             "Content-Disposition": content_disposition,
             "Cache-Control": "private, max-age=3600",
-        }
+        },
     )

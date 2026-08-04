@@ -115,13 +115,15 @@ def record_live_sample(
         raise ValueError("variant must be 'champion' or 'challenger'")
     for d in store.deployments:
         if d.deployment_id == deployment_id:
-            d.samples.append(LiveSample(
-                variant=variant,
-                latency_ms=float(latency_ms),
-                error=bool(error),
-                score=score,
-                timestamp=timestamp if timestamp is not None else _now(),
-            ))
+            d.samples.append(
+                LiveSample(
+                    variant=variant,
+                    latency_ms=float(latency_ms),
+                    error=bool(error),
+                    score=score,
+                    timestamp=timestamp if timestamp is not None else _now(),
+                )
+            )
             return
     raise KeyError(f"deployment_id not found: {deployment_id}")
 
@@ -149,16 +151,12 @@ def evaluate_rollback(store: DeploymentStore, deployment_id: str) -> Dict[str, A
         }
     err_rate = sum(1 for s in chall if s.error) / n
     if err_rate > d.policy.error_rate_max:
-        reasons.append(
-            f"error_rate {err_rate:.4f} > {d.policy.error_rate_max:.4f}"
-        )
+        reasons.append(f"error_rate {err_rate:.4f} > {d.policy.error_rate_max:.4f}")
     latencies = sorted(s.latency_ms for s in chall)
     p99_idx = max(0, int(math.ceil(0.99 * n)) - 1)
     p99 = latencies[p99_idx] if latencies else 0.0
     if p99 > d.policy.latency_p99_max_ms:
-        reasons.append(
-            f"latency_p99 {p99:.1f}ms > {d.policy.latency_p99_max_ms:.1f}ms"
-        )
+        reasons.append(f"latency_p99 {p99:.1f}ms > {d.policy.latency_p99_max_ms:.1f}ms")
     return {
         "deployment_id": deployment_id,
         "verdict": "rollback" if reasons else "ok",
@@ -169,9 +167,7 @@ def evaluate_rollback(store: DeploymentStore, deployment_id: str) -> Dict[str, A
     }
 
 
-def mark_status(
-    store: DeploymentStore, deployment_id: str, status: str
-) -> None:
+def mark_status(store: DeploymentStore, deployment_id: str, status: str) -> None:
     if status not in ("running", "rolled_back", "promoted"):
         raise ValueError("status must be running/rolled_back/promoted")
     for d in store.deployments:
@@ -181,9 +177,7 @@ def mark_status(
     raise KeyError(f"deployment_id not found: {deployment_id}")
 
 
-def summarise_deployment(
-    store: DeploymentStore, deployment_id: str
-) -> Dict[str, Any]:
+def summarise_deployment(store: DeploymentStore, deployment_id: str) -> Dict[str, Any]:
     d = next(
         (d for d in store.deployments if d.deployment_id == deployment_id),
         None,
@@ -195,7 +189,8 @@ def summarise_deployment(
         rows = [s for s in d.samples if s.variant == variant]
         if not rows:
             by_variant[variant] = {
-                "n": 0.0, "error_rate": float("nan"),
+                "n": 0.0,
+                "error_rate": float("nan"),
                 "latency_mean_ms": float("nan"),
                 "latency_p99_ms": float("nan"),
                 "score_mean": float("nan"),
@@ -238,5 +233,3 @@ def list_deployments(
     if mode is not None:
         out = [d for d in out if d.mode == mode]
     return out
-
-

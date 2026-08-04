@@ -9,15 +9,15 @@ Tests the full ML workflow using real LLM agents:
 
 Run:  uv run pytest plugins/tests/test_end2end_ds_pipeline.py -v -s
 """
+
 from __future__ import annotations
 
-import os
 import json
+import os
 from pathlib import Path
 
-import pytest
 import pandas as pd
-
+import pytest
 from _llm import make_chat_model, skip_no_key
 
 pytestmark = pytest.mark.e2e_ds
@@ -47,6 +47,7 @@ def _ensure_sample_data():
 
 def _cleanup():
     import shutil
+
     if DATA_DIR.exists():
         shutil.rmtree(DATA_DIR)
 
@@ -61,12 +62,14 @@ def llm():
 # 1. Data Loading & Exploration (via DataLoaderToolsAgent)
 # ---------------------------------------------------------------------------
 
+
 @skip_no_key
 def test_01_data_loading(llm):
     """Load and preview the Iris CSV."""
     _ensure_sample_data()
 
     from ai_data_science_team.agents import DataLoaderToolsAgent
+
     agent = DataLoaderToolsAgent(model=llm)
     agent.invoke_agent(
         user_instructions=(
@@ -86,6 +89,7 @@ def test_01_data_loading(llm):
 # 2. LLM-Generated ML Pipeline (agent orchestrates sklearn code)
 # ---------------------------------------------------------------------------
 
+
 @skip_no_key
 def test_02_llm_orchestrated_ml(llm):
     """LLM writes & explains a complete ML pipeline: load → train → evaluate.
@@ -94,12 +98,13 @@ def test_02_llm_orchestrated_ml(llm):
     """
     _ensure_sample_data()
     from sklearn.ensemble import RandomForestClassifier
-    from sklearn.model_selection import train_test_split
     from sklearn.metrics import accuracy_score, classification_report
+    from sklearn.model_selection import train_test_split
 
     # --- Step A: LLM loads & analyzes data via agent ---
     print("\n  ── Step A: Loading & Profiling ──")
     from ai_data_science_team.agents import DataLoaderToolsAgent
+
     loader = DataLoaderToolsAgent(model=llm)
     loader.invoke_agent(
         user_instructions=(
@@ -129,13 +134,10 @@ def test_02_llm_orchestrated_ml(llm):
     report = classification_report(y_test, y_pred, output_dict=True)
 
     print(f"  Accuracy: {acc:.2%}")
-    print(f"  Model: RandomForestClassifier(n=100)")
+    print("  Model: RandomForestClassifier(n=100)")
 
     # Feature importance
-    feat_imp = sorted(
-        zip(X.columns, model.feature_importances_),
-        key=lambda x: x[1], reverse=True
-    )
+    feat_imp = sorted(zip(X.columns, model.feature_importances_), key=lambda x: x[1], reverse=True)
     print(f"  Top features: {feat_imp[:3]}")
 
     # Save results for LLM interpretation
@@ -144,23 +146,22 @@ def test_02_llm_orchestrated_ml(llm):
         "model": "RandomForestClassifier(n_estimators=100)",
         "n_train": len(X_train),
         "n_test": len(X_test),
-        "feature_importances": [
-            {"feature": f, "importance": round(i, 4)} for f, i in feat_imp
-        ],
+        "feature_importances": [{"feature": f, "importance": round(i, 4)} for f, i in feat_imp],
         "classification_report": {
             label: (
-                {k: round(v, 4) if isinstance(v, float) else v
-                 for k, v in metrics.items()}
-                if isinstance(metrics, dict) else round(metrics, 4)
+                {k: round(v, 4) if isinstance(v, float) else v for k, v in metrics.items()}
+                if isinstance(metrics, dict)
+                else round(metrics, 4)
             )
             for label, metrics in report.items()
-        }
+        },
     }
 
     # --- Step C: LLM interprets results ---
     print("\n  ── Step C: Interpreting Results ──")
 
     from langchain_openai import ChatOpenAI
+
     interpreter = ChatOpenAI(
         model="deepseek-v4-flash",
         api_key=os.getenv("OPENCODE_API_KEY") or os.getenv("OPENAI_API_KEY"),
@@ -169,11 +170,19 @@ def test_02_llm_orchestrated_ml(llm):
         max_tokens=1000,
     )
 
-    interpretation = interpreter.invoke([
-        {"role": "system", "content": "You are a data science interpreter. "
-         "Explain ML results concisely in Turkish."},
-        {"role": "user", "content": f"Şu ML sonuçlarını yorumla:\n{json.dumps(results, indent=2)}"}
-    ])
+    interpretation = interpreter.invoke(
+        [
+            {
+                "role": "system",
+                "content": "You are a data science interpreter. "
+                "Explain ML results concisely in Turkish.",
+            },
+            {
+                "role": "user",
+                "content": f"Şu ML sonuçlarını yorumla:\n{json.dumps(results, indent=2)}",
+            },
+        ]
+    )
     print(f"  LLM Yorumu:\n  {interpretation.content[:500]}")
 
     assert acc > 0.5, f"Model accuracy too low: {acc}"
@@ -183,6 +192,7 @@ def test_02_llm_orchestrated_ml(llm):
 # ---------------------------------------------------------------------------
 # Cleanup
 # ---------------------------------------------------------------------------
+
 
 def teardown_module():
     _cleanup()

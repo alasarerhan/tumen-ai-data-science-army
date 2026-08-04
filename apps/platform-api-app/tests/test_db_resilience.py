@@ -5,10 +5,12 @@ Tests cover:
   - Query timeout handling
   - Transaction rollback on error
 """
+
 from __future__ import annotations
 
-import pytest
 from unittest.mock import patch
+
+import pytest
 from sqlalchemy.exc import OperationalError
 
 
@@ -20,18 +22,23 @@ class TestDatabaseConnectionFailure:
 
         db = seeded_db["db"]
 
-        with patch.object(db, 'execute', side_effect=OperationalError("connection failed", {}, None)):
-            with pytest.raises(Exception):
-                run_service.list_workflow_runs_for_workspace(db, workspace_id=seeded_db["workspace"].id)
+        with patch.object(
+            db, "execute", side_effect=OperationalError("connection failed", {}, None)
+        ), pytest.raises(Exception):
+            run_service.list_workflow_runs_for_workspace(
+                db, workspace_id=seeded_db["workspace"].id
+            )
 
     def test_db_timeout_returns_503(self, seeded_db: dict) -> None:
         from platform_api.services import run_service
 
         db = seeded_db["db"]
 
-        with patch.object(db, 'execute', side_effect=OperationalError("timeout", {}, None)):
+        with patch.object(db, "execute", side_effect=OperationalError("timeout", {}, None)):
             with pytest.raises(Exception):
-                run_service.list_workflow_runs_for_workspace(db, workspace_id=seeded_db["workspace"].id)
+                run_service.list_workflow_runs_for_workspace(
+                    db, workspace_id=seeded_db["workspace"].id
+                )
 
 
 class TestTransactionRollback:
@@ -54,14 +61,16 @@ class TestTransactionRollback:
         )
         db.flush()
 
-        initial_count = len(chat_service.list_chat_sessions(
-            db,
-            workspace_id=workspace.id,
-            user_id=user_id,
-        ))
+        initial_count = len(
+            chat_service.list_chat_sessions(
+                db,
+                workspace_id=workspace.id,
+                user_id=user_id,
+            )
+        )
 
         try:
-            with patch.object(db, 'flush', side_effect=Exception("Simulated error")):
+            with patch.object(db, "flush", side_effect=Exception("Simulated error")):
                 chat_service.create_message(
                     db,
                     session=session,
@@ -74,10 +83,12 @@ class TestTransactionRollback:
 
         db.rollback()
 
-        final_count = len(chat_service.list_chat_sessions(
-            db,
-            workspace_id=workspace.id,
-            user_id=user_id,
-        ))
+        final_count = len(
+            chat_service.list_chat_sessions(
+                db,
+                workspace_id=workspace.id,
+                user_id=user_id,
+            )
+        )
 
         assert final_count == initial_count

@@ -12,10 +12,16 @@ PowerAnalysisAgent.
 Node type: ``kpi.compute``
 """
 
-from typing import (Dict, Optional, Tuple)  # noqa: E402
 import logging  # noqa: E402, F401
-from typing import Any  # noqa: E402, F401
+from typing import (  # noqa: E402
+    Any,  # noqa: E402, F401
+    Dict,
+    Mapping,  # noqa: E402
+    Optional,
+    Tuple,
+)
 
+import pandas as pd  # noqa: E402, F401
 from langchain.tools import tool  # noqa: E402, F401
 from langchain_core.messages import AIMessage, BaseMessage  # noqa: E402, F401
 from langgraph.graph import END, START, StateGraph  # noqa: E402, F401
@@ -24,11 +30,6 @@ from langgraph.types import Checkpointer  # noqa: E402, F401
 from typing_extensions import Annotated, Sequence, TypedDict  # noqa: E402, F401
 
 from ai_data_science_team.templates import BaseAgent  # noqa: E402, F401
-from ai_data_science_team.utils.regex import format_agent_name  # noqa: E402, F401
-
-import pandas as pd  # noqa: E402, F401
-from typing import Mapping  # noqa: E402
-
 from ai_data_science_team.tools.kpi import (  # noqa: E402, F401
     AlarmRule,
     KPIHistory,
@@ -42,7 +43,7 @@ from ai_data_science_team.tools.kpi import (  # noqa: E402, F401
     record_period,
     sparkline_points,
 )
-
+from ai_data_science_team.utils.regex import format_agent_name  # noqa: E402, F401
 
 logger = logging.getLogger(__name__)
 
@@ -54,6 +55,7 @@ NODE_TYPE = "kpi.compute"
 # Tool wrappers
 # ---------------------------------------------------------------------------
 
+
 @tool(response_format="content_and_artifact")
 def define_kpi_wrapped(name: str, code: str) -> Tuple[str, dict]:
     """Tool wrapper for ``define_kpi``.
@@ -63,7 +65,7 @@ def define_kpi_wrapped(name: str, code: str) -> Tuple[str, dict]:
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: c3_define_kpi")
-    kwargs = {'name': name, 'code': code}
+    kwargs = {"name": name, "code": code}
     try:
         result = define_kpi(**kwargs)
     except Exception as exc:
@@ -83,7 +85,9 @@ def define_kpi_wrapped(name: str, code: str) -> Tuple[str, dict]:
 
 
 @tool(response_format="content_and_artifact")
-def evaluate_python_code_wrapped(kpi: Mapping[str, Any], dataframe: pd.DataFrame) -> Tuple[str, dict]:
+def evaluate_python_code_wrapped(
+    kpi: Mapping[str, Any], dataframe: pd.DataFrame
+) -> Tuple[str, dict]:
     """Tool wrapper for ``evaluate_python_code``.
 
     Run the KPI's Python expression against ``dataframe``.
@@ -91,7 +95,7 @@ def evaluate_python_code_wrapped(kpi: Mapping[str, Any], dataframe: pd.DataFrame
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: c3_evaluate_python_code")
-    kwargs = {'kpi': kpi, 'dataframe': dataframe}
+    kwargs = {"kpi": kpi, "dataframe": dataframe}
     try:
         result = evaluate_python_code(**kwargs)
     except Exception as exc:
@@ -147,7 +151,7 @@ def record_period_wrapped(kpi: Mapping[str, Any]) -> Tuple[str, dict]:
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: c3_record_period")
-    kwargs = {'kpi': kpi}
+    kwargs = {"kpi": kpi}
     try:
         result = record_period(**kwargs)
     except Exception as exc:
@@ -175,7 +179,7 @@ def make_history_wrapped(kpi_id: str) -> Tuple[str, dict]:
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: c3_make_history")
-    kwargs = {'kpi_id': kpi_id}
+    kwargs = {"kpi_id": kpi_id}
     try:
         result = make_history(**kwargs)
     except Exception as exc:
@@ -195,7 +199,9 @@ def make_history_wrapped(kpi_id: str) -> Tuple[str, dict]:
 
 
 @tool(response_format="content_and_artifact")
-def evaluate_and_record_wrapped(kpi: Mapping[str, Any], dataframe: pd.DataFrame, history: KPIHistory) -> Tuple[str, dict]:
+def evaluate_and_record_wrapped(
+    kpi: Mapping[str, Any], dataframe: pd.DataFrame, history: KPIHistory
+) -> Tuple[str, dict]:
     """Tool wrapper for ``evaluate_and_record``.
 
     One-shot compute + record.
@@ -203,7 +209,7 @@ def evaluate_and_record_wrapped(kpi: Mapping[str, Any], dataframe: pd.DataFrame,
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: c3_evaluate_and_record")
-    kwargs = {'kpi': kpi, 'dataframe': dataframe, 'history': history}
+    kwargs = {"kpi": kpi, "dataframe": dataframe, "history": history}
     try:
         result = evaluate_and_record(**kwargs)
     except Exception as exc:
@@ -231,7 +237,7 @@ def build_alarm_wrapped(kpi_id: str) -> Tuple[str, dict]:
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: c3_build_alarm")
-    kwargs = {'kpi_id': kpi_id}
+    kwargs = {"kpi_id": kpi_id}
     try:
         result = build_alarm(**kwargs)
     except Exception as exc:
@@ -259,7 +265,7 @@ def check_alarm_wrapped(rule: AlarmRule) -> Tuple[str, dict]:
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: c3_check_alarm")
-    kwargs = {'rule': rule}
+    kwargs = {"rule": rule}
     try:
         result = check_alarm(**kwargs)
     except Exception as exc:
@@ -287,7 +293,7 @@ def sparkline_points_wrapped(values: Sequence[float], n: int) -> Tuple[str, dict
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: c3_sparkline_points")
-    kwargs = {'values': values, 'n': n}
+    kwargs = {"values": values, "n": n}
     try:
         result = sparkline_points(**kwargs)
     except Exception as exc:
@@ -362,7 +368,12 @@ def make_kpi_agent(
     def run_react_agent(state: GraphState):
         logger.info("    * RUN REACT AGENT FOR C3")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
-        messages = [("system", "You are the C3 agent. Use the available tools to complete the user's request.")] + list(base)
+        messages = [
+            (
+                "system",
+                "You are the C3 agent. Use the available tools to complete the user's request.",
+            )
+        ] + list(base)
         input_payload = {"messages": messages}
         return react_agent.invoke(input_payload, invoke_react_agent_kwargs)
 
@@ -381,7 +392,9 @@ def make_kpi_agent(
             last_ai = AIMessage(content=getattr(internal[-1], "content", ""), name=AGENT_NAME)
         tool_calls = []
         for msg in internal:
-            name = getattr(getattr(msg, "tool_call_id", None), "name", None) or getattr(msg, "name", None)
+            name = getattr(getattr(msg, "tool_call_id", None), "name", None) or getattr(
+                msg, "name", None
+            )
             if name:
                 tool_calls.append(name)
         if log_tool_calls and tool_calls:
@@ -449,6 +462,7 @@ class KPIMetricsAgent(BaseAgent):
         if not self.response or "messages" not in self.response:
             return None
         from IPython.display import Markdown as _Markdown  # noqa: E402, F401
+
         for msg in reversed(self.response.get("messages", [])):
             content = getattr(msg, "content", "")
             if content:

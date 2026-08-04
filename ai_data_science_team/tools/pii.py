@@ -43,16 +43,13 @@ from typing import Any, Dict, List, Mapping, Optional  # noqa: E402, F401
 import numpy as np  # noqa: E402, F401
 import pandas as pd  # noqa: E402, F401
 
-
 # ---------------------------------------------------------------------------
 # PII detectors (regex-based; TR-specific)
 # ---------------------------------------------------------------------------
 
 
 _EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
-_TR_PHONE_RE = re.compile(
-    r"^(?:\+?90|0)?\s?5\d{2}[\s-]?\d{3}[\s-]?\d{2}[\s-]?\d{2}$"
-)
+_TR_PHONE_RE = re.compile(r"^(?:\+?90|0)?\s?5\d{2}[\s-]?\d{3}[\s-]?\d{2}[\s-]?\d{2}$")
 _TCKN_RE = re.compile(r"^\d{11}$")
 _IBAN_RE = re.compile(r"^[A-Z]{2}\d{2}[A-Z0-9]{12,30}$")
 
@@ -263,9 +260,7 @@ def _hash_value(
     if algo == "md5":
         digest = hashlib.md5(payload).hexdigest()
     elif algo == "hmac-sha256":
-        digest = hmac.new(
-            salt.encode("utf-8"), value.encode("utf-8"), hashlib.sha256
-        ).hexdigest()
+        digest = hmac.new(salt.encode("utf-8"), value.encode("utf-8"), hashlib.sha256).hexdigest()
     else:
         digest = hashlib.sha256(payload).hexdigest()
     return digest[:16]
@@ -298,7 +293,9 @@ def _mask_for(value: str, pii_type: Optional[str], strategy: str, params: Mappin
             return "*" * (max(len(value) - 4, 0)) + tail
         return _mask_generic(value)
     if s == "hash":
-        return _hash_value(value, salt=str(params.get("salt", "")), algo=str(params.get("algo", "sha256")))
+        return _hash_value(
+            value, salt=str(params.get("salt", "")), algo=str(params.get("algo", "sha256"))
+        )
     if s == "tokenize":
         return _tokenize_value(value, salt=str(params.get("salt", "default")))
     if s == "drop":
@@ -432,5 +429,3 @@ __all__ = [
     "AnonymisationResult",
     "anonymize_dataframe",
 ]
-
-

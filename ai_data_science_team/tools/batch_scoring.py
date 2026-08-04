@@ -34,7 +34,6 @@ from typing import Any, Dict, List, Optional, Sequence, Tuple, Union  # noqa: E4
 import numpy as np  # noqa: E402, F401
 import pandas as pd  # noqa: E402, F401
 
-
 # ---------------------------------------------------------------------------
 # Schema alignment
 # ---------------------------------------------------------------------------
@@ -99,10 +98,7 @@ def resolve_model(model: Any) -> Any:
     if model is None:
         raise ValueError("model must not be None")
     if not (hasattr(model, "predict") or hasattr(model, "predict_proba")):
-        raise ValueError(
-            "model must implement at least one of `predict` or "
-            "`predict_proba`"
-        )
+        raise ValueError("model must implement at least one of `predict` or `predict_proba`")
     return model
 
 
@@ -171,9 +167,7 @@ def predict_dataframe(
             if isinstance(n_features, int) and len(df.columns) >= n_features:
                 expected = list(df.columns[:n_features])
         if expected is None:
-            expected = [
-                c for c in df.columns if pd.api.types.is_numeric_dtype(df[c])
-            ]   
+            expected = [c for c in df.columns if pd.api.types.is_numeric_dtype(df[c])]
     elif isinstance(feature_columns, str):
         expected = [feature_columns]
     else:
@@ -301,5 +295,3 @@ __all__ = [
     "chunked_predict",
     "scoring_report",
 ]
-
-

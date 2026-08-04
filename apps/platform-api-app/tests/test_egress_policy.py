@@ -6,7 +6,9 @@ from platform_api.core.egress_policy import enforce_egress_policy, is_url_host_a
 
 
 def test_is_url_host_allowed_supports_exact_and_subdomain():
-    assert is_url_host_allowed("https://accounts.google.com/.well-known/jwks.json", "accounts.google.com")
+    assert is_url_host_allowed(
+        "https://accounts.google.com/.well-known/jwks.json", "accounts.google.com"
+    )
     assert is_url_host_allowed("https://sub.example.com/path", "example.com")
     assert not is_url_host_allowed("https://evil-example.com/path", "example.com")
 
@@ -29,4 +31,3 @@ def test_enforce_egress_policy_allows_when_non_strict():
         purpose="artifact_redirect",
     )
     assert allowed is False
-

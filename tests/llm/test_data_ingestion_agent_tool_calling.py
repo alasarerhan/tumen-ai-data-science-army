@@ -33,12 +33,14 @@ pytestmark = pytest.mark.llm
 # 1. PURE: Tool başına gerçek testler
 # ---------------------------------------------------------------------------
 
+
 def test_register_ingest_job_real(llm_or_skip, llm_model):
     """``register_ingest_job_wrapped(name, source, target)`` yeni bir job record üretir."""
     tool = register_ingest_job_wrapped
     result, _ = _assert_result(
         _drive_tool_call(
-            llm_model, tool,
+            llm_model,
+            tool,
             "register_ingest_job tool'unu TEK çağrı ile çağır. "
             "name='daily_users_etl', source='s3://bucket/raw/', target='s3://bucket/staging/'.",
         ),
@@ -55,7 +57,8 @@ def test_compute_watermark_real(llm_or_skip, llm_model):
     tool = compute_watermark_wrapped
     result, _ = _assert_result(
         _drive_tool_call(
-            llm_model, tool,
+            llm_model,
+            tool,
             "compute_watermark tool'unu TEK çağrı ile çağır. "
             "job_id='daily_users_etl', previous='2024-01-01', current='2024-01-02'.",
         ),
@@ -72,7 +75,8 @@ def test_record_run_real(llm_or_skip, llm_model):
     tool = record_run_wrapped
     result, _ = _assert_result(
         _drive_tool_call(
-            llm_model, tool,
+            llm_model,
+            tool,
             "record_run tool'unu TEK çağrı ile çağır. "
             "job_id='daily_users_etl', run_id='run_42', status='success', "
             "started_at='2024-01-02T03:00:00Z'.",
@@ -89,6 +93,7 @@ def test_record_run_real(llm_or_skip, llm_model):
 # 2. STATEFUL: pd.DataFrame argümanı → underlying tool.func() doğrudan çağrı
 # ---------------------------------------------------------------------------
 
+
 def test_incremental_diff_real():
     """``incremental_diff`` iki DataFrame arasında added/removed/changed sınıflandırır.
 
@@ -98,7 +103,9 @@ def test_incremental_diff_real():
     baseline = pd.DataFrame({"id": [1, 2, 3], "value": [10, 20, 30]})
     current = pd.DataFrame({"id": [2, 3, 4], "value": [20, 30, 40]})
     out = incremental_diff(
-        baseline, current, key_columns=["id"],
+        baseline,
+        current,
+        key_columns=["id"],
         compare_columns=["value"],
     )
     assert "added" in out

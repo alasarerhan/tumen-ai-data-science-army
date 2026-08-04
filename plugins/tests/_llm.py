@@ -17,6 +17,7 @@ Resolves API keys in this order:
 If none are set, the helpers raise a pytest.skip() so the e2e/integration
 tests pass through cleanly when the user has no key at all.
 """
+
 from __future__ import annotations
 
 import os

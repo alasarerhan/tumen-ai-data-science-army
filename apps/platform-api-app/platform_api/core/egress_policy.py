@@ -50,4 +50,3 @@ def enforce_egress_policy(
     if strict_mode:
         raise ValueError(f"Egress target is not allowed for {purpose}")
     return False
-

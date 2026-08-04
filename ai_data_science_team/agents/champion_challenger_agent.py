@@ -12,9 +12,13 @@ PowerAnalysisAgent.
 Node type: ``model.champion_challenger``
 """
 
-from typing import (Dict, Optional, Tuple)  # noqa: E402
 import logging  # noqa: E402, F401
-from typing import Any  # noqa: E402, F401
+from typing import (  # noqa: E402
+    Any,  # noqa: E402, F401
+    Dict,
+    Optional,
+    Tuple,
+)
 
 from langchain.tools import tool  # noqa: E402, F401
 from langchain_core.messages import AIMessage, BaseMessage  # noqa: E402, F401
@@ -24,10 +28,6 @@ from langgraph.types import Checkpointer  # noqa: E402, F401
 from typing_extensions import Annotated, Sequence, TypedDict  # noqa: E402, F401
 
 from ai_data_science_team.templates import BaseAgent  # noqa: E402, F401
-from ai_data_science_team.utils.regex import format_agent_name  # noqa: E402, F401
-
-
-
 from ai_data_science_team.tools.champion_challenger import (  # noqa: E402, F401
     auc_with_delong_ci,
     compare_models,
@@ -35,7 +35,7 @@ from ai_data_science_team.tools.champion_challenger import (  # noqa: E402, F401
     mcnemar_test,
     wilcoxon_signed_rank,
 )
-
+from ai_data_science_team.utils.regex import format_agent_name  # noqa: E402, F401
 
 logger = logging.getLogger(__name__)
 
@@ -47,8 +47,15 @@ NODE_TYPE = "model.champion_challenger"
 # Tool wrappers
 # ---------------------------------------------------------------------------
 
+
 @tool(response_format="content_and_artifact")
-def mcnemar_test_wrapped(y_true: Sequence[Any], y_pred_a: Sequence[Any], y_pred_b: Sequence[Any], exact: bool, correction: bool) -> Tuple[str, dict]:
+def mcnemar_test_wrapped(
+    y_true: Sequence[Any],
+    y_pred_a: Sequence[Any],
+    y_pred_b: Sequence[Any],
+    exact: bool,
+    correction: bool,
+) -> Tuple[str, dict]:
     """Tool wrapper for ``mcnemar_test``.
 
     McNemar test for paired binary classifiers.
@@ -56,7 +63,13 @@ def mcnemar_test_wrapped(y_true: Sequence[Any], y_pred_a: Sequence[Any], y_pred_
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: f2_mcnemar_test")
-    kwargs = {'y_true': y_true, 'y_pred_a': y_pred_a, 'y_pred_b': y_pred_b, 'exact': exact, 'correction': correction}
+    kwargs = {
+        "y_true": y_true,
+        "y_pred_a": y_pred_a,
+        "y_pred_b": y_pred_b,
+        "exact": exact,
+        "correction": correction,
+    }
     try:
         result = mcnemar_test(**kwargs)
     except Exception as exc:
@@ -76,7 +89,9 @@ def mcnemar_test_wrapped(y_true: Sequence[Any], y_pred_a: Sequence[Any], y_pred_
 
 
 @tool(response_format="content_and_artifact")
-def wilcoxon_signed_rank_wrapped(residuals_a: Sequence[float], residuals_b: Sequence[float], alternative: str) -> Tuple[str, dict]:
+def wilcoxon_signed_rank_wrapped(
+    residuals_a: Sequence[float], residuals_b: Sequence[float], alternative: str
+) -> Tuple[str, dict]:
     """Tool wrapper for ``wilcoxon_signed_rank``.
 
     Paired Wilcoxon signed-rank test on residual pairs.
@@ -84,7 +99,7 @@ def wilcoxon_signed_rank_wrapped(residuals_a: Sequence[float], residuals_b: Sequ
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: f2_wilcoxon_signed_rank")
-    kwargs = {'residuals_a': residuals_a, 'residuals_b': residuals_b, 'alternative': alternative}
+    kwargs = {"residuals_a": residuals_a, "residuals_b": residuals_b, "alternative": alternative}
     try:
         result = wilcoxon_signed_rank(**kwargs)
     except Exception as exc:
@@ -104,7 +119,9 @@ def wilcoxon_signed_rank_wrapped(residuals_a: Sequence[float], residuals_b: Sequ
 
 
 @tool(response_format="content_and_artifact")
-def auc_with_delong_ci_wrapped(y_true: Sequence[Any], scores: Sequence[float], alpha: float) -> Tuple[str, dict]:
+def auc_with_delong_ci_wrapped(
+    y_true: Sequence[Any], scores: Sequence[float], alpha: float
+) -> Tuple[str, dict]:
     """Tool wrapper for ``auc_with_delong_ci``.
 
     AUC with DeLong 95% confidence interval.
@@ -112,7 +129,7 @@ def auc_with_delong_ci_wrapped(y_true: Sequence[Any], scores: Sequence[float], a
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: f2_auc_with_delong_ci")
-    kwargs = {'y_true': y_true, 'scores': scores, 'alpha': alpha}
+    kwargs = {"y_true": y_true, "scores": scores, "alpha": alpha}
     try:
         result = auc_with_delong_ci(**kwargs)
     except Exception as exc:
@@ -132,7 +149,9 @@ def auc_with_delong_ci_wrapped(y_true: Sequence[Any], scores: Sequence[float], a
 
 
 @tool(response_format="content_and_artifact")
-def delong_pvalue_wrapped(y_true: Sequence[Any], scores_a: Sequence[float], scores_b: Sequence[float]) -> Tuple[str, dict]:
+def delong_pvalue_wrapped(
+    y_true: Sequence[Any], scores_a: Sequence[float], scores_b: Sequence[float]
+) -> Tuple[str, dict]:
     """Tool wrapper for ``delong_pvalue``.
 
     Two-sided DeLong test comparing AUCs of two classifiers.
@@ -140,7 +159,7 @@ def delong_pvalue_wrapped(y_true: Sequence[Any], scores_a: Sequence[float], scor
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: f2_delong_pvalue")
-    kwargs = {'y_true': y_true, 'scores_a': scores_a, 'scores_b': scores_b}
+    kwargs = {"y_true": y_true, "scores_a": scores_a, "scores_b": scores_b}
     try:
         result = delong_pvalue(**kwargs)
     except Exception as exc:
@@ -160,7 +179,9 @@ def delong_pvalue_wrapped(y_true: Sequence[Any], scores_a: Sequence[float], scor
 
 
 @tool(response_format="content_and_artifact")
-def compare_models_wrapped(y_true: Sequence[Any], y_proba_a: Sequence[float], y_proba_b: Sequence[float]) -> Tuple[str, dict]:
+def compare_models_wrapped(
+    y_true: Sequence[Any], y_proba_a: Sequence[float], y_proba_b: Sequence[float]
+) -> Tuple[str, dict]:
     """Tool wrapper for ``compare_models``.
 
     End-to-end champion vs challenger comparison.
@@ -168,7 +189,7 @@ def compare_models_wrapped(y_true: Sequence[Any], y_proba_a: Sequence[float], y_
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: f2_compare_models")
-    kwargs = {'y_true': y_true, 'y_proba_a': y_proba_a, 'y_proba_b': y_proba_b}
+    kwargs = {"y_true": y_true, "y_proba_a": y_proba_a, "y_proba_b": y_proba_b}
     try:
         result = compare_models(**kwargs)
     except Exception as exc:
@@ -239,7 +260,12 @@ def make_champion_challenger_agent(
     def run_react_agent(state: GraphState):
         logger.info("    * RUN REACT AGENT FOR F2")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
-        messages = [("system", "You are the F2 agent. Use the available tools to complete the user's request.")] + list(base)
+        messages = [
+            (
+                "system",
+                "You are the F2 agent. Use the available tools to complete the user's request.",
+            )
+        ] + list(base)
         input_payload = {"messages": messages}
         return react_agent.invoke(input_payload, invoke_react_agent_kwargs)
 
@@ -258,7 +284,9 @@ def make_champion_challenger_agent(
             last_ai = AIMessage(content=getattr(internal[-1], "content", ""), name=AGENT_NAME)
         tool_calls = []
         for msg in internal:
-            name = getattr(getattr(msg, "tool_call_id", None), "name", None) or getattr(msg, "name", None)
+            name = getattr(getattr(msg, "tool_call_id", None), "name", None) or getattr(
+                msg, "name", None
+            )
             if name:
                 tool_calls.append(name)
         if log_tool_calls and tool_calls:
@@ -326,6 +354,7 @@ class ChampionChallengerAgent(BaseAgent):
         if not self.response or "messages" not in self.response:
             return None
         from IPython.display import Markdown as _Markdown  # noqa: E402, F401
+
         for msg in reversed(self.response.get("messages", [])):
             content = getattr(msg, "content", "")
             if content:

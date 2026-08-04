@@ -59,7 +59,7 @@ def _require_dev_mode_request(request: Request) -> None:
         raise HTTPException(
             status_code=503,
             detail="AUTH_MODE=dev is only allowed when DEPLOYMENT_PROFILE=local. "
-                   "This is a security measure to prevent authentication bypass in production.",
+            "This is a security measure to prevent authentication bypass in production.",
         )
     if not settings.dev_auth_token:
         raise HTTPException(

@@ -11,6 +11,7 @@ Dependencies overridden per test via ``app.dependency_overrides``:
 
 The ``enforce_tenant_write_quota`` function is patched for write operations.
 """
+
 from __future__ import annotations
 
 import json
@@ -317,9 +318,7 @@ class TestPublishWorkflowEndpoint:
             workspace_id=str(sdb["workspace"].id),
             user_id=sdb["user_admin"].id,
         )
-        r = client.post(
-            f"/v1/workflows/{record.id}/publish?workspace_id={sdb['workspace'].id}"
-        )
+        r = client.post(f"/v1/workflows/{record.id}/publish?workspace_id={sdb['workspace'].id}")
         assert r.status_code == 409
 
 
@@ -339,9 +338,7 @@ class TestArchiveWorkflowEndpoint:
     def test_member_cannot_archive(self, member_client):
         client, sdb = member_client
         record = _create_workflow_in_db(sdb)
-        r = client.post(
-            f"/v1/workflows/{record.id}/archive?workspace_id={sdb['workspace'].id}"
-        )
+        r = client.post(f"/v1/workflows/{record.id}/archive?workspace_id={sdb['workspace'].id}")
         assert r.status_code == 403
 
     def test_anon_cannot_archive(self, anon_client, seeded_db):
@@ -407,7 +404,12 @@ class TestTriggerWorkflowEndpoint:
             "name": "invalid-chain",
             "steps": [
                 {"id": "viz", "agent": "Visualization", "instruction": "Plot the dataset."},
-                {"id": "model", "agent": "H2O ML", "instruction": "Train a model.", "depends_on": ["viz"]},
+                {
+                    "id": "model",
+                    "agent": "H2O ML",
+                    "instruction": "Train a model.",
+                    "depends_on": ["viz"],
+                },
             ],
         }
         record = WorkflowSpec(

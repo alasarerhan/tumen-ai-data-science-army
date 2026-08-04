@@ -12,9 +12,14 @@ PowerAnalysisAgent.
 Node type: ``monitor.retrain``
 """
 
-from typing import (Dict, Optional, Tuple)  # noqa: E402
 import logging  # noqa: E402, F401
-from typing import Any  # noqa: E402, F401
+from typing import (  # noqa: E402
+    Any,  # noqa: E402, F401
+    Dict,
+    Mapping,  # noqa: E402
+    Optional,
+    Tuple,
+)
 
 from langchain.tools import tool  # noqa: E402, F401
 from langchain_core.messages import AIMessage, BaseMessage  # noqa: E402, F401
@@ -24,10 +29,6 @@ from langgraph.types import Checkpointer  # noqa: E402, F401
 from typing_extensions import Annotated, Sequence, TypedDict  # noqa: E402, F401
 
 from ai_data_science_team.templates import BaseAgent  # noqa: E402, F401
-from ai_data_science_team.utils.regex import format_agent_name  # noqa: E402, F401
-
-from typing import Mapping  # noqa: E402
-
 from ai_data_science_team.tools.retrain_orchestrator import (  # noqa: E402, F401
     Event,
     Policy,
@@ -38,7 +39,7 @@ from ai_data_science_team.tools.retrain_orchestrator import (  # noqa: E402, F40
     record_event,
     simulate,
 )
-
+from ai_data_science_team.utils.regex import format_agent_name  # noqa: E402, F401
 
 logger = logging.getLogger(__name__)
 
@@ -50,6 +51,7 @@ NODE_TYPE = "monitor.retrain"
 # Tool wrappers
 # ---------------------------------------------------------------------------
 
+
 @tool(response_format="content_and_artifact")
 def build_policy_wrapped(spec: Mapping[str, Any]) -> Tuple[str, dict]:
     """Tool wrapper for ``build_policy``.
@@ -59,7 +61,7 @@ def build_policy_wrapped(spec: Mapping[str, Any]) -> Tuple[str, dict]:
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: g2_build_policy")
-    kwargs = {'spec': spec}
+    kwargs = {"spec": spec}
     try:
         result = build_policy(**kwargs)
     except Exception as exc:
@@ -87,7 +89,7 @@ def decide_action_wrapped(signal: Mapping[str, Any], policy: Policy) -> Tuple[st
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: g2_decide_action")
-    kwargs = {'signal': signal, 'policy': policy}
+    kwargs = {"signal": signal, "policy": policy}
     try:
         result = decide_action(**kwargs)
     except Exception as exc:
@@ -115,7 +117,7 @@ def simulate_wrapped(signals: Sequence[Mapping[str, Any]], policy: Policy) -> Tu
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: g2_simulate")
-    kwargs = {'signals': signals, 'policy': policy}
+    kwargs = {"signals": signals, "policy": policy}
     try:
         result = simulate(**kwargs)
     except Exception as exc:
@@ -135,7 +137,9 @@ def simulate_wrapped(signals: Sequence[Mapping[str, Any]], policy: Policy) -> Tu
 
 
 @tool(response_format="content_and_artifact")
-def record_event_wrapped(policy: Policy, signal: Dict[str, Any], decision: Dict[str, Any]) -> Tuple[str, dict]:
+def record_event_wrapped(
+    policy: Policy, signal: Dict[str, Any], decision: Dict[str, Any]
+) -> Tuple[str, dict]:
     """Tool wrapper for ``record_event``.
 
     Record a single audit-trail event.
@@ -143,7 +147,7 @@ def record_event_wrapped(policy: Policy, signal: Dict[str, Any], decision: Dict[
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: g2_record_event")
-    kwargs = {'policy': policy, 'signal': signal, 'decision': decision}
+    kwargs = {"policy": policy, "signal": signal, "decision": decision}
     try:
         result = record_event(**kwargs)
     except Exception as exc:
@@ -171,7 +175,7 @@ def event_to_dict_wrapped(ev: Event) -> Tuple[str, dict]:
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: g2_event_to_dict")
-    kwargs = {'ev': ev}
+    kwargs = {"ev": ev}
     try:
         result = event_to_dict(**kwargs)
     except Exception as exc:
@@ -199,7 +203,7 @@ def build_audit_trail_wrapped(events: Sequence[Event]) -> Tuple[str, dict]:
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: g2_build_audit_trail")
-    kwargs = {'events': events}
+    kwargs = {"events": events}
     try:
         result = build_audit_trail(**kwargs)
     except Exception as exc:
@@ -271,7 +275,12 @@ def make_retrain_orchestrator_agent(
     def run_react_agent(state: GraphState):
         logger.info("    * RUN REACT AGENT FOR G2")
         base = state.get("messages") or [("user", state.get("user_instructions"))]
-        messages = [("system", "You are the G2 agent. Use the available tools to complete the user's request.")] + list(base)
+        messages = [
+            (
+                "system",
+                "You are the G2 agent. Use the available tools to complete the user's request.",
+            )
+        ] + list(base)
         input_payload = {"messages": messages}
         return react_agent.invoke(input_payload, invoke_react_agent_kwargs)
 
@@ -290,7 +299,9 @@ def make_retrain_orchestrator_agent(
             last_ai = AIMessage(content=getattr(internal[-1], "content", ""), name=AGENT_NAME)
         tool_calls = []
         for msg in internal:
-            name = getattr(getattr(msg, "tool_call_id", None), "name", None) or getattr(msg, "name", None)
+            name = getattr(getattr(msg, "tool_call_id", None), "name", None) or getattr(
+                msg, "name", None
+            )
             if name:
                 tool_calls.append(name)
         if log_tool_calls and tool_calls:
@@ -358,6 +369,7 @@ class RetrainOrchestratorAgent(BaseAgent):
         if not self.response or "messages" not in self.response:
             return None
         from IPython.display import Markdown as _Markdown  # noqa: E402, F401
+
         for msg in reversed(self.response.get("messages", [])):
             content = getattr(msg, "content", "")
             if content:

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-
 import ai_data_science_team.tools.promotion as g5
 
 
@@ -21,15 +20,21 @@ class TestRegisterVersion:
 
 class TestValidateSignature:
     def test_match(self):
-        a = g5.ModelVersionRecord(model_id="m", version="1", input_schema=["x", "y"], output_type="p")
-        b = g5.ModelVersionRecord(model_id="m", version="2", input_schema=["x", "y"], output_type="p")
+        a = g5.ModelVersionRecord(
+            model_id="m", version="1", input_schema=["x", "y"], output_type="p"
+        )
+        b = g5.ModelVersionRecord(
+            model_id="m", version="2", input_schema=["x", "y"], output_type="p"
+        )
         ok, issues = g5.validate_signature(a, b)
         assert ok is True
         assert issues == []
 
     def test_mismatch(self):
         a = g5.ModelVersionRecord(model_id="m", version="1", input_schema=["x"], output_type="p")
-        b = g5.ModelVersionRecord(model_id="m", version="2", input_schema=["x", "z"], output_type="c")
+        b = g5.ModelVersionRecord(
+            model_id="m", version="2", input_schema=["x", "z"], output_type="c"
+        )
         ok, issues = g5.validate_signature(a, b)
         assert ok is False
         assert len(issues) == 2
@@ -55,7 +60,10 @@ class TestRequestPromotion:
     def test_dev_to_staging_pending_approval(self):
         rec = g5.ModelVersionRecord(model_id="m", version="1", metrics={"auc": 0.9})
         out = g5.request_promotion(
-            rec, "staging", reason="first", require_approval=True,
+            rec,
+            "staging",
+            reason="first",
+            require_approval=True,
         )
         assert out["status"] == "pending_approval"
         assert rec.stage == "dev"  # not moved until approve()
@@ -68,7 +76,10 @@ class TestRequestPromotion:
         # status string.
         rec = g5.ModelVersionRecord(model_id="m", version="1")
         out = g5.request_promotion(
-            rec, "staging", reason="quick", require_approval=False,
+            rec,
+            "staging",
+            reason="quick",
+            require_approval=False,
         )
         assert out["status"] == "approved"
         # Stage is still dev; an explicit approve() moves it.
@@ -86,7 +97,10 @@ class TestRequestPromotion:
     def test_min_metrics_fail(self):
         rec = g5.ModelVersionRecord(model_id="m", version="1", metrics={"auc": 0.7})
         out = g5.request_promotion(
-            rec, "staging", reason="x", min_metrics={"auc": 0.85},
+            rec,
+            "staging",
+            reason="x",
+            min_metrics={"auc": 0.85},
         )
         assert out["status"] == "rejected"
 
@@ -158,4 +172,3 @@ class TestMLflowAliasSync:
         out = g5.mlflow_alias_sync("m", "1", "champion")
         # mlflow likely not in the runtime; either ok or no_mlflow.
         assert out["status"] in {"ok", "no_mlflow"}
-

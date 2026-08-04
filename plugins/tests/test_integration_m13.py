@@ -8,16 +8,14 @@ Atlamak için (diğer testlerle birlikte):
     python -m pytest tests/ -v -m "not integration"
 """
 
-import pytest
 import pandas as pd
-
+import pytest
 from _llm import make_chat_model, skip_no_key
 
 # ---------------------------------------------------------------------------
 # Guards — skip the entire module if the key is absent
 # ---------------------------------------------------------------------------
 pytestmark = pytest.mark.integration
-
 
 
 langchain_openai = pytest.importorskip(
@@ -29,6 +27,7 @@ langchain_openai = pytest.importorskip(
 # ---------------------------------------------------------------------------
 # Shared fixtures
 # ---------------------------------------------------------------------------
+
 
 @pytest.fixture(scope="module")
 def llm():
@@ -43,8 +42,18 @@ def monthly_series() -> pd.DataFrame:
         {
             "date": pd.date_range("2023-01-01", periods=12, freq="MS"),
             "value": [
-                100, 110, 105, 120, 130, 125,
-                140, 135, 150, 145, 160, 155,
+                100,
+                110,
+                105,
+                120,
+                130,
+                125,
+                140,
+                135,
+                150,
+                145,
+                160,
+                155,
             ],
         }
     )
@@ -53,6 +62,7 @@ def monthly_series() -> pd.DataFrame:
 # ---------------------------------------------------------------------------
 # TimeSeriesEDAAgent
 # ---------------------------------------------------------------------------
+
 
 @skip_no_key
 def test_time_series_eda_agent_basic(llm, monthly_series):
@@ -111,7 +121,7 @@ def test_time_series_eda_agent_tool_calls(llm, monthly_series):
 # ForecastEvaluationAgent
 # ---------------------------------------------------------------------------
 
-ACTUAL    = [100.0, 110.0, 105.0, 120.0, 130.0, 125.0]
+ACTUAL = [100.0, 110.0, 105.0, 120.0, 130.0, 125.0]
 PREDICTED = [102.0, 108.0, 107.0, 118.0, 132.0, 123.0]
 
 
@@ -151,6 +161,7 @@ def test_forecast_evaluation_agent_artifacts(llm):
 # ForecastingModelAgent  (smoke test — just confirms no crash)
 # ---------------------------------------------------------------------------
 
+
 @skip_no_key
 def test_forecasting_model_agent_smoke(llm, monthly_series):
     """ForecastingModelAgent should complete without raising an exception."""
@@ -158,9 +169,7 @@ def test_forecasting_model_agent_smoke(llm, monthly_series):
 
     agent = ForecastingModelAgent(model=llm)
     agent.invoke_agent(
-        user_instructions=(
-            "Fit a simple forecasting model and produce a 3-step-ahead forecast."
-        ),
+        user_instructions=("Fit a simple forecasting model and produce a 3-step-ahead forecast."),
         data_raw=monthly_series,
         date_column="date",
         value_column="value",

@@ -77,7 +77,7 @@ class TestRunStudy:
         }
 
         def fn(p):
-            return -(p["x"] - 0.5) ** 2 - (p["y"] - 0.5) ** 2
+            return -((p["x"] - 0.5) ** 2) - (p["y"] - 0.5) ** 2
 
         out = run_study(
             fn,
@@ -129,7 +129,7 @@ class TestRunStudy:
         space = {"x": {"type": "float", "low": 0.0, "high": 1.0}}
 
         def fn(p):
-            return -(p["x"] - 0.5) ** 2
+            return -((p["x"] - 0.5) ** 2)
 
         out = run_study(
             fn,
@@ -142,10 +142,7 @@ class TestRunStudy:
         # Some trials may have been pruned (or not); both fields exist.
         assert "n_trials_completed" in out
         assert "n_trials_pruned" in out
-        assert (
-            out["n_trials_completed"] + out["n_trials_pruned"]
-            == len(out["trials"])
-        )
+        assert out["n_trials_completed"] + out["n_trials_pruned"] == len(out["trials"])
 
     def test_objective_failure_recorded(self):
         space = {"x": {"type": "float", "low": 0.0, "high": 1.0}}
@@ -173,7 +170,7 @@ class TestRunStudy:
         }
 
         def fn(p):
-            return -(p["x"] - 0.5) ** 2 - 0.05 * (p["y"] - 0.5) ** 2
+            return -((p["x"] - 0.5) ** 2) - 0.05 * (p["y"] - 0.5) ** 2
 
         out = run_study(
             fn,
@@ -193,9 +190,7 @@ class TestRunStudy:
         def fn(p):
             return p["x"]
 
-        out = run_study(
-            fn, space, n_trials=5, direction="maximize", random_seed=0
-        )
+        out = run_study(fn, space, n_trials=5, direction="maximize", random_seed=0)
         assert len(out["optimization_history"]) == 5
         # Trial 0..4 should appear in order.
         assert [h["trial"] for h in out["optimization_history"]] == [0, 1, 2, 3, 4]

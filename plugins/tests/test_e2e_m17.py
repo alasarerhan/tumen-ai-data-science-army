@@ -14,15 +14,13 @@ Calistirmak icin:
 Atlamak icin:
     python -m pytest tests/ -v -m "not integration"
 """
+
 from __future__ import annotations
 
-
-
-from _llm import make_chat_model, skip_no_key
 import pytest
+from _llm import make_chat_model, skip_no_key
 
 pytestmark = pytest.mark.integration
-
 
 
 langchain_openai = pytest.importorskip(
@@ -67,8 +65,8 @@ def llm():
 @skip_no_key
 def test_e2e_hitl_synthesize_then_approve(llm):
     """Stage 1: synthesize findings. Stage 2: HITL interrupt + yes-approve."""
-    from ai_data_science_team.agents.strategic_agents import ResultsSynthesizerAgent
     from ai_data_science_team.agents.hitl_agent import ApprovalGateAgent
+    from ai_data_science_team.agents.strategic_agents import ResultsSynthesizerAgent
 
     # --- Stage 1: synthesize ---
     synth = ResultsSynthesizerAgent(model=llm)
@@ -87,9 +85,7 @@ def test_e2e_hitl_synthesize_then_approve(llm):
     approval = ApprovalGateAgent(model=llm, human_in_the_loop=True)
     _inv(
         approval,
-        user_instructions=(
-            "Summarise the synthesis findings for human review. One paragraph."
-        ),
+        user_instructions=("Summarise the synthesis findings for human review. One paragraph."),
         prior_artifacts=synth_artifacts,
         config=config,
     )
@@ -105,16 +101,14 @@ def test_e2e_hitl_synthesize_then_approve(llm):
         "ApprovalGateAgent must produce a non-empty message after approval"
     )
     final_artifacts = approval.get_artifacts()
-    assert isinstance(final_artifacts, dict), (
-        "ApprovalGateAgent artifacts must be a dict"
-    )
+    assert isinstance(final_artifacts, dict), "ApprovalGateAgent artifacts must be a dict"
 
 
 @skip_no_key
 def test_e2e_hitl_synthesize_then_modify_and_approve(llm):
     """Stage 1: synthesize. Stage 2: HITL with modification request, then approve."""
-    from ai_data_science_team.agents.strategic_agents import ResultsSynthesizerAgent
     from ai_data_science_team.agents.hitl_agent import ApprovalGateAgent
+    from ai_data_science_team.agents.strategic_agents import ResultsSynthesizerAgent
 
     # Stage 1
     synth = ResultsSynthesizerAgent(model=llm)
@@ -151,8 +145,8 @@ def test_e2e_hitl_synthesize_then_modify_and_approve(llm):
 @skip_no_key
 def test_e2e_hitl_no_interrupt_full_flow(llm):
     """Non-HITL mode: synthesize → gate (no interrupt) → final message in one pass."""
-    from ai_data_science_team.agents.strategic_agents import ResultsSynthesizerAgent
     from ai_data_science_team.agents.hitl_agent import ApprovalGateAgent
+    from ai_data_science_team.agents.strategic_agents import ResultsSynthesizerAgent
 
     synth = ResultsSynthesizerAgent(model=llm)
     _inv(

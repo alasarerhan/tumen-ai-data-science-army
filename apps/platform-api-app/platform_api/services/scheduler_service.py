@@ -256,7 +256,7 @@ class SchedulerService:
         """Calculate the next run time for a job."""
         if interval_seconds:
             return from_time + timedelta(seconds=interval_seconds)
-        elif cron_expression:
+        if cron_expression:
             try:
                 from croniter import croniter
                 cron = croniter(cron_expression, from_time)
@@ -484,7 +484,7 @@ class SchedulerService:
                                 ScheduledJob.enabled,
                                 ScheduledJob.next_run_at <= now,
                                 or_(
-                                    ScheduledJob.last_run_status is None,
+                                    ScheduledJob.last_run_status.is_(None),
                                     ScheduledJob.last_run_status != "running",
                                 ),
                             )

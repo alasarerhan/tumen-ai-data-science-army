@@ -114,7 +114,7 @@ def feature_drift_report_wrapped(baseline_df: pd.DataFrame, current_df: pd.DataF
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: g1_feature_drift_report")
-    kwargs = {'baseline_d': baseline_df, 'current_df': current_df}
+    kwargs = {'baseline_df': baseline_df, 'current_df': current_df}
     try:
         result = feature_drift_report(**kwargs)
     except Exception as exc:
@@ -170,7 +170,7 @@ def drift_signal_payload_wrapped(baseline_df: pd.DataFrame, current_df: pd.DataF
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: g1_drift_signal_payload")
-    kwargs = {'baseline_d': baseline_df, 'current_df': current_df}
+    kwargs = {'baseline_df': baseline_df, 'current_df': current_df}
     try:
         result = drift_signal_payload(**kwargs)
     except Exception as exc:

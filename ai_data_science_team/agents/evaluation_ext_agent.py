@@ -111,7 +111,7 @@ def evaluate_segments_wrapped(df: pd.DataFrame, y_true: Sequence[int], y_pred: S
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: f1_evaluate_segments")
-    kwargs = {'d': df, 'y_true': y_true, 'y_pred': y_pred, 'segment_columns': segment_columns}
+    kwargs = {'df': df, 'y_true': y_true, 'y_pred': y_pred, 'segment_columns': segment_columns}
     try:
         result = evaluate_segments(**kwargs)
     except Exception as exc:

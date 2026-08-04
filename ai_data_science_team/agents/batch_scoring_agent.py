@@ -57,7 +57,7 @@ def align_features_wrapped(df: pd.DataFrame, expected_features: Sequence[str]) -
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: g4_align_features")
-    kwargs = {'d': df, 'expected_features': expected_features}
+    kwargs = {'df': df, 'expected_features': expected_features}
     try:
         result = align_features(**kwargs)
     except Exception as exc:
@@ -113,7 +113,7 @@ def predict_dataframe_wrapped(df: pd.DataFrame, model: Any) -> Tuple[str, dict]:
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: g4_predict_dataframe")
-    kwargs = {'d': df, 'model': model}
+    kwargs = {'df': df, 'model': model}
     try:
         result = predict_dataframe(**kwargs)
     except Exception as exc:
@@ -141,7 +141,7 @@ def chunked_predict_wrapped(df: pd.DataFrame, model: Any) -> Tuple[str, dict]:
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: g4_chunked_predict")
-    kwargs = {'d': df, 'model': model}
+    kwargs = {'df': df, 'model': model}
     try:
         result = chunked_predict(**kwargs)
     except Exception as exc:

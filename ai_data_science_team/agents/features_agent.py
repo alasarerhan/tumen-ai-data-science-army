@@ -58,7 +58,7 @@ def filter_scores_wrapped(df: pd.DataFrame, target: pd.Series) -> Tuple[str, dic
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: d2_filter_scores")
-    kwargs = {'d': df, 'target': target}
+    kwargs = {'df': df, 'target': target}
     try:
         result = filter_scores(**kwargs)
     except Exception as exc:
@@ -86,7 +86,7 @@ def select_filter_wrapped(df: pd.DataFrame, target: pd.Series) -> Tuple[str, dic
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: d2_select_filter")
-    kwargs = {'d': df, 'target': target}
+    kwargs = {'df': df, 'target': target}
     try:
         result = select_filter(**kwargs)
     except Exception as exc:
@@ -114,7 +114,7 @@ def select_wrapper_wrapped(df: pd.DataFrame, target: pd.Series) -> Tuple[str, di
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: d2_select_wrapper")
-    kwargs = {'d': df, 'target': target}
+    kwargs = {'df': df, 'target': target}
     try:
         result = select_wrapper(**kwargs)
     except Exception as exc:
@@ -142,7 +142,7 @@ def select_embedded_wrapped(df: pd.DataFrame, target: pd.Series) -> Tuple[str, d
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: d2_select_embedded")
-    kwargs = {'d': df, 'target': target}
+    kwargs = {'df': df, 'target': target}
     try:
         result = select_embedded(**kwargs)
     except Exception as exc:
@@ -170,7 +170,7 @@ def detect_leakage_wrapped(df: pd.DataFrame, target: pd.Series) -> Tuple[str, di
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: d2_detect_leakage")
-    kwargs = {'d': df, 'target': target}
+    kwargs = {'df': df, 'target': target}
     try:
         result = detect_leakage(**kwargs)
     except Exception as exc:
@@ -226,7 +226,7 @@ def select_feature_wrapped(df: pd.DataFrame, target: pd.Series) -> Tuple[str, di
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: d2_select_feature")
-    kwargs = {'d': df, 'target': target}
+    kwargs = {'df': df, 'target': target}
     try:
         result = select_feature(**kwargs)
     except Exception as exc:

@@ -112,7 +112,7 @@ def anonymize_dataframe_wrapped(df: pd.DataFrame, strategies: Mapping[str, Mappi
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: b5_anonymize_dataframe")
-    kwargs = {'d': df, 'strategies': strategies}
+    kwargs = {'df': df, 'strategies': strategies}
     try:
         result = anonymize_dataframe(**kwargs)
     except Exception as exc:

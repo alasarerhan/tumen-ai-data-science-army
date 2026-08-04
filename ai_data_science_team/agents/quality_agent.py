@@ -83,7 +83,7 @@ def b2_validate_against_suite_wrapped(df: pd.DataFrame, suite: Sequence[Mapping[
     Returns a (content, artifact) tuple per the react-agent contract.
     """
     logger.info("    * Tool: b2_validate_against_suite")
-    kwargs = {'d': df, 'suite': suite}
+    kwargs = {'df': df, 'suite': suite}
     try:
         result = validate_against_suite(**kwargs)
     except Exception as exc:

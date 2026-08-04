@@ -70,7 +70,7 @@ def test_openai_timeout_fail_fast():
 @pytest.mark.real
 def test_postgres_down_graceful():
     """Postgres down → graceful degradation kanıtı."""
-    proc = subprocess.run(
+    subprocess.run(
         ["docker", "stop", "tumen-postgres"],
         capture_output=True,
         text=True,
@@ -112,7 +112,7 @@ def test_postgres_down_graceful():
 @pytest.mark.real
 def test_redis_down_graceful():
     """Redis down → cache bypass çalışmalı."""
-    proc = subprocess.run(
+    subprocess.run(
         ["docker", "stop", "tumen-cache"],
         capture_output=True,
         text=True,
@@ -199,6 +199,7 @@ def test_alembic_roundtrip_smoke():
     # Skip if Postgres yok (canlı DB gerekli); local ortamda IndexError atar
     if not result.stdout.strip():
         import pytest as _pytest
+
         _pytest.skip(
             "alembic stdout boş — canlı Postgres gerekli (DATABASE_URL "
             "localhost:5432'te erişilebilir değil). Integration testi, "

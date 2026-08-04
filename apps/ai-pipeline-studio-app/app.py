@@ -3959,19 +3959,19 @@ with st.expander(
         #### Visualization
         - Make a violin+box plot of MonthlyCharges by Churn.
         - Plot tenure distribution split by InternetService.
-        
+
         #### SQL (if a DB is connected)
         - Connect to a DB: `connect to data/northwind.db`
         - Show the tables in the connected database (do not call other agents).
-        - Write SQL to count customers by Contract type and execute it.      
+        - Write SQL to count customers by Contract type and execute it.
 
         #### Feature engineering
         - Create model-ready features for churn (encode categoricals, handle totals/averages).
-        
+
         #### Machine Learning (Logs To MLFlow by default)
         - Train an H2O AutoML classifier on Churn with max runtime 30 seconds and report leaderboard.
         - Score using an H2O model id (current cluster): ``predict with model `XGBoost_grid_...` on the dataset``
-        
+
         #### MLflow
         - What runs are available in the H2O AutoML experiment?
         - Score using MLflow (latest run): `predict using mlflow on the dataset`

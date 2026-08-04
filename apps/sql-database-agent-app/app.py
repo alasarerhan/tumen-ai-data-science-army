@@ -45,7 +45,7 @@ with st.expander("Example Questions", expanded=False):
         """
         - What tables exist in the database?
         - What are the first 10 rows in the territory table?
-        - Aggregate sales for each territory. 
+        - Aggregate sales for each territory.
         - Aggregate sales by month for each territory.
         """
     )
@@ -164,7 +164,7 @@ if st.session_state["PATH_DB"] and (
 
             response_text = f"""
             I'm sorry. I am having difficulty answering that question. You can try providing more details and I'll do my best to provide an answer.
-            
+
             Error: {e}
             """
             msgs.add_ai_message(response_text)

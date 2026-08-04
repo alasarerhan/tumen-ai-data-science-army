@@ -202,7 +202,7 @@ def execute_platform_query(
 
         try:
             sections.append(resolver(ctx, plan, resource_key))
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             sections.append(
                 _section(
                     resource_key=resource_key,

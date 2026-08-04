@@ -740,7 +740,7 @@ def register_production_agent_catalog(*, clear_existing: bool = False) -> dict[s
         name = str(spec["name"])
         try:
             agent_class = _import_agent_class(str(spec["module"]), str(spec["class_name"]))
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             skipped[name] = str(exc)
             logger.warning("Skipping agent catalog registration for %s: %s", name, exc)
             continue

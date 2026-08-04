@@ -22,12 +22,13 @@ class TestDatabaseConnectionFailure:
 
         db = seeded_db["db"]
 
-        with patch.object(
-            db, "execute", side_effect=OperationalError("connection failed", {}, None)
-        ), pytest.raises(Exception):
-            run_service.list_workflow_runs_for_workspace(
-                db, workspace_id=seeded_db["workspace"].id
-            )
+        with (
+            patch.object(
+                db, "execute", side_effect=OperationalError("connection failed", {}, None)
+            ),
+            pytest.raises(Exception),
+        ):
+            run_service.list_workflow_runs_for_workspace(db, workspace_id=seeded_db["workspace"].id)
 
     def test_db_timeout_returns_503(self, seeded_db: dict) -> None:
         from platform_api.services import run_service

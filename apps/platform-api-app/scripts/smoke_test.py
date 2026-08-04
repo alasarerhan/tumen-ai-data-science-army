@@ -160,7 +160,7 @@ def main() -> int:
         body = exc.read().decode("utf-8", errors="ignore")
         print(f"http error: {exc.code} {exc.reason} body={body}")
         return 1
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         print(f"smoke test failed: {exc}")
         return 1
 

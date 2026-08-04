@@ -121,8 +121,8 @@ st.set_page_config(page_title=TITLE, page_icon="📊")
 st.title("📊 " + TITLE)
 
 st.markdown("""
-Welcome to the EDA Copilot. This AI agent is designed to help you find and load data 
-and return exploratory analysis reports that can be used to understand the data 
+Welcome to the EDA Copilot. This AI agent is designed to help you find and load data
+and return exploratory analysis reports that can be used to understand the data
 prior to other analysis (e.g. modeling, feature engineering, etc).
 """)
 

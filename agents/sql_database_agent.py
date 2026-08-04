@@ -499,19 +499,19 @@ def make_sql_database_agent(
         # Prompt to get recommended steps from the LLM
         recommend_steps_prompt = PromptTemplate(
             template="""
-            You are a SQL Database Instructions Expert. Given the following information about the SQL database, 
-            recommend a series of numbered steps to take to collect the data and process it according to user instructions. 
-            The steps should be tailored to the SQL database characteristics and should be helpful 
+            You are a SQL Database Instructions Expert. Given the following information about the SQL database,
+            recommend a series of numbered steps to take to collect the data and process it according to user instructions.
+            The steps should be tailored to the SQL database characteristics and should be helpful
             for a sql database coding agent that will write the SQL code.
-            
+
             IMPORTANT INSTRUCTIONS:
             - Take into account the user instructions and the previously recommended steps.
             - If no user instructions are provided, just return the steps needed to understand the database.
             - Take into account the database dialect and the tables and columns in the database.
             - Pay attention to use only the column names you can see in the tables below. Be careful to not query for columns that do not exist. Also, pay attention to which column is in which table.
             - IMPORTANT: Pay attention to the table names and column names in the database. Make sure to use the correct table and column names in the SQL code. If a space is present in the table name or column name, make sure to account for it.
-            
-            
+
+
             User instructions / Question:
             {user_instructions}
 
@@ -522,20 +522,20 @@ def make_sql_database_agent(
             {all_sql_database_summary}
 
             Return steps as a numbered list. You can return short code snippets to demonstrate actions. But do not return a fully coded solution. The code will be generated separately by a Coding Agent.
-            
+
             Consider these:
-            
+
             1. Consider the database dialect and the tables and columns in the database.
-            
-            
+
+
             Avoid these:
             1. Do not include steps to save files.
             2. Do not include steps to modify existing tables, create new tables or modify the database schema.
             3. Do not include steps that alter the existing data in the database.
             4. Make sure not to include unsafe code that could cause data loss or corruption or SQL injections.
             5. Make sure to not include irrelevant steps that do not help in the SQL agent's data collection and processing. Examples include steps to create new tables, modify the schema, save files, create charts, etc.
-  
-            
+
+
             """,
             input_variables=["user_instructions", "recommended_steps", "all_sql_database_summary"],
         )
@@ -574,10 +574,10 @@ def make_sql_database_agent(
         # Prompt to get the SQL code from the LLM
         sql_query_code_prompt = PromptTemplate(
             template="""
-            You are a SQL Database Coding Expert. Given the following information about the SQL database, 
-            write the SQL code to collect the data and process it according to user instructions. 
+            You are a SQL Database Coding Expert. Given the following information about the SQL database,
+            write the SQL code to collect the data and process it according to user instructions.
             The code should be tailored to the SQL database characteristics and should take into account user instructions, recommended steps, database and table characteristics.
-            
+
             IMPORTANT INSTRUCTIONS:
             - Do not use a LIMIT clause unless a user specifies a limit to be returned.
             - Return SQL in ```sql ``` format.
@@ -585,8 +585,8 @@ def make_sql_database_agent(
             - Pay attention to use only the column names you can see in the tables below. Be careful to not query for columns that do not exist. Also, pay attention to which column is in which table.
             - Pay attention to the SQL dialect from the database summary metadata. Write the SQL code according to the dialect specified.
             - IMPORTANT: Pay attention to the table names and column names in the database. Make sure to use the correct table and column names in the SQL code. If a space is present in the table name or column name, make sure to account for it.
-            
-            
+
+
             User instructions / Question:
             {user_instructions}
 
@@ -598,13 +598,13 @@ def make_sql_database_agent(
 
             Return:
             - The SQL code in ```sql ``` format to collect the data and process it according to the user instructions.
-            
+
             Avoid these:
             - Do not include steps to save files.
             - Do not include steps to modify existing tables, create new tables or modify the database schema.
             - Make sure not to alter the existing data in the database.
             - Make sure not to include unsafe code that could cause data loss or corruption.
-            
+
             """,
             input_variables=["user_instructions", "recommended_steps", "all_sql_database_summary"],
         )
@@ -625,7 +625,7 @@ def make_sql_database_agent(
 def {function_name}(connection):
     import pandas as pd
     import sqlalchemy as sql
-    
+
     # Create a connection if needed
     is_engine = isinstance(connection, sql.engine.base.Engine)
     conn = connection.connect() if is_engine else connection
@@ -633,7 +633,7 @@ def {function_name}(connection):
     sql_query = '''
     {sql_query_code}
     '''
-    
+
     return pd.read_sql(sql_query, connection)
         """
 
@@ -703,12 +703,12 @@ def {function_name}(connection):
     def fix_sql_database_code(state: GraphState):
         prompt = """
         You are a SQL Database Agent code fixer. Your job is to create a {function_name}(connection) function that can be run on a sql connection. The function is currently broken and needs to be fixed.
-        
+
         Make sure to only return the function definition for {function_name}().
-        
+
         Return Python code in ```python``` format with a single function definition, {function_name}(connection), that includes all imports inside the function. The connection object is a SQLAlchemy connection object. Don't specify the class of the connection object, just use it as an argument to the function.
-        
-        This is the broken code (please fix): 
+
+        This is the broken code (please fix):
         {code_snippet}
 
         Last Known Error:
@@ -790,12 +790,12 @@ def smart_schema_filter(llm, user_instructions, all_sql_database_summary, smart_
             You have the full database metadata in JSON format below:
 
                 {all_sql_database_summary}
-            
-            
-            Please return ONLY the subset of this metadata that is relevant to answering the user’s question. 
-            - Preserve the same JSON structure for "schemas" -> "tables" -> "columns". 
+
+
+            Please return ONLY the subset of this metadata that is relevant to answering the user’s question.
+            - Preserve the same JSON structure for "schemas" -> "tables" -> "columns".
             - If any schemas/tables are irrelevant, omit them entirely.
-            - If some columns in a relevant table are not needed, you can still keep them if you aren't sure. 
+            - If some columns in a relevant table are not needed, you can still keep them if you aren't sure.
             - However, try to keep only the minimum amount of data required to answer the user’s question.
 
             Return a valid JSON object. Do not include any additional explanation or text outside of the JSON.

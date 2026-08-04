@@ -129,7 +129,7 @@ def _mirror_signal_to_staged_runtime(
                 payload=merged_payload,
             )
         )
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         logger.warning(
             "Failed to mirror workflow signal %s for staged M22 session %s: %s",
             signal_type,

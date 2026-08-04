@@ -38,7 +38,7 @@ st.set_page_config(
 st.title(TITLE)
 
 st.markdown("""
-Welcome to the Pandas Data Analyst AI. Upload a CSV or Excel file and ask questions about the data.  
+Welcome to the Pandas Data Analyst AI. Upload a CSV or Excel file and ask questions about the data.
 The AI agent will analyze your dataset and return either data tables or interactive charts.
 """)
 
@@ -46,7 +46,7 @@ with st.expander("Example Questions", expanded=False):
     st.write(
         """
         ##### Bikes Data Set:
-        
+
         -  Show the top 5 bike models by extended sales.
         -  Show the top 5 bike models by extended sales in a bar chart.
         -  Show the top 5 bike models by extended sales in a pie chart.
@@ -95,7 +95,7 @@ llm = ChatOpenAI(model=model_option, api_key=st.session_state["OPENAI_API_KEY"])
 # ---------------------------
 
 st.markdown("""
-Upload a CSV or Excel file and ask questions about your data.  
+Upload a CSV or Excel file and ask questions about your data.
 The AI agent will analyze your dataset and return either data tables or interactive charts.
 """)
 

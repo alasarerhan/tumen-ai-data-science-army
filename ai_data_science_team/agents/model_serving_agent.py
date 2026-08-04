@@ -24,7 +24,7 @@ Task types
 
 Security
 --------
-Pickle files can execute arbitrary code during deserialization. 
+Pickle files can execute arbitrary code during deserialization.
 For local files, we require a .sha256 signature file for verification.
 MLflow URIs are trusted as they use MLflow's built-in validation.
 """

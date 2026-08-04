@@ -178,9 +178,14 @@ class SignalStore:
         with self._lock:
             session_signals = self._signals.setdefault(signal.session_id, [])
             if len(session_signals) >= self._max_signals:
-                # Remove oldest unconsumed signals to make room
-                session_signals[:] = [s for s in session_signals if s.consumed]
-                if len(session_signals) >= self._max_signals:
+                # Make room by dropping the oldest unconsumed signal (FIFO).
+                # If all stored signals are already consumed, raise; otherwise
+                # always reclaim exactly one slot so the new emit is accepted.
+                for i, existing in enumerate(session_signals):
+                    if not existing.consumed:
+                        del session_signals[i]
+                        break
+                else:
                     raise SignalLimitExceededError(
                         f"Session {signal.session_id} has reached max signals limit "
                         f"({self._max_signals}). Clear consumed signals or increase limit."

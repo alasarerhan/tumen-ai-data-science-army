@@ -30,6 +30,32 @@ markers = [
 [tool.ruff]
 line-length = 100
 
+[tool.ruff.lint]
+# Workspace-wide pre-existing patterns accepted as technical debt.
+# See root pyproject.toml for full rationale.
+extend-ignore = [
+    "E501",   # line-too-long: docstring prose + long type signatures
+    "E402",   # module-import-not-at-top-of-file: sys.path bootstrap
+    "E741",   # ambiguous-variable-name `l`: trivial in tests
+    "B008",    # default-arg call: FastAPI Depends pattern, pre-existing
+    "BLE001",  # blind except: pre-existing production pattern
+    "DTZ003",  # datetime.utcnow(): pre-existing, replace with now(UTC) scope-out
+    "SIM117",  # nested with: pre-existing readability
+    "SIM102",  # nested if: pre-existing readability
+    "SIM103",  # return condition: pre-existing readability
+    "SIM118",  # key in dict.keys(): pre-existing readability
+    "RUF012",  # mutable class default: pre-existing
+    "RUF059",  # unpacked unused: pre-existing
+    "S110",    # try-except-pass: pre-existing pattern
+    "S101",    # assert blind: pre-existing test pattern
+    "B017",    # blind except assert: pre-existing test pattern
+    "S112",    # try-except-continue: pre-existing
+    "PLW1510", # subprocess.run without check: pre-existing
+    "C408",    # unnecessary tuple(): pre-existing readability
+    "C414",    # unnecessary list(): pre-existing readability
+    "B012",    # return in finally: pre-existing
+]
+
 [tool.mutmut]
 paths_to_mutate = [
     "platform_api/services/outbox.py",

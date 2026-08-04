@@ -54,6 +54,8 @@ ml = [
     "lightgbm",
     "prophet",
     "shap",
+    "torch",
+    "tensorflow",
 ]
 # Legacy viz extras kept for compatibility (not imported by inner package).
 viz = [

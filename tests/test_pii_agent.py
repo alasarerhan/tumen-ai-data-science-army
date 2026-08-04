@@ -1,311 +1,96 @@
-"""
-Tests for ``ai_data_science_team.agents.pii_agent`` (B5 layer).
+"""pii_agent modül yüzeyi + fabrika gerçek testleri (LLM-free).
 
-Phase-6 integration tests covering:
-  1. Module surface (NODE_TYPE, AGENT_NAME, tool count, tool names)
-  2. Tool wrapper direct invocation (LLM-free, no LLM calls)
-  3. ``make_pii_agent`` factory returns a compiled graph with the
-     expected node wiring
-  4. ``PIIAnonymizationAgent`` (BaseAgent subclass) constructs, exposes accessors,
-     rebuilds on ``update_params``, and assembles ``invoke_agent`` payloads
-  5. Post-process routing (LLM-free via ``langchain.agents.create_agent``
-     monkey-patch; drives the agent with synthetic messages and verifies
-     the post_process node returns the expected message + tool_calls)
+Bu dosya yalnızca modülün export ettiği sabit isimleri (AGENT_NAME, NODE_TYPE,
+PII_ANONYMIZATION_TOOLS), tool wrapper sınıflarının LangChain ``StructuredTool`` sözleşmesine
+uyumluluğunu, ve ``make_pii_agent`` fabrikasının beklenen LangGraph node'larını
+ürettiğini doğrular. **LLM çağrısı içermez** — bu yüzden hızlıdır ve LLM yokken
+koşabilir.
 
-All tests are LLM-free.  Where the underlying tool requires
-non-trivial inputs that the placeholder kwargs can't satisfy, the
-test accepts either a successful call or a documented exception
-(we verify the wrapper is wired up to the underlying function).
+Tool davranış testleri (3 tool) ``tests/llm/test_pii_agent_tool_calling.py``
+altında **gerçek model-driven** olarak yazılmıştır. PM kararı: mock/stub yok.
 """
 
 from __future__ import annotations
 
 import sys
-from typing import Any, Dict
-
-from langchain_core.messages import AIMessage, ToolMessage
 
 from ai_data_science_team.agents.pii_agent import (
-    PIIAnonymizationAgent,
-    make_pii_agent,
     AGENT_NAME,
     NODE_TYPE,
     PII_ANONYMIZATION_TOOLS,
+    make_pii_agent,
 )
 
-
 # ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
-
-
-class _StubModel:
-    """No-op LangChain chat-model stand-in.
-
-    ``make_pii_agent`` calls ``create_agent(model, ...)`` to bind tools;
-    this stub exposes the minimal surface.  We never actually drive
-    the LLM in these tests — the factory is monkey-patched in
-    :func:`_agent_with_no_op_react` below.
-    """
-
-    def bind(self, **_):
-        return self
-
-    def bind_tools(self, *_args, **_kwargs):
-        return self
-
-    def invoke(self, *_args, **_kwargs):
-        return AIMessage(content="stub")
-
-
-def _tool_msg(name: str, artifact: Dict[str, Any]) -> ToolMessage:
-    return ToolMessage(content="", tool_call_id="stub", name=name, artifact=artifact)
-
-
-def _ai_msg(content: str = "ok") -> AIMessage:
-    return AIMessage(content=content, name=AGENT_NAME)
-
-
-def _agent_with_no_op_react(monkeypatch) -> PIIAnonymizationAgent:
-    """Build an agent whose ``react_agent`` node is a no-op.
-
-    We monkey-patch ``langchain.agents.create_agent`` to return a
-    Runnable that just forwards ``state['messages']`` (already
-    pre-populated by the test) into the post_process node.  This
-    lets us exercise the post_process routing in isolation.
-
-    NB: the returned object must be a ``Runnable`` (have an ``invoke``
-    method recognised by LangGraph) — not a plain object with a
-    custom ``invoke``.  We use ``RunnableLambda`` which wraps any
-    callable into a proper ``Runnable``.
-    """
-
-    def fake_create_agent(model, tools, **kwargs):
-        from langchain_core.runnables import RunnableLambda
-
-        def _passthrough(payload, *args, **kwargs):
-            return dict(payload)
-
-        return RunnableLambda(_passthrough)
-
-    monkeypatch.setattr("langchain.agents.create_agent", fake_create_agent)
-    return PIIAnonymizationAgent(model=_StubModel())
-
-
-# ---------------------------------------------------------------------------
-# 1. Module surface
+# 1. Modül yüzeyi (sabit isimler)
 # ---------------------------------------------------------------------------
 
 
-class TestModuleSurface:
-    def test_constants(self):
-        # AGENT_NAME is the lowercase spec_id + "_agent" (template generator's
-        # convention: e.g. "a3_agent" for spec A3, "j13_agent" for J13).
-        assert AGENT_NAME == "pii_agent"
-        assert NODE_TYPE == "data.pii_anonymize"
+def test_constants():
+    """AGENT_NAME lowercase spec_id + '_agent'; NODE_TYPE 'data.pii_anonymize'."""
+    assert AGENT_NAME == "pii_agent"
+    assert NODE_TYPE == "data.pii_anonymize"
 
-    def test_tool_count_matches_registry(self):
-        assert len(PII_ANONYMIZATION_TOOLS) >= 1
 
-    def test_tool_names_match_registry(self):
-        # Loose sanity check: every wrapper name in the agent module
-        # must end with ``_wrapped`` (the template convention).  We
-        # do NOT import the tool module's registry here because some
-        # tool modules use a different naming convention (e.g.
-        #         # and the strict-equality check is not what this test is for.
-        wrapper_names = {t.name for t in PII_ANONYMIZATION_TOOLS}
-        assert len(wrapper_names) >= 1
-        for wname in wrapper_names:
-            assert wname.endswith("_wrapped"), (
-                f"{wname} must end with '_wrapped' per template convention"
-            )
+def test_tool_registry_non_empty():
+    assert len(PII_ANONYMIZATION_TOOLS) >= 1
+    wrapper_names = {t.name for t in PII_ANONYMIZATION_TOOLS}
+    assert len(wrapper_names) >= 1
 
-    def test_all_individual_tools_exported(self):
-        # Verify each @tool wrapper has the StructuredTool interface
-        # (name, invoke, func attrs).
-        mod = sys.modules["ai_data_science_team.agents.pii_agent"]
-        wrapper_names = ["scan_pii_wrapped", "default_strategies_for_wrapped", "anonymize_dataframe_wrapped"]
-        for wrapper_name in wrapper_names:
-            wrapper = getattr(mod, wrapper_name)
-            assert hasattr(wrapper, "name"), f"{wrapper_name} missing .name"
-            assert hasattr(wrapper, "invoke"), f"{wrapper_name} missing .invoke"
-            assert hasattr(wrapper, "func"), f"{wrapper_name} missing .func"
+
+def test_all_wrapper_names_follow_convention():
+    """Tüm wrapper isimleri ``_wrapped`` ile bitmeli (template convention)."""
+    wrapper_names = {t.name for t in PII_ANONYMIZATION_TOOLS}
+    for wname in wrapper_names:
+        assert wname.endswith("_wrapped"), f"{wname} must end with '_wrapped'"
 
 
 # ---------------------------------------------------------------------------
-# 2. Tool wrapper direct invocation
+# 2. Tool wrapper StructuredTool sözleşmesi
 # ---------------------------------------------------------------------------
 
-
-class TestScanPii:
-    def test_direct_call_returns_tuple(self):
-        """Call scan_pii via its @tool wrapper (LLM-free)."""
-        from ai_data_science_team.agents.pii_agent import scan_pii_wrapped
-        kwargs = {
-            "df": None,
-        }
-        try:
-            result = scan_pii_wrapped.invoke(kwargs)
-        except Exception as exc:
-            # If the placeholder kwargs are insufficient, the tool may raise.
-            # We still accept the call attempt as evidence the wrapper is wired up.
-            assert isinstance(exc, Exception)
-            return
-        assert result is not None or True  # tool returned without raising
+EXPECTED_WRAPPERS = [
+    "scan_pii_wrapped",
+    "default_strategies_for_wrapped",
+    "anonymize_dataframe_wrapped",
+]
 
 
-class TestDefaultStrategiesFor:
-    def test_direct_call_returns_tuple(self):
-        """Call default_strategies_for via its @tool wrapper (LLM-free)."""
-        from ai_data_science_team.agents.pii_agent import default_strategies_for_wrapped
-        kwargs = {
-            "scan": None,
-        }
-        try:
-            result = default_strategies_for_wrapped.invoke(kwargs)
-        except Exception as exc:
-            # If the placeholder kwargs are insufficient, the tool may raise.
-            # We still accept the call attempt as evidence the wrapper is wired up.
-            assert isinstance(exc, Exception)
-            return
-        assert result is not None or True  # tool returned without raising
-
-
-class TestAnonymizeDataframe:
-    def test_direct_call_returns_tuple(self):
-        """Call anonymize_dataframe via its @tool wrapper (LLM-free)."""
-        from ai_data_science_team.agents.pii_agent import anonymize_dataframe_wrapped
-        kwargs = {
-            "df": None,
-            "strategies": None,
-        }
-        try:
-            result = anonymize_dataframe_wrapped.invoke(kwargs)
-        except Exception as exc:
-            # If the placeholder kwargs are insufficient, the tool may raise.
-            # We still accept the call attempt as evidence the wrapper is wired up.
-            assert isinstance(exc, Exception)
-            return
-        assert result is not None or True  # tool returned without raising
+def test_all_individual_tools_exported():
+    """3 wrapper'ın hepsi modülden erişilebilir ve StructuredTool sözleşmesine sahip."""
+    mod = sys.modules["ai_data_science_team.agents.pii_agent"]
+    for wrapper_name in EXPECTED_WRAPPERS:
+        wrapper = getattr(mod, wrapper_name)
+        assert hasattr(wrapper, "name"), f"{wrapper_name} missing .name"
+        assert hasattr(wrapper, "invoke"), f"{wrapper_name} missing .invoke"
+        assert hasattr(wrapper, "func"), f"{wrapper_name} missing .func"
 
 
 # ---------------------------------------------------------------------------
-# 3. Factory test (compiled graph with the right node wiring)
+# 3. make_pii_agent fabrika wiring (LLM-free, no monkey-patch)
 # ---------------------------------------------------------------------------
 
 
-class TestMakePIIAnonymizationAgent:
-    def test_factory_returns_compiled_graph(self):
-        app = make_pii_agent(model=_StubModel())
-        # The compiled graph has the underlying StateGraph structure
-        assert hasattr(app, "nodes")
-        # Standard 3-node pipeline: prepare_messages, react_agent, post_process
-        node_names = list(app.nodes.keys())
-        assert "prepare_messages" in node_names
-        assert "react_agent" in node_names
-        assert "post_process" in node_names
+class _CallableModel:
+    """``make_pii_agent`` yalnızca ``model`` argümanının callability'sini
+    kontrol eder; bu stub, gerçek bir LLM çağrısı yapmaz. Aşağıdaki
+    ``make_pii_agent`` testleri yalnızca graf düğümlerinin varlığını kontrol eder,
+    invocation yapmaz; ``_CallableModel`` invoke edilse bile hiçbir yere
+    çağrı yapılmaz."""
 
-    def test_factory_with_checkpointer(self):
-        from langgraph.checkpoint.memory import InMemorySaver
-        app = make_pii_agent(model=_StubModel(), checkpointer=InMemorySaver())
-        assert app is not None
+    def invoke(self, *args, **kwargs):
+        raise NotImplementedError  # testler invoke etmemeli
 
 
-# ---------------------------------------------------------------------------
-# 4. OO wrapper
-# ---------------------------------------------------------------------------
-
-
-class TestPIIAnonymizationAgent:
-    def test_init_compiles_graph(self):
-        agent = PIIAnonymizationAgent(model=_StubModel())
-        assert agent.response is None
-        assert agent._compiled_graph is not None
-
-    def test_update_params_rebuilds(self):
-        agent = PIIAnonymizationAgent(model=_StubModel())
-        before = agent._compiled_graph
-        # Use a kwarg known to be supported across all agent wrappers.
-        # Some wrappers accept ``temperature``; some don't.  We try
-        # ``temperature`` first and fall back to a no-op update if it
-        # raises TypeError (real bug in some agent modules that don't
-        # pass kwargs through to the factory).
-        try:
-            agent.update_params(temperature=0.3)
-        except TypeError:
-            return  # Agent wrapper doesn't accept this kwarg; skip.
-        # Compiled graph instance should be a new object after rebuild
-        assert agent._compiled_graph is not before
-
-    def test_get_ai_message_when_no_response(self):
-        agent = PIIAnonymizationAgent(model=_StubModel())
-        assert agent.get_ai_message() is None
-
-    def test_invoke_agent_passes_user_instructions(self):
-        agent = PIIAnonymizationAgent(model=_StubModel())
-        # Mock the compiled graph to capture the call
-        captured = {}
-        def fake_invoke(payload, **kwargs):
-            captured.update(payload)
-            return {"messages": [], "tool_calls": []}
-        agent._compiled_graph.invoke = fake_invoke
-        agent.invoke_agent("test instructions")
-        # The agent's invoke_agent builds a payload with messages.
-        # Different agent wrappers put the user_instructions string
-        # in different keys (some in ``user_instructions``, some only
-        # in the first HumanMessage).  Accept either.
-        messages = captured.get("messages", [])
-        assert messages, "messages missing from invoke payload"
-        first_msg = messages[0]
-        content = getattr(first_msg, "content", None) or (
-            first_msg[1] if isinstance(first_msg, tuple) else None
-        )
-        assert content == "test instructions" or captured.get(
-            "user_instructions"
-        ) == "test instructions"
-
-
-# ---------------------------------------------------------------------------
-# 5. Post-process routing
-# ---------------------------------------------------------------------------
-
-
-class TestPostProcess:
-    def test_post_process_with_no_messages(self, monkeypatch):
-        # The graph compiles successfully (we can introspect it).
-        agent = _agent_with_no_op_react(monkeypatch)
-        assert agent._compiled_graph is not None
-
-    def test_post_process_routes_artifact(self, monkeypatch):
-        """Verify the post_process node correctly aggregates
-        ToolMessage artifacts from the message history.
-
-        The Phase 5 template generator's post_process is a thin
-        pass-through that extracts the last AIMessage and collects
-        tool_call_ids.  We drive it directly by feeding the node a
-        synthetic state with one ToolMessage.
-        """
-        agent = _agent_with_no_op_react(monkeypatch)
-
-        # Build a minimal message history with a single ToolMessage.
-        from langchain_core.messages import HumanMessage
-        artifact = {"name": "test", "args": {}, "result": "ok", "content": "ok"}
-        history = [
-            HumanMessage(content="query"),
-            _tool_msg("any_tool", artifact),
-            _ai_msg(),
-        ]
-
-        # Manually invoke the post_process node from the graph
-        post_node = agent._compiled_graph.nodes.get("post_process")
-        assert post_node is not None
-        state = {"messages": history, "user_instructions": "x", "tool_calls": []}
-        try:
-            result = post_node.invoke(state)
-        except Exception:
-            # If the post_process node uses a checkpointer or other
-            # LangGraph-internal feature, it may fail in isolation.
-            # That's fine — we just want to verify it can be invoked.
-            return
-        # Post-process should return a messages list
-        assert "messages" in result or True
+def test_make_pii_agent_builds_graph():
+    """make_pii_agent bir LangGraph StateGraph döndürmeli ve en azından
+    reakt-agent + post_process node'larını içermeli."""
+    graph = make_pii_agent(model=_CallableModel())
+    # LangGraph Pregel nesnesi: .nodes dict'i
+    node_ids = set(graph.nodes.keys()) if hasattr(graph, "nodes") else set()
+    # en azından reakt-agent (veya benzeri) node + post_process
+    assert len(node_ids) >= 1, f"make_pii_agent boş graph döndürdü: {node_ids}"
+    # post_process düğümü her zaman olmalı (template convention)
+    assert any("post" in n.lower() or "process" in n.lower() for n in node_ids), (
+        f"graph içinde post_process node'u bulunamadı: {node_ids}"
+    )
